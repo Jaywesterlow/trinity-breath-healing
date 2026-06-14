@@ -185,26 +185,110 @@ Explicit exclusions to prevent scope creep.
 
 ## Traceability
 
-Updated during roadmap creation.
+Updated during roadmap creation (2026-06-14). Each requirement maps to exactly one phase.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| FND-01 → FND-08 | Phase 0 | Pending |
-| SEO-01 → SEO-11 | Phase 0 | Pending |
-| SCH-01 → SCH-08 | Phase 0 | Pending |
-| LND-01 → LND-15 | Phase 1 | Pending |
-| RES-01 → RES-03 | Phase 2 | Pending |
-| INT-01 → INT-08 | Phase 3 | Pending |
-| PRF-01 → PRF-08 | Phase 0 + Phase 1 | Pending |
-| A11Y-01 → A11Y-05 | Phase 0 + Phase 1 | Pending |
-| LGL-01 → LGL-11 | Phase 4 | Pending |
-| LCH-01 → LCH-07 | Phase 5 | Pending |
+| FND-01 | Phase 0 | Pending |
+| FND-02 | Phase 0 | Pending |
+| FND-03 | Phase 0 | Pending |
+| FND-04 | Phase 0 | Pending |
+| FND-05 | Phase 0 | Pending |
+| FND-06 | Phase 0 | Pending |
+| FND-07 | Phase 0 | Pending |
+| FND-08 | Phase 0 | Pending |
+| SEO-01 | Phase 0 | Pending |
+| SEO-02 | Phase 0 | Pending |
+| SEO-03 | Phase 0 | Pending |
+| SEO-04 | Phase 0 | Pending |
+| SEO-05 | Phase 0 | Pending |
+| SEO-06 | Phase 0 | Pending |
+| SEO-07 | Phase 0 | Pending |
+| SEO-08 | Phase 0 | Pending |
+| SEO-09 | Phase 0 | Pending |
+| SEO-10 | Phase 0 | Pending |
+| SEO-11 | Phase 0 | Pending |
+| SCH-01 | Phase 0 | Pending |
+| SCH-02 | Phase 0 | Pending |
+| SCH-03 | Phase 0 | Pending |
+| SCH-04 | Phase 0 | Pending |
+| SCH-05 | Phase 0 | Pending |
+| SCH-06 | Phase 0 | Pending |
+| SCH-07 | Phase 0 | Pending |
+| SCH-08 | Phase 0 | Pending |
+| LND-01 | Phase 1 (sub-unit 1 — Hero) | Pending |
+| LND-02 | Phase 1 (sub-unit 2 — Header) | Pending |
+| LND-03 | Phase 1 (sub-unit 3 — Intro) | Pending |
+| LND-04 | Phase 1 (sub-unit 4 — Voor wie) | Pending |
+| LND-05 | Phase 1 (sub-unit 5 — Aanpak accordion) | Pending |
+| LND-06 | Phase 1 (sub-unit 6 — Praktische info) | Pending |
+| LND-07 | Phase 1 (sub-unit 7 — Over de practitioner) | Pending |
+| LND-08 | Phase 1 (sub-unit 8 — FAQ) | Pending |
+| LND-09 | Phase 1 (sub-unit 9 — Citation blocks) | Pending |
+| LND-10 | Phase 1 (sub-unit 10 — Inline contact) | Pending |
+| LND-11 | Phase 1 (sub-unit 11 — Booking CTA) | Pending |
+| LND-12 | Phase 1 (sub-unit 12 — Footer) | Pending |
+| LND-13 | Phase 1 (sub-unit 7 — Testimonials seeded in Over) | Pending |
+| LND-14 | Phase 1 (sub-unit 9 — Glossary with citations) | Pending |
+| LND-15 | Phase 1 (cross-section copy gate) | Pending |
+| RES-01 | Phase 2 | Pending |
+| RES-02 | Phase 2 | Pending |
+| RES-03 | Phase 2 | Pending |
+| INT-01 | Phase 3 | Pending |
+| INT-02 | Phase 3 | Pending |
+| INT-03 | Phase 3 | Pending |
+| INT-04 | Phase 3 | Pending |
+| INT-05 | Phase 3 | Pending |
+| INT-06 | Phase 3 | Pending |
+| INT-07 | Phase 3 | Pending |
+| INT-08 | Phase 3 | Pending |
+| PRF-01 | Phase 0 (image primitive configured) | Pending |
+| PRF-02 | Phase 1 (sub-unit 1 — Hero preload) | Pending |
+| PRF-03 | Phase 1 (per-section enforcement) | Pending |
+| PRF-04 | Phase 1 (sub-unit DoD) | Pending |
+| PRF-05 | Phase 1 (sub-unit DoD) | Pending |
+| PRF-06 | Phase 1 (sub-unit DoD) | Pending |
+| PRF-07 | Phase 1 (no 3p JS on `/`) | Pending |
+| PRF-08 | Phase 0 (CI budget gate skeleton) | Pending |
+| A11Y-01 | Phase 1 (per-section WCAG 2.2 AA) | Pending |
+| A11Y-02 | Phase 1 (sub-unit 10 — contact form labels) | Pending |
+| A11Y-03 | Phase 1 (per-section tap targets) | Pending |
+| A11Y-04 | Phase 1 (screen-reader walkthrough at end) | Pending |
+| A11Y-05 | Phase 0 (pa11y/axe CI skeleton) | Pending |
+| LGL-01 | Phase 4 | Pending |
+| LGL-02 | Phase 4 | Pending |
+| LGL-03 | Phase 4 | Pending |
+| LGL-04 | Phase 4 | Pending |
+| LGL-05 | Phase 4 | Pending |
+| LGL-06 | Phase 4 | Pending |
+| LGL-07 | Phase 4 | Pending |
+| LGL-08 | Phase 4 | Pending |
+| LGL-09 | Phase 4 | Pending |
+| LGL-10 | Phase 4 | Pending |
+| LGL-11 | Phase 4 | Pending |
+| LCH-01 | Phase 5 | Pending |
+| LCH-02 | Phase 5 | Pending |
+| LCH-03 | Phase 5 | Pending |
+| LCH-04 | Phase 5 | Pending |
+| LCH-05 | Phase 5 | Pending |
+| LCH-06 | Phase 5 | Pending |
+| LCH-07 | Phase 5 | Pending |
 
 **Coverage:**
-- v1 requirements: 70 total (FND 8 + SEO 11 + SCH 8 + LND 15 + RES 3 + INT 8 + PRF 8 + A11Y 5 + LGL 11 + LCH 7 - dedupe overlaps in PRF/A11Y)
-- Mapped to phases: 70
-- Unmapped: 0 ✓
+- v1 requirements: 84 total (FND 8 + SEO 11 + SCH 8 + LND 15 + RES 3 + INT 8 + PRF 8 + A11Y 5 + LGL 11 + LCH 7 = 84 unique IDs)
+- Mapped to phases: 84
+- Unmapped: 0
+- Each requirement maps to exactly one phase (no duplicates, no orphans)
+
+**Per-phase counts:**
+- Phase 0 (Foundation & SEO Scaffolding): 30 (FND 8 + SEO 11 + SCH 8 + PRF-01 + PRF-08 + A11Y-05)
+- Phase 1 (Landing Sections, 12 sub-units): 25 (LND 15 + PRF-02 → PRF-07 = 6 + A11Y-01 → A11Y-04 = 4)
+- Phase 2 (Reserved-Page Deepening): 3 (RES)
+- Phase 3 (Integrations): 8 (INT)
+- Phase 4 (Legal & Copy Gate): 11 (LGL)
+- Phase 5 (Launch & Monitoring): 7 (LCH)
+- Total: 30 + 25 + 3 + 8 + 11 + 7 = 84 ✓
 
 ---
 *Requirements defined: 2026-06-14*
-*Last updated: 2026-06-14 after initialization*
+*Last updated: 2026-06-14 after roadmap creation*
