@@ -41,7 +41,17 @@
   4. GitHub Actions CI fails the build if any rendered route has zero or multiple `<h1>`, missing/duplicate meta description, an invalid canonical, an unparseable JSON-LD `@graph`, a `schema-dts` type error, or any new placeholder string (grep gate inactive until LGL-11 — but the grep target is plumbed in Phase 0).
   5. Repository `trinity-breath-healing` (private) exists on GitHub with main-branch protection; Vercel project is connected and auto-deploys `main` to `trinity-breath-healing.vercel.app` plus preview URLs per PR; Search Console URL-prefix verification via HTML-file method against the Vercel-default URL has been initiated.
 
-**Plans**: TBD
+**Plans**: 9 plans
+Plans:
+- [ ] 00-01-PLAN.md — Repo scaffold + SvelteKit/Svelte 5 + adapter-vercel + CI skeleton + test infra (Wave 0)
+- [ ] 00-02-PLAN.md — Head/PageTitle primitives + PageMeta + SITE_URL + BRAND constants
+- [ ] 00-03-PLAN.md — JsonLd primitive + schema-dts shared/services/breadcrumb/faq/webpage + buildGraph composer
+- [ ] 00-04-PLAN.md — robots.txt + sitemap.xml endpoint + 15-route manifest + check-robots.sh
+- [ ] 00-05-PLAN.md — 14 reserved stub routes + StubLayout + STUB_META + Playwright route tests
+- [ ] 00-06-PLAN.md — static/global.css design tokens + reset + self-hosted woff2 + no-shared-css/check-tokens scripts
+- [ ] 00-07-PLAN.md — EnhancedImage primitive (PRF-01) with required alt/width/height
+- [ ] 00-08-PLAN.md — Full CI gates: check-html, validate-json-ld, check-initial-html-ai, lighthouserc, pa11yci, synthetic-violations test
+- [ ] 00-09-PLAN.md — GitHub repo + branch protection + Vercel bind + Search Console verification + production smoke test
 **UI hint**: no (primitives + placeholder tokens only; no visible sections yet)
 
 ### Phase 1: Landing Sections (Mobile-First, 8 sub-units in Figma frame order)
