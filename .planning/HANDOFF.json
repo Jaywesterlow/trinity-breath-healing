@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-15T17:23:27.398Z",
+  "timestamp": "2026-06-15T17:35:00.000Z",
   "phase": "00",
   "phase_name": "foundation-seo-scaffolding",
   "phase_dir": ".planning/phases/00-foundation-seo-scaffolding",
@@ -52,6 +52,6 @@
     ".planning/phases/00-foundation-seo-scaffolding/00-08-PLAN.md",
     ".planning/phases/00-foundation-seo-scaffolding/00-VALIDATION.md"
   ],
-  "next_action": "Re-spawn gsd-plan-checker against current on-disk plans (iteration 2/3) to verify revision-planner's edits actually resolved BLOCKER-1..7 and to confirm BLOCKER-8 status on Plan 09. Use the same prompt as iteration 1, plus an explicit note: `Iteration 2 — verify the 6 blockers from iteration 1 are structurally fixed; flag any blocker not fully resolved.`",
+  "next_action": "PASTE THE 3 LISTS from `.continue-here.md` (LIST 1 stage map, LIST 2 cuttable options, LIST 3 recommendation) verbatim as the first response. Do NOT skip. Do NOT summarize. Do NOT take action until user picks option (a) finish, (b) force-accept and exit, or (c) stop. Only then proceed.",
   "context_notes": "Resumed from 5h limit, completed `/gsd-resume-work` reconciliation, then `/gsd-plan-phase 0` end-to-end through planner + first checker pass + revision-planner mid-write. Plans landed on disk via planner self-commit (752a3fd); revision-planner did not commit. Checker found 7 blockers (1 D-09 contradiction, 1 invalid Svelte syntax for <html lang>, 3 requirement coverage gaps SEO-09/FND-03/SEO-03, 1 dependency-graph gap Plan 04→02, 2 double-claims FND-06/SEO-11) + 5 warnings (Plan 08 scope, SCH-07 empty FAQ, og:locale, scope-sanity, VALIDATION SEO IDs). VALIDATION.md SEO IDs already corrected. Revision-planner was given a structured fix list and acknowledged each blocker before session cut. On disk evidence: 6 plans + VALIDATION.md modified with substantial diff sizes (10–116 lines per file) — strongly suggests revision-planner reached most blockers. Plan 09 absent from diff list is the only structural concern."
 }
