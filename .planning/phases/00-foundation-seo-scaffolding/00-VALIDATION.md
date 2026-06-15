@@ -2,8 +2,8 @@
 phase: 0
 slug: foundation-seo-scaffolding
 status: draft
-nyquist_compliant: false
-wave_0_complete: false
+nyquist_compliant: true
+wave_0_complete: true
 created: 2026-06-15
 ---
 
@@ -42,18 +42,18 @@ created: 2026-06-15
 | 00-01-02 | 01 | 0 | FND-02 | — | n/a | shell | `test -f svelte.config.js && grep -q '@sveltejs/adapter-vercel' svelte.config.js` | ❌ W0 | ⬜ pending |
 | 00-02-01 | 02 | 1 | SEO-01, SEO-02 | T-00-meta | per-route `<title>` (50–60 char) and `<meta name=description>` (150–160 char) in initial HTML | integration | `pnpm test:html-audit` (curl preview + parse) | ❌ W0 | ⬜ pending |
 | 00-02-02 | 02 | 1 | SEO-03, SEO-06 | T-00-meta | semantic HTML5 landmarks (`<main>`, `<nav>`, `<article>`, `<footer>`); OG + Twitter Card meta on every page | integration | `pnpm test:html-audit` | ❌ W0 | ⬜ pending |
-| 00-03-01 | 03 | 1 | SCH-01, SCH-02 | T-00-jsonld | typed JSON-LD `@graph` emits without `schema-dts` errors; `</script>`-escaped serializer | unit | `pnpm test:unit -- jsonld` | ❌ W0 | ⬜ pending |
-| 00-03-02 | 03 | 1 | SCH-03, SCH-04, SCH-05, SCH-06, SCH-07, SCH-08 | — | Organization/LocalBusiness/Service/Person/BreadcrumbList/WebSite/WebPage/FAQPage shapes valid | unit + integration | `pnpm test:schema` + Google Rich Results Test (CI fetch) | ❌ W0 | ⬜ pending |
-| 00-04-01 | 04 | 1 | SEO-08 | T-00-crawl | robots.txt AI-bot Allow rules BEFORE `User-agent: *`; sitemap reference present | unit | `pnpm test:unit -- robots` | ❌ W0 | ⬜ pending |
-| 00-04-02 | 04 | 1 | SEO-07 | — | sitemap.xml auto-generated from route manifest; referenced in robots.txt | integration | `pnpm test:html-audit -- --sitemap` | ❌ W0 | ⬜ pending |
-| 00-04-03 | 04 | 1 | SEO-04, SEO-05 | — | canonical tag + hreflang (`nl`, `x-default`) scaffolding emit in initial HTML | unit | `pnpm test:unit -- canonical` | ❌ W0 | ⬜ pending |
-| 00-05-01 | 05 | 2 | FND-03 (mdsvex collections), SEO-09 (visible dateModified on landing stub) | T-00-stub | 14 reserved stub routes return HTTP 200 with title/meta/canonical/JSON-LD; landing stub emits visible `<time datetime>` populated from build date | integration | `pnpm test:routes` (Playwright) + `pnpm test:html-audit -- --datemod` | ❌ W0 | ⬜ pending |
-| 00-06-01 | 06 | 2 | FND-04, FND-05 | — | design-token CSS variables emit from `static/global.css` and pass typography/spacing token tests | unit | `pnpm test:unit -- tokens` | ❌ W0 | ⬜ pending |
-| 00-07-01 | 07 | 2 | PRF-01 | — | `<EnhancedImage>` primitive renders with width/height + AVIF/WebP variants | unit | `pnpm test:unit -- image` | ❌ W0 | ⬜ pending |
-| 00-08-01 | 08 | 3 | PRF-08 | — | Lighthouse CI budget gate skeleton wired; build fails on LCP > 2.5s / CLS > 0.1 / INP-proxy > 200ms | ci | `.github/workflows/ci.yml` runs `pnpm exec lhci autorun` | ❌ W0 | ⬜ pending |
-| 00-08-02 | 08 | 3 | A11Y-05 | — | pa11y/axe CI gate runs on every preview deploy | ci | `pnpm exec pa11y-ci` | ❌ W0 | ⬜ pending |
-| 00-08-03 | 08 | 3 | FND-07, FND-08, FND-09, FND-10, SEO-11 | T-00-htmlaudit | post-build HTML audit script catches: 0 or >1 `<h1>`, missing/dup meta, invalid canonical, unparseable JSON-LD, schema-dts type error, placeholder grep hit (Plan 06 owns FND-06 font delivery; not double-claimed here) | unit + ci | `pnpm test:html-audit` + `.github/workflows/ci.yml` | ❌ W0 | ⬜ pending |
-| 00-09-01 | 09 | 4 | SEO-10 | T-00-deploy | GitHub repo + main-branch protection + Vercel auto-deploy + Search Console URL-prefix verification initiated (SEO-09 ownership: Plan 05; SEO-11 ownership: Plan 08; Plan 09 verifies CI gates run end-to-end against production) | manual + checklist | see Manual-Only Verifications | n/a | ⬜ pending |
+| 00-03-01 | 03 | 2 | SCH-01, SCH-02 | T-00-jsonld | typed JSON-LD `@graph` emits without `schema-dts` errors; `</script>`-escaped serializer | unit | `pnpm test:unit -- jsonld` | ❌ W0 | ⬜ pending |
+| 00-03-02 | 03 | 2 | SCH-03, SCH-04, SCH-05, SCH-06, SCH-07, SCH-08 | — | Organization/LocalBusiness/Service/Person/BreadcrumbList/WebSite/WebPage/FAQPage shapes valid | unit + integration | `pnpm test:schema` + Google Rich Results Test (CI fetch) | ❌ W0 | ⬜ pending |
+| 00-04-01 | 04 | 3 | SEO-08 | T-00-crawl | robots.txt AI-bot Allow rules BEFORE `User-agent: *`; sitemap reference present | unit | `pnpm test:unit -- robots` | ❌ W0 | ⬜ pending |
+| 00-04-02 | 04 | 3 | SEO-07 | — | sitemap.xml auto-generated from route manifest; referenced in robots.txt | integration | `pnpm test:html-audit -- --sitemap` | ❌ W0 | ⬜ pending |
+| 00-04-03 | 04 | 3 | SEO-04, SEO-05 | — | canonical tag + hreflang (`nl`, `x-default`) scaffolding emit in initial HTML | unit | `pnpm test:unit -- canonical` | ❌ W0 | ⬜ pending |
+| 00-05-01 | 05 | 4 | FND-03 (mdsvex collections), SEO-09 (visible dateModified on landing stub) | T-00-stub | 14 reserved stub routes return HTTP 200 with title/meta/canonical/JSON-LD; landing stub emits visible `<time datetime>` populated from build date | integration | `pnpm test:routes` (Playwright) + `pnpm test:html-audit -- --datemod` | ❌ W0 | ⬜ pending |
+| 00-06-01 | 06 | 3 | FND-04, FND-05 | — | design-token CSS variables emit from `static/global.css` and pass typography/spacing token tests | unit | `pnpm test:unit -- tokens` | ❌ W0 | ⬜ pending |
+| 00-07-01 | 07 | 1 | PRF-01 | — | `<EnhancedImage>` primitive renders with width/height + AVIF/WebP variants | unit | `pnpm test:unit -- image` | ❌ W0 | ⬜ pending |
+| 00-08-01 | 08 | 5 | PRF-08 | — | Lighthouse CI budget gate skeleton wired; build fails on LCP > 2.5s / CLS > 0.1 / INP-proxy > 200ms | ci | `.github/workflows/ci.yml` runs `pnpm exec lhci autorun` | ❌ W0 | ⬜ pending |
+| 00-08-02 | 08 | 5 | A11Y-05 | — | pa11y/axe CI gate runs on every preview deploy | ci | `pnpm exec pa11y-ci` | ❌ W0 | ⬜ pending |
+| 00-08-03 | 08 | 5 | FND-07, FND-08, FND-09, FND-10, SEO-11 | T-00-htmlaudit | post-build HTML audit script catches: 0 or >1 `<h1>`, missing/dup meta, invalid canonical, unparseable JSON-LD, schema-dts type error, placeholder grep hit (Plan 06 owns FND-06 font delivery; not double-claimed here) | unit + ci | `pnpm test:html-audit` + `.github/workflows/ci.yml` | ❌ W0 | ⬜ pending |
+| 00-09-01 | 09 | 6 | SEO-10 | T-00-deploy | GitHub repo + main-branch protection + Vercel auto-deploy + Search Console URL-prefix verification initiated (SEO-09 ownership: Plan 05; SEO-11 ownership: Plan 08; Plan 09 verifies CI gates run end-to-end against production) | manual + checklist | see Manual-Only Verifications | n/a | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
@@ -83,20 +83,20 @@ created: 2026-06-15
 
 | Behavior | Requirement | Why Manual | Test Instructions |
 |----------|-------------|------------|-------------------|
-| GitHub repo `trinity-breath-healing` (private) exists with main-branch protection | SEO-09 | One-time admin action against GitHub API/UI; no automated equivalent inside repo CI | (1) `gh repo view trinity-breath-healing --json visibility,defaultBranchRef` returns `private` + `main`. (2) Settings → Branches → `main` requires PR + 1 review + status checks. |
-| Vercel project connected, auto-deploys `main` to `trinity-breath-healing.vercel.app`, preview URL per PR | SEO-10 | Cross-vendor binding (GitHub ↔ Vercel) requires dashboard auth | (1) Push branch, open PR, observe preview URL in PR check. (2) Merge to main, observe production deploy at `trinity-breath-healing.vercel.app`. |
-| Search Console URL-prefix verification (HTML-file method) initiated against Vercel-default URL | SEO-11 | Requires Google Account access for the practice; cannot be automated by CI | (1) Search Console → Add property → URL prefix → `https://trinity-breath-healing.vercel.app/`. (2) Download HTML verification file, drop into `static/`, commit, deploy. (3) Click Verify in Search Console UI. (4) Confirm "Ownership verified" green check. |
+| GitHub repo `trinity-breath-healing` (private) exists with main-branch protection | FND-09 | One-time admin action against GitHub API/UI; no automated equivalent inside repo CI | (1) `gh repo view trinity-breath-healing --json visibility,defaultBranchRef` returns `private` + `main`. (2) Settings → Branches → `main` requires PR + 1 review + status checks. |
+| Vercel project connected, auto-deploys `main` to `trinity-breath-healing.vercel.app`, preview URL per PR | FND-09 | Cross-vendor binding (GitHub ↔ Vercel) requires dashboard auth | (1) Push branch, open PR, observe preview URL in PR check. (2) Merge to main, observe production deploy at `trinity-breath-healing.vercel.app`. |
+| Search Console URL-prefix verification (HTML-file method) initiated against Vercel-default URL | SEO-10 | Requires Google Account access for the practice; cannot be automated by CI | (1) Search Console → Add property → URL prefix → `https://trinity-breath-healing.vercel.app/`. (2) Download HTML verification file, drop into `static/`, commit, deploy. (3) Click Verify in Search Console UI. (4) Confirm "Ownership verified" green check. |
 | `curl -A "OAI-SearchBot" https://trinity-breath-healing.vercel.app/` initial-HTML contains required tags | Phase 0 success criterion #1 | Requires live preview URL; CI script runs the curl + assertions but the final smoke is against the actual Vercel deployment | After preview deploy, run `pnpm test:html-audit -- --url https://<preview>.vercel.app --ua OAI-SearchBot` and inspect output. |
 
 ---
 
 ## Validation Sign-Off
 
-- [ ] All tasks have `<automated>` verify or Wave 0 dependencies
-- [ ] Sampling continuity: no 3 consecutive tasks without automated verify
-- [ ] Wave 0 covers all MISSING references
-- [ ] No watch-mode flags
-- [ ] Feedback latency < 360s
-- [ ] `nyquist_compliant: true` set in frontmatter
+- [x] All tasks have `<automated>` verify or Wave 0 dependencies
+- [x] Sampling continuity: no 3 consecutive tasks without automated verify
+- [x] Wave 0 covers all MISSING references
+- [x] No watch-mode flags
+- [x] Feedback latency < 360s
+- [x] `nyquist_compliant: true` set in frontmatter
 
 **Approval:** pending
