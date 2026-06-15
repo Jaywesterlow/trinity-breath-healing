@@ -40,20 +40,20 @@ created: 2026-06-15
 |---------|------|------|-------------|------------|-----------------|-----------|-------------------|-------------|--------|
 | 00-01-01 | 01 | 0 | FND-01 | — | n/a (infra) | shell | `pnpm install && pnpm check` | ❌ W0 | ⬜ pending |
 | 00-01-02 | 01 | 0 | FND-02 | — | n/a | shell | `test -f svelte.config.js && grep -q '@sveltejs/adapter-vercel' svelte.config.js` | ❌ W0 | ⬜ pending |
-| 00-02-01 | 02 | 1 | SEO-01, SEO-02 | T-00-meta | per-route `<title>`, meta, canonical in initial HTML | integration | `pnpm test:html-audit` (curl preview + parse) | ❌ W0 | ⬜ pending |
-| 00-02-02 | 02 | 1 | SEO-03 | — | exactly one `<h1>` per route | integration | `pnpm test:html-audit` | ❌ W0 | ⬜ pending |
-| 00-03-01 | 03 | 1 | SCH-01, SCH-02 | T-00-jsonld | typed JSON-LD `@graph` emits without `schema-dts` errors | unit | `pnpm test:unit -- jsonld` | ❌ W0 | ⬜ pending |
-| 00-03-02 | 03 | 1 | SCH-03..08 | — | Organization/LocalBusiness/Service/Person/BreadcrumbList/WebSite/WebPage shapes valid | unit + integration | `pnpm test:schema` + Google Rich Results Test (CI fetch) | ❌ W0 | ⬜ pending |
-| 00-04-01 | 04 | 1 | SEO-04 | T-00-crawl | robots.txt AI-bot Allow rules BEFORE `User-agent: *` | unit | `pnpm test:unit -- robots` | ❌ W0 | ⬜ pending |
-| 00-04-02 | 04 | 1 | SEO-05, SEO-06 | — | sitemap.xml auto-generated from routes; referenced in robots.txt | integration | `pnpm test:html-audit -- --sitemap` | ❌ W0 | ⬜ pending |
-| 00-04-03 | 04 | 1 | SEO-07, SEO-08 | — | canonical + hreflang scaffolding emit in initial HTML | unit | `pnpm test:unit -- canonical` | ❌ W0 | ⬜ pending |
-| 00-05-01 | 05 | 2 | FND-03 | T-00-stub | 14 reserved stub routes return HTTP 200 with title/meta/canonical/JSON-LD | integration | `pnpm test:routes` (Playwright) | ❌ W0 | ⬜ pending |
+| 00-02-01 | 02 | 1 | SEO-01, SEO-02 | T-00-meta | per-route `<title>` (50–60 char) and `<meta name=description>` (150–160 char) in initial HTML | integration | `pnpm test:html-audit` (curl preview + parse) | ❌ W0 | ⬜ pending |
+| 00-02-02 | 02 | 1 | SEO-03, SEO-06 | T-00-meta | semantic HTML5 landmarks (`<main>`, `<nav>`, `<article>`, `<footer>`); OG + Twitter Card meta on every page | integration | `pnpm test:html-audit` | ❌ W0 | ⬜ pending |
+| 00-03-01 | 03 | 1 | SCH-01, SCH-02 | T-00-jsonld | typed JSON-LD `@graph` emits without `schema-dts` errors; `</script>`-escaped serializer | unit | `pnpm test:unit -- jsonld` | ❌ W0 | ⬜ pending |
+| 00-03-02 | 03 | 1 | SCH-03, SCH-04, SCH-05, SCH-06, SCH-07, SCH-08 | — | Organization/LocalBusiness/Service/Person/BreadcrumbList/WebSite/WebPage/FAQPage shapes valid | unit + integration | `pnpm test:schema` + Google Rich Results Test (CI fetch) | ❌ W0 | ⬜ pending |
+| 00-04-01 | 04 | 1 | SEO-08 | T-00-crawl | robots.txt AI-bot Allow rules BEFORE `User-agent: *`; sitemap reference present | unit | `pnpm test:unit -- robots` | ❌ W0 | ⬜ pending |
+| 00-04-02 | 04 | 1 | SEO-07 | — | sitemap.xml auto-generated from route manifest; referenced in robots.txt | integration | `pnpm test:html-audit -- --sitemap` | ❌ W0 | ⬜ pending |
+| 00-04-03 | 04 | 1 | SEO-04, SEO-05 | — | canonical tag + hreflang (`nl`, `x-default`) scaffolding emit in initial HTML | unit | `pnpm test:unit -- canonical` | ❌ W0 | ⬜ pending |
+| 00-05-01 | 05 | 2 | FND-03 (mdsvex collections), SEO-09 (visible dateModified on landing stub) | T-00-stub | 14 reserved stub routes return HTTP 200 with title/meta/canonical/JSON-LD; landing stub emits visible `<time datetime>` populated from build date | integration | `pnpm test:routes` (Playwright) + `pnpm test:html-audit -- --datemod` | ❌ W0 | ⬜ pending |
 | 00-06-01 | 06 | 2 | FND-04, FND-05 | — | design-token CSS variables emit from `static/global.css` and pass typography/spacing token tests | unit | `pnpm test:unit -- tokens` | ❌ W0 | ⬜ pending |
 | 00-07-01 | 07 | 2 | PRF-01 | — | `<EnhancedImage>` primitive renders with width/height + AVIF/WebP variants | unit | `pnpm test:unit -- image` | ❌ W0 | ⬜ pending |
 | 00-08-01 | 08 | 3 | PRF-08 | — | Lighthouse CI budget gate skeleton wired; build fails on LCP > 2.5s / CLS > 0.1 / INP-proxy > 200ms | ci | `.github/workflows/ci.yml` runs `pnpm exec lhci autorun` | ❌ W0 | ⬜ pending |
 | 00-08-02 | 08 | 3 | A11Y-05 | — | pa11y/axe CI gate runs on every preview deploy | ci | `pnpm exec pa11y-ci` | ❌ W0 | ⬜ pending |
-| 00-08-03 | 08 | 3 | FND-06..10 | T-00-htmlaudit | post-build HTML audit script catches: 0 or >1 `<h1>`, missing/dup meta, invalid canonical, unparseable JSON-LD, schema-dts type error, placeholder grep hit | unit + ci | `pnpm test:html-audit` + `.github/workflows/ci.yml` | ❌ W0 | ⬜ pending |
-| 00-09-01 | 09 | 3 | SEO-09, SEO-10, SEO-11 | T-00-deploy | GitHub repo + main-branch protection + Vercel auto-deploy + Search Console URL-prefix verification initiated | manual + checklist | see Manual-Only Verifications | n/a | ⬜ pending |
+| 00-08-03 | 08 | 3 | FND-07, FND-08, FND-09, FND-10, SEO-11 | T-00-htmlaudit | post-build HTML audit script catches: 0 or >1 `<h1>`, missing/dup meta, invalid canonical, unparseable JSON-LD, schema-dts type error, placeholder grep hit (Plan 06 owns FND-06 font delivery; not double-claimed here) | unit + ci | `pnpm test:html-audit` + `.github/workflows/ci.yml` | ❌ W0 | ⬜ pending |
+| 00-09-01 | 09 | 4 | SEO-10 | T-00-deploy | GitHub repo + main-branch protection + Vercel auto-deploy + Search Console URL-prefix verification initiated (SEO-09 ownership: Plan 05; SEO-11 ownership: Plan 08; Plan 09 verifies CI gates run end-to-end against production) | manual + checklist | see Manual-Only Verifications | n/a | ⬜ pending |
 
 *Status: ⬜ pending · ✅ green · ❌ red · ⚠️ flaky*
 
