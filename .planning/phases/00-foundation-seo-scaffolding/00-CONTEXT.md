@@ -128,13 +128,21 @@ All routes return HTTP 200 from Phase 0 with stub pages (zero-301 v2 migration g
 ### Design tokens
 
 - **Source of truth: deferred.** User will provide design tokens "when we get to that point."
-- Phase 0 ships with **placeholder design tokens** in `src/styles/tokens.css` (CSS variables for color, spacing, radius, type, motion) marked with `/* TODO: replace with Figma values */`. Estimated palette from Figma frames as starter values:
+- Phase 0 ships with **placeholder design tokens** in `static/global.css` (CSS variables on `:root` for color, spacing, radius, type, motion) marked with `/* TODO: replace with Figma values */`. Estimated palette from Figma frames as starter values:
   - `--color-bg-sand: #F2EBDD` (approx warm cream from frames)
   - `--color-fg-forest: #3A4530` (approx dark forest green from cards)
   - `--color-accent-gold: #D4A968` (approx gold from CTA + logo)
   - `--color-card-warm: #E8DEC8` (approx)
 - These are PLACEHOLDERS — visual fidelity comes in a later phase when user provides exact tokens (likely Figma Dev Mode export or manual transcription).
-- CI grep `grep -rE "TODO" src/styles/` flags these as still-pending pre-launch.
+- CI grep `grep -rE "TODO" static/global.css` flags these as still-pending pre-launch.
+
+### Styling architecture rules (locked 2026-06-15)
+
+- **`static/global.css` ONLY for:** CSS variables on `:root` (design tokens), CSS reset (e.g., a minimal `*, *::before, *::after { box-sizing: border-box; }` set + `body` defaults), typography baseline (heading font-families and base sizes), and any TRULY global utility classes (e.g., `.visually-hidden` for a11y).
+- **EVERY component file** owns its own styles in a `<style>` block at the bottom of the `.svelte` file. Svelte scopes them automatically.
+- **NO** shared CSS files beyond `global.css`. NO `src/styles/` directory. NO `@import` chains. NO CSS-in-JS, NO PostCSS preprocessing beyond what Vite does by default.
+- Reused values = CSS variables in `global.css`. Reused PATTERNS = Svelte components (composition over CSS reuse).
+- Mobile-first: components write base styles first, then `@media (min-width: …)` for desktop overrides.
 
 ### Stack confirmations (carry forward from research; framework SWAPPED 2026-06-15)
 
@@ -142,7 +150,7 @@ All routes return HTTP 200 from Phase 0 with stub pages (zero-301 v2 migration g
 - **Adapter:** `@sveltejs/adapter-vercel` (region `fra1`)
 - **Rendering posture:** SSG by default via `export const prerender = true` in `+layout.ts` (applies to all child routes) or per-route opt-out for the dynamic `/api/contact` endpoint
 - **Routing:** filesystem-based, SvelteKit `src/routes/`
-- **Styling:** Tailwind v4 build-time atomic CSS (works with Svelte 5 / Vite)
+- **Styling: PLAIN CSS ONLY** — NO Tailwind, NO CSS preprocessors, NO CSS-in-JS, NO SCSS/SASS, NO CSS modules library. Architecture: single `static/global.css` for design tokens (CSS variables), reset, typography baseline, and any global utility classes; every other style lives inside its respective `.svelte` component in a scoped `<style>` block. Locked by user 2026-06-15.
 - **Content/MDX:** `mdsvex` (Svelte-native MDX preprocessor) — `.svx` files in `src/content/` consumed via Vite glob imports; Zod for type-safety on frontmatter
 - **Schema-typed JSON-LD:** `schema-dts` (framework-agnostic types)
 - **Head/meta:** `<svelte:head>` inside a reusable `<Head>` component + `<PageTitle>` component for one-H1 discipline

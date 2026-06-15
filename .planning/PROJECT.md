@@ -55,6 +55,8 @@ Marketing website for **Trinity Breath & Healing** — a Holland-based breathwor
 - Native mobile apps
 - Aggregate review schema — N/A given no-reviews decision
 - Custom domain registration in v1 — host on `*.vercel.app` until launch commitment
+- ~~Tailwind CSS (any version)~~, CSS-in-JS, SCSS/SASS, PostCSS plugins beyond Vite defaults — user direction 2026-06-15: plain CSS only
+- Shared CSS files beyond `static/global.css` — all other styles live inside Svelte component `<style>` blocks (Svelte scopes them automatically)
 
 ## Context
 
@@ -103,6 +105,7 @@ Marketing website for **Trinity Breath & Healing** — a Holland-based breathwor
 | **MDX: `mdsvex`** (Svelte-native MDX preprocessor) | Required because SvelteKit has no Astro-equivalent Content Collections; `.svx` files + Vite glob imports | — Pending |
 | **Images: `@sveltejs/enhanced-img`** | Vite plugin; AVIF/WebP at build time; explicit dimensions → CLS=0 | — Pending |
 | **Sitemap: hand-rolled `+server.ts` endpoint** | No plug-and-play sitemap lib for SvelteKit equivalent to Astro's | — Pending |
+| **Styling: PLAIN CSS ONLY** — single `static/global.css` for tokens/reset/typography + Svelte component scoped `<style>` blocks for everything else | User explicit choice 2026-06-15; NO Tailwind, NO CSS-in-JS, NO preprocessors, NO shared CSS files beyond `global.css`. Reused values become CSS variables; reused patterns become Svelte components. | — Pending |
 | **Booking: Cal.com inline embed INSIDE contact-section toggle** (NOT separate `/boeken` page) | Matches Figma Frame 5 design; eliminates `/boeken` route | — Pending |
 | **Schema: `ProfessionalService` + per-modality `Service` + `Person`** (NOT `LocalBusiness` with storefront) | Practice is mobile + remote + part-time at 3rd-party — no customer storefront | — Pending |
 | **No testimonials, no `/reviews` route** | User direction (overrides earlier roadmap) | — Pending |

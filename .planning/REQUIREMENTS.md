@@ -11,7 +11,7 @@ Categories derived from research + Figma frames + Phase 0 context.
 ### Foundation (FND)
 
 - [ ] **FND-01**: SvelteKit + Svelte 5 (runes) + TS strict scaffolded with `@sveltejs/adapter-vercel` (region `fra1`); SSG via `export const prerender = true` in root `+layout.ts`
-- [ ] **FND-02**: Tailwind v4 build-time atomic CSS configured (no runtime CSS-in-JS); CSS variables for tokens in `src/app.css`
+- [ ] **FND-02**: Plain CSS architecture — single `static/global.css` for CSS variables (design tokens), CSS reset, typography baseline, truly-global utility classes; every other style lives inside its respective `.svelte` component file in a `<style>` block (Svelte scopes automatically). NO Tailwind, NO CSS-in-JS, NO SCSS/SASS, NO shared CSS files beyond `global.css`.
 - [ ] **FND-03**: `mdsvex` configured for `.svx` files in `src/content/`; Vite glob imports for collection-style access; Zod schemas for type-safe frontmatter
 - [ ] **FND-04**: Design tokens placeholder set (CSS variables for color, spacing, radius, type, motion) marked `/* TODO */`; real values from Figma provided in a later phase
 - [ ] **FND-05**: Mobile-first reset + responsive grid system
@@ -196,6 +196,10 @@ Explicit exclusions to prevent scope creep.
 | Mock booking timezone | Real `Europe/Amsterdam` only; DST tests required |
 | Custom domain registration in v1 | User direction: not using domain yet; ship on `*.vercel.app` |
 | `LocalBusiness` schema with public storefront address | Practice is mobile + remote + part-time; no customer storefront |
+| Tailwind CSS (any version) | User direction 2026-06-15: plain CSS only |
+| CSS-in-JS, SCSS/SASS, PostCSS preprocessing beyond Vite defaults | User direction 2026-06-15: plain CSS only |
+| Shared CSS files beyond `static/global.css` | User direction 2026-06-15: per-component CSS lives inside the component `<style>` block |
+| `src/styles/` directory | User direction 2026-06-15: single `static/global.css` + per-component styles |
 
 ## Traceability
 

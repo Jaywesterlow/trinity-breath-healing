@@ -205,7 +205,7 @@ Phase 2 + Phase 3 can run in parallel; Phase 2 privacy-policy merges only after 
 
 Carried over from `research/SUMMARY.md`, updated for stack swap:
 
-- **Phase 0 (light)**: confirm SvelteKit + Svelte 5 (runes stable) + Tailwind v4 + `@sveltejs/adapter-vercel` + `mdsvex` + `@sveltejs/enhanced-img` patch versions at `npm install`.
+- **Phase 0 (light)**: confirm SvelteKit + Svelte 5 (runes stable) + `@sveltejs/adapter-vercel` + `mdsvex` + `@sveltejs/enhanced-img` patch versions at `npm install`. No Tailwind — plain CSS only.
 - **Phase 3 (medium)**: confirm Cal.com Cloud EU plan + `nl` locale + Google Meet auto-create, Resend `eu-west-1` posture, Plausible EU pricing, Vercel free-tier function limits at contract time.
 - **Phase 4 (strong)**: Dutch counsel review of Wet BIG protected-title scope for non-BIG practitioners, Reclame Code Stichting current guidance, AVG/ePrivacy 2026 interpretation of cookieless-no-banner. Counsel sign-off is non-negotiable for launch.
 
