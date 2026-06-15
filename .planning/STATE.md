@@ -15,11 +15,11 @@
 
 **Phase:** 0 — Foundation & SEO Scaffolding
 **Plan:** Not started
-**Status:** Roadmap approved; awaiting `/gsd:plan-phase 0` to decompose into executable plans.
+**Status:** Phase 0 CONTEXT + DISCUSSION-LOG + RESEARCH complete (uncommitted). Stack pivoted to SvelteKit/Svelte 5 + Vercel + plain CSS. Awaiting `/gsd:plan-phase 0` to decompose into executable plans.
 **Progress:** Phases 0/6 complete · Plans 0/? complete
 
 ```
-[░░░░░░░░░░] 0% — Phase 0 not yet planned
+[█░░░░░░░░░] ~10% — Phase 0 researched, plans not yet generated
 ```
 
 ## Performance Metrics
@@ -42,14 +42,14 @@
 
 | Decision | Rationale | Source |
 |----------|-----------|--------|
-| Astro 5 + TS strict + `@astrojs/cloudflare` adapter | Default zero-JS HTML output = cleanest possible initial HTML for AI crawlers; SSG default + content collections + native i18n; best LCP for a content-heavy marketing site | research/STACK.md |
-| Cloudflare Pages hosting (AMS POP) | EU posture, no cold start on Workers form/booking endpoints, free at this scale | research/STACK.md |
-| Cal.com inline embed on `/boeken` only, `client:visible` below the fold | Open source, native Google Meet auto-create, Dutch locale, EU posture; zero impact on landing LCP | research/STACK.md + research/PITFALLS.md #8 |
-| Resend EU (`eu-west-1`) + React Email | EU data residency, Worker-compatible, best DX | research/STACK.md |
+| **SvelteKit + Svelte 5 + TS strict** (pivot from Astro 5, commit `4532a2a`) | Vercel-native stack, SSR/SSG-capable, signals/runes for fine-grained reactivity, smaller runtime than React | PROJECT.md + commit 4532a2a |
+| **Vercel hosting** (pivot from Cloudflare Pages, commit `8cbadb3`) | EU regions, native SvelteKit adapter, Figma overrides workflow, integrated preview deploys | PROJECT.md + commit 8cbadb3 |
+| **Plain CSS** — single `static/global.css` + Svelte scoped styles (pivot from Tailwind v4, commit `a7f96e1`) | Zero build-tool churn, Svelte scoped CSS sufficient, design-token system via CSS variables | PROJECT.md + commit a7f96e1 |
+| Cal.com inline embed on `/boeken` only, lazy-mounted below the fold | Open source, native Google Meet auto-create, Dutch locale, EU posture; zero impact on landing LCP | research/STACK.md + research/PITFALLS.md #8 |
+| Resend EU (`eu-west-1`) + React Email | EU data residency, Worker/server-route compatible, best DX | research/STACK.md |
 | Plausible Cloud (EU) cookieless, no banner | EU-hosted, ~1 KB, no CLS/INP hit from consent banner | research/STACK.md |
 | `schema-dts` + hand-rolled `<JsonLd>` emitter | TS-typed schema.org → typos become compile errors | research/STACK.md |
-| Astro Content Collections (git-MDX + Zod) v1 | Zero runtime cost, zero CMS bill, full SSG; Sanity EU upgrade path for v2 | research/STACK.md |
-| Tailwind v4 build-time atomic CSS | Zero runtime JS, small bundle, build-time tokens | research/STACK.md |
+| Markdown content via SvelteKit content collections / mdsvex (replaces Astro Content Collections) | Zero runtime cost, full SSG; Sanity EU upgrade path for v2 | PROJECT.md |
 | Reserved 200-response stub URLs `/over-ons`, `/contact`, `/boeken` from Phase 0 | Zero-301 v2 migration guarantee | research/ARCHITECTURE.md §2.2 |
 | Phase 0 lock-in BEFORE any visible section | Prevents 9 of 20 pitfalls (CSR, robots, meta, hero lazy, canonical, sitemap mismatch, hreflang, granularity bias) | research/PITFALLS.md #20 |
 | Skip `llms.txt` / `llms-full.txt` | No proven retrieval effect with any major AI crawler (2026 verified) | PROJECT.md + research/PITFALLS.md anti-cargo-cult |
@@ -77,9 +77,14 @@ None currently. Phase 0 can begin once the open questions above are answered or 
 
 ## Session Continuity
 
-**Last action:** Roadmap created (2026-06-14). 70/70 v1 requirements mapped to 6 phases (0–5). REQUIREMENTS.md traceability updated.
+**Last action:** Session resumed 2026-06-15 after 5-hour limit interrupt. Prior session pivoted stack to SvelteKit/Svelte 5 + Vercel + plain CSS (commits 8cbadb3, 4532a2a, a7f96e1) and generated Phase 0 RESEARCH.md (uncommitted, 128 KB). No HANDOFF.json or `.continue-here` — clean resume point.
 
-**Next action:** `/gsd:plan-phase 0` — decompose Phase 0 into executable plans.
+**Next action:** `/gsd:plan-phase 0` — decompose Phase 0 into executable plans using updated stack + 00-RESEARCH.md.
+
+**Outstanding uncommitted artifacts:**
+- `.planning/phases/00-foundation-seo-scaffolding/00-RESEARCH.md` (Phase 0 research output)
+- `Figma/` (design assets)
+- `seo-aeo-samenvatting-checklist.md` (authoritative Dutch SEO/AEO playbook)
 
 **Files of record:**
 - `.planning/PROJECT.md` — scope, audience, constraints, key decisions
@@ -94,4 +99,4 @@ None currently. Phase 0 can begin once the open questions above are answered or 
 - `seo-aeo-samenvatting-checklist.md` (project root) — Dutch SEO/AEO playbook, authoritative reference
 
 ---
-*Last updated: 2026-06-14 after roadmap creation*
+*Last updated: 2026-06-15 — session resumed after 5h limit, STATE reconciled with stack pivot commits + Phase 0 RESEARCH completion*
