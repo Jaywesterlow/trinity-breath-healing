@@ -21,7 +21,7 @@ Marketing website for **Trinity Breath & Healing** — a Holland-based breathwor
 - [ ] Inline contact email form (server-side delivery to practitioner) — Vercel Function → Resend EU
 - [ ] Inline 30-min Google Meet **intake booking** via Cal.com embed inside the contact-section toggle (NOT a separate `/boeken` page)
 - [ ] Footer mailto link + phone (tel:) + KvK placeholder + BIG-status placeholder slots
-- [ ] SSG-rendered HTML on Vercel — content + meta + JSON-LD present in initial HTML, not JS-injected
+- [ ] SSG-rendered HTML on Vercel (SvelteKit `prerender = true`) — content + meta + JSON-LD present in initial HTML, not JS-injected
 - [ ] Per-page unique `<title>` (50–60 chars) and meta description (150–160 chars) in initial HTML
 - [ ] One unique `<H1>` per page; logical H2/H3 hierarchy
 - [ ] Semantic HTML5 landmarks (`<main>`, `<nav>`, `<article>`, `<section>`, `<footer>`)
@@ -30,7 +30,7 @@ Marketing website for **Trinity Breath & Healing** — a Holland-based breathwor
 - [ ] XML sitemap auto-generated; canonical tag on every page; hreflang nl + x-default infrastructure
 - [ ] Core Web Vitals targets: LCP < 2.5s · INP < 200ms · CLS < 0.1
 - [ ] Open Graph + Twitter Card meta for social sharing
-- [ ] Image optimization: AVIF/WebP, alt-text, explicit width/height, hero illustration eager + preloaded, rest lazy
+- [ ] Image optimization via `@sveltejs/enhanced-img`: AVIF/WebP, alt-text, explicit width/height, hero illustration eager + preloaded, rest lazy
 - [ ] Inline FAQ section ADDED below the contact section on landing (8–12 Q&A, answer-first, 50–150 word answers) — overrides Figma which omits it
 - [ ] Citeable content blocks already in design (stats 8+ / 65+ / ∞) + at least 1 stat + 1 attributed quote + 1 outbound citation per KDD 2024 GEO
 - [ ] Practitioner E-E-A-T signals: practitioner age (53) + "vanuit eigen ervaring" framing + credentials placeholder
@@ -74,7 +74,7 @@ Marketing website for **Trinity Breath & Healing** — a Holland-based breathwor
 ## Constraints
 
 - **Discoverability:** SEO + AEO are primary success metrics — overrides aesthetic preferences in conflict.
-- **Tech rendering:** SSG only — Astro 5 on Vercel. Content + meta + JSON-LD in initial HTML.
+- **Tech rendering:** SSG only — SvelteKit + Svelte 5 (runes) on Vercel, `prerender = true` per route. Content + meta + JSON-LD in initial HTML.
 - **Build approach:** Mobile-first markup + structure first, then CSS layered to match Figma desktop. Not the reverse.
 - **Hosting:** Vercel (`fra1` region for Frankfurt EU residency on serverless functions). NOT Cloudflare Pages. NOT Netlify.
 - **CI:** GitHub Actions for tests + Lighthouse CI + pa11y/axe + JSON-LD validation. Vercel handles deploy via GitHub integration.
@@ -95,11 +95,14 @@ Marketing website for **Trinity Breath & Healing** — a Holland-based breathwor
 | Skip `llms.txt` despite hype | No proven retrieval effect per reference doc (2026 verified) | — Pending |
 | Use proven SEO/AEO techniques only | User constraint | — Pending |
 | Infer missing mobile frames from desktop | User direction (Frame 2 accordion, Frame 4 inactive state) | — Pending |
-| **Framework: Astro 5 + TypeScript strict** | SSG-by-default = cleanest initial HTML for AI crawlers; lowest LCP | — Pending |
+| **Framework: SvelteKit + Svelte 5 (runes)** + TypeScript strict | User explicit choice 2026-06-15; SSG via `prerender = true`; project-local `svelte-project` skill aligns | — Pending |
 | **Hosting: Vercel (`fra1`)** | User explicit choice; GitHub-native; EU region for serverless functions | — Pending |
 | **CI: GitHub Actions** | User uses GitHub; portability + transparency over Vercel built-in CI | — Pending |
 | **Repository: `trinity-breath-healing` private on GitHub** | User explicit choice | — Pending |
-| **Adapter: `@astrojs/vercel`** (NOT `@astrojs/cloudflare`) | Follows hosting decision | — Pending |
+| **Adapter: `@sveltejs/adapter-vercel`** (NOT Astro adapter, NOT Cloudflare) | Follows framework + hosting decisions | — Pending |
+| **MDX: `mdsvex`** (Svelte-native MDX preprocessor) | Required because SvelteKit has no Astro-equivalent Content Collections; `.svx` files + Vite glob imports | — Pending |
+| **Images: `@sveltejs/enhanced-img`** | Vite plugin; AVIF/WebP at build time; explicit dimensions → CLS=0 | — Pending |
+| **Sitemap: hand-rolled `+server.ts` endpoint** | No plug-and-play sitemap lib for SvelteKit equivalent to Astro's | — Pending |
 | **Booking: Cal.com inline embed INSIDE contact-section toggle** (NOT separate `/boeken` page) | Matches Figma Frame 5 design; eliminates `/boeken` route | — Pending |
 | **Schema: `ProfessionalService` + per-modality `Service` + `Person`** (NOT `LocalBusiness` with storefront) | Practice is mobile + remote + part-time at 3rd-party — no customer storefront | — Pending |
 | **No testimonials, no `/reviews` route** | User direction (overrides earlier roadmap) | — Pending |

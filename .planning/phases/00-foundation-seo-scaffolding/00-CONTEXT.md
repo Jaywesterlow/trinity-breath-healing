@@ -7,7 +7,7 @@
 
 ## Domain
 
-A deployable Astro 5 scaffold whose default output for any route is content + meta + JSON-LD in initial HTML. Primitives, robots.txt, sitemap, shared schema, design tokens, reserved stub URLs, and CI gates ship BEFORE any visible landing section is built. After this phase, Phase 1 (per-section landing build) can begin without re-deriving anything.
+A deployable SvelteKit + Svelte 5 scaffold whose default output for any route is content + meta + JSON-LD in initial HTML. Primitives, robots.txt, sitemap, shared schema, design tokens, reserved stub URLs, and CI gates ship BEFORE any visible landing section is built. After this phase, Phase 1 (per-section landing build) can begin without re-deriving anything.
 
 Requirements are locked by `.planning/REQUIREMENTS.md` (Phase 0 scope: FND-01..08, SEO-01..11, SCH-01..08, PRF-01, PRF-08, A11Y-05). Discussion below captures HOW.
 
@@ -17,7 +17,7 @@ Requirements are locked by `.planning/REQUIREMENTS.md` (Phase 0 scope: FND-01..0
 - `.planning/REQUIREMENTS.md` — 84 v1 reqs; Phase 0 scope listed in traceability
 - `.planning/ROADMAP.md` — 6 phases; this is Phase 0
 - `.planning/research/SUMMARY.md` — research synthesis (note: stack reshapes per Vercel decision below)
-- `.planning/research/STACK.md` — original Cloudflare-Pages picks; superseded for hosting only
+- `.planning/research/STACK.md` — original picks; HOSTING superseded to Vercel + FRAMEWORK superseded to SvelteKit/Svelte 5 (2026-06-15)
 - `.planning/research/ARCHITECTURE.md` — hub-spoke topical model, SEO-invariant primitives, build order
 - `.planning/research/PITFALLS.md` — 20 pitfalls; Phase 0 lock-in prevents 9 of them
 - `seo-aeo-samenvatting-checklist.md` — authoritative Dutch SEO/AEO playbook (Princeton/KDD 2024 GEO, HubSpot 2025, 2026 crawler refs)
@@ -32,7 +32,7 @@ No ADRs in this project yet — decisions captured here become source of truth u
 
 - **Hosting platform: Vercel** (NOT Cloudflare Pages). Decided 2026-06-15.
   - **Why:** user uses GitHub, prefers GitHub Actions CI, wants frictionless integration. Vercel auto-deploys from GitHub on push, auto-generates preview URLs per branch/PR, handles serverless functions in EU region.
-  - **Astro adapter:** `@astrojs/vercel` (replaces `@astrojs/cloudflare` in STACK.md).
+  - **Astro adapter:** `@sveltejs/adapter-vercel` (replaces `@astrojs/cloudflare` in STACK.md).
   - **Region:** `fra1` (Frankfurt) for Vercel Functions — EU data residency.
   - **Production URL (interim):** `trinity-breath-healing.vercel.app` (no custom domain yet).
   - **Preview URLs:** Vercel auto-generates `*-trinity-breath-healing-<branch>.vercel.app` per PR.
@@ -136,19 +136,26 @@ All routes return HTTP 200 from Phase 0 with stub pages (zero-301 v2 migration g
 - These are PLACEHOLDERS — visual fidelity comes in a later phase when user provides exact tokens (likely Figma Dev Mode export or manual transcription).
 - CI grep `grep -rE "TODO" src/styles/` flags these as still-pending pre-launch.
 
-### Stack confirmations (carry forward from research)
+### Stack confirmations (carry forward from research; framework SWAPPED 2026-06-15)
 
-- **Framework:** Astro 5 with TypeScript strict
-- **Adapter:** `@astrojs/vercel` (SWAPPED from `@astrojs/cloudflare`)
-- **Styling:** Tailwind v4 build-time atomic CSS
-- **Content:** Astro Content Collections + MDX + Zod schemas
-- **Schema-typed JSON-LD:** `schema-dts`
-- **Images:** Astro `<Image>` + Sharp at build time (AVIF/WebP, explicit width/height → CLS=0)
-- **Fonts:** self-hosted woff2, `font-display: swap`, metric-matched fallback
+- **Framework: SvelteKit + Svelte 5 (runes mode)** with TypeScript strict — SWAPPED from SvelteKit + Svelte 5 per user direction 2026-06-15
+- **Adapter:** `@sveltejs/adapter-vercel` (region `fra1`)
+- **Rendering posture:** SSG by default via `export const prerender = true` in `+layout.ts` (applies to all child routes) or per-route opt-out for the dynamic `/api/contact` endpoint
+- **Routing:** filesystem-based, SvelteKit `src/routes/`
+- **Styling:** Tailwind v4 build-time atomic CSS (works with Svelte 5 / Vite)
+- **Content/MDX:** `mdsvex` (Svelte-native MDX preprocessor) — `.svx` files in `src/content/` consumed via Vite glob imports; Zod for type-safety on frontmatter
+- **Schema-typed JSON-LD:** `schema-dts` (framework-agnostic types)
+- **Head/meta:** `<svelte:head>` inside a reusable `<Head>` component + `<PageTitle>` component for one-H1 discipline
+- **Images:** `@sveltejs/enhanced-img` (Vite plugin) — AVIF/WebP at build time, explicit width/height → CLS=0
+- **Sitemap:** hand-rolled `src/routes/sitemap.xml/+server.ts` (no plug-and-play sitemap lib for SvelteKit equivalent to Astro's)
+- **robots.txt:** static file at `static/robots.txt`
+- **Forms / serverless:** SvelteKit `+server.ts` POST endpoints (deployed as Vercel Functions automatically)
+- **Fonts:** self-hosted woff2 in `static/fonts/`, `font-display: swap`, metric-matched fallback
 - **Analytics:** Plausible Cloud EU (cookieless, no banner)
 - **Transactional email:** Resend `eu-west-1` (deferred to Phase 3 — not in Phase 0 scope)
 - **Booking:** Cal.com inline embed (deferred to Phase 3 — not in Phase 0 scope)
 - **Booking placement:** INSIDE landing contact section toggle (NOT separate /boeken page)
+- **Scaffolding:** consider invoking the project-local `svelte-project` skill (and `plain-css-system` for the token system) to bootstrap a SvelteKit project with strict TypeScript, plain CSS variables for tokens, and the user's preferred conventions.
 
 ## Code Context
 
@@ -193,7 +200,7 @@ All non-blocking-Phase-0 unknowns live in `.planning/phases/00-foundation-seo-sc
 
 ## Success Criteria (carried from ROADMAP.md, restated)
 
-1. `astro build` produces a clean Vercel deploy and `curl -A "OAI-SearchBot" https://trinity-breath-healing.vercel.app/` returns initial HTML containing exactly one `<h1>`, a 50–60-char `<title>`, a 150–160-char meta description, a canonical, and one `<script type="application/ld+json">`.
+1. `vite build` (SvelteKit's underlying build command) produces a clean Vercel deploy and `curl -A "OAI-SearchBot" https://trinity-breath-healing.vercel.app/` returns initial HTML containing exactly one `<h1>`, a 50–60-char `<title>`, a 150–160-char meta description, a canonical, and one `<script type="application/ld+json">`.
 2. `/robots.txt` is served with explicit `Allow: /` blocks for OAI-SearchBot, ChatGPT-User, PerplexityBot, Perplexity-User, ClaudeBot, Claude-User, Google-Extended, Applebot-Extended placed BEFORE the wildcard `User-agent: *`; `/sitemap.xml` is auto-generated and referenced from robots.txt.
 3. All 14 reserved routes (`/werkwijze`, `/over-mij`, `/behandelingen`, `/contact`, 4× `/diensten/<slug>`, `/diensten`, `/blog`, `/artikelen`, `/faq`, `/privacyverklaring`, `/algemene-voorwaarden`) return HTTP 200 with stub pages emitting per-page title + meta + canonical + JSON-LD.
 4. GitHub Actions CI fails the build if any rendered route has zero or multiple `<h1>`, missing/duplicate meta description, an invalid canonical, an unparseable JSON-LD `@graph`, or a `schema-dts` type error.

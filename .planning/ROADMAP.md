@@ -12,7 +12,7 @@
 
 ## Phases
 
-- [ ] **Phase 0: Foundation & SEO Scaffolding** — Astro 5 + Vercel + GitHub Actions CI + primitives + robots.txt + sitemap + shared schema + design-token placeholders + CI gates skeleton + 14 reserved stub URLs (lock-in BEFORE any visible section)
+- [ ] **Phase 0: Foundation & SEO Scaffolding** — SvelteKit + Svelte 5 (runes) + Vercel + GitHub Actions CI + primitives + robots.txt + sitemap + shared schema + design-token placeholders + CI gates skeleton + 14 reserved stub URLs (lock-in BEFORE any visible section)
 - [ ] **Phase 1: Landing Sections (Mobile-First, 8 sub-units in Figma frame order)** — Build the landing page section by section: hero → header + mobile menu → Werkwijze 3 cards → About + stats → Behandelingen selector → Contact + booking toggle → inline FAQ → footer
 - [ ] **Phase 2: Reserved-Page v1 Content** — Real content for the 3 routes that MUST be real before launch: `/privacyverklaring`, `/algemene-voorwaarden`, `/contact` (standalone form + booking). Other 11 routes stay as Phase 0 stubs through v1.
 - [ ] **Phase 3: Integrations (Vercel Function + Resend + Cal.com inline + Plausible)** — `/api/contact` Vercel Function → Resend EU dispatch; Cal.com 30-min Google Meet inline embed wired inside landing contact-section toggle; Plausible cookieless analytics; DST end-to-end booking test
@@ -23,7 +23,7 @@
 
 ### Phase 0: Foundation & SEO Scaffolding
 
-**Goal**: A deployable Astro 5 scaffold on Vercel whose default output for any route is content + meta + JSON-LD in initial HTML. Primitives, robots.txt, sitemap, shared schema, design-token placeholders, GitHub Actions CI gates, and 14 reserved stub URLs ship BEFORE any visible landing section is built.
+**Goal**: A deployable SvelteKit (Svelte 5 runes) scaffold on Vercel whose default output for any route is content + meta + JSON-LD in initial HTML. Primitives, robots.txt, sitemap, shared schema, design-token placeholders, GitHub Actions CI gates, and 14 reserved stub URLs ship BEFORE any visible landing section is built.
 
 **Depends on**: Nothing (foundation phase)
 
@@ -35,7 +35,7 @@
 - A11Y-05 (pa11y/axe CI gate skeleton wired)
 
 **Success Criteria** (what must be TRUE):
-  1. `astro build` produces a clean Vercel bundle deployable to `fra1`; `curl -A "OAI-SearchBot" https://trinity-breath-healing.vercel.app/` returns initial HTML containing exactly one `<h1>`, a 50–60-char `<title>`, a 150–160-char meta description, a canonical, and one `<script type="application/ld+json">`.
+  1. `vite build` (SvelteKit) produces a clean Vercel bundle deployable to `fra1`; `curl -A "OAI-SearchBot" https://trinity-breath-healing.vercel.app/` returns initial HTML containing exactly one `<h1>`, a 50–60-char `<title>`, a 150–160-char meta description, a canonical, and one `<script type="application/ld+json">`.
   2. `/robots.txt` is served with explicit `Allow: /` blocks for `OAI-SearchBot`, `ChatGPT-User`, `PerplexityBot`, `Perplexity-User`, `ClaudeBot`, `Claude-User`, `Google-Extended`, `Applebot-Extended` placed BEFORE the wildcard `User-agent: *`; `/sitemap.xml` is auto-generated and referenced from robots.txt.
   3. All 14 reserved routes (`/werkwijze`, `/over-mij`, `/behandelingen`, `/contact`, 4× `/diensten/<slug>`, `/diensten`, `/blog`, `/artikelen`, `/faq`, `/privacyverklaring`, `/algemene-voorwaarden`) return HTTP 200 with stub pages emitting per-page title + meta + canonical + JSON-LD.
   4. GitHub Actions CI fails the build if any rendered route has zero or multiple `<h1>`, missing/duplicate meta description, an invalid canonical, an unparseable JSON-LD `@graph`, a `schema-dts` type error, or any new placeholder string (grep gate inactive until LGL-11 — but the grep target is plumbed in Phase 0).
@@ -145,7 +145,7 @@
 - LCH-01, LCH-02, LCH-03, LCH-04, LCH-05, LCH-06, LCH-07
 
 **Success Criteria** (what must be TRUE):
-  1. `astro build` completes cleanly and Vercel `fra1` serves `/`, `/contact`, `/privacyverklaring`, `/algemene-voorwaarden`, `/robots.txt`, and `/sitemap.xml` on the production URL (`trinity-breath-healing.vercel.app` until custom domain is connected) with HTTPS + HSTS.
+  1. `vite build` (SvelteKit) completes cleanly and Vercel `fra1` serves `/`, `/contact`, `/privacyverklaring`, `/algemene-voorwaarden`, `/robots.txt`, and `/sitemap.xml` on the production URL (`trinity-breath-healing.vercel.app` until custom domain is connected) with HTTPS + HSTS.
   2. Sitemap is submitted in Google Search Console; URL Inspection on each priority page shows rendered content and structured data with no "blocked by robots.txt" or "Crawled - currently not indexed" errors.
   3. `curl -A "OAI-SearchBot" <prod-url>` on each priority route returns initial HTML containing the route's H1, meta description, canonical, and JSON-LD `@graph` — verified per route, recorded in a launch checklist.
   4. After 28 days in production, CrUX field data for the landing page reports LCP<2.5s, INP<200ms, CLS<0.1 on the mobile cohort; the server-log review within 30 days confirms at least one hit each from `OAI-SearchBot`, `PerplexityBot`, `ClaudeBot`, and ideally `Google-Extended` / `Applebot-Extended` (no silent block).
@@ -205,7 +205,7 @@ Phase 2 + Phase 3 can run in parallel; Phase 2 privacy-policy merges only after 
 
 Carried over from `research/SUMMARY.md`, updated for stack swap:
 
-- **Phase 0 (light)**: confirm Astro 5 + Tailwind v4 + `@astrojs/vercel` patch versions at `npm install`.
+- **Phase 0 (light)**: confirm SvelteKit + Svelte 5 (runes stable) + Tailwind v4 + `@sveltejs/adapter-vercel` + `mdsvex` + `@sveltejs/enhanced-img` patch versions at `npm install`.
 - **Phase 3 (medium)**: confirm Cal.com Cloud EU plan + `nl` locale + Google Meet auto-create, Resend `eu-west-1` posture, Plausible EU pricing, Vercel free-tier function limits at contract time.
 - **Phase 4 (strong)**: Dutch counsel review of Wet BIG protected-title scope for non-BIG practitioners, Reclame Code Stichting current guidance, AVG/ePrivacy 2026 interpretation of cookieless-no-banner. Counsel sign-off is non-negotiable for launch.
 
