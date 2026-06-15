@@ -14,12 +14,12 @@
 ## Current Position
 
 **Phase:** 0 — Foundation & SEO Scaffolding
-**Plan:** Not started
-**Status:** Phase 0 CONTEXT + DISCUSSION-LOG + RESEARCH complete (uncommitted). Stack pivoted to SvelteKit/Svelte 5 + Vercel + plain CSS. Awaiting `/gsd:plan-phase 0` to decompose into executable plans.
-**Progress:** Phases 0/6 complete · Plans 0/? complete
+**Plan:** Plan-phase complete — 9 executable plans across 7 waves (0–6), revision loop cleared (iter 2+3) by gsd-plan-checker. Ready for `/gsd:execute-phase 0`.
+**Status:** All 9 plans + VALIDATION.md committed (d07c0d6). HANDOFF + .continue-here cleared.
+**Progress:** Phases 0/6 complete · Plans 0/9 executed
 
 ```
-[█░░░░░░░░░] ~10% — Phase 0 researched, plans not yet generated
+[██░░░░░░░░] ~20% — Phase 0 fully planned, execution not yet started
 ```
 
 ## Performance Metrics
@@ -77,14 +77,20 @@ None currently. Phase 0 can begin once the open questions above are answered or 
 
 ## Session Continuity
 
-**Last action:** Session resumed 2026-06-15 after 5-hour limit interrupt. Prior session pivoted stack to SvelteKit/Svelte 5 + Vercel + plain CSS (commits 8cbadb3, 4532a2a, a7f96e1) and generated Phase 0 RESEARCH.md (uncommitted, 128 KB). No HANDOFF.json or `.continue-here` — clean resume point.
+**Last action:** Session resumed 2026-06-15 via `/gsd-resume-work`. User picked option (a) "Finish Phase 0 plan-phase now". Applied iter-1 BLOCKER-8 manually (Plan 09 SEO-11 removed). Ran gsd-plan-checker iter 2 → 4 blockers + 3 warnings (down from 7 iter 1). Spawned gsd-planner iter 3 (final) revision — surgical wave/depends_on fixes + VALIDATION.md flags + Manual-Only req IDs. Committed d07c0d6. Deleted HANDOFF.json + .continue-here.md (resolved). 3-iteration revision cap reached.
 
-**Next action:** `/gsd:plan-phase 0` — decompose Phase 0 into executable plans using updated stack + 00-RESEARCH.md.
+**Wave map locked:**
+- Wave 0: Plan 01 (test infra + scaffold)
+- Wave 1: Plan 02, 07
+- Wave 2: Plan 03
+- Wave 3: Plan 04, 06
+- Wave 4: Plan 05
+- Wave 5: Plan 08
+- Wave 6: Plan 09 (human checkpoints)
 
-**Outstanding uncommitted artifacts:**
-- `.planning/phases/00-foundation-seo-scaffolding/00-RESEARCH.md` (Phase 0 research output)
-- `Figma/` (design assets)
-- `seo-aeo-samenvatting-checklist.md` (authoritative Dutch SEO/AEO playbook)
+**Next action:** `/gsd:execute-phase 0` — execute 9 plans wave-by-wave.
+
+**Outstanding uncommitted artifacts:** None.
 
 **Files of record:**
 - `.planning/PROJECT.md` — scope, audience, constraints, key decisions
@@ -99,4 +105,4 @@ None currently. Phase 0 can begin once the open questions above are answered or 
 - `seo-aeo-samenvatting-checklist.md` (project root) — Dutch SEO/AEO playbook, authoritative reference
 
 ---
-*Last updated: 2026-06-15 — session resumed after 5h limit, STATE reconciled with stack pivot commits + Phase 0 RESEARCH completion*
+*Last updated: 2026-06-15 — Phase 0 plan-phase complete; revision loop closed at iter 3; ready for /gsd:execute-phase 0*
