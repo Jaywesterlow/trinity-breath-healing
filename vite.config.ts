@@ -1,5 +1,6 @@
 import { sveltekit } from '@sveltejs/kit/vite';
 import { enhancedImages } from '@sveltejs/enhanced-img';
+import { svelteTesting } from '@testing-library/svelte/vite';
 import { defineConfig } from 'vitest/config';
 import { resolve } from 'path';
 
@@ -20,6 +21,7 @@ export default defineConfig({
 		projects: [
 			{
 				extends: './vite.config.ts',
+				plugins: [svelteTesting()], // Required for @testing-library/svelte to resolve browser Svelte
 				test: {
 					name: 'unit',
 					environment: 'jsdom',
