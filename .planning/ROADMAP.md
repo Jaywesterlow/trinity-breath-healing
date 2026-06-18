@@ -43,13 +43,13 @@
 
 **Plans**: 9 plans
 Plans:
-- [ ] 00-01-PLAN.md — Repo scaffold + SvelteKit/Svelte 5 + adapter-vercel + CI skeleton + test infra (Wave 0)
-- [ ] 00-02-PLAN.md — Head/PageTitle primitives + PageMeta + SITE_URL + BRAND constants
-- [ ] 00-03-PLAN.md — JsonLd primitive + schema-dts shared/services/breadcrumb/faq/webpage + buildGraph composer
+- [x] 00-01-PLAN.md — Repo scaffold + SvelteKit/Svelte 5 + adapter-vercel + CI skeleton + test infra (Wave 0) ✓ 2026-06-18
+- [x] 00-02-PLAN.md — Head/PageTitle primitives + PageMeta + SITE_URL + BRAND constants ✓ 2026-06-18
+- [ ] 00-03-PLAN.md — JsonLd primitive + schema-dts shared/services/breadcrumb/faq/webpage + buildGraph composer ← NEXT
 - [ ] 00-04-PLAN.md — robots.txt + sitemap.xml endpoint + 15-route manifest + check-robots.sh
 - [ ] 00-05-PLAN.md — 14 reserved stub routes + StubLayout + STUB_META + Playwright route tests
 - [ ] 00-06-PLAN.md — static/global.css design tokens + reset + self-hosted woff2 + no-shared-css/check-tokens scripts
-- [ ] 00-07-PLAN.md — EnhancedImage primitive (PRF-01) with required alt/width/height
+- [x] 00-07-PLAN.md — EnhancedImage primitive (PRF-01) with required alt/width/height ✓ 2026-06-18
 - [ ] 00-08-PLAN.md — Full CI gates: check-html, validate-json-ld, check-initial-html-ai, lighthouserc, pa11yci, synthetic-violations test
 - [ ] 00-09-PLAN.md — GitHub repo + branch protection + Vercel bind + Search Console verification + production smoke test
 **UI hint**: no (primitives + placeholder tokens only; no visible sections yet)

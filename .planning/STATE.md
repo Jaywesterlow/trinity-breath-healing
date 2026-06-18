@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Wave 0 complete — Plan 01 done. Wave 1 next (new session).
+status: Wave 1 complete — Plans 01, 02, 07 done. Wave 2 next (Plan 03).
 last_updated: "2026-06-18"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 9
-  completed_plans: 1
-  percent: 11
+  completed_plans: 3
+  percent: 33
 ---
 
 # State: Trinity Breath & Healing
@@ -28,12 +28,12 @@ progress:
 ## Current Position
 
 **Phase:** 0 — Foundation & SEO Scaffolding
-**Plan:** Wave 0 complete (Plan 01 done). Wave 1 next: Plan 02 + Plan 07.
-**Status:** Plan 01 committed. All FND-03 acceptance criteria met. Build verified. 2/2 unit tests passing.
-**Progress:** Phases 0/6 complete · Plans 1/9 executed
+**Plan:** Wave 1 complete (Plans 01, 02, 07 done). Wave 2 next: Plan 03.
+**Status:** Plans 01 + 02 + 07 merged to master. 35/35 unit tests passing. node-html-parser gate PASS (og:locale=nl_NL, hreflang×2, nav+main+footer in initial HTML). BLOCKER-5 + WARNING-3 closed.
+**Progress:** Phases 0/6 complete · Plans 3/9 executed
 
 ```
-[█████░░░░░] ~11% — Wave 0 done; Wave 1 (Plan 02 + 07) next
+[███░░░░░░░] ~33% — Wave 1 done; Wave 2 (Plan 03 — JsonLd primitive) next
 ```
 
 ## Performance Metrics
@@ -103,7 +103,7 @@ None. Phase 0 Wave 0 complete. Wave 1 (Plan 02 + 07) ready.
 
 ## Session Continuity
 
-**Last action (2026-06-18, session 5):** Wave 1 parallel execution started. Plan 07 (EnhancedImage primitive) DONE — commits c9c5f3c + 1a8c872 + 749d699 on worktree branch `worktree-agent-a3d9db9c9f0ef6418`. Plan 02 (Head/SEO primitives) was in-flight when user paused — agent ac707fc62b1bd8e0e still running. Master still at de66a75 — NEITHER worktree merged yet.
+**Last action (2026-06-18, session 6):** Wave 1 complete. Merged plan-07 (EnhancedImage) + plan-02 (Head/SEO primitives + landmark skeletons) to master. 35/35 tests pass. node-html-parser gate PASS. Worktrees removed. Wave 2 (Plan 03 — JsonLd) ready.
 
 **Previously (2026-06-18, session 4):** Plan 01 fully executed. All 18 remaining Task 2 items written. Build verified (`lang="nl"` confirmed, fail-loud verified, 2/2 unit tests passing). `pnpm check` 0 errors. Fixed: removed `paths` from `tsconfig.json`; installed `jsdom`.
 
@@ -114,16 +114,16 @@ None. Phase 0 Wave 0 complete. Wave 1 (Plan 02 + 07) ready.
 **Wave map locked:**
 
 - Wave 0: Plan 01 ✓ DONE
-- Wave 1: Plan 02 ⚡ in-flight, Plan 07 ✓ done (unmerged worktree)
-- Wave 2: Plan 03
+- Wave 1: Plan 02 ✓ DONE, Plan 07 ✓ DONE (merged)
+- Wave 2: Plan 03 ← NEXT
 - Wave 3: Plan 04, 06
 - Wave 4: Plan 05
 - Wave 5: Plan 08
 - Wave 6: Plan 09 (human checkpoints)
 
-**Next action:** Resume → wait for Plan 02 completion → merge BOTH worktrees (plan-07 branch `worktree-agent-a3d9db9c9f0ef6418` + plan-02 branch from `git worktree list`) → post-merge build+test gate → update STATE/ROADMAP → Wave 2 (Plan 03).
+**Next action:** `/gsd:execute-phase 0 --wave 2` — execute Plan 03 (JsonLd primitive + schema-dts shared/services/breadcrumb/faq/webpage + buildGraph composer).
 
-**Outstanding uncommitted artifacts:** Plan 07 SUMMARY in unmerged worktree. Plan 02 uncommitted (agent in-flight).
+**Outstanding uncommitted artifacts:** None.
 
 **Files of record:**
 
@@ -140,6 +140,6 @@ None. Phase 0 Wave 0 complete. Wave 1 (Plan 02 + 07) ready.
 - `seo-aeo-samenvatting-checklist.md` (project root) — Dutch SEO/AEO playbook, authoritative reference
 
 ---
-*Last updated: 2026-06-18 — Wave 1 mid-execution pause. Plan 07 done (unmerged worktree). Plan 02 in-flight.*
+*Last updated: 2026-06-18 — Wave 1 complete. Plans 01+02+07 merged, 35/35 tests pass, HTML gate PASS. Wave 2 (Plan 03) next.*
 *Previously: 2026-06-18 — Wave 0 complete; Plan 01 done.*
 *2026-06-15 — Phase 0 plan-phase complete; revision loop closed at iter 3.*
