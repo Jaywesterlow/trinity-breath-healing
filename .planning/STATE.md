@@ -103,25 +103,27 @@ None. Phase 0 Wave 0 complete. Wave 1 (Plan 02 + 07) ready.
 
 ## Session Continuity
 
-**Last action (2026-06-18, session 4):** Plan 01 fully executed. All 18 remaining Task 2 items written. Build verified (`lang="nl"` confirmed, fail-loud verified, 2/2 unit tests passing). `pnpm check` 0 errors. Fixed: removed `paths` from `tsconfig.json` (interfered with SvelteKit auto-aliases); installed `jsdom` (Vitest 4 requirement). Plan 01 SUMMARY written. Committed.
+**Last action (2026-06-18, session 5):** Wave 1 parallel execution started. Plan 07 (EnhancedImage primitive) DONE — commits c9c5f3c + 1a8c872 + 749d699 on worktree branch `worktree-agent-a3d9db9c9f0ef6418`. Plan 02 (Head/SEO primitives) was in-flight when user paused — agent ac707fc62b1bd8e0e still running. Master still at de66a75 — NEITHER worktree merged yet.
 
-**Previously (2026-06-18, session 3):** Plan 01 execution started. Task 1 (package legitimacy gate) complete. Task 2 scaffold started: sv create, deps installed, config files written. Paused mid-Task-2. Committed 0b36c49.
+**Previously (2026-06-18, session 4):** Plan 01 fully executed. All 18 remaining Task 2 items written. Build verified (`lang="nl"` confirmed, fail-loud verified, 2/2 unit tests passing). `pnpm check` 0 errors. Fixed: removed `paths` from `tsconfig.json`; installed `jsdom`.
 
-**Previously (2026-06-18, session 2):** Resumed via `/gsd-resume-work`. Locked 4 Phase 0 blockers. PROJECT.md NAP block added.
+**Previously (2026-06-18, session 3):** Plan 01 execution started. Paused mid-Task-2.
+
+**Previously (2026-06-18, session 2):** Locked 4 Phase 0 blockers. PROJECT.md NAP block added.
 
 **Wave map locked:**
 
 - Wave 0: Plan 01 ✓ DONE
-- Wave 1: Plan 02, 07
+- Wave 1: Plan 02 ⚡ in-flight, Plan 07 ✓ done (unmerged worktree)
 - Wave 2: Plan 03
 - Wave 3: Plan 04, 06
 - Wave 4: Plan 05
 - Wave 5: Plan 08
 - Wave 6: Plan 09 (human checkpoints)
 
-**Next action:** New session → `/gsd-resume-work` → execute **Wave 1: Plan 02 + Plan 07** (one per sub-session or both in same session per executor judgment). Plan 02 = `<Head>` + `<JsonLd>` primitives + landmark skeleton. Plan 07 = `robots.txt` + sitemap + hreflang.
+**Next action:** Resume → wait for Plan 02 completion → merge BOTH worktrees (plan-07 branch `worktree-agent-a3d9db9c9f0ef6418` + plan-02 branch from `git worktree list`) → post-merge build+test gate → update STATE/ROADMAP → Wave 2 (Plan 03).
 
-**Outstanding uncommitted artifacts:** None.
+**Outstanding uncommitted artifacts:** Plan 07 SUMMARY in unmerged worktree. Plan 02 uncommitted (agent in-flight).
 
 **Files of record:**
 
@@ -138,6 +140,6 @@ None. Phase 0 Wave 0 complete. Wave 1 (Plan 02 + 07) ready.
 - `seo-aeo-samenvatting-checklist.md` (project root) — Dutch SEO/AEO playbook, authoritative reference
 
 ---
-*Last updated: 2026-06-18 — Wave 0 complete; Plan 01 done; Wave 1 (Plan 02 + 07) next.*
-*Previously: 2026-06-18 — Plan 01 Task 2 mid-progress; scaffold + config committed; source files + build verify remaining.*
+*Last updated: 2026-06-18 — Wave 1 mid-execution pause. Plan 07 done (unmerged worktree). Plan 02 in-flight.*
+*Previously: 2026-06-18 — Wave 0 complete; Plan 01 done.*
 *2026-06-15 — Phase 0 plan-phase complete; revision loop closed at iter 3.*
