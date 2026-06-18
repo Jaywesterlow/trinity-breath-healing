@@ -57,27 +57,34 @@
 
 ### Todos (Roadmap-level)
 
-- [ ] Confirm Astro 5 / Tailwind v4 / `@astrojs/cloudflare` patch versions at install (Phase 0 light flag)
-- [ ] Resolve address situation: physical / online-only / hybrid (blocks Phase 0 — schema choice + NAP)
-- [ ] Lock NAP source-of-truth in PROJECT.md (blocks Phase 0 — robots.txt + Organization JSON-LD)
-- [ ] Decide training-crawler posture: allow `Google-Extended` / `Applebot-Extended`? (blocks Phase 0 — robots.txt)
-- [ ] Photography for hero — real practitioner photo, not stock (blocks Phase 1 hero sub-unit)
+**Phase 0 blockers — RESOLVED 2026-06-18:**
+- [x] ~~Resolve address situation~~ → Hybrid home practice, city-level public, full address shared post-booking only. PROJECT.md NAP block.
+- [x] ~~Lock NAP source-of-truth~~ → PROJECT.md "NAP — Source of Truth" block locked. Known: name + practitioner age 53 + service area. `TBD_*` placeholders for phone/email/KvK/BIG/association/Instagram/practitioner-name. CI flags `TBD_*` as warnings; Phase 5 launch gate fails on residual `TBD_*`.
+- [x] ~~Training-crawler posture~~ → Allow all (Google-Extended + Applebot-Extended + retrieval crawlers). Already in PROJECT.md decisions.
+- [x] ~~Domain DNS access~~ → No custom domain in v1; ship on `trinity-breath-healing.vercel.app`. DNS work entirely skipped in Phase 0. Custom domain deferred post-launch.
+
+**Phase 0 light flag (not blocking):**
+- [ ] Confirm SvelteKit / Svelte 5 / adapter-vercel / mdsvex patch versions at `pnpm install`
+
+**Downstream blockers (do not block Phase 0):**
+- [ ] Photography for hero — real practitioner photo, not stock (blocks Phase 1 hero sub-unit; Figma uses illustration so non-blocking if illustration stays)
 - [ ] Brand-voice samples from practitioner (blocks Phase 1 copy)
-- [ ] Testimonial inventory + written consent files (blocks Phase 1 testimonials sub-unit + Phase 4)
 - [ ] CMS-overlay decision: Sveltia on git vs PR-based editing (blocks Phase 3 — content workflow)
 - [ ] Pricing transparency decision (FAQ #6) — show price on page or not (blocks Phase 1 FAQ + copy)
 - [ ] BIG / non-BIG status confirmation (blocks Phase 4 — vocabulary scope)
 - [ ] Professional association membership (CAT / NFG / RBCZ) (blocks Phase 4 — badges + sameAs)
 - [ ] Existing Google Business Profile claim status (blocks Phase 4 — NAP audit scope)
-- [ ] Domain DNS access for Search Console + Resend SPF/DKIM/DMARC + Cloudflare Pages (blocks Phase 5 — and propagation takes up to 48h, kick off in Phase 0)
+- [ ] Replace `TBD_*` NAP placeholders before Phase 5 prod cutover
 
 ### Blockers
 
-None currently. Phase 0 can begin once the open questions above are answered or explicitly deferred to planning.
+None. Phase 0 unblocked. Ready for `/gsd:execute-phase 0`.
 
 ## Session Continuity
 
-**Last action:** Session resumed 2026-06-15 via `/gsd-resume-work`. User picked option (a) "Finish Phase 0 plan-phase now". Applied iter-1 BLOCKER-8 manually (Plan 09 SEO-11 removed). Ran gsd-plan-checker iter 2 → 4 blockers + 3 warnings (down from 7 iter 1). Spawned gsd-planner iter 3 (final) revision — surgical wave/depends_on fixes + VALIDATION.md flags + Manual-Only req IDs. Committed d07c0d6. Deleted HANDOFF.json + .continue-here.md (resolved). 3-iteration revision cap reached.
+**Last action (2026-06-18):** Resumed via `/gsd-resume-work`. User picked option (a)+(c): pre-resolve Phase 0 blockers in this Opus session, then `/clear` + switch to **Sonnet 4.6** to execute wave 0 only. Locked 4 Phase 0 blockers via AskUserQuestion: hybrid home practice (city-level public NAP), `TBD_*` placeholder NAP block written into PROJECT.md, training crawlers all allowed (already locked), no custom domain in v1 (no DNS work). PROJECT.md "NAP — Source of Truth" block added; 4 Key Decisions table rows marked ✓ Locked 2026-06-18.
+
+**Previously (2026-06-15):** Session resumed via `/gsd-resume-work`. User picked option (a) "Finish Phase 0 plan-phase now". Applied iter-1 BLOCKER-8 manually (Plan 09 SEO-11 removed). Ran gsd-plan-checker iter 2 → 4 blockers + 3 warnings (down from 7 iter 1). Spawned gsd-planner iter 3 (final) revision — surgical wave/depends_on fixes + VALIDATION.md flags + Manual-Only req IDs. Committed d07c0d6. Deleted HANDOFF.json + .continue-here.md (resolved). 3-iteration revision cap reached.
 
 **Wave map locked:**
 - Wave 0: Plan 01 (test infra + scaffold)
@@ -88,7 +95,7 @@ None currently. Phase 0 can begin once the open questions above are answered or 
 - Wave 5: Plan 08
 - Wave 6: Plan 09 (human checkpoints)
 
-**Next action:** `/gsd:execute-phase 0` — execute 9 plans wave-by-wave.
+**Next action:** `/clear` → switch model to **Sonnet 4.6** (`/model claude-sonnet-4-6`) → run **`/gsd:execute-phase 0 --wave 0`** (or equivalent: execute only wave 0, then stop). Wave 0 = Plan 01 = SvelteKit scaffold + test infra + smoke mdsvex collection. After commit, do NOT auto-advance to wave 1 — close session, fresh session for next wave.
 
 **Outstanding uncommitted artifacts:** None.
 
@@ -105,4 +112,5 @@ None currently. Phase 0 can begin once the open questions above are answered or 
 - `seo-aeo-samenvatting-checklist.md` (project root) — Dutch SEO/AEO playbook, authoritative reference
 
 ---
-*Last updated: 2026-06-15 — Phase 0 plan-phase complete; revision loop closed at iter 3; ready for /gsd:execute-phase 0*
+*Last updated: 2026-06-18 — Phase 0 blockers resolved; NAP locked with TBD placeholders; ready for Sonnet-4.6 single-wave execution.*
+*Previously: 2026-06-15 — Phase 0 plan-phase complete; revision loop closed at iter 3; ready for /gsd:execute-phase 0.*

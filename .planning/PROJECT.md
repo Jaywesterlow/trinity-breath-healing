@@ -58,6 +58,36 @@ Marketing website for **Trinity Breath & Healing** — a Holland-based breathwor
 - ~~Tailwind CSS (any version)~~, CSS-in-JS, SCSS/SASS, PostCSS plugins beyond Vite defaults — user direction 2026-06-15: plain CSS only
 - Shared CSS files beyond `static/global.css` — all other styles live inside Svelte component `<style>` blocks (Svelte scopes them automatically)
 
+## NAP — Source of Truth (locked 2026-06-18)
+
+This is the **single canonical source** for all on-site NAP rendering, JSON-LD `Organization` + `ProfessionalService` + `Person` nodes, footer block, and contact-page meta. Anywhere else NAP appears must reference these constants (not redeclare). Update here only; everything else recompiles.
+
+| Field | Value | Status |
+|---|---|---|
+| Practice name (legal) | `Trinity Breath & Healing` | locked |
+| Trade name displayed | `Trinity Breath & Healing` | locked |
+| Practitioner name | `TBD_PRACTITIONER_NAME` (aunt — provide before Phase 4) | placeholder |
+| Practitioner age | `53` (in copy as "vanuit eigen ervaring", not as numeric where avoidable) | locked |
+| Phone | `TBD_PHONE` (E.164 format, e.g. `+31 6 ...`) — used in `tel:` + JSON-LD `telephone` | placeholder |
+| Email (public contact) | `TBD_EMAIL` — used in `mailto:` + JSON-LD `email` + Resend `to:` | placeholder |
+| Email (booking confirmation `from:`) | `noreply@trinity-breath-healing.vercel.app` (Resend EU-verified) | locked |
+| Address policy | **Home base, city-level public, full address shared only after confirmed intake booking** (user direction 2026-06-18: hybrid home practice) | locked |
+| City (public) | `Amsterdam` (or wider Amsterdam metropolitan region for `areaServed`) | locked |
+| Country | `Netherlands` / `NL` | locked |
+| Service area (areaServed in `ProfessionalService` JSON-LD) | "30-minute radius from Amsterdam" + Reigersbos fysio (Saturdays) + Almere session room | locked |
+| Postal code (full address — non-public) | `TBD_HOME_POSTCODE` (omitted from public schema; used internally if needed) | placeholder |
+| Street + house number (non-public) | `TBD_HOME_STREET` (omitted from public schema; shared post-booking only) | placeholder |
+| KvK (Dutch CoC) number | `TBD_KVK` (footer slot, schema `taxID`) | placeholder |
+| BTW-id / VAT (if applicable) | `TBD_BTW` | placeholder |
+| BIG-registratie status | `TBD_BIG_STATUS` (footer disclosure slot; affects vocabulary scope per Wet BIG) | placeholder |
+| Professional association (CAT / NFG / RBCZ) | `TBD_ASSOCIATION` (used in `sameAs` + footer badge) | placeholder |
+| Website canonical (v1) | `https://trinity-breath-healing.vercel.app` (no custom domain in v1) | locked |
+| Instagram handle | `TBD_INSTAGRAM_HANDLE` (used in `sameAs`) | placeholder |
+
+**Placeholder convention:** all `TBD_*` values must be defined as named exports in `src/lib/constants/nap.ts` so a grep for `TBD_` finds every placeholder before launch. Build does NOT fail on placeholders during Phase 0–4; CI gate (Plan 09) flags them as warnings; Phase 5 launch gate fails if any `TBD_` remains.
+
+**Address-on-request flow:** the contact form / booking confirmation email is the ONLY surface where full home address is shared. JSON-LD `address` field uses `PostalAddress` with `addressLocality: "Amsterdam"` + `addressCountry: "NL"` only — no `streetAddress`, no `postalCode`.
+
 ## Context
 
 - **Reference document:** `seo-aeo-samenvatting-checklist.md` at project root — authoritative Dutch SEO/AEO playbook (Princeton/KDD 2024 GEO, HubSpot 2025, 2026 crawler refs). All SEO/AEO choices cross-reference this.
@@ -107,15 +137,15 @@ Marketing website for **Trinity Breath & Healing** — a Holland-based breathwor
 | **Sitemap: hand-rolled `+server.ts` endpoint** | No plug-and-play sitemap lib for SvelteKit equivalent to Astro's | — Pending |
 | **Styling: PLAIN CSS ONLY** — single `static/global.css` for tokens/reset/typography + Svelte component scoped `<style>` blocks for everything else | User explicit choice 2026-06-15; NO Tailwind, NO CSS-in-JS, NO preprocessors, NO shared CSS files beyond `global.css`. Reused values become CSS variables; reused patterns become Svelte components. | — Pending |
 | **Booking: Cal.com inline embed INSIDE contact-section toggle** (NOT separate `/boeken` page) | Matches Figma Frame 5 design; eliminates `/boeken` route | — Pending |
-| **Schema: `ProfessionalService` + per-modality `Service` + `Person`** (NOT `LocalBusiness` with storefront) | Practice is mobile + remote + part-time at 3rd-party — no customer storefront | — Pending |
+| **Schema: `ProfessionalService` + per-modality `Service` + `Person`** (NOT `LocalBusiness` with storefront) | Practice is hybrid home base + mobile + remote + part-time at 3rd-party — no public storefront address | ✓ Locked 2026-06-18 |
 | **No testimonials, no `/reviews` route** | User direction (overrides earlier roadmap) | — Pending |
 | **Inline FAQ section ADDED on landing under contact** | User direction; AEO citation lift (overrides Figma which omits FAQ) | — Pending |
 | **Eyebrow tags match nav names** (Frame 4 → "Behandelingen", Frame 5 → "Contact") | User direction | — Pending |
 | **Footer adds KvK + BIG status placeholder slots** | User direction; legal NL requirement | — Pending |
 | **Build mobile-first then layer CSS to design** | User direction; semantic + a11y discipline | — Pending |
-| **Training crawlers (Google-Extended, Applebot-Extended) ALLOWED in robots.txt** | Non-sensitive content + high long-term AI citation surface | — Pending |
+| **Training crawlers (Google-Extended, Applebot-Extended) ALLOWED in robots.txt** | Non-sensitive content + high long-term AI citation surface | ✓ Locked 2026-06-18 |
 | **Search Console verification via user's Google account** (HTML-file method, URL-prefix property) | DNS-TXT deferred until custom domain | — Pending |
-| **Custom domain deferred** | User: "not using the name right now"; ship on `*.vercel.app` | — Pending |
+| **Custom domain deferred** | User: "not using the name right now"; ship on `*.vercel.app`. **No DNS work needed in Phase 0.** | ✓ Locked 2026-06-18 |
 | **Design tokens deferred to later phase** | User will provide; Phase 0 ships placeholders with TODO markers | — Pending |
 | **CMS: git-MDX (Astro Content Collections) v1; Sanity EU v2 trigger when >50 pages OR >2 editors** | Aunt unlikely to edit v1; Sanity migration cost amortizes only at scale | — Pending |
 | **Email delivery: Resend EU (`eu-west-1`)** | EU residency for GDPR; React Email DX | — Pending |
@@ -139,4 +169,5 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-15 after Figma frame review + Vercel/design overrides decided in Phase 0 discussion*
+*Last updated: 2026-06-18 — Phase 0 blockers resolved: hybrid-home location, NAP source-of-truth locked (TBD placeholders), training crawlers allowed, no custom domain in v1 (no DNS work in Phase 0).*
+*Previously: 2026-06-15 after Figma frame review + Vercel/design overrides decided in Phase 0 discussion.*
