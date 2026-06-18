@@ -268,26 +268,36 @@ Document the verified version + publish date back into this table before proceed
 
 ## Package Legitimacy Audit
 
-> **Required and incomplete this round.** slopcheck was unavailable; web verification was blocked. Every package is `[ASSUMED]` and gated by a planner-inserted `checkpoint:human-verify`.
+> **VERIFIED 2026-06-18** via `npm view` (identical registry data to `pnpm view`; pnpm not installed on dev machine — deviation noted). User approved all packages. Verification method: `npm view <pkg> version repository.url scripts.postinstall` for all packages; mdsvex peer deps checked; adapter-vercel type definitions extracted from tarball.
 
-| Package | Registry | Age | Downloads | Source Repo | slopcheck | Disposition |
-|---------|----------|-----|-----------|-------------|-----------|-------------|
-| `svelte` | npm | mature (10+ yrs, but v5 newer) | very high | github.com/sveltejs/svelte | NOT RUN | Planner gates via checkpoint |
-| `@sveltejs/kit` | npm | mature (~5 yrs) | very high | github.com/sveltejs/kit | NOT RUN | Planner gates via checkpoint |
-| `@sveltejs/vite-plugin-svelte` | npm | mature | very high | github.com/sveltejs/vite-plugin-svelte | NOT RUN | Planner gates via checkpoint |
-| `@sveltejs/adapter-vercel` | npm | mature | high | github.com/sveltejs/kit (monorepo) | NOT RUN | Planner gates via checkpoint |
-| `@sveltejs/enhanced-img` | npm | newer (~2 yrs) | growing | github.com/sveltejs/kit (monorepo) | NOT RUN | Planner gates via checkpoint |
-| `mdsvex` | npm | mature (~5 yrs) | high | github.com/pngwn/MDsveX | NOT RUN | Planner gates via checkpoint; **also verify Svelte 5 compatibility** |
-| `schema-dts` | npm | mature | medium | github.com/google/schema-dts | NOT RUN | Planner gates via checkpoint (Google-owned) |
-| `zod` | npm | mature | very high | github.com/colinhacks/zod | NOT RUN | Planner gates via checkpoint |
-| `fontaine` | npm | mature (~3 yrs) | medium | github.com/unjs/fontaine | NOT RUN | Planner gates via checkpoint (unjs org = Nuxt ecosystem, well-known) |
-| `node-html-parser` | npm | mature | high | github.com/taoqf/node-html-parser | NOT RUN | Planner gates via checkpoint |
-| `@lhci/cli` | npm | mature | high | github.com/GoogleChrome/lighthouse-ci | NOT RUN | Planner gates via checkpoint (Google-owned) |
-| `pa11y-ci` | npm | mature | medium | github.com/pa11y/pa11y-ci | NOT RUN | Planner gates via checkpoint |
-| `structured-data-testing-tool` | npm | mature | medium | github.com/glitchdigital/structured-data-testing-tool | NOT RUN | Planner gates via checkpoint |
+| Package | Verified Version | Source Repo | Postinstall | Verdict |
+|---------|-----------------|-------------|-------------|---------|
+| `svelte` | 5.56.3 | github.com/sveltejs/svelte | none | ✅ APPROVED |
+| `@sveltejs/kit` | 2.66.0 | github.com/sveltejs/kit | none | ✅ APPROVED |
+| `@sveltejs/vite-plugin-svelte` | 7.1.2 | github.com/sveltejs/vite-plugin-svelte | none | ✅ APPROVED |
+| `@sveltejs/adapter-vercel` | 6.3.4 | github.com/sveltejs/kit (monorepo) | none | ✅ APPROVED — `regions: string[]` + `runtime: 'nodejs20.x'` confirmed in index.d.ts |
+| `@sveltejs/enhanced-img` | 0.11.0 | github.com/sveltejs/kit (monorepo) | none | ✅ APPROVED |
+| `mdsvex` | 0.12.7 | github.com/pngwn/MDsveX | none | ✅ APPROVED — Svelte 5 peer: `^5.0.0-next.120` covers 5.56.3 |
+| `schema-dts` | 2.0.0 | github.com/google/schema-dts | none | ✅ APPROVED |
+| `zod` | **3.25.76** (pinned `zod@3`) | github.com/colinhacks/zod | none | ✅ APPROVED — pinned to 3.x; latest is 4.4.3 but Zod 4 breaks `z.string().date()` used in frontmatterSchema |
+| `fontaine` | 0.8.0 | github.com/unjs/fontaine | none | ✅ APPROVED |
+| `node-html-parser` | 7.1.0 | github.com/taoqf/node-fast-html-parser | none | ✅ APPROVED |
+| `@lhci/cli` | 0.15.1 | github.com/GoogleChrome/lighthouse-ci | none | ✅ APPROVED |
+| `pa11y-ci` | 4.1.1 | github.com/pa11y/pa11y-ci | none | ✅ APPROVED |
+| `structured-data-testing-tool` | 4.5.0 | github.com/glitchdigital/structured-data-testing-tool | none | ✅ APPROVED |
+| `vitest` | 4.1.9 | github.com/vitest-dev/vitest | none | ✅ APPROVED — v4 config change audit ran; `environment: 'jsdom'` + basic `include` config unchanged |
+| `@playwright/test` | 1.61.0 | github.com/microsoft/playwright | none | ✅ APPROVED — no postinstall; browsers need `npx playwright install chromium` (manual, not supply-chain risk) |
+| `typescript` | 6.0.3 | github.com/microsoft/TypeScript | none | ✅ APPROVED — SvelteKit 2.66.0 peer: `^5.3.3 \|\| ^6.0.0` |
+| `prettier` | 3.8.4 | github.com/prettier/prettier | none | ✅ APPROVED |
+| `prettier-plugin-svelte` | 4.1.1 | github.com/sveltejs/prettier-plugin-svelte | none | ✅ APPROVED |
+| `eslint` | 10.5.0 | github.com/eslint/eslint | none | ✅ APPROVED |
+| `eslint-plugin-svelte` | 3.19.0 | github.com/sveltejs/eslint-plugin-svelte | none | ✅ APPROVED |
+| `@typescript-eslint/parser` | 8.61.1 | github.com/typescript-eslint/typescript-eslint | none | ✅ APPROVED |
+| `@typescript-eslint/eslint-plugin` | 8.61.1 | github.com/typescript-eslint/typescript-eslint | none | ✅ APPROVED |
 
-**Packages removed due to slopcheck [SLOP] verdict:** none — slopcheck not run.
-**Packages flagged as suspicious [SUS]:** none — slopcheck not run; **the planner must treat the entire table as suspicious until human-verified.**
+**Packages removed due to [SLOP] verdict:** none.
+**Packages flagged [SUS]:** none — all repos match official orgs; no postinstall hooks on any package.
+**Version pin rationale:** `zod` pinned to `^3.25.76` (not `^4.x`) — breaking API change confirmed. All other packages use latest verified version.
 
 ## Architecture Patterns
 
