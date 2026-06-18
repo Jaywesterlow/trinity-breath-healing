@@ -9,11 +9,7 @@
 		"forceConsistentCasingInFileNames": true,
 		"resolveJsonModule": true,
 		"skipLibCheck": true,
-		"moduleResolution": "bundler",
-		"paths": {
-			"$schema/*": ["./src/lib/schema/*"],
-			"$content/*": ["./src/content/*"]
-		}
+		"moduleResolution": "bundler"
+		// All path aliases ($lib, $schema, $content, $app) auto-generated in .svelte-kit/tsconfig.json via kit.alias
 	}
-	// Path aliases $lib/* and $app/* are auto-generated in .svelte-kit/tsconfig.json via kit.alias
 }

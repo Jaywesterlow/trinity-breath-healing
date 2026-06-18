@@ -39,6 +39,7 @@
 		"eslint-plugin-svelte": "^3.19.0",
 		"fontaine": "^0.8.0",
 		"globals": "^17.6.0",
+		"jsdom": "^29.1.1",
 		"mdsvex": "^0.12.7",
 		"node-html-parser": "^7.1.0",
 		"pa11y-ci": "^4.1.1",
@@ -57,6 +58,10 @@
 		"zod": "^3.25.76"
 	},
 	"pnpm": {
-		"onlyBuiltDependencies": ["core-js", "puppeteer", "sharp"]
+		"onlyBuiltDependencies": [
+			"core-js",
+			"puppeteer",
+			"sharp"
+		]
 	}
 }

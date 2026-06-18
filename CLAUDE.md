@@ -1,3 +1,11 @@
+## Project Configuration
+
+- **Language**: TypeScript
+- **Package Manager**: pnpm
+- **Add-ons**: prettier, eslint, vitest
+
+---
+
 <!-- GSD:project-start source:PROJECT.md -->
 ## Project
 

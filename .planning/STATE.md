@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: All 9 plans + VALIDATION.md committed (d07c0d6). HANDOFF + .continue-here cleared.
-last_updated: "2026-06-18T20:59:53.150Z"
+status: Wave 0 complete — Plan 01 done. Wave 1 next (new session).
+last_updated: "2026-06-18"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 9
-  completed_plans: 0
-  percent: 0
+  completed_plans: 1
+  percent: 11
 ---
 
 # State: Trinity Breath & Healing
@@ -28,12 +28,12 @@ progress:
 ## Current Position
 
 **Phase:** 0 — Foundation & SEO Scaffolding
-**Plan:** Plan 01 in progress (Wave 0). Task 1 complete. Task 2 mid-progress.
-**Status:** Scaffold + config files committed (0b36c49). Remaining Task 2: source files, CI configs, build verify. HANDOFF.json + .continue-here written.
-**Progress:** Phases 0/6 complete · Plans 0/9 executed (Plan 01 ~50% done)
+**Plan:** Wave 0 complete (Plan 01 done). Wave 1 next: Plan 02 + Plan 07.
+**Status:** Plan 01 committed. All FND-03 acceptance criteria met. Build verified. 2/2 unit tests passing.
+**Progress:** Phases 0/6 complete · Plans 1/9 executed
 
 ```
-[███░░░░░░░] ~25% — Plan 01 scaffold + deps done; source files + verification remaining
+[█████░░░░░] ~11% — Wave 0 done; Wave 1 (Plan 02 + 07) next
 ```
 
 ## Performance Metrics
@@ -68,6 +68,8 @@ progress:
 | Phase 0 lock-in BEFORE any visible section | Prevents 9 of 20 pitfalls (CSR, robots, meta, hero lazy, canonical, sitemap mismatch, hreflang, granularity bias) | research/PITFALLS.md #20 |
 | Skip `llms.txt` / `llms-full.txt` | No proven retrieval effect with any major AI crawler (2026 verified) | PROJECT.md + research/PITFALLS.md anti-cargo-cult |
 | Per-section landing build, hero-first, mobile-first | User-stated granularity preference; ARCHITECTURE §11.2 codifies the 12-section order | PROJECT.md + research/ARCHITECTURE.md §11.2 |
+| **`tsconfig.json` paths removed** — aliases via `kit.alias` only | Manual `paths` block overrode SvelteKit's auto-generated `$lib` alias → `svelte-check` error. Kit.alias is the single source of truth. | Plan 01 execution |
+| **jsdom installed separately** | Vitest 4 no longer bundles jsdom; must be explicit devDependency | Plan 01 execution |
 
 ### Todos (Roadmap-level)
 
@@ -78,13 +80,15 @@ progress:
 - [x] ~~Training-crawler posture~~ → Allow all (Google-Extended + Applebot-Extended + retrieval crawlers). Already in PROJECT.md decisions.
 - [x] ~~Domain DNS access~~ → No custom domain in v1; ship on `trinity-breath-healing.vercel.app`. DNS work entirely skipped in Phase 0. Custom domain deferred post-launch.
 
-**Phase 0 light flag (not blocking):**
+**Plan 01 light flags (resolved or noted):**
 
-- [ ] Confirm SvelteKit / Svelte 5 / adapter-vercel / mdsvex patch versions at `pnpm install`
+- [x] ~~Confirm patch versions at pnpm install~~ → Verified. All packages confirmed. jsdom 29.1.1 added (Vitest 4 requirement).
+- [ ] `pnpm.onlyBuiltDependencies` WARN (pnpm 11 ignores `package.json` `pnpm` field) — non-blocking; move to `.npmrc` when convenient (Plan 08 cleanup candidate)
+- [ ] mdsvex `<script context="module">` deprecation in Svelte 5 — upstream mdsvex issue; advisory warning in tests only
 
 **Downstream blockers (do not block Phase 0):**
 
-- [ ] Photography for hero — real practitioner photo, not stock (blocks Phase 1 hero sub-unit; Figma uses illustration so non-blocking if illustration stays)
+- [ ] Photography for hero — real practitioner photo, not stock (blocks Phase 1 hero sub-unit)
 - [ ] Brand-voice samples from practitioner (blocks Phase 1 copy)
 - [ ] CMS-overlay decision: Sveltia on git vs PR-based editing (blocks Phase 3 — content workflow)
 - [ ] Pricing transparency decision (FAQ #6) — show price on page or not (blocks Phase 1 FAQ + copy)
@@ -95,19 +99,19 @@ progress:
 
 ### Blockers
 
-None. Phase 0 unblocked. Ready for `/gsd:execute-phase 0`.
+None. Phase 0 Wave 0 complete. Wave 1 (Plan 02 + 07) ready.
 
 ## Session Continuity
 
-**Last action (2026-06-18, session 3):** Plan 01 execution started. Task 1 (package legitimacy gate) complete — all 22 packages verified, zod pinned to 3.x (4.x breaking), vitest 4.1.9 safe. Task 2 in progress: sv create v0.16.1 scaffold ran, all deps installed (adapter-vercel/mdsvex/enhanced-img/schema-dts etc.), package.json+svelte.config.js+vite.config.ts+tsconfig.json+app.html+.env.example+layout.ts+seo/defaults.ts written. Paused mid-Task-2. HANDOFF.json + .continue-here written. Committed 0b36c49.
+**Last action (2026-06-18, session 4):** Plan 01 fully executed. All 18 remaining Task 2 items written. Build verified (`lang="nl"` confirmed, fail-loud verified, 2/2 unit tests passing). `pnpm check` 0 errors. Fixed: removed `paths` from `tsconfig.json` (interfered with SvelteKit auto-aliases); installed `jsdom` (Vitest 4 requirement). Plan 01 SUMMARY written. Committed.
 
-**Previously (2026-06-18, session 2):** Resumed via `/gsd-resume-work`. User picked option (a)+(c): pre-resolve Phase 0 blockers in this Opus session, then `/clear` + switch to **Sonnet 4.6** to execute wave 0 only. Locked 4 Phase 0 blockers via AskUserQuestion: hybrid home practice (city-level public NAP), `TBD_*` placeholder NAP block written into PROJECT.md, training crawlers all allowed (already locked), no custom domain in v1 (no DNS work). PROJECT.md "NAP — Source of Truth" block added; 4 Key Decisions table rows marked ✓ Locked 2026-06-18.
+**Previously (2026-06-18, session 3):** Plan 01 execution started. Task 1 (package legitimacy gate) complete. Task 2 scaffold started: sv create, deps installed, config files written. Paused mid-Task-2. Committed 0b36c49.
 
-**Previously (2026-06-15):** Session resumed via `/gsd-resume-work`. User picked option (a) "Finish Phase 0 plan-phase now". Applied iter-1 BLOCKER-8 manually (Plan 09 SEO-11 removed). Ran gsd-plan-checker iter 2 → 4 blockers + 3 warnings (down from 7 iter 1). Spawned gsd-planner iter 3 (final) revision — surgical wave/depends_on fixes + VALIDATION.md flags + Manual-Only req IDs. Committed d07c0d6. Deleted HANDOFF.json + .continue-here.md (resolved). 3-iteration revision cap reached.
+**Previously (2026-06-18, session 2):** Resumed via `/gsd-resume-work`. Locked 4 Phase 0 blockers. PROJECT.md NAP block added.
 
 **Wave map locked:**
 
-- Wave 0: Plan 01 (test infra + scaffold)
+- Wave 0: Plan 01 ✓ DONE
 - Wave 1: Plan 02, 07
 - Wave 2: Plan 03
 - Wave 3: Plan 04, 06
@@ -115,9 +119,9 @@ None. Phase 0 unblocked. Ready for `/gsd:execute-phase 0`.
 - Wave 5: Plan 08
 - Wave 6: Plan 09 (human checkpoints)
 
-**Next action:** Resume Plan 01 Task 2 via `/gsd-resume-work`. Write remaining source files per `.planning/phases/00-foundation-seo-scaffolding/.continue-here.md` remaining_work list (18 items), then run `pnpm build` + `pnpm test:unit -- --run`, then commit Plan 01 complete. Do NOT auto-advance to Wave 1 after — close session.
+**Next action:** New session → `/gsd-resume-work` → execute **Wave 1: Plan 02 + Plan 07** (one per sub-session or both in same session per executor judgment). Plan 02 = `<Head>` + `<JsonLd>` primitives + landmark skeleton. Plan 07 = `robots.txt` + sitemap + hreflang.
 
-**Outstanding uncommitted artifacts:** .planning/STATE.md updated (not yet committed).
+**Outstanding uncommitted artifacts:** None.
 
 **Files of record:**
 
@@ -125,14 +129,15 @@ None. Phase 0 unblocked. Ready for `/gsd:execute-phase 0`.
 - `.planning/REQUIREMENTS.md` — 70 v1 requirements + v2 deferred + Out of Scope + traceability
 - `.planning/ROADMAP.md` — 6 phases, success criteria, dependencies
 - `.planning/STATE.md` — this file
+- `.planning/phases/00-foundation-seo-scaffolding/00-01-SUMMARY.md` — Plan 01 completion record
 - `.planning/research/SUMMARY.md` — research synthesis + "Implications for Roadmap"
-- `.planning/research/STACK.md` — Astro 5 + Cloudflare + Cal.com + Resend + Plausible
+- `.planning/research/STACK.md` — SvelteKit + Vercel + Cal.com + Resend + Plausible
 - `.planning/research/ARCHITECTURE.md` — hub-spoke + SSG + primitives + per-section build order
 - `.planning/research/FEATURES.md` — 20 table stakes + 15 differentiators + 20 anti-features + 12-question FAQ bank
 - `.planning/research/PITFALLS.md` — 20 pitfalls + recovery + pitfall-to-phase mapping
 - `seo-aeo-samenvatting-checklist.md` (project root) — Dutch SEO/AEO playbook, authoritative reference
 
 ---
-*Last updated: 2026-06-18 — Plan 01 Task 2 mid-progress; scaffold + config committed; source files + build verify remaining.*
-*Previously: 2026-06-18 — Phase 0 blockers resolved; NAP locked with TBD placeholders; ready for Sonnet-4.6 single-wave execution.*
+*Last updated: 2026-06-18 — Wave 0 complete; Plan 01 done; Wave 1 (Plan 02 + 07) next.*
+*Previously: 2026-06-18 — Plan 01 Task 2 mid-progress; scaffold + config committed; source files + build verify remaining.*
 *2026-06-15 — Phase 0 plan-phase complete; revision loop closed at iter 3.*
