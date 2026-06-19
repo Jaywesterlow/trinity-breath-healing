@@ -45,7 +45,7 @@ REQUIRED_TOKENS=(
 FAILED=0
 
 for token in "${REQUIRED_TOKENS[@]}"; do
-  if ! grep -q "${token}:" "$CSS_FILE"; then
+  if ! grep -qF -- "${token}:" "$CSS_FILE"; then
     echo "MISSING TOKEN: '${token}:' not found in $CSS_FILE" >&2
     FAILED=1
   fi
