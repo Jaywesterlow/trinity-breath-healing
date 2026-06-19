@@ -1,1 +1,22 @@
 /* Plan 06 fills this file — plain CSS locked per CONTEXT.md D-09 */
+
+:root {
+  /* Colors — extracted from Figma by user 2026-06-19 */
+  --linen-bg:    #FAF0E6;  /* warm cream/sand — main background */
+  --dark-cream:  #B68A6B;  /* dark cream accent */
+  --dark-green:  #3D4A35;  /* forest green — primary brand dark */
+  --light-green: #EDE8D0;  /* pale sage — card backgrounds */
+  --mid-green:   #7A8C6E;  /* mid sage — secondary text, borders */
+
+  /* Typography */
+  --font-body:    'DM Sans', sans-serif;          /* neutral/body text */
+  --font-display: 'Cormorant Garamond', serif;    /* stylized/headings */
+}
+
+/*
+  Opacity notes (from Figma, user 2026-06-19):
+  - Cal.com booking widget — weekday initials use the line background color at 0.7 opacity
+  - Past selectable calendar days — var(--mid-green) at 0.1 opacity,
+    with the entire element also at 0.3 opacity (double-layered opacity)
+  Apply via CSS opacity on the element or color-mix() as appropriate per context.
+*/
