@@ -1,3 +1,40 @@
-# allow crawling everything by default
+# robots.txt — Trinity Breath & Healing
+# Order is critical: named bot Allow blocks MUST precede User-agent: *
+# scripts/check-robots.sh enforces this order in CI.
+
+# ─── Search / RAG crawlers ────────────────────────────────────────────────────
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+# ─── Training crawlers ────────────────────────────────────────────────────────
+# DECISION: training crawlers (Google-Extended, Applebot-Extended) ALLOWED per CONTEXT.md (2026-06-15).
+# Rationale: wellness content has low IP risk + high long-term citation surface in Gemini
+# + Apple Intelligence baseline knowledge. Change requires architectural discussion.
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# ─── Wildcard fallback ────────────────────────────────────────────────────────
 User-agent: *
-Disallow:
+Allow: /
+Disallow: /api/
+
+Sitemap: https://trinity-breath-healing.vercel.app/sitemap.xml
