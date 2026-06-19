@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Wave 1 complete — Plans 01, 02, 07 done. Wave 2 next (Plan 03).
-last_updated: "2026-06-18"
+status: "Plans 01 + 02 + 07 merged to master. 35/35 unit tests passing. node-html-parser gate PASS (og:locale=nl_NL, hreflang×2, nav+main+footer in initial HTML). BLOCKER-5 + WARNING-3 closed."
+last_updated: "2026-06-19T11:09:21.147Z"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 9
-  completed_plans: 3
-  percent: 33
+  completed_plans: 7
+  percent: 0
 ---
 
 # State: Trinity Breath & Healing
@@ -28,12 +28,12 @@ progress:
 ## Current Position
 
 **Phase:** 0 — Foundation & SEO Scaffolding
-**Plan:** Wave 1 complete (Plans 01, 02, 07 done). Wave 2 next: Plan 03.
-**Status:** Plans 01 + 02 + 07 merged to master. 35/35 unit tests passing. node-html-parser gate PASS (og:locale=nl_NL, hreflang×2, nav+main+footer in initial HTML). BLOCKER-5 + WARNING-3 closed.
-**Progress:** Phases 0/6 complete · Plans 3/9 executed
+**Plan:** Wave 3 complete (Plans 03, 04, 06 done). Wave 4 next: Plan 05.
+**Status:** Plans 01+02+03+04+06+07 merged to master. 127/127 unit tests passing. CSS token system + enforcement scripts in place.
+**Progress:** Phases 0/6 complete · Plans 7/9 executed
 
 ```
-[███░░░░░░░] ~33% — Wave 1 done; Wave 2 (Plan 03 — JsonLd primitive) next
+[███████░░░] ~78% — Wave 3 done; Wave 4 (Plan 05 — contact form) next
 ```
 
 ## Performance Metrics
@@ -103,7 +103,7 @@ None. Phase 0 Wave 0 complete. Wave 1 (Plan 02 + 07) ready.
 
 ## Session Continuity
 
-**Last action (2026-06-18, session 6):** Wave 1 complete. Merged plan-07 (EnhancedImage) + plan-02 (Head/SEO primitives + landmark skeletons) to master. 35/35 tests pass. node-html-parser gate PASS. Worktrees removed. Wave 2 (Plan 03 — JsonLd) ready.
+**Last action (2026-06-19, session 7):** Wave 3 complete. Plan 06 done — CSS token system (static/global.css, 25 tokens), placeholder woff2 fonts (DM Sans + Cormorant Garamond), enforcement scripts (check-tokens.sh, no-shared-css.sh), 127/127 tests passing. Wave 4 (Plan 05 — contact form) next.
 
 **Previously (2026-06-18, session 4):** Plan 01 fully executed. All 18 remaining Task 2 items written. Build verified (`lang="nl"` confirmed, fail-loud verified, 2/2 unit tests passing). `pnpm check` 0 errors. Fixed: removed `paths` from `tsconfig.json`; installed `jsdom`.
 
@@ -115,13 +115,13 @@ None. Phase 0 Wave 0 complete. Wave 1 (Plan 02 + 07) ready.
 
 - Wave 0: Plan 01 ✓ DONE
 - Wave 1: Plan 02 ✓ DONE, Plan 07 ✓ DONE (merged)
-- Wave 2: Plan 03 ← NEXT
-- Wave 3: Plan 04, 06
-- Wave 4: Plan 05
+- Wave 2: Plan 03 ✓ DONE
+- Wave 3: Plan 04 ✓ DONE, Plan 06 ✓ DONE
+- Wave 4: Plan 05 ← NEXT
 - Wave 5: Plan 08
 - Wave 6: Plan 09 (human checkpoints)
 
-**Next action:** `/gsd:execute-phase 0 --wave 2` — execute Plan 03 (JsonLd primitive + schema-dts shared/services/breadcrumb/faq/webpage + buildGraph composer).
+**Next action:** `/gsd:execute-phase 0 --wave 4` — execute Plan 05 (contact form: Cloudflare Worker + Resend EU).
 
 **Outstanding uncommitted artifacts:** None.
 
@@ -140,6 +140,6 @@ None. Phase 0 Wave 0 complete. Wave 1 (Plan 02 + 07) ready.
 - `seo-aeo-samenvatting-checklist.md` (project root) — Dutch SEO/AEO playbook, authoritative reference
 
 ---
-*Last updated: 2026-06-18 — Wave 1 complete. Plans 01+02+07 merged, 35/35 tests pass, HTML gate PASS. Wave 2 (Plan 03) next.*
+*Last updated: 2026-06-19 — Wave 3 complete. Plans 01+02+03+04+06+07 done, 127/127 tests pass. Wave 4 (Plan 05) next.*
 *Previously: 2026-06-18 — Wave 0 complete; Plan 01 done.*
 *2026-06-15 — Phase 0 plan-phase complete; revision loop closed at iter 3.*
