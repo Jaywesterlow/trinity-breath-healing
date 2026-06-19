@@ -19,6 +19,12 @@
 	let { children } = $props();
 </script>
 
+<svelte:head>
+  <!-- FND-06 + Pattern 7: preload PRIMARY body-font weight only. Display font (Cormorant Garamond) -->
+  <!-- is heading-only; not on the critical LCP path for stubs. Phase 1 hero may add a second preload. -->
+  <link rel="preload" as="font" type="font/woff2" crossorigin="anonymous" href="/fonts/dm-sans/dm-sans-regular.woff2" />
+</svelte:head>
+
 <Head meta={page.data.meta} />
 <JsonLd graph={page.data.graph} />
 <SiteNav />
