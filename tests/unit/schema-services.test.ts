@@ -1,12 +1,18 @@
 /**
- * schema-services.test.ts — TDD RED gate for Task 1
+ * schema-services.test.ts — TDD gate for Task 1
  * Tests: makeServiceNode factory + allServiceNodes (4 modalities)
  * Requirements: SCH-04
  * D-locked: service slugs mahatma-healing, goldhealing, raster-energie, spinal-touch
  *
  * Uses vi.doMock() for env override.
+ *
+ * Note on schema-dts types: schema-dts Service type includes `string` union so direct
+ * bracket notation fails strict TS. Tests cast via `as unknown as Record<string, unknown>`
+ * for runtime assertions. Type safety in implementation confirmed by `pnpm check`.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+type SchemaNode = Record<string, unknown>;
 
 describe('services.ts — Service schema nodes', () => {
 	beforeEach(() => {
@@ -23,7 +29,7 @@ describe('services.ts — Service schema nodes', () => {
 
 	it('Test 1: makeServiceNode returns Service with correct @id and @type', async () => {
 		const { makeServiceNode } = await loadServices();
-		const node = makeServiceNode('mahatma-healing', 'Mahatma Healing');
+		const node = makeServiceNode('mahatma-healing', 'Mahatma Healing') as unknown as SchemaNode;
 		expect(node['@type']).toBe('Service');
 		expect(node['@id']).toBe(
 			'https://trinity-breath-healing.vercel.app/#service-mahatma-healing'
@@ -32,8 +38,8 @@ describe('services.ts — Service schema nodes', () => {
 
 	it('Test 2: makeServiceNode has provider linking to organization @id', async () => {
 		const { makeServiceNode } = await loadServices();
-		const node = makeServiceNode('mahatma-healing', 'Mahatma Healing');
-		const provider = node['provider'] as { '@id': string };
+		const node = makeServiceNode('mahatma-healing', 'Mahatma Healing') as unknown as SchemaNode;
+		const provider = node['provider'] as SchemaNode;
 		expect(provider).toBeDefined();
 		expect(provider['@id']).toBe(
 			'https://trinity-breath-healing.vercel.app/#organization'
@@ -43,7 +49,7 @@ describe('services.ts — Service schema nodes', () => {
 	it('Test 3: makeServiceNode has areaServed matching BRAND.areaServed', async () => {
 		const { makeServiceNode } = await loadServices();
 		const { BRAND } = await import('$lib/constants/brand');
-		const node = makeServiceNode('mahatma-healing', 'Mahatma Healing');
+		const node = makeServiceNode('mahatma-healing', 'Mahatma Healing') as unknown as SchemaNode;
 		const areaServed = node['areaServed'] as string[];
 		expect(Array.isArray(areaServed)).toBe(true);
 		for (const city of BRAND.areaServed) {
@@ -53,7 +59,7 @@ describe('services.ts — Service schema nodes', () => {
 
 	it('Test 4: makeServiceNode url points to /diensten/<slug>', async () => {
 		const { makeServiceNode } = await loadServices();
-		const node = makeServiceNode('mahatma-healing', 'Mahatma Healing');
+		const node = makeServiceNode('mahatma-healing', 'Mahatma Healing') as unknown as SchemaNode;
 		expect(node['url']).toBe(
 			'https://trinity-breath-healing.vercel.app/diensten/mahatma-healing'
 		);
@@ -66,7 +72,7 @@ describe('services.ts — Service schema nodes', () => {
 
 	it('Test 6: allServiceNodes covers the 4 locked slugs', async () => {
 		const { allServiceNodes } = await loadServices();
-		const slugs = allServiceNodes.map((n) => n['@id']?.toString() ?? '');
+		const slugs = allServiceNodes.map((n) => (n as unknown as SchemaNode)['@id']?.toString() ?? '');
 		expect(slugs).toContain('https://trinity-breath-healing.vercel.app/#service-mahatma-healing');
 		expect(slugs).toContain('https://trinity-breath-healing.vercel.app/#service-goldhealing');
 		expect(slugs).toContain('https://trinity-breath-healing.vercel.app/#service-raster-energie');

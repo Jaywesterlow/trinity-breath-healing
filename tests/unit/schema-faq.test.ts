@@ -1,5 +1,5 @@
 /**
- * schema-faq.test.ts — TDD RED gate for Task 1
+ * schema-faq.test.ts — TDD gate for Task 1
  * Tests: buildFaqPage() builder + buildWebPage() helper + buildGraph() composer
  * Requirements: SCH-07, SCH-01, SEO-09
  *
@@ -10,8 +10,14 @@
  * SEO-09: buildWebPage omits dateModified key when absent (never emits undefined).
  *
  * Uses vi.doMock() for env override.
+ *
+ * Note on schema-dts types: schema-dts types include `string` unions so direct bracket
+ * notation fails strict TS. Tests cast via `as unknown as Record<string, unknown>` for
+ * runtime assertions. Type safety in implementation confirmed by `pnpm check`.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+type SchemaNode = Record<string, unknown>;
 
 describe('faq.ts — FAQPage builder', () => {
 	beforeEach(() => {
@@ -28,7 +34,7 @@ describe('faq.ts — FAQPage builder', () => {
 
 	it('WARNING-2: buildFaqPage([]) returns valid FAQPage with mainEntity=[] (empty is valid in Phase 0)', async () => {
 		const { buildFaqPage } = await loadFaq();
-		const result = buildFaqPage([]);
+		const result = buildFaqPage([]) as unknown as SchemaNode;
 		expect(result['@type']).toBe('FAQPage');
 		expect(Array.isArray(result['mainEntity'])).toBe(true);
 		expect((result['mainEntity'] as unknown[]).length).toBe(0);
@@ -39,7 +45,7 @@ describe('faq.ts — FAQPage builder', () => {
 		const result = buildFaqPage([
 			{ question: 'Wat is ademwerk?', answer: 'Ademwerk is...' },
 			{ question: 'Hoe lang duurt een sessie?', answer: 'Circa 90 minuten.' }
-		]);
+		]) as unknown as SchemaNode;
 		const mainEntity = result['mainEntity'] as unknown[];
 		expect(mainEntity).toHaveLength(2);
 	});
@@ -48,16 +54,14 @@ describe('faq.ts — FAQPage builder', () => {
 		const { buildFaqPage } = await loadFaq();
 		const result = buildFaqPage([
 			{ question: 'q1', answer: 'a1' }
-		]);
-		const mainEntity = result['mainEntity'] as Array<{
-			'@type': string;
-			name: string;
-			acceptedAnswer: { '@type': string; text: string };
-		}>;
-		expect(mainEntity[0]['@type']).toBe('Question');
-		expect(mainEntity[0].name).toBe('q1');
-		expect(mainEntity[0].acceptedAnswer['@type']).toBe('Answer');
-		expect(mainEntity[0].acceptedAnswer.text).toBe('a1');
+		]) as unknown as SchemaNode;
+		const mainEntity = result['mainEntity'] as SchemaNode[];
+		const entry = mainEntity[0]!;
+		const acceptedAnswer = entry['acceptedAnswer'] as SchemaNode;
+		expect(entry['@type']).toBe('Question');
+		expect(entry['name']).toBe('q1');
+		expect(acceptedAnswer['@type']).toBe('Answer');
+		expect(acceptedAnswer['text']).toBe('a1');
 	});
 });
 
@@ -76,7 +80,7 @@ describe('webpage.ts — WebPage builder', () => {
 
 	it('Test 1: buildWebPage returns WebPage with correct @type, name, description, url', async () => {
 		const { buildWebPage } = await loadWebPage();
-		const result = buildWebPage({ title: 'Mijn titel', description: 'Beschrijving', path: '/' });
+		const result = buildWebPage({ title: 'Mijn titel', description: 'Beschrijving', path: '/' }) as unknown as SchemaNode;
 		expect(result['@type']).toBe('WebPage');
 		expect(result['name']).toBe('Mijn titel');
 		expect(result['description']).toBe('Beschrijving');
@@ -85,13 +89,13 @@ describe('webpage.ts — WebPage builder', () => {
 
 	it('SEO-09: buildWebPage with dateModified includes the key', async () => {
 		const { buildWebPage } = await loadWebPage();
-		const result = buildWebPage({ title: 't', description: 'd', path: '/', dateModified: '2026-06-15' });
+		const result = buildWebPage({ title: 't', description: 'd', path: '/', dateModified: '2026-06-15' }) as unknown as SchemaNode;
 		expect(result['dateModified']).toBe('2026-06-15');
 	});
 
 	it('SEO-09: buildWebPage without dateModified OMITS the key (never undefined)', async () => {
 		const { buildWebPage } = await loadWebPage();
-		const result = buildWebPage({ title: 't', description: 'd', path: '/' });
+		const result = buildWebPage({ title: 't', description: 'd', path: '/' }) as unknown as SchemaNode;
 		// Key must be absent entirely — not set to undefined
 		expect(Object.hasOwn(result, 'dateModified')).toBe(false);
 	});
@@ -148,7 +152,7 @@ describe('buildGraph.ts — @graph composer', () => {
 	it('Test 5: shared nodes contain Organization, ProfessionalService, Person, WebSite types', async () => {
 		const { buildGraph } = await loadBuildGraph();
 		const result = buildGraph({ pageSpecific: [], path: '/' });
-		const types = result.map((n) => (n as { '@type': string })['@type']);
+		const types = result.map((n) => (n as SchemaNode)['@type']);
 		expect(types).toContain('Organization');
 		expect(types).toContain('ProfessionalService');
 		expect(types).toContain('Person');
