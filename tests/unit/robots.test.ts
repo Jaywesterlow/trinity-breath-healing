@@ -42,8 +42,8 @@ describe('static/robots.txt', () => {
 				expect(botIdx, `User-agent: ${bot} not found`).toBeGreaterThanOrEqual(0);
 				// next non-blank line after the bot declaration must be Allow: /
 				let next = botIdx + 1;
-				while (next < lines.length && lines[next].trim() === '') next++;
-				expect(lines[next].trim()).toBe('Allow: /');
+				while (next < lines.length && (lines[next] ?? '').trim() === '') next++;
+				expect(lines[next]?.trim()).toBe('Allow: /');
 			});
 		}
 

@@ -35,7 +35,7 @@ describe('sitemap.xml GET handler', () => {
 		const { GET } = await import('../../src/routes/sitemap.xml/+server');
 		const response = await GET({} as Parameters<typeof GET>[0]);
 		const body = await response.text();
-		const locs = [...body.matchAll(/<loc>(.+?)<\/loc>/g)].map((m) => m[1]);
+		const locs = [...body.matchAll(/<loc>(.+?)<\/loc>/g)].map((m) => m[1] ?? '');
 		expect(locs.length).toBe(15);
 		for (const loc of locs) {
 			expect(loc.startsWith('https://')).toBe(true);
