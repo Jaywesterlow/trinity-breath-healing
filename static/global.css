@@ -1,6 +1,6 @@
 /* static/global.css — design tokens + reset + typography baseline + utilities */
 /* NO component styles in this file. Component styles live in each .svelte <style> block. */
-/* D-09: plain CSS locked. NO Tailwind / SCSS / CSS-in-JS / @import chains. */
+/* D-09: plain CSS locked. NO Tailwind / SCSS / CSS-in-JS / no-import chains. */
 
 :root {
   /* --- Color tokens (Figma-derived 2026-06-19; audit against final design file before launch) --- */
