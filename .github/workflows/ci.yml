@@ -11,36 +11,32 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 11
-
       - uses: actions/setup-node@v4
         with:
           node-version: '20.x'
-          cache: 'pnpm'
+          cache: 'npm'
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: npm ci
 
       - name: Type check
-        run: pnpm check
+        run: npm run check
 
       - name: Build
-        run: pnpm build
+        run: npm run build
         env:
           PUBLIC_SITE_URL: https://trinity-breath-healing.vercel.app
 
       - name: Audit HTML structure
-        run: pnpm audit:html
+        run: npm run audit:html
         # wired in Plan 00-08
 
       - name: Validate JSON-LD
-        run: pnpm audit:json-ld
+        run: npm run audit:json-ld
         # wired in Plan 00-08
 
       - name: Test HTML audit
-        run: pnpm test:html-audit
+        run: npm run test:html-audit
         # wired in Plan 00-08
 
   lighthouse-and-a11y:

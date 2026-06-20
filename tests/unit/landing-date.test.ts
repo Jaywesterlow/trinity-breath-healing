@@ -1,7 +1,7 @@
 /**
  * landing-date.test.ts — TDD gate for Plan 05 Task 1 (SEO-09 / BLOCKER-3 closure)
  *
- * Verifies that after a pnpm build, the landing page HTML at
+ * Verifies that after an npm run build, the landing page HTML at
  * .svelte-kit/output/prerendered/pages/index.html:
  *   1. Contains exactly one <time datetime="YYYY-MM-DD"> element
  *   2. The datetime attribute is a valid ISO date (YYYY-MM-DD)
@@ -12,8 +12,8 @@
  *
  * Requirements: SEO-09, BLOCKER-3
  *
- * NOTE: This test reads the prerendered HTML. Run `pnpm build` before running this test.
- * Use: `PUBLIC_SITE_URL=https://trinity-breath-healing.vercel.app pnpm build && pnpm test:unit -- --run landing-date`
+ * NOTE: This test reads the prerendered HTML. Run `npm run build` before running this test.
+ * Use: `PUBLIC_SITE_URL=https://trinity-breath-healing.vercel.app npm run build && pnpm test:unit -- --run landing-date`
  */
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';
@@ -23,8 +23,8 @@ import { parse } from 'node-html-parser';
 const HTML_PATH = resolve('.svelte-kit/output/prerendered/pages/index.html');
 
 describe('Landing page SEO-09 — visible dateModified + JSON-LD single-source (BLOCKER-3)', () => {
-	it('prerendered index.html exists (run pnpm build first)', () => {
-		expect(existsSync(HTML_PATH), `Missing: ${HTML_PATH} — run pnpm build first`).toBe(true);
+	it('prerendered index.html exists (run npm run build first)', () => {
+		expect(existsSync(HTML_PATH), `Missing: ${HTML_PATH} — run npm run build first`).toBe(true);
 	});
 
 	it('landing HTML contains exactly one <time datetime="YYYY-MM-DD"> element', () => {

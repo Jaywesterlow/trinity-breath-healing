@@ -1,37 +1,46 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-18T23:45:00.000Z",
+  "timestamp": "2026-06-20T15:30:00Z",
   "phase": "00",
   "phase_name": "foundation-seo-scaffolding",
   "phase_dir": ".planning/phases/00-foundation-seo-scaffolding",
   "plan": null,
   "task": null,
   "total_tasks": null,
-  "status": "paused-mid-wave",
+  "status": "paused",
   "completed_tasks": [
-    {"id": "plan-01", "name": "SvelteKit scaffold + test infra + FND-03 content pipeline", "status": "done", "commit": "ebcd072"},
-    {"id": "plan-07", "name": "EnhancedImage primitive (PRF-01)", "status": "done-unmerged", "commits": ["c9c5f3c", "1a8c872", "749d699"], "worktree_branch": "worktree-agent-a3d9db9c9f0ef6418", "worktree_path": ".claude/worktrees/agent-a3d9db9c9f0ef6418", "merged": false}
-  ],
-  "in_flight_tasks": [
-    {"id": "plan-02", "name": "Head/JsonLd primitives + landmark skeleton (SEO-01..06)", "status": "executing", "agent_id": "ac707fc62b1bd8e0e", "note": "Agent still running when user paused. Wait for completion notification, then merge worktree to master."}
+    {"id": "wave-4-plan-05", "name": "14 stub routes + SEO-09 BUILD_DATE wiring", "status": "done", "commit": "5cda227"}
   ],
   "remaining_tasks": [
-    {"id": "plan-03", "name": "Reserved stub routes (/over-ons, /contact, /boeken)", "status": "not_started", "wave": 2},
-    {"id": "plan-04", "name": "LocalBusiness + Person JSON-LD", "status": "not_started", "wave": 3},
-    {"id": "plan-06", "name": "CSS design tokens + typography", "status": "not_started", "wave": 3},
-    {"id": "plan-05", "name": "Plausible analytics integration", "status": "not_started", "wave": 4},
-    {"id": "plan-08", "name": "CI gates (Lighthouse + pa11y-ci + HTML/JSON-LD audits)", "status": "not_started", "wave": 5},
-    {"id": "plan-09", "name": "Phase 0 validation + human checkpoints", "status": "not_started", "wave": 6}
+    {"id": "npm-migration-finish", "name": "User runs npm install --legacy-peer-deps, write .npmrc, commit", "status": "blocked_human_action"},
+    {"id": "wave-5-plan-08", "name": "HTML audit gate CI script (check-html.ts)", "status": "not_started"}
   ],
-  "blockers": [],
-  "human_actions_pending": [],
+  "blockers": [
+    {
+      "description": "npm install fails via Claude tool runner — npm 11.7.0 bug 'Cannot read properties of null (reading matches)'",
+      "type": "human_action",
+      "workaround": "User must run 'npm install --legacy-peer-deps' directly in their terminal"
+    }
+  ],
+  "human_actions_pending": [
+    {
+      "action": "Run: npm install --legacy-peer-deps",
+      "context": "pnpm→npm migration. pnpm-lock.yaml deleted, package-lock.json not yet generated. npm 11.x bug prevents tool-based execution.",
+      "blocking": true
+    }
+  ],
   "decisions": [
-    {"decision": "tsconfig.json paths block removed", "rationale": "Manual paths overrode SvelteKit auto-generated $lib alias → svelte-check error. Kit.alias is single source of truth.", "phase": "00"},
-    {"decision": "jsdom added as devDependency", "rationale": "Vitest 4 no longer bundles jsdom; must be explicit.", "phase": "00"},
-    {"decision": "@testing-library/svelte absent — used svelte/compiler + svelte/server render pipeline for Plan 07 tests", "rationale": "testing-library not installed; compiler render works cleanly", "phase": "00"},
-    {"decision": "TypeScript 6 fixture tests require --ignoreconfig flag on tsc CLI", "rationale": "TS6 change; added flag to tsc invocation in image tests", "phase": "00"}
+    {"decision": "Switch pnpm → npm", "rationale": "User preference", "phase": "00"},
+    {"decision": "Use legacy-peer-deps=true in .npmrc", "rationale": "knip peer dep conflict in npm strict mode", "phase": "00"}
   ],
-  "uncommitted_files": [],
-  "next_action": "Resume: (1) Wait for Plan 02 agent completion notification if not already received. (2) Merge BOTH worktrees to master: plan-07 worktree (worktree-agent-a3d9db9c9f0ef6418) AND plan-02 worktree (check git worktree list). (3) Run post-merge build+test gate: PUBLIC_SITE_URL=https://trinity-breath-healing.vercel.app pnpm build && pnpm test:unit. (4) Update STATE.md + ROADMAP.md to mark plan-02 + plan-07 done. (5) Continue with Wave 2: Plan 03.",
-  "context_notes": "Wave 1 paused mid-execution. Plan 07 DONE on unmerged worktree branch worktree-agent-a3d9db9c9f0ef6418. Plan 02 was still in-flight when user paused — check completion notification. Master still at de66a75. DO NOT start Wave 2 until both worktrees merged + build/test pass."
+  "uncommitted_files": [
+    "package.json",
+    "CLAUDE.md",
+    ".github/workflows/ci.yml",
+    "playwright.config.ts",
+    "tests/unit/landing-date.test.ts",
+    "pnpm-lock.yaml (deleted)"
+  ],
+  "next_action": "Ask user if they ran 'npm install --legacy-peer-deps'. If yes: check package-lock.json exists, write .npmrc, run tests, commit. If no: remind them to run it.",
+  "context_notes": "Wave 4 done, migration 80% done. All file edits complete. Only missing: lockfile from successful npm install."
 }

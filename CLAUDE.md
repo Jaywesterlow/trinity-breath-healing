@@ -1,7 +1,7 @@
 ## Project Configuration
 
 - **Language**: TypeScript
-- **Package Manager**: pnpm
+- **Package Manager**: npm
 - **Add-ons**: prettier, eslint, vitest
 
 ---
