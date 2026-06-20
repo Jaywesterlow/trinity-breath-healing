@@ -1,17 +1,32 @@
 {
   "ci": {
     "collect": {
+      "numberOfRuns": 3,
       "settings": {
-        "preset": "desktop"
+        "preset": "desktop",
+        "formFactor": "desktop",
+        "screenEmulation": {
+          "mobile": false,
+          "width": 1350,
+          "height": 940,
+          "deviceScaleFactor": 1,
+          "disabled": false
+        }
       }
     },
     "assert": {
+      "preset": "lighthouse:no-pwa",
       "assertions": {
+        "categories:performance": ["error", { "minScore": 0.85 }],
+        "categories:seo": ["error", { "minScore": 1.0 }],
+        "categories:accessibility": ["error", { "minScore": 0.95 }],
         "largest-contentful-paint": ["error", { "maxNumericValue": 2500 }],
         "cumulative-layout-shift": ["error", { "maxNumericValue": 0.1 }],
-        "categories:seo": ["error", { "minScore": 1 }],
-        "categories:accessibility": ["error", { "minScore": 0.95 }]
+        "interactive": ["warn", { "maxNumericValue": 3000 }]
       }
+    },
+    "upload": {
+      "target": "temporary-public-storage"
     }
   }
 }

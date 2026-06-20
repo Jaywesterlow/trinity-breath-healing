@@ -18,11 +18,13 @@
 		"test": "npm run test:unit -- --run",
 		"test:unit": "vitest",
 		"test:integration": "playwright test",
-		"test:html-audit": "node -e \"console.log('html-audit: stub (wired in Plan 00-08)')\"",
-		"test:routes": "node -e \"console.log('routes: stub (wired in Plan 00-08)')\"",
-		"test:schema": "node -e \"console.log('schema-validate: stub (wired in Plan 00-08)')\"",
-		"audit:html": "node -e \"console.log('audit:html stub (wired in Plan 00-08)')\"",
-		"audit:json-ld": "node -e \"console.log('audit:json-ld stub (wired in Plan 00-08)')\""
+		"audit:html": "node --import tsx/esm scripts/check-html.ts",
+		"audit:json-ld": "node --import tsx/esm scripts/validate-json-ld.ts",
+		"audit:initial-html-ai": "node --import tsx/esm scripts/check-initial-html-ai.ts",
+		"audit:placeholders": "bash scripts/grep-placeholders.sh",
+		"test:html-audit": "npm run audit:html",
+		"test:routes": "npm run test:integration",
+		"test:schema": "npx structured-data-testing-tool"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
@@ -47,6 +49,7 @@
 		"prettier-plugin-svelte": "^4.1.0",
 		"schema-dts": "^2.0.0",
 		"structured-data-testing-tool": "^4.5.0",
+		"tsx": "^4.19.2",
 		"svelte": "^5.56.1",
 		"svelte-check": "^4.6.0",
 		"typescript": "^6.0.3",
