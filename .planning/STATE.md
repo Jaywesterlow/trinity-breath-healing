@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: "Plans 01 + 02 + 07 merged to master. 35/35 unit tests passing. node-html-parser gate PASS (og:locale=nl_NL, hreflang×2, nav+main+footer in initial HTML). BLOCKER-5 + WARNING-3 closed."
-last_updated: "2026-06-19T11:09:21.147Z"
+status: "Wave 4 complete. Plan 05 merged to master. 14 stub routes prerendered, SEO-09/BLOCKER-3 closed (BUILD_DATE chain). 140/140 unit tests passing."
+last_updated: "2026-06-20T15:00:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 9
-  completed_plans: 7
+  completed_plans: 8
   percent: 0
 ---
 
@@ -28,12 +28,12 @@ progress:
 ## Current Position
 
 **Phase:** 0 — Foundation & SEO Scaffolding
-**Plan:** Wave 3 complete (Plans 03, 04, 06 done). Wave 4 next: Plan 05.
-**Status:** Plans 01+02+03+04+06+07 merged to master. 127/127 unit tests passing. CSS token system + enforcement scripts in place.
-**Progress:** Phases 0/6 complete · Plans 7/9 executed
+**Plan:** Wave 4 complete (Plan 05 done). Wave 5 next: Plan 08.
+**Status:** Plans 01+02+03+04+05+06+07 merged to master. 140/140 unit tests passing. 14 stub routes prerendered. SEO-09/BLOCKER-3 closed.
+**Progress:** Phases 0/6 complete · Plans 8/9 executed
 
 ```
-[███████░░░] ~78% — Wave 3 done; Wave 4 (Plan 05 — contact form) next
+[████████░░] ~89% — Wave 4 done; Wave 5 (Plan 08 — HTML audit gate) next
 ```
 
 ## Performance Metrics
@@ -99,11 +99,15 @@ progress:
 
 ### Blockers
 
-None. Phase 0 Wave 0 complete. Wave 1 (Plan 02 + 07) ready.
+None. Wave 4 complete. Wave 5 (Plan 08) ready.
 
 ## Session Continuity
 
-**Last action (2026-06-19, session 7):** Wave 3 complete. Plan 06 done — CSS token system (static/global.css, 25 tokens), placeholder woff2 fonts (DM Sans + Cormorant Garamond), enforcement scripts (check-tokens.sh, no-shared-css.sh), 127/127 tests passing. Wave 4 (Plan 05 — contact form) next.
+**Last action (2026-06-20, session 9):** Wave 4 complete. Plan 05 executed and merged. 14 stub routes prerendered (16 total HTML outputs: index + 14 stubs + sitemap.xml). SEO-09/BLOCKER-3 closed: `__BUILD_DATE__=2026-06-20` flows Vite define → meta.dateModified → visible `<time datetime="2026-06-20">` + JSON-LD `WebPage.dateModified`. 140/140 unit tests pass. Wave 5 (Plan 08 — HTML audit gate) next. Stale worktree directory `.claude/worktrees/agent-af6422c664bad6c56` still on disk (Windows path-length prevents deletion) — git refs pruned, harmless.
+
+**Previously (2026-06-20, session 8):** Session resumed. Deleted stale HANDOFF.json. Confirmed master at `a4760c3`, 127/127 tests, Wave 3 done.
+
+**Previously (2026-06-19, session 7):** Wave 3 complete. Plan 06 done — CSS token system (static/global.css, 25 tokens), placeholder woff2 fonts (DM Sans + Cormorant Garamond), enforcement scripts (check-tokens.sh, no-shared-css.sh), 127/127 tests passing.
 
 **Previously (2026-06-18, session 4):** Plan 01 fully executed. All 18 remaining Task 2 items written. Build verified (`lang="nl"` confirmed, fail-loud verified, 2/2 unit tests passing). `pnpm check` 0 errors. Fixed: removed `paths` from `tsconfig.json`; installed `jsdom`.
 
@@ -117,11 +121,11 @@ None. Phase 0 Wave 0 complete. Wave 1 (Plan 02 + 07) ready.
 - Wave 1: Plan 02 ✓ DONE, Plan 07 ✓ DONE (merged)
 - Wave 2: Plan 03 ✓ DONE
 - Wave 3: Plan 04 ✓ DONE, Plan 06 ✓ DONE
-- Wave 4: Plan 05 ← NEXT
-- Wave 5: Plan 08
+- Wave 4: Plan 05 ✓ DONE
+- Wave 5: Plan 08 ← NEXT
 - Wave 6: Plan 09 (human checkpoints)
 
-**Next action:** `/gsd:execute-phase 0 --wave 4` — execute Plan 05 (contact form: Cloudflare Worker + Resend EU).
+**Next action:** `/gsd-execute-phase --wave 5` — execute Plan 08 (HTML audit gate: check-html.ts CI validation).
 
 **Outstanding uncommitted artifacts:** None.
 
@@ -140,6 +144,7 @@ None. Phase 0 Wave 0 complete. Wave 1 (Plan 02 + 07) ready.
 - `seo-aeo-samenvatting-checklist.md` (project root) — Dutch SEO/AEO playbook, authoritative reference
 
 ---
-*Last updated: 2026-06-19 — Wave 3 complete. Plans 01+02+03+04+06+07 done, 127/127 tests pass. Wave 4 (Plan 05) next.*
-*Previously: 2026-06-18 — Wave 0 complete; Plan 01 done.*
+*Last updated: 2026-06-20 — Wave 4 complete. Plans 01+02+03+04+05+06+07 done, 140/140 tests pass. Wave 5 (Plan 08) next.*
+*Previously: 2026-06-19 — Wave 3 complete. Plans 01+02+03+04+06+07 done, 127/127 tests pass.*
+*2026-06-18 — Wave 0 complete; Plan 01 done.*
 *2026-06-15 — Phase 0 plan-phase complete; revision loop closed at iter 3.*
