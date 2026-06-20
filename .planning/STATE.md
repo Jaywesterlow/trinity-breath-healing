@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Plans 01+02+03+04+05+06+07 merged to master. 140/140 unit tests passing. 14 stub routes prerendered. SEO-09/BLOCKER-3 closed.
-last_updated: "2026-06-20T16:43:14.826Z"
+status: Plans 01–08 merged to master. 140 unit + 19 synthetic-violation + 153 html-audit tests pass. All CI gates wired. Wave 6 (Plan 09) next.
+last_updated: "2026-06-20T22:00:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 9
-  completed_plans: 7
+  completed_plans: 8
   percent: 0
 ---
 
@@ -28,12 +28,12 @@ progress:
 ## Current Position
 
 **Phase:** 0 — Foundation & SEO Scaffolding
-**Plan:** Wave 4 complete (Plan 05 done). Wave 5 next: Plan 08.
-**Status:** Plans 01+02+03+04+05+06+07 merged to master. 140/140 unit tests passing. 14 stub routes prerendered. SEO-09/BLOCKER-3 closed.
-**Progress:** Phases 0/6 complete · Plans 8/9 executed
+**Plan:** Wave 5 complete (Plan 08 done). Wave 6 next: Plan 09.
+**Status:** Plans 01–08 merged to master. 140 unit + 19 synthetic-violation + 153 html-audit tests pass. All CI quality gates wired and green.
+**Progress:** Phases 0/6 complete · Plans 9/9 executed (Plan 09 pending)
 
 ```
-[████████░░] ~89% — Wave 4 done; Wave 5 (Plan 08 — HTML audit gate) next
+[█████████░] ~95% — Wave 5 done; Wave 6 (Plan 09 — branch protection + human checkpoints) next
 ```
 
 ## Performance Metrics
@@ -103,7 +103,9 @@ None. Wave 4 complete. Wave 5 (Plan 08) ready.
 
 ## Session Continuity
 
-**Last action (2026-06-20, session 10):** pnpm→npm migration complete. Deleted pnpm `node_modules/` (crashed npm due to `.pnpm/` symlink tree), ran `npm install --legacy-peer-deps` successfully, added `legacy-peer-deps=true` to `.npmrc`. Fixed `runTscOnFixture` in `image.test.ts` to call `node typescript/bin/tsc` directly (avoids npm `.cmd` wrapper + `&`-in-path cmd.exe bug on Windows). 140/140 tests pass. Wave 5 (Plan 08 — HTML audit gate) next.
+**Last action (2026-06-20, session 11):** Wave 5 complete. Plan 08 — all CI quality gates wired. Scripts: check-html.ts (H1/title/desc/canonical/hreflang/OG/Twitter/og:locale/landmarks/font-preload/SEO-09 <time datetime>), validate-json-ld.ts (schema types/dateModified cross-check/WARNING-2 FAQPage policy), check-initial-html-ai.ts, grep-placeholders.sh. Synthetic violations: 19/19. HTML audit integration: 153/153. Full ci.yml (build-and-audit + lighthouse-and-a11y + playwright-integration). lighthouserc.json (LCP/CLS/SEO/A11y budgets). Windows workaround: node --import tsx/esm + direct vite/playwright invocation. 140/140 unit tests. Commit ee3d961.
+
+**Previously (2026-06-20, session 10):** pnpm→npm migration complete. Deleted pnpm `node_modules/` (crashed npm due to `.pnpm/` symlink tree), ran `npm install --legacy-peer-deps` successfully, added `legacy-peer-deps=true` to `.npmrc`. Fixed `runTscOnFixture` in `image.test.ts` to call `node typescript/bin/tsc` directly (avoids npm `.cmd` wrapper + `&`-in-path cmd.exe bug on Windows). 140/140 tests pass.
 
 **Previously (2026-06-20, session 8):** Session resumed. Deleted stale HANDOFF.json. Confirmed master at `a4760c3`, 127/127 tests, Wave 3 done.
 
@@ -122,10 +124,10 @@ None. Wave 4 complete. Wave 5 (Plan 08) ready.
 - Wave 2: Plan 03 ✓ DONE
 - Wave 3: Plan 04 ✓ DONE, Plan 06 ✓ DONE
 - Wave 4: Plan 05 ✓ DONE
-- Wave 5: Plan 08 ← NEXT
-- Wave 6: Plan 09 (human checkpoints)
+- Wave 5: Plan 08 ✓ DONE
+- Wave 6: Plan 09 (human checkpoints) ← NEXT
 
-**Next action:** Start new session → `/gsd-execute-phase --wave 5` — execute Plan 08 (HTML audit gate: check-html.ts CI validation).
+**Next action:** Start new session → `/gsd-execute-phase --wave 6` — execute Plan 09 (branch protection + human checkpoints: domain, Search Console, Vercel, social links).
 
 **Outstanding uncommitted artifacts:** None.
 
@@ -144,7 +146,7 @@ None. Wave 4 complete. Wave 5 (Plan 08) ready.
 - `seo-aeo-samenvatting-checklist.md` (project root) — Dutch SEO/AEO playbook, authoritative reference
 
 ---
-*Last updated: 2026-06-20 — Wave 4 complete. Plans 01+02+03+04+05+06+07 done, 140/140 tests pass. Wave 5 (Plan 08) next.*
+*Last updated: 2026-06-20 — Wave 5 complete. Plans 01–08 done. 140 unit + 19 synthetic-violation + 153 html-audit tests pass. Wave 6 (Plan 09) next.*
 *Previously: 2026-06-19 — Wave 3 complete. Plans 01+02+03+04+06+07 done, 127/127 tests pass.*
 *2026-06-18 — Wave 0 complete; Plan 01 done.*
 *2026-06-15 — Phase 0 plan-phase complete; revision loop closed at iter 3.*
