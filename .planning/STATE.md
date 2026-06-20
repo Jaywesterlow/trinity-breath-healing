@@ -125,7 +125,7 @@ None. Wave 4 complete. Wave 5 (Plan 08) ready.
 - Wave 5: Plan 08 ← NEXT
 - Wave 6: Plan 09 (human checkpoints)
 
-**Next action:** `/gsd-execute-phase --wave 5` — execute Plan 08 (HTML audit gate: check-html.ts CI validation).
+**Next action:** Start new session → `/gsd-execute-phase --wave 5` — execute Plan 08 (HTML audit gate: check-html.ts CI validation).
 
 **Outstanding uncommitted artifacts:** None.
 
