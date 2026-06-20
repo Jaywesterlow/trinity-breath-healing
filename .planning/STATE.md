@@ -2,13 +2,13 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: "Wave 4 complete. Plan 05 merged to master. 14 stub routes prerendered, SEO-09/BLOCKER-3 closed (BUILD_DATE chain). 140/140 unit tests passing."
-last_updated: "2026-06-20T15:00:00.000Z"
+status: Plans 01+02+03+04+05+06+07 merged to master. 140/140 unit tests passing. 14 stub routes prerendered. SEO-09/BLOCKER-3 closed.
+last_updated: "2026-06-20T16:43:14.826Z"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 9
-  completed_plans: 8
+  completed_plans: 7
   percent: 0
 ---
 
@@ -103,7 +103,7 @@ None. Wave 4 complete. Wave 5 (Plan 08) ready.
 
 ## Session Continuity
 
-**Last action (2026-06-20, session 9):** Wave 4 complete. Plan 05 executed and merged. 14 stub routes prerendered (16 total HTML outputs: index + 14 stubs + sitemap.xml). SEO-09/BLOCKER-3 closed: `__BUILD_DATE__=2026-06-20` flows Vite define → meta.dateModified → visible `<time datetime="2026-06-20">` + JSON-LD `WebPage.dateModified`. 140/140 unit tests pass. Wave 5 (Plan 08 — HTML audit gate) next. Stale worktree directory `.claude/worktrees/agent-af6422c664bad6c56` still on disk (Windows path-length prevents deletion) — git refs pruned, harmless.
+**Last action (2026-06-20, session 10):** pnpm→npm migration complete. Deleted pnpm `node_modules/` (crashed npm due to `.pnpm/` symlink tree), ran `npm install --legacy-peer-deps` successfully, added `legacy-peer-deps=true` to `.npmrc`. Fixed `runTscOnFixture` in `image.test.ts` to call `node typescript/bin/tsc` directly (avoids npm `.cmd` wrapper + `&`-in-path cmd.exe bug on Windows). 140/140 tests pass. Wave 5 (Plan 08 — HTML audit gate) next.
 
 **Previously (2026-06-20, session 8):** Session resumed. Deleted stale HANDOFF.json. Confirmed master at `a4760c3`, 127/127 tests, Wave 3 done.
 

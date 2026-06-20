@@ -139,14 +139,16 @@ describe('EnhancedImage – rendering (PRF-01 §B)', () => {
 // attempts to construct a value with a missing required prop.
 // ---------------------------------------------------------------------------
 
-const TSC = path.join(ROOT, 'node_modules', '.bin', 'tsc');
+// Use typescript/bin/tsc directly via node to avoid .cmd wrapper issues on Windows
+// (paths containing & break cmd /c even when quoted).
+const TSC = path.join(ROOT, 'node_modules', 'typescript', 'bin', 'tsc');
 const FIXTURES_DIR = path.join(ROOT, 'tests', 'fixtures');
 
 function runTscOnFixture(fixturePath: string): { exitCode: number; output: string } {
 	try {
 		// --ignoreconfig is required in TypeScript 6 when specifying files on the command line
 		// (ts5112 error otherwise). --strict enables strictNullChecks so required props are enforced.
-		execSync(`"${TSC}" --ignoreconfig --noEmit --strict "${fixturePath}"`, {
+		execSync(`node "${TSC}" --ignoreconfig --noEmit --strict "${fixturePath}"`, {
 			cwd: ROOT,
 			stdio: 'pipe'
 		});
