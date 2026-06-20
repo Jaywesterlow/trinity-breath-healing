@@ -4,19 +4,27 @@ import { buildGraph } from '$lib/schema/buildGraph';
 import { buildWebPage } from '$lib/schema/webpage';
 
 /**
- * Landing page load — overrides layout's base graph with page-specific WebPage node.
- * Plan 05 will replace this with a version that passes dateModified: BUILD_DATE for SEO-09.
- * The wiring is already plumbed (buildWebPage accepts dateModified as optional param).
+ * Landing page load — SEO-09 / BLOCKER-3.
+ *
+ * __BUILD_DATE__ is injected by Vite at build time (vite.config.ts `define` block).
+ * It resolves to a YYYY-MM-DD string (e.g. '2026-06-20').
+ *
+ * Single source of truth: the same BUILD_DATE value flows to:
+ *   1. meta.dateModified → rendered as visible <time datetime={data.meta.dateModified}> in +page.svelte
+ *   2. buildWebPage({ dateModified: __BUILD_DATE__ }) → JSON-LD WebPage.dateModified in @graph
+ *
+ * Both UI and structured data agree — no drift possible. Phase 1 may add per-section
+ * dateModified from MDX/Sanity frontmatter; this landing date persists as the site-level signal.
  */
 export const load: PageLoad = async () => ({
-	meta: defaults,
+	meta: { ...defaults, dateModified: __BUILD_DATE__ },
 	graph: buildGraph({
 		pageSpecific: [
 			buildWebPage({
 				title: defaults.title,
 				description: defaults.description,
-				path: '/'
-				// dateModified: BUILD_DATE — Plan 05 wires this (SEO-09 recency signal)
+				path: '/',
+				dateModified: __BUILD_DATE__
 			})
 		],
 		path: '/'

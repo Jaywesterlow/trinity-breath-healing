@@ -10,6 +10,11 @@ export default defineConfig({
 		sveltekit()
 		// NO Tailwind plugin, NO PostCSS preset — plain CSS locked per CONTEXT.md D-09
 	],
+	// SEO-09: BUILD_DATE is inlined at build time and consumed by src/routes/+page.ts + +page.svelte.
+	// Single source of truth between visible <time datetime> and JSON-LD WebPage.dateModified.
+	define: {
+		__BUILD_DATE__: JSON.stringify(new Date().toISOString().split('T')[0])
+	},
 	resolve: {
 		alias: {
 			$lib: resolve('./src/lib'),
