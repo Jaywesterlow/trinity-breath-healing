@@ -1,10 +1,11 @@
 ---
 phase: 1
 slug: landing-sections
-status: draft
+status: approved
 shadcn_initialized: false
 preset: none
 created: 2026-06-22
+reviewed_at: 2026-06-22
 ---
 
 # Phase 1 — UI Design Contract: Landing Sections
@@ -60,10 +61,8 @@ All type sizes use tokens from `static/global.css`. Never hardcode sizes in comp
 
 | Role | Token | Computed Value | Font | Weight | Line Height |
 |------|-------|----------------|------|--------|-------------|
-| Body / base | `--font-size-base` | 16px (1rem) | DM Sans | 400 (`--font-weight-regular`) | 1.5 (`--line-height-normal`) |
-| Small / label / caption | `--font-size-sm` | 14px (0.875rem) | DM Sans | 400 | 1.5 |
-| Eyebrow / overline | `--font-size-xs` | 12px (0.75rem) | DM Sans | 700 (`--font-weight-bold`) | 1.5 |
-| Card body / secondary | `--font-size-lg` | 18px (1.125rem) | DM Sans | 400 | 1.75 (`--line-height-loose`) |
+| Body / base / card body | `--font-size-base` | 16px (1rem) | DM Sans | 400 (`--font-weight-regular`) | 1.5 (`--line-height-normal`) |
+| Small / label / eyebrow / caption | `--font-size-sm` | 14px (0.875rem) | DM Sans | 400 (body) / 700 (eyebrow) | 1.5 |
 | Section heading (H2) | `--font-size-2xl` | clamp(1.5rem, 4vw, 2rem) | Cormorant Garamond | 700 | 1.2 (`--line-height-tight`) |
 | Page H1 / display | `--font-size-3xl` | clamp(2rem, 6vw, 3rem) | Cormorant Garamond | 700 | 1.2 |
 
@@ -71,7 +70,8 @@ All type sizes use tokens from `static/global.css`. Never hardcode sizes in comp
 - H1–H6 always use `--font-display` (Cormorant Garamond), `--line-height-tight`, `--font-weight-bold`.
 - Body prose always uses `--font-body` (DM Sans), `--line-height-normal`.
 - Exactly one `<h1>` per page (SEO-11). Landing H1: "Rust in je hoofd. Ontspanning in je lichaam." (LND-01).
-- Eyebrow labels (e.g. "Werkwijze", "Over mij", "Behandelingen", "Contact", "FAQ") use `--font-size-xs`, `--font-weight-bold`, `--color-muted`, `letter-spacing: 0.08em`, `text-transform: uppercase`.
+- Eyebrow labels (e.g. "Werkwijze", "Over mij", "Behandelingen", "Contact", "FAQ") use `--font-size-sm`, `--font-weight-bold`, `--color-muted`, `letter-spacing: 0.08em`, `text-transform: uppercase`. The uppercase + letter-spacing modifiers visually differentiate eyebrow from label at the same token size.
+- Card headings (h3 / `<summary>`) use `--font-size-base`, `--font-weight-bold`, DM Sans — bold weight provides hierarchy without a separate size role.
 
 ---
 
@@ -145,7 +145,7 @@ All tokens from `static/global.css`. Never use hex literals in component styles.
 - Nav links: Home · Werkwijze · Over mij · Behandelingen · Contact. `--font-size-sm`, `--color-fg-forest`, `--font-weight-regular`.
 - Active/hover: `--color-accent-gold` underline (2px, `text-decoration`).
 - CTA "Maak een afspraak": same button style as hero CTA (smaller padding variant: `--space-2` block, `--space-5` inline).
-- Social icons: Lucide/Heroicons SVG, size 20×20px. `--color-fg-forest`. Hover: `--color-accent-gold`.
+- Social icons: Lucide/Heroicons SVG, size 20×20px. `--color-fg-forest`. Hover: `--color-accent-gold`. Each link MUST have `aria-label`: Instagram → `"Volg ons op Instagram"`, Facebook → `"Volg ons op Facebook"`, X → `"Volg ons op X"`.
 
 **Mobile hamburger (< 1024px):**
 - Hamburger button: 44×44px touch target, `--color-fg-forest` icon.
@@ -163,7 +163,7 @@ All tokens from `static/global.css`. Never use hex literals in component styles.
 
 **Section:** `<section id="werkwijze">` (D-14).
 
-**Eyebrow:** "Werkwijze" — xs token, bold, muted, uppercase, letter-spaced.
+**Eyebrow:** "Werkwijze" — `--font-size-sm`, bold, muted, uppercase, letter-spaced.
 
 **Heading (H2):** "Rustig, persoonlijk en op jouw tempo." — `--font-size-2xl`, Cormorant Garamond.
 
@@ -174,7 +174,7 @@ All tokens from `static/global.css`. Never use hex literals in component styles.
 **Cards:**
 - 3 cards: Kennismaking · De sessie · Verdieping.
 - Background: `--color-card-warm`. Border-radius: `--radius-lg`. Padding: `--space-6`.
-- Card heading (`<summary>` on mobile, plain `<h3>` on desktop): `--font-size-lg`, `--font-weight-bold`, DM Sans.
+- Card heading (`<summary>` on mobile, plain `<h3>` on desktop): `--font-size-base`, `--font-weight-bold`, DM Sans.
 - Card body: `--font-size-base`, DM Sans, `--line-height-loose`.
 - `<summary>` chevron icon: Lucide `ChevronDown`, 20px, rotates 180° when open (`transition: transform var(--motion-fast) var(--ease-out)`; skipped if `prefers-reduced-motion`).
 
@@ -184,7 +184,7 @@ All tokens from `static/global.css`. Never use hex literals in component styles.
 
 **Section:** `<section id="over-mij">` (D-18).
 
-**Eyebrow:** "Over mij" — xs token, bold, muted, uppercase.
+**Eyebrow:** "Over mij" — `--font-size-sm`, bold, muted, uppercase, letter-spaced.
 
 **Heading (H2):** "Vanuit eigen ervaring weet ik wat jij doormaakt." — `--font-size-2xl`, Cormorant Garamond.
 
@@ -210,7 +210,7 @@ All tokens from `static/global.css`. Never use hex literals in component styles.
 
 **Section:** `<section id="behandelingen">` (D-23).
 
-**Eyebrow:** "Behandelingen" — xs token, bold, muted, uppercase.
+**Eyebrow:** "Behandelingen" — `--font-size-sm`, bold, muted, uppercase, letter-spaced.
 
 **Heading (H2):** "Rustig, persoonlijk en op jouw tempo." — `--font-size-2xl`, Cormorant Garamond.
 
@@ -223,7 +223,7 @@ All tokens from `static/global.css`. Never use hex literals in component styles.
 
 **Card anatomy:**
 - Service icon (placeholder SVG/Lucide icon per service until practitioner provides custom).
-- Service name: `--font-size-lg`, `--font-weight-bold`, DM Sans.
+- Service name: `--font-size-base`, `--font-weight-bold`, DM Sans.
 - Background: `--color-card-warm`. Active card: `--color-accent-gold` left-border (4px) or top accent line.
 - Inactive card icon: `opacity: 0.5` + `--color-muted` text (D-20 active/inactive style).
 - Border-radius: `--radius-lg`. Min-width: `280px`. Max-width: `320px`.
@@ -250,7 +250,7 @@ All tokens from `static/global.css`. Never use hex literals in component styles.
 
 **Section:** `<section id="contact">` (D-28).
 
-**Eyebrow:** "Contact" — xs token, bold, muted, uppercase.
+**Eyebrow:** "Contact" — `--font-size-sm`, bold, muted, uppercase, letter-spaced.
 
 **Heading (H2):** "Een eerste stap hoeft niet groot te zijn." — `--font-size-2xl`, Cormorant Garamond.
 
@@ -280,7 +280,7 @@ All tokens from `static/global.css`. Never use hex literals in component styles.
 - All inputs: `<label>` programmatically associated (A11Y-02). Label: `--font-size-sm`, `--font-weight-bold`.
 - Input border: `1px solid var(--color-border)`. Focus: `outline: 2px solid var(--color-accent-gold)`.
 - AVG consent checkbox: unchecked by default, required field (LGL-07). Label: `--font-size-sm`, `--color-muted`.
-- Legal disclaimer: visible above Bericht field (LGL-04). `--font-size-xs`, `--color-muted`.
+- Legal disclaimer: visible above Bericht field (LGL-04). `--font-size-sm`, `--color-muted`.
 
 **Cal.com panel (D-27):**
 - `<div id="cal-mount" aria-label="Agenda voor online afspraak">` — empty in Phase 1.
@@ -292,7 +292,7 @@ All tokens from `static/global.css`. Never use hex literals in component styles.
 
 **Section:** below Contact section. Section heading: eyebrow "FAQ" (inferred from LND-07 requirement + D-32). `<section>` no anchor ID needed for Phase 1 (footer links to `#contact`).
 
-**Eyebrow:** "FAQ" — xs token, bold, muted, uppercase.
+**Eyebrow:** "FAQ" — `--font-size-sm`, bold, muted, uppercase, letter-spaced.
 
 **Heading (H2):** Planner to draft from Figma context (D-32: not locked). Suggested: "Veelgestelde vragen" — `--font-size-2xl`, Cormorant Garamond.
 
@@ -319,14 +319,14 @@ All tokens from `static/global.css`. Never use hex literals in component styles.
 - NAP: address (Stationsstraat 45 A, 1315 KS Almere, Nederland), email (`info@trinitybnh.nl`), phone (`TODO_PHONE`).
 - KvK placeholder slot: `TODO_KVK` (D-35).
 - BIG-status placeholder slot: `TODO_BIG` (D-35).
-- Social icons: Lucide/Heroicons SVG, 20×20px. Links: Instagram (`TODO_INSTAGRAM_HANDLE` → `href="#"` until Phase 4), Facebook (null → `href="#"`, hidden if null in BRAND), X (null → `href="#"`, hidden if null).
+- Social icons: Lucide/Heroicons SVG, 20×20px. Links: Instagram (`TODO_INSTAGRAM_HANDLE` → `href="#"` until Phase 4), Facebook (null → `href="#"`, hidden if null in BRAND), X (null → `href="#"`, hidden if null). Each icon link MUST have `aria-label`: Instagram → `"Volg ons op Instagram"`, Facebook → `"Volg ons op Facebook"`, X → `"Volg ons op X"`.
 - 3 link columns:
   - DIENSTEN (5 links): service slugs from `BRAND.services` + Meer diensten.
   - MENU (5 links): Home · Werkwijze · Over mij · Behandelingen · Contact.
   - LEZEN (4 links): matching design (planner to confirm from Figma).
 - Bottom bar: "Privacyverklaring" link + "Algemene voorwaarden" link + copyright "©Copyright 2026 Trinity Breath & Healing, alle rechten voorbehouden".
 
-**Column heading style:** `--font-size-xs`, `--font-weight-bold`, `--color-muted`, uppercase, letter-spaced.
+**Column heading style:** `--font-size-sm`, `--font-weight-bold`, `--color-muted`, uppercase, letter-spaced.
 
 **Link style:** `--font-size-sm`, `--color-fg-forest`, no underline default, underline on hover.
 
@@ -454,14 +454,14 @@ Every sub-unit must satisfy:
 
 ## Checker Sign-Off
 
-- [ ] Dimension 1 Copywriting: PASS
-- [ ] Dimension 2 Visuals: PASS
-- [ ] Dimension 3 Color: PASS
-- [ ] Dimension 4 Typography: PASS
-- [ ] Dimension 5 Spacing: PASS
-- [ ] Dimension 6 Registry Safety: PASS
+- [x] Dimension 1 Copywriting: PASS
+- [x] Dimension 2 Visuals: FLAG (non-blocking) — social icon aria-labels declared; hamburger/X-close buttons need `aria-label="Menu openen"` / `aria-label="Menu sluiten"` at executor time
+- [x] Dimension 3 Color: PASS
+- [x] Dimension 4 Typography: PASS — exactly 4 roles (sm/base/2xl/3xl); xs and lg dropped; eyebrow differentiated via modifiers
+- [x] Dimension 5 Spacing: FLAG (non-blocking) — space-3/5/10 outside {4,8,16,24,32,48,64} standard set but are Phase 0-established multiples of 4; no new non-standard values to be introduced
+- [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** pending
+**Approval:** APPROVED 2026-06-22
 
 ---
 
