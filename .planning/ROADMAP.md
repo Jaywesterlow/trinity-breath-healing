@@ -86,7 +86,7 @@ Plans:
 
 **Plans**: 10 plans
 Plans:
-- [ ] 01-00-PLAN.md — Wave 0: CI/test infra, image stubs, logo placeholder, check-copy.sh, html-audit Phase 1 assertions, ci.yml update (Wave 0)
+- [x] 01-00-PLAN.md — Wave 0: CI/test infra, image stubs, logo placeholder, check-copy.sh, html-audit Phase 1 assertions, ci.yml update (Wave 0)
 - [ ] 01-01-PLAN.md — Hero section: HeroSection.svelte, Head.svelte heroPreload, +page.svelte replacement (Wave 1)
 - [ ] 01-02-PLAN.md — Header + mobile menu overlay: SiteNav.svelte full replacement, +layout.svelte (Wave 1)
 - [ ] 01-03-PLAN.md — Werkwijze 3-card / accordion: WerkwijzeSection.svelte, +page.svelte (Wave 2)
@@ -180,7 +180,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 0. Foundation & SEO Scaffolding | 9/9 | COMPLETE | 2026-06-22 |
-| 1. Landing Sections (8 sub-units) | 0/10 | Planned | - |
+| 1. Landing Sections (8 sub-units) | 1/10 | In Progress|  |
 | 2. Reserved-Page v1 Content | 0/? | Not started | - |
 | 3. Integrations | 0/? | Not started | - |
 | 4. Legal & Copy Gate | 0/? | Not started | - |

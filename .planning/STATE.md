@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Phase 1 PLANNED. UI-SPEC approved. 10 plans in 5 waves ready to execute. Wave 0 next.
-last_updated: "2026-06-23T00:00:00.000Z"
+status: Plans 01–08 merged to master. 140 unit + 19 synthetic-violation + 153 html-audit tests pass. All CI quality gates wired and green.
+last_updated: "2026-06-22T23:41:43.655Z"
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 19
-  completed_plans: 9
-  percent: 0
+  completed_plans: 10
+  percent: 17
 ---
 
 # State: Trinity Breath & Healing
@@ -27,13 +27,13 @@ progress:
 
 ## Current Position
 
-**Phase:** 0 — Foundation & SEO Scaffolding
-**Plan:** Wave 5 complete (Plan 08 done). Wave 6 next: Plan 09.
-**Status:** Plans 01–08 merged to master. 140 unit + 19 synthetic-violation + 153 html-audit tests pass. All CI quality gates wired and green.
-**Progress:** Phases 0/6 complete · Plans 9/9 executed (Plan 09 pending)
+**Phase:** 1 — Landing Sections
+**Plan:** Wave 0 complete (Plan 01-00 done). Wave 1 next: Plans 01-01 through 01-03.
+**Status:** Phase 1 Wave 0 complete. CI floor set: check-copy.sh gate, Phase 1 html-audit red tests, image stubs, logo placeholder. 139 unit tests pass + 1 skip.
+**Progress:** [█████░░░░░] 53%
 
 ```
-[█████████░] ~95% — Wave 5 done; Wave 6 (Plan 09 — branch protection + human checkpoints) next
+[█████░░░░░] 53% — Phase 1 Wave 0 done; Wave 1 (Plans 01-01, 01-02, 01-03) next
 ```
 
 ## Performance Metrics
@@ -70,6 +70,8 @@ progress:
 | Per-section landing build, hero-first, mobile-first | User-stated granularity preference; ARCHITECTURE §11.2 codifies the 12-section order | PROJECT.md + research/ARCHITECTURE.md §11.2 |
 | **`tsconfig.json` paths removed** — aliases via `kit.alias` only | Manual `paths` block overrode SvelteKit's auto-generated `$lib` alias → `svelte-check` error. Kit.alias is the single source of truth. | Plan 01 execution |
 | **jsdom installed separately** | Vitest 4 no longer bundles jsdom; must be explicit devDependency | Plan 01 execution |
+| **`fs.existsSync` guard before dynamic import in Vitest** | Vite `vite:import-analysis` resolves alias targets at transform time — try/catch and `@vite-ignore` do not suppress the error when the alias target file is absent. Gate on `fs.existsSync` + use absolute path via `path.resolve` | Plan 01-00 execution |
+| **`test.describe` not bare `describe` in Playwright specs** | `@playwright/test` does not export a top-level `describe` — use `test.describe()` to avoid TypeScript errors in `svelte-check` | Plan 01-00 execution |
 
 ### Todos (Roadmap-level)
 
@@ -103,7 +105,9 @@ None. Wave 4 complete. Wave 5 (Plan 08) ready.
 
 ## Session Continuity
 
-**Last action (2026-06-22, session 13):** Phase 1 context gathered. 01-CONTEXT.md + 01-DISCUSSION-LOG.md written and committed. 40 decisions locked (D-01–D-40). User must provide 6 image assets before Phase 1 execution. Next: `/gsd-plan-phase` (Phase 1).
+**Last action (2026-06-23, session 14):** Phase 1 Wave 0 complete. Plan 01-00 done. check-copy.sh (LND-09/LND-10), Phase 1 html-audit red tests (6 assertions), schema-faq conditional guard, 5 PNG stubs, logo.svg, ci.yml updated. 139 unit tests pass + 1 skip. Wave 1 next: Plans 01-01 through 01-03.
+
+**Previously (2026-06-22, session 13):** Phase 1 context gathered. 01-CONTEXT.md + 01-DISCUSSION-LOG.md written and committed. 40 decisions locked (D-01–D-40). User must provide 6 image assets before Phase 1 execution. Next: `/gsd-plan-phase` (Phase 1).
 
 **Previously (2026-06-22, session 12):** Phase 0 COMPLETE. Plan 09 all tasks done. GSC meta tag wired. PR #1 merged. Production deploy READY. AI crawler smoke tests 4/4 pass. robots.txt ✓ sitemap 15 loc ✓. PHASE0-LAUNCH-CHECKLIST.md + 00-09-SUMMARY.md done. Wave 6 done.
 
