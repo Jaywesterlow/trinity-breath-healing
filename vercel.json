@@ -1,0 +1,10 @@
+{
+	"build": {
+		"env": {
+			"PUBLIC_SITE_URL": "https://trinity-breath-healing.vercel.app"
+		}
+	},
+	"env": {
+		"PUBLIC_SITE_URL": "https://trinity-breath-healing.vercel.app"
+	}
+}

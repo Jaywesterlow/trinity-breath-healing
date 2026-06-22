@@ -1,0 +1,72 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-06-21T00:00:00.000Z",
+  "phase": "00",
+  "phase_name": "foundation-seo-scaffolding",
+  "phase_dir": ".planning/phases/00-foundation-seo-scaffolding",
+  "plan": 9,
+  "task": 2,
+  "total_tasks": 4,
+  "status": "paused",
+  "completed_tasks": [
+    {
+      "id": 1,
+      "name": "Create GitHub repo + push Phase 0 PR",
+      "status": "done",
+      "commit": "e022e71",
+      "notes": "Repo: https://github.com/Jaywesterlow/trinity-breath-healing (PRIVATE). PR #1: https://github.com/Jaywesterlow/trinity-breath-healing/pull/1 (phase-0-foundation -> main). main reset to initial commit 79d0c9a so PR has a diff."
+    }
+  ],
+  "remaining_tasks": [
+    {
+      "id": 2,
+      "name": "Connect Vercel to GitHub repo + set PUBLIC_SITE_URL env var",
+      "status": "not_started",
+      "notes": "User must do manually via Vercel dashboard. See PLAN.md Task 2."
+    },
+    {
+      "id": 3,
+      "name": "Configure main-branch protection with Plan 08 gates as required status checks",
+      "status": "not_started",
+      "notes": "Agent can do via gh CLI after CI run names confirmed from a real workflow run."
+    },
+    {
+      "id": 4,
+      "name": "Search Console verification + production smoke test + PHASE0-LAUNCH-CHECKLIST.md",
+      "status": "not_started",
+      "notes": "Needs production deploy. Search Console HTML file -> static/. PHASE0-LAUNCH-CHECKLIST.md template already exists."
+    }
+  ],
+  "blockers": [
+    {
+      "description": "Task 2 requires user to connect Vercel to GitHub in the Vercel dashboard — cannot be automated",
+      "type": "human_action",
+      "workaround": "None"
+    }
+  ],
+  "human_actions_pending": [
+    {
+      "action": "Connect Vercel to trinity-breath-healing GitHub repo via vercel.com",
+      "context": "Add New Project -> import from GitHub -> select trinity-breath-healing -> SvelteKit auto-detected -> deploy -> Settings -> Env Vars -> PUBLIC_SITE_URL=https://trinity-breath-healing.vercel.app for Production AND Preview",
+      "blocking": true
+    }
+  ],
+  "decisions": [
+    {
+      "decision": "main branch reset to initial commit 79d0c9a; all Phase 0 work on phase-0-foundation",
+      "rationale": "GitHub needs base/head to differ to create a PR. main = seed commit, phase-0-foundation = all work.",
+      "phase": "00"
+    },
+    {
+      "decision": "gh CLI invoked via full path C:\\Program Files\\GitHub CLI\\gh.exe with GH_CONFIG_DIR set",
+      "rationale": "gh not on PATH in Claude shell. Must use: $env:GH_CONFIG_DIR = '$env:APPDATA\\GitHub CLI'; & 'C:\\Program Files\\GitHub CLI\\gh.exe' ...",
+      "phase": "00"
+    }
+  ],
+  "uncommitted_files": [
+    ".planning/phases/00-foundation-seo-scaffolding/PHASE0-LAUNCH-CHECKLIST.md",
+    ".planning/HANDOFF.json"
+  ],
+  "next_action": "User connects Vercel via dashboard. Once preview deploy + CI run exist, agent wires branch protection (Task 3) via gh CLI, then guides Search Console verification (Task 4).",
+  "context_notes": "Plan 09 is all human checkpoints. Task 1 done. CI will run once Vercel preview deploy exists. Branch protection can be set by agent via gh CLI after first CI run. Task 4 (Search Console) always manual."
+}
