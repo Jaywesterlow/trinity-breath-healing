@@ -32,7 +32,7 @@
 
 ## Phase 0 — Foundation & SEO Scaffolding
 
-**Status:** 7/9 plans done. Plan 05 (stub routes) in progress. Plans 08–09 pending.
+**Status:** COMPLETE. All 9/9 plans done. Production live at `https://trinity-breath-healing.vercel.app`. CI green. 312 tests passing (140 unit + 19 synthetic-violation + 153 html-audit).
 
 ### What "Foundation" means for an SEO/AEO site
 
@@ -80,29 +80,32 @@ AI crawlers and Google do NOT execute JavaScript by default. Every piece of cont
 
 ### Plans In Progress
 
-#### Plan 05 — 14 Reserved Stub Routes + SEO-09 (Wave 4) — INCOMPLETE
-**Status:** RED commit done (`test(00-05)`). Implementation uncommitted in worktree `worktree-agent-af6422c664bad6c56`.
+#### Plan 05 — 14 Reserved Stub Routes + SEO-09 (Wave 4) ✓
+**Commit prefix:** `feat(00-05)`
 **What:** 28 files (14 × `+page.ts` + `+page.svelte`). Shared `<StubLayout>`. `STUB_META` map (14 distinct title/description pairs). Vite `__BUILD_DATE__` define for visible `dateModified` on landing page.
-**Why matters:** All 14 reserved URLs must return HTTP 200 from day one (zero-301 migration guarantee — when Phase 2 deepens `/contact`, only body changes; URL + schema persist). Also closes SEO-09 (visible recency signal AI engines weight heavily).
+**Why matters:** All 14 reserved URLs return HTTP 200 from day one (zero-301 migration guarantee). Closes SEO-09 (visible recency signal AI engines weight heavily).
 
-### Plans Pending
+#### Plan 08 — Full CI Gates (Wave 5) ✓
+**Commit prefix:** `feat(00-08)`
+**What:** `check-html.ts` (H1/title/desc/canonical/hreflang/OG/Twitter/og:locale/landmarks/font-preload/SEO-09 `<time datetime>`), `validate-json-ld.ts` (schema types/dateModified/FAQPage policy), `check-initial-html-ai.ts` (AI crawler simulation via curl). Lighthouse CI budgets (LCP/CLS/SEO/A11y). `pa11y-ci` accessibility gate. Full `ci.yml` (build-and-audit + lighthouse-and-a11y + playwright-integration). 19/19 synthetic violations catch. 153/153 html-audit tests.
 
-| Plan | Wave | What |
-|------|------|------|
-| 08 | 5 | Full CI gates: `check-html.ts`, `validate-json-ld`, `check-initial-html-ai`, Lighthouse CI budgets, pa11y/axe |
-| 09 | 6 | GitHub repo + branch protection + Vercel bind + Search Console verification + production smoke test (human checkpoints) |
+#### Plan 09 — Deploy Bind + Human Checkpoints (Wave 6) ✓
+**Commit prefix:** `feat(00-09)` / `chore(00-09)`
+**What:** GitHub repo made public (required for free branch protection). Branch ruleset `protect-main` (ID 17981026) wired. Vercel project connected. Google Search Console meta-tag verification committed to `src/app.html`. Production smoke tests 4/4 pass (robots.txt ✓, sitemap 15 loc ✓, AI crawler initial-HTML ✓, JSON-LD valid ✓).
+**Manual steps required:** GSC property creation (OAuth-gated), repo public confirmation. Documented in `manual-steps.md`.
 
 ---
 
-## Phases 1–5 (Not Started)
+## Phases 1–5
 
-| Phase | What | Visible? |
-|-------|------|----------|
-| 1 | Landing page — 8 sections in Figma frame order (hero, nav, Werkwijze, About, Behandelingen, Contact+booking, FAQ, footer) | **Yes — first visible UI** |
-| 2 | Real content for `/privacyverklaring`, `/algemene-voorwaarden`, `/contact` | Yes |
-| 3 | Vercel Function `/api/contact` → Resend EU; Cal.com inline embed; Plausible analytics | Partial |
-| 4 | Dutch counsel review, hedge-language grep, AVG flow, NAP audit | No |
-| 5 | Production deploy, Search Console, AI-crawler verification, 28-day CWV monitoring | No |
+| Phase | Status | What | Visible? |
+|-------|--------|------|----------|
+| 0 | ✓ COMPLETE | Foundation & SEO Scaffolding — scaffold, primitives, routes, CI, deploy bind | No |
+| 1 | Next | Landing page — hero, nav, Werkwijze, About, Behandelingen, Contact+booking, FAQ, footer | **Yes — first visible UI** |
+| 2 | Pending | Real content for `/privacyverklaring`, `/algemene-voorwaarden`, `/contact` | Yes |
+| 3 | Pending | Vercel Function `/api/contact` → Resend EU; Cal.com inline embed; Plausible analytics | Partial |
+| 4 | Pending | Dutch counsel review, hedge-language grep, AVG flow, NAP audit | No |
+| 5 | Pending | Production deploy, Search Console, AI-crawler verification, 28-day CWV monitoring | No |
 
 ---
 
@@ -115,7 +118,9 @@ AI crawlers and Google do NOT execute JavaScript by default. Every piece of cont
 | 03 | ~60 |
 | 04 | ~100 |
 | 06 | 127/127 |
-| 05 (pending) | ~140+ (adds stub-meta + landing-date + Playwright integration) |
+| 05 | 140/140 (adds stub-meta + landing-date + Playwright integration) |
+| 08 | 312/312 (adds 19 synthetic-violation + 153 html-audit) |
+| 09 | 312/312 (no new tests; smoke tests 4/4 pass externally) |
 
 ---
 
@@ -149,4 +154,4 @@ Session 8: Plan 09 — deploy bind
 → Phase 1 begins (visible UI)
 ```
 
-Enforce: one wave per session, wrap at 60% context, stop at 75%.
+Enforce: one wave per session, wrap at 60% context. Invoke `/context-guardian` at session start — it owns the 65%/75% mandatory checkpoints (self-imposed hard stops proved unreliable).
