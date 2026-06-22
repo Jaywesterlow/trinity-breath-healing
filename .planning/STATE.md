@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Plan 09 Wave 6 in progress. CI green. Repo public. Branch ruleset active on main. Search Console pending (user Google auth required).
-last_updated: "2026-06-22T14:40:00.000Z"
+status: Phase 0 COMPLETE. All Plans 01-09 done. Production deployed. CI green. Phase 1 next.
+last_updated: "2026-06-22T15:00:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 0
@@ -103,7 +103,7 @@ None. Wave 4 complete. Wave 5 (Plan 08) ready.
 
 ## Session Continuity
 
-**Last action (2026-06-22, session 12):** Plan 09 Wave 6 in progress. All ESLint errors fixed (20 errors across 7 files across 3 CI cycles). CI green: build-and-audit ✓ playwright-integration ✓ lighthouse-and-a11y (continue-on-error — Vercel preview SSO blocks crawlers on Hobby plan). Repo made public. Branch ruleset `protect-main` wired: requires build-and-audit + playwright-integration, blocks force-push + deletion. Task 4 (Search Console) requires user Google account auth — cannot be automated.
+**Last action (2026-06-22, session 12):** Phase 0 COMPLETE. Plan 09 all tasks done. GSC meta tag wired. PR #1 merged. Production deploy READY. AI crawler smoke tests 4/4 pass. robots.txt ✓ sitemap 15 loc ✓. PHASE0-LAUNCH-CHECKLIST.md + 00-09-SUMMARY.md done. Wave 6 done.
 
 **Previously (2026-06-20, session 11):** Wave 5 complete. Plan 08 — all CI quality gates wired. Scripts: check-html.ts (H1/title/desc/canonical/hreflang/OG/Twitter/og:locale/landmarks/font-preload/SEO-09 <time datetime>), validate-json-ld.ts (schema types/dateModified cross-check/WARNING-2 FAQPage policy), check-initial-html-ai.ts, grep-placeholders.sh. Synthetic violations: 19/19. HTML audit integration: 153/153. Full ci.yml (build-and-audit + lighthouse-and-a11y + playwright-integration). lighthouserc.json (LCP/CLS/SEO/A11y budgets). Windows workaround: node --import tsx/esm + direct vite/playwright invocation. 140/140 unit tests. Commit ee3d961.
 
@@ -127,9 +127,9 @@ None. Wave 4 complete. Wave 5 (Plan 08) ready.
 - Wave 3: Plan 04 ✓ DONE, Plan 06 ✓ DONE
 - Wave 4: Plan 05 ✓ DONE
 - Wave 5: Plan 08 ✓ DONE
-- Wave 6: Plan 09 (human checkpoints) ← NEXT
+- Wave 6: Plan 09 ✓ DONE
 
-**Next action:** Start new session → `/gsd-execute-phase --wave 6` — execute Plan 09 (branch protection + human checkpoints: domain, Search Console, Vercel, social links).
+**Next action:** Phase 1 — Landing Page Sections. Start new session → `/gsd-execute-phase --wave 1` (Phase 1, Wave 1).
 
 **Outstanding uncommitted artifacts:** None.
 
