@@ -25,7 +25,6 @@
  */
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
-import path from 'path';
 import { parse } from 'node-html-parser';
 
 const AI_USER_AGENTS = [
@@ -65,7 +64,7 @@ function parseArgs(): { url: string; ua: string } {
 async function fetchHtml(url: string, ua: string): Promise<string> {
 	if (url.startsWith('file://')) {
 		// file:// — read local prerendered output (offline/CI use)
-		let filePath = fileURLToPath(url);
+		const filePath = fileURLToPath(url);
 		// On Windows, fileURLToPath returns C:\... which is correct
 		return readFileSync(filePath, 'utf8');
 	}

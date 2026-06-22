@@ -18,7 +18,9 @@ export function loadCollection<T extends Frontmatter = Frontmatter>(
 			const frontmatter = frontmatterSchema.parse(mod.metadata) as T;
 			return { path, frontmatter, default: mod.default };
 		} catch (err) {
-			throw new Error(`[loadCollection] Invalid frontmatter in ${path}: ${String(err)}`);
+			throw new Error(`[loadCollection] Invalid frontmatter in ${path}: ${String(err)}`, {
+				cause: err
+			});
 		}
 	});
 }

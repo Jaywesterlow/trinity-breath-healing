@@ -34,7 +34,7 @@ import { readFileSync, readdirSync } from 'fs';
 import path from 'path';
 import { parse } from 'node-html-parser';
 
-const SITE_URL = (
+const _SITE_URL = (
 	process.env.PUBLIC_SITE_URL ?? 'https://trinity-breath-healing.vercel.app'
 ).replace(/\/$/, '');
 const ROOT_DIR = process.env.HTML_AUDIT_ROOT ?? '.svelte-kit/output/prerendered/pages';
