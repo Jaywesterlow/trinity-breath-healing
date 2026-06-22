@@ -18,7 +18,7 @@
 
 <nav aria-label="Breadcrumb">
 	<ol>
-		{#each items as item, i}
+		{#each items as item, i (item.path)}
 			<li>
 				{#if i < items.length - 1}
 					<a href={item.path}>{item.name}</a>

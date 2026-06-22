@@ -18,8 +18,13 @@
 			'<\\/script'
 		)
 	);
+
+	// Avoid template literal with literal <script — confuses ESLint Svelte parser
+	const jsonLdHtml = $derived(
+		'<script type="application/ld+json">' + serialized + '<' + '/script>'
+	);
 </script>
 
 <svelte:head>
-	{@html `<script type="application/ld+json">${serialized}</script>`}
+	{@html jsonLdHtml}
 </svelte:head>

@@ -12,7 +12,7 @@
  */
 import { test, expect } from '@playwright/test';
 import { spawnSync } from 'child_process';
-import { mkdtempSync, writeFileSync, mkdirSync, rmSync, existsSync } from 'fs';
+import { mkdtempSync, writeFileSync, rmSync, existsSync } from 'fs';
 import os from 'os';
 import path from 'path';
 
@@ -155,10 +155,6 @@ test('oversized meta description causes check-html.ts to exit 1', () => {
 	const tmp = makeTmpDir();
 	try {
 		const longDesc = 'X'.repeat(300);
-		const mutated = BASELINE_HTML.replace(
-			/content="[^"]*"(?=\s*>(?!<\/head>))/,
-			`content="${longDesc}"`
-		);
 		// Use targeted replacement for description
 		const fixed = BASELINE_HTML.replace(`content="${DESC_150}"`, `content="${longDesc}"`);
 		writeIndex(tmp, fixed);

@@ -15,7 +15,6 @@ import path from 'path';
 import { parse } from 'node-html-parser';
 
 const PAGES_DIR = path.resolve('.svelte-kit/output/prerendered/pages');
-const SITE_URL = process.env.PUBLIC_SITE_URL ?? 'https://trinity-breath-healing.vercel.app';
 
 const DESC_MIN = 148;
 const DESC_MAX = 162;

@@ -11,7 +11,7 @@
  *
  * Uses @testing-library/svelte for component rendering in jsdom environment.
  */
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/svelte';
 
 // Svelte components (imported after mocking env)
@@ -51,13 +51,7 @@ describe('<JsonLd> component', () => {
 
 		const scripts = document.head.querySelectorAll('script[type="application/ld+json"]');
 		const lastScript = scripts[scripts.length - 1]!;
-		const rawContent = lastScript.textContent ?? '';
-
-		// The raw text content in jsdom won't contain literal </script> because the browser
-		// parser already closes the script tag at </script. Instead, verify via innerHTML
-		// approach: the serialized JSON should have replaced </script with <\/script
-		// We test the component's $derived serialized value by checking the outer HTML.
-		// jsdom parses </script> in textContent as closing the script — so we check outerHTML
+		// jsdom parses </script> in textContent as closing the script — check outerHTML instead
 		const outerHTML = lastScript.outerHTML;
 		// The escaped form <\/script should appear in the raw HTML
 		// jsdom stores textContent after parsing; check that no unescaped </script appears
