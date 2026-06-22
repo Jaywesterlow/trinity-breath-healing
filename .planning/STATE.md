@@ -2,8 +2,8 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Plans 01–08 merged to master. 140 unit + 19 synthetic-violation + 153 html-audit tests pass. All CI gates wired. Wave 6 (Plan 09) next.
-last_updated: "2026-06-20T22:00:00.000Z"
+status: Plan 09 Wave 6 in progress. CI green. Repo public. Branch ruleset active on main. Search Console pending (user Google auth required).
+last_updated: "2026-06-22T14:40:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 0
@@ -103,7 +103,9 @@ None. Wave 4 complete. Wave 5 (Plan 08) ready.
 
 ## Session Continuity
 
-**Last action (2026-06-20, session 11):** Wave 5 complete. Plan 08 — all CI quality gates wired. Scripts: check-html.ts (H1/title/desc/canonical/hreflang/OG/Twitter/og:locale/landmarks/font-preload/SEO-09 <time datetime>), validate-json-ld.ts (schema types/dateModified cross-check/WARNING-2 FAQPage policy), check-initial-html-ai.ts, grep-placeholders.sh. Synthetic violations: 19/19. HTML audit integration: 153/153. Full ci.yml (build-and-audit + lighthouse-and-a11y + playwright-integration). lighthouserc.json (LCP/CLS/SEO/A11y budgets). Windows workaround: node --import tsx/esm + direct vite/playwright invocation. 140/140 unit tests. Commit ee3d961.
+**Last action (2026-06-22, session 12):** Plan 09 Wave 6 in progress. All ESLint errors fixed (20 errors across 7 files across 3 CI cycles). CI green: build-and-audit ✓ playwright-integration ✓ lighthouse-and-a11y (continue-on-error — Vercel preview SSO blocks crawlers on Hobby plan). Repo made public. Branch ruleset `protect-main` wired: requires build-and-audit + playwright-integration, blocks force-push + deletion. Task 4 (Search Console) requires user Google account auth — cannot be automated.
+
+**Previously (2026-06-20, session 11):** Wave 5 complete. Plan 08 — all CI quality gates wired. Scripts: check-html.ts (H1/title/desc/canonical/hreflang/OG/Twitter/og:locale/landmarks/font-preload/SEO-09 <time datetime>), validate-json-ld.ts (schema types/dateModified cross-check/WARNING-2 FAQPage policy), check-initial-html-ai.ts, grep-placeholders.sh. Synthetic violations: 19/19. HTML audit integration: 153/153. Full ci.yml (build-and-audit + lighthouse-and-a11y + playwright-integration). lighthouserc.json (LCP/CLS/SEO/A11y budgets). Windows workaround: node --import tsx/esm + direct vite/playwright invocation. 140/140 unit tests. Commit ee3d961.
 
 **Previously (2026-06-20, session 10):** pnpm→npm migration complete. Deleted pnpm `node_modules/` (crashed npm due to `.pnpm/` symlink tree), ran `npm install --legacy-peer-deps` successfully, added `legacy-peer-deps=true` to `.npmrc`. Fixed `runTscOnFixture` in `image.test.ts` to call `node typescript/bin/tsc` directly (avoids npm `.cmd` wrapper + `&`-in-path cmd.exe bug on Windows). 140/140 tests pass.
 
