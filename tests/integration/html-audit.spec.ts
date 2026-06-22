@@ -152,7 +152,7 @@ for (const file of htmlFiles) {
 
 const indexPath = path.join(PAGES_DIR, 'index.html');
 
-describe('Phase 1 landing-page assertions', () => {
+test.describe('Phase 1 landing-page assertions', () => {
 	let indexHtml = '';
 	let root: ReturnType<typeof parse>;
 

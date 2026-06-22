@@ -47,6 +47,9 @@ jobs:
         env:
           PUBLIC_SITE_URL: https://trinity-breath-healing.vercel.app
 
+      - name: Copy preservation gate — locked Figma copy in rendered HTML (LND-09, LND-10)
+        run: bash scripts/check-copy.sh
+
       - name: JSON-LD audit — schema types, WebPage.dateModified, FAQPage policy (SCH-08/SEO-09/WARNING-2)
         run: npm run audit:json-ld
 
