@@ -38,16 +38,28 @@ describe('STUB_META — 14 stub route entries', () => {
 	it('Test 3: every title is between 50-60 chars inclusive', () => {
 		for (const [path, meta] of Object.entries(STUB_META)) {
 			const len = meta.title.length;
-			expect(len, `title for ${path} is ${len} chars (must be 50-60): "${meta.title}"`).toBeGreaterThanOrEqual(50);
-			expect(len, `title for ${path} is ${len} chars (must be 50-60): "${meta.title}"`).toBeLessThanOrEqual(60);
+			expect(
+				len,
+				`title for ${path} is ${len} chars (must be 50-60): "${meta.title}"`
+			).toBeGreaterThanOrEqual(50);
+			expect(
+				len,
+				`title for ${path} is ${len} chars (must be 50-60): "${meta.title}"`
+			).toBeLessThanOrEqual(60);
 		}
 	});
 
 	it('Test 4: every description is between 150-160 chars inclusive', () => {
 		for (const [path, meta] of Object.entries(STUB_META)) {
 			const len = meta.description.length;
-			expect(len, `description for ${path} is ${len} chars (must be 150-160): "${meta.description}"`).toBeGreaterThanOrEqual(150);
-			expect(len, `description for ${path} is ${len} chars (must be 150-160): "${meta.description}"`).toBeLessThanOrEqual(160);
+			expect(
+				len,
+				`description for ${path} is ${len} chars (must be 150-160): "${meta.description}"`
+			).toBeGreaterThanOrEqual(150);
+			expect(
+				len,
+				`description for ${path} is ${len} chars (must be 150-160): "${meta.description}"`
+			).toBeLessThanOrEqual(160);
 		}
 	});
 
@@ -70,7 +82,10 @@ describe('STUB_META — 14 stub route entries', () => {
 		for (const path of nestedPaths) {
 			const meta = STUB_META[path]!;
 			expect(meta.crumbs.length, `${path} crumbs length`).toBe(3);
-			expect(meta.crumbs[1], `${path} intermediate crumb`).toEqual({ name: 'Diensten', path: '/diensten' });
+			expect(meta.crumbs[1], `${path} intermediate crumb`).toEqual({
+				name: 'Diensten',
+				path: '/diensten'
+			});
 		}
 	});
 

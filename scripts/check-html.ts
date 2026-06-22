@@ -34,7 +34,9 @@ import { readFileSync, readdirSync } from 'fs';
 import path from 'path';
 import { parse } from 'node-html-parser';
 
-const SITE_URL = (process.env.PUBLIC_SITE_URL ?? 'https://trinity-breath-healing.vercel.app').replace(/\/$/, '');
+const SITE_URL = (
+	process.env.PUBLIC_SITE_URL ?? 'https://trinity-breath-healing.vercel.app'
+).replace(/\/$/, '');
 const ROOT_DIR = process.env.HTML_AUDIT_ROOT ?? '.svelte-kit/output/prerendered/pages';
 
 const DESC_MIN = 148;
@@ -97,12 +99,15 @@ function auditFile(file: string): void {
 	if (!canonHref.startsWith('https://')) fail(rel, 'canonical missing or not absolute https://');
 
 	// hreflang
-	if (!root.querySelector("link[rel='alternate'][hreflang='nl']")) fail(rel, 'missing hreflang="nl"');
-	if (!root.querySelector("link[rel='alternate'][hreflang='x-default']")) fail(rel, 'missing hreflang="x-default"');
+	if (!root.querySelector("link[rel='alternate'][hreflang='nl']"))
+		fail(rel, 'missing hreflang="nl"');
+	if (!root.querySelector("link[rel='alternate'][hreflang='x-default']"))
+		fail(rel, 'missing hreflang="x-default"');
 
 	// OG tags
 	for (const prop of ['og:title', 'og:description', 'og:url', 'og:image', 'og:type']) {
-		if (!root.querySelector(`meta[property='${prop}']`)) fail(rel, `missing <meta property="${prop}">`);
+		if (!root.querySelector(`meta[property='${prop}']`))
+			fail(rel, `missing <meta property="${prop}">`);
 	}
 
 	// og:locale === nl_NL (WARNING-3)
@@ -124,7 +129,10 @@ function auditFile(file: string): void {
 
 	// Defensive font preload (Plan 06 owns FND-06; this gate catches accidental removal)
 	if (!root.querySelector("link[rel='preload'][as='font'][type='font/woff2'][crossorigin]")) {
-		fail(rel, 'missing <link rel="preload" as="font" type="font/woff2" crossorigin> (defensive FND-06)');
+		fail(
+			rel,
+			'missing <link rel="preload" as="font" type="font/woff2" crossorigin> (defensive FND-06)'
+		);
 	}
 
 	// Landing-only: <time datetime> (BLOCKER-3 / SEO-09)
@@ -138,7 +146,10 @@ function auditFile(file: string): void {
 			if (!/^\d{4}-\d{2}-\d{2}$/.test(dt)) {
 				fail(rel, `<time datetime> attribute "${dt}" is not YYYY-MM-DD (BLOCKER-3 / SEO-09)`);
 			} else if (text !== dt) {
-				fail(rel, `<time> visible text "${text}" !== datetime attribute "${dt}" (BLOCKER-3 / SEO-09)`);
+				fail(
+					rel,
+					`<time> visible text "${text}" !== datetime attribute "${dt}" (BLOCKER-3 / SEO-09)`
+				);
 			}
 		}
 	}

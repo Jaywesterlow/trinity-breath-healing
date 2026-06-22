@@ -20,8 +20,8 @@
 
 <section class="hero-placeholder">
 	<p>
-		Trinity Breath & Healing begeleidt vanuit eigen ervaring bij lichaamsgerichte therapie,
-		ademwerk en energetische behandelingen in Amsterdam en de regio.
+		Trinity Breath & Healing begeleidt vanuit eigen ervaring bij lichaamsgerichte therapie, ademwerk
+		en energetische behandelingen in Amsterdam en de regio.
 	</p>
 	<p><em>Volledige landingspagina komt beschikbaar in Phase 1.</em></p>
 </section>

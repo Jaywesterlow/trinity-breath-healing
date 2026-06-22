@@ -125,7 +125,10 @@ test('baseline passes check-html.ts', () => {
 test('second <h1> causes check-html.ts to exit 1', () => {
 	const tmp = makeTmpDir();
 	try {
-		const mutated = BASELINE_HTML.replace('<h1>Trinity Breath &amp; Healing</h1>', '<h1>Trinity Breath &amp; Healing</h1><h1>Tweede koptitel</h1>');
+		const mutated = BASELINE_HTML.replace(
+			'<h1>Trinity Breath &amp; Healing</h1>',
+			'<h1>Trinity Breath &amp; Healing</h1><h1>Tweede koptitel</h1>'
+		);
 		writeIndex(tmp, mutated);
 		const { exitCode, stderr } = runCheckHtml(tmp);
 		expect(exitCode).toBe(1);
@@ -157,10 +160,7 @@ test('oversized meta description causes check-html.ts to exit 1', () => {
 			`content="${longDesc}"`
 		);
 		// Use targeted replacement for description
-		const fixed = BASELINE_HTML.replace(
-			`content="${DESC_150}"`,
-			`content="${longDesc}"`
-		);
+		const fixed = BASELINE_HTML.replace(`content="${DESC_150}"`, `content="${longDesc}"`);
 		writeIndex(tmp, fixed);
 		const { exitCode, stderr } = runCheckHtml(tmp);
 		expect(exitCode).toBe(1);
@@ -213,7 +213,10 @@ test('wrong og:locale value causes check-html.ts to exit 1 (WARNING-3)', () => {
 test('missing <nav> causes check-html.ts to exit 1 (BLOCKER-5)', () => {
 	const tmp = makeTmpDir();
 	try {
-		const mutated = BASELINE_HTML.replace(/<nav>[\s\S]*?<\/nav>/, '<div class="nav-replaced">nav removed</div>');
+		const mutated = BASELINE_HTML.replace(
+			/<nav>[\s\S]*?<\/nav>/,
+			'<div class="nav-replaced">nav removed</div>'
+		);
 		writeIndex(tmp, mutated);
 		const { exitCode, stderr } = runCheckHtml(tmp);
 		expect(exitCode).toBe(1);
@@ -226,7 +229,10 @@ test('missing <nav> causes check-html.ts to exit 1 (BLOCKER-5)', () => {
 test('missing <footer> causes check-html.ts to exit 1 (BLOCKER-5)', () => {
 	const tmp = makeTmpDir();
 	try {
-		const mutated = BASELINE_HTML.replace(/<footer>[\s\S]*?<\/footer>/, '<div class="footer-replaced"></div>');
+		const mutated = BASELINE_HTML.replace(
+			/<footer>[\s\S]*?<\/footer>/,
+			'<div class="footer-replaced"></div>'
+		);
 		writeIndex(tmp, mutated);
 		const { exitCode, stderr } = runCheckHtml(tmp);
 		expect(exitCode).toBe(1);
@@ -267,7 +273,10 @@ test('baseline passes validate-json-ld.ts', () => {
 test('missing JSON-LD script causes validate-json-ld.ts to exit 1', () => {
 	const tmp = makeTmpDir();
 	try {
-		const mutated = BASELINE_HTML.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, '');
+		const mutated = BASELINE_HTML.replace(
+			/<script type="application\/ld\+json">[\s\S]*?<\/script>/,
+			''
+		);
 		writeIndex(tmp, mutated);
 		const { exitCode, stderr } = runValidateJsonLd(tmp);
 		expect(exitCode).toBe(1);
@@ -330,7 +339,11 @@ test('missing WebPage.dateModified causes validate-json-ld.ts to exit 1 (SEO-09)
 	try {
 		const graphNoDM = VALID_JSON_LD['@graph'].map((n) => {
 			if (n['@type'] === 'WebPage') {
-				const { dateModified: _dm, ...rest } = n as { '@type': string; dateModified?: string; [k: string]: unknown };
+				const { dateModified: _dm, ...rest } = n as {
+					'@type': string;
+					dateModified?: string;
+					[k: string]: unknown;
+				};
 				return rest;
 			}
 			return n;
@@ -413,9 +426,13 @@ test('stub page missing BreadcrumbList causes validate-json-ld.ts to exit 1', ()
 				// BreadcrumbList intentionally missing
 			]
 		};
-		const stubHtml = BASELINE_HTML
-			.replace(`href="${SITE_URL}/"`, `href="${SITE_URL}/werkwijze"`)
-			.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, `<script type="application/ld+json">${JSON.stringify(stubLd)}</script>`);
+		const stubHtml = BASELINE_HTML.replace(
+			`href="${SITE_URL}/"`,
+			`href="${SITE_URL}/werkwijze"`
+		).replace(
+			/<script type="application\/ld\+json">[\s\S]*?<\/script>/,
+			`<script type="application/ld+json">${JSON.stringify(stubLd)}</script>`
+		);
 		writeFileSync(path.join(tmp, 'werkwijze.html'), stubHtml, 'utf8');
 		const { exitCode, stderr } = runValidateJsonLd(tmp);
 		expect(exitCode).toBe(1);

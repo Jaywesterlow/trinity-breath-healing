@@ -7,3 +7,8 @@ bun.lockb
 
 # Miscellaneous
 /static/
+
+# Planning docs — intentional formatting, not source code
+.planning/
+*.md
+lighthouserc.json

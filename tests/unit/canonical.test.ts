@@ -90,9 +90,7 @@ describe('buildCanonical (src/lib/seo/defaults.ts)', () => {
 		}));
 		const { buildCanonical } = await import('$lib/seo/defaults');
 		expect(buildCanonical('https://example.com', '/')).toBe('https://example.com/');
-		expect(buildCanonical('https://example.com', '/over-mij')).toBe(
-			'https://example.com/over-mij'
-		);
+		expect(buildCanonical('https://example.com', '/over-mij')).toBe('https://example.com/over-mij');
 		// Ensure no double-slash when path starts with /
 		const result = buildCanonical('https://example.com', '/contact');
 		expect(result).not.toContain('//contact');

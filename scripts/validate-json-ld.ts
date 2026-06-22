@@ -59,7 +59,10 @@ function auditFile(file: string): void {
 		return;
 	}
 	if (jsonLdEls.length > 1) {
-		fail(rel, `expected 1 JSON-LD script, found ${jsonLdEls.length} (Pitfall #6 — one @graph per page)`);
+		fail(
+			rel,
+			`expected 1 JSON-LD script, found ${jsonLdEls.length} (Pitfall #6 — one @graph per page)`
+		);
 		return;
 	}
 

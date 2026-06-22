@@ -87,9 +87,7 @@ describe('scripts/check-tokens.sh (FND-04 enforcement)', () => {
 		const tmpCss = join(tmpDir, 'global-missing.css');
 		// CSS missing --color-bg-sand entirely
 		writeFileSync(tmpCss, ':root { --color-fg-forest: #3D4A35; font-display: swap; }\n');
-		expect(() =>
-			execSync(`bash "${scriptPath}" "${tmpCss}"`, { stdio: 'pipe' })
-		).toThrow();
+		expect(() => execSync(`bash "${scriptPath}" "${tmpCss}"`, { stdio: 'pipe' })).toThrow();
 		rmSync(tmpDir, { recursive: true, force: true });
 	});
 });
@@ -105,9 +103,7 @@ describe('scripts/no-shared-css.sh (FND-02 enforcement)', () => {
 		const violationPath = 'src/lib/components/Button.css';
 		try {
 			writeFileSync(violationPath, '.btn { color: red; }\n');
-			expect(() =>
-				execSync(`bash "${scriptPath}"`, { stdio: 'pipe' })
-			).toThrow();
+			expect(() => execSync(`bash "${scriptPath}"`, { stdio: 'pipe' })).toThrow();
 		} finally {
 			rmSync(violationPath, { force: true });
 		}

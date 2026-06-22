@@ -34,9 +34,7 @@ describe('shared.ts — shared schema nodes', () => {
 		const { organizationNode } = await loadShared();
 		const node = organizationNode as unknown as SchemaNode;
 		expect(node['@type']).toBe('Organization');
-		expect(node['@id']).toBe(
-			'https://trinity-breath-healing.vercel.app/#organization'
-		);
+		expect(node['@id']).toBe('https://trinity-breath-healing.vercel.app/#organization');
 	});
 
 	it('Test 2: professionalServiceNode has @type ProfessionalService (NOT LocalBusiness)', async () => {
@@ -44,9 +42,7 @@ describe('shared.ts — shared schema nodes', () => {
 		// D-locked: ProfessionalService over LocalBusiness (mobile + remote + part-time; no storefront)
 		const node = professionalServiceNode as unknown as SchemaNode;
 		expect(node['@type']).toBe('ProfessionalService');
-		expect(node['@id']).toBe(
-			'https://trinity-breath-healing.vercel.app/#business'
-		);
+		expect(node['@id']).toBe('https://trinity-breath-healing.vercel.app/#business');
 	});
 
 	it('Test 3: professionalServiceNode.areaServed matches BRAND.areaServed', async () => {
@@ -65,9 +61,7 @@ describe('shared.ts — shared schema nodes', () => {
 		const person = personNode as unknown as SchemaNode;
 		const org = organizationNode as unknown as SchemaNode;
 		expect(person['@type']).toBe('Person');
-		expect(person['@id']).toBe(
-			'https://trinity-breath-healing.vercel.app/#practitioner'
-		);
+		expect(person['@id']).toBe('https://trinity-breath-healing.vercel.app/#practitioner');
 		// worksFor links to the organization via @id reference
 		const worksFor = person['worksFor'] as SchemaNode;
 		expect(worksFor).toBeDefined();
@@ -78,9 +72,7 @@ describe('shared.ts — shared schema nodes', () => {
 		const { webSiteNode } = await loadShared();
 		const node = webSiteNode as unknown as SchemaNode;
 		expect(node['@type']).toBe('WebSite');
-		expect(node['@id']).toBe(
-			'https://trinity-breath-healing.vercel.app/#website'
-		);
+		expect(node['@id']).toBe('https://trinity-breath-healing.vercel.app/#website');
 		expect(node['inLanguage']).toBe('nl-NL');
 	});
 });

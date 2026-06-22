@@ -42,7 +42,9 @@ async function renderEnhancedImage(props: {
 	const preprocessed = await preprocess(source, [
 		{
 			markup({ content }: { content: string }) {
-				return { code: content.replace(/<enhanced:img/g, '<img').replace(/<\/enhanced:img>/g, '</img>') };
+				return {
+					code: content.replace(/<enhanced:img/g, '<img').replace(/<\/enhanced:img>/g, '</img>')
+				};
 			}
 		}
 	]);

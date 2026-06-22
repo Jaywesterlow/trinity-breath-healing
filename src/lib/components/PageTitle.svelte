@@ -9,7 +9,9 @@
 	let { children }: { children?: Snippet } = $props();
 </script>
 
-<h1>{#if children}{@render children()}{/if}</h1>
+<h1>
+	{#if children}{@render children()}{/if}
+</h1>
 
 <style>
 	h1 {

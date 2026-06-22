@@ -31,9 +31,7 @@ describe('services.ts — Service schema nodes', () => {
 		const { makeServiceNode } = await loadServices();
 		const node = makeServiceNode('mahatma-healing', 'Mahatma Healing') as unknown as SchemaNode;
 		expect(node['@type']).toBe('Service');
-		expect(node['@id']).toBe(
-			'https://trinity-breath-healing.vercel.app/#service-mahatma-healing'
-		);
+		expect(node['@id']).toBe('https://trinity-breath-healing.vercel.app/#service-mahatma-healing');
 	});
 
 	it('Test 2: makeServiceNode has provider linking to organization @id', async () => {
@@ -41,9 +39,7 @@ describe('services.ts — Service schema nodes', () => {
 		const node = makeServiceNode('mahatma-healing', 'Mahatma Healing') as unknown as SchemaNode;
 		const provider = node['provider'] as SchemaNode;
 		expect(provider).toBeDefined();
-		expect(provider['@id']).toBe(
-			'https://trinity-breath-healing.vercel.app/#organization'
-		);
+		expect(provider['@id']).toBe('https://trinity-breath-healing.vercel.app/#organization');
 	});
 
 	it('Test 3: makeServiceNode has areaServed matching BRAND.areaServed', async () => {
@@ -60,9 +56,7 @@ describe('services.ts — Service schema nodes', () => {
 	it('Test 4: makeServiceNode url points to /diensten/<slug>', async () => {
 		const { makeServiceNode } = await loadServices();
 		const node = makeServiceNode('mahatma-healing', 'Mahatma Healing') as unknown as SchemaNode;
-		expect(node['url']).toBe(
-			'https://trinity-breath-healing.vercel.app/diensten/mahatma-healing'
-		);
+		expect(node['url']).toBe('https://trinity-breath-healing.vercel.app/diensten/mahatma-healing');
 	});
 
 	it('Test 5: allServiceNodes has exactly 4 entries', async () => {

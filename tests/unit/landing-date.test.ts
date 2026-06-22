@@ -89,6 +89,9 @@ describe('Landing page SEO-09 — visible dateModified + JSON-LD single-source (
 	it('__BUILD_DATE__ literal is NOT present in the prerendered HTML (Vite replaced it)', () => {
 		if (!existsSync(HTML_PATH)) return;
 		const raw = readFileSync(HTML_PATH, 'utf8');
-		expect(raw, '__BUILD_DATE__ must not appear in prerendered HTML — Vite define did not replace it').not.toContain('__BUILD_DATE__');
+		expect(
+			raw,
+			'__BUILD_DATE__ must not appear in prerendered HTML — Vite define did not replace it'
+		).not.toContain('__BUILD_DATE__');
 	});
 });

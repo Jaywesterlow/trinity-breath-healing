@@ -52,9 +52,7 @@ describe('faq.ts — FAQPage builder', () => {
 
 	it('Test 2: each entry has @type Question, name, and acceptedAnswer', async () => {
 		const { buildFaqPage } = await loadFaq();
-		const result = buildFaqPage([
-			{ question: 'q1', answer: 'a1' }
-		]) as unknown as SchemaNode;
+		const result = buildFaqPage([{ question: 'q1', answer: 'a1' }]) as unknown as SchemaNode;
 		const mainEntity = result['mainEntity'] as SchemaNode[];
 		const entry = mainEntity[0]!;
 		const acceptedAnswer = entry['acceptedAnswer'] as SchemaNode;
@@ -80,7 +78,11 @@ describe('webpage.ts — WebPage builder', () => {
 
 	it('Test 1: buildWebPage returns WebPage with correct @type, name, description, url', async () => {
 		const { buildWebPage } = await loadWebPage();
-		const result = buildWebPage({ title: 'Mijn titel', description: 'Beschrijving', path: '/' }) as unknown as SchemaNode;
+		const result = buildWebPage({
+			title: 'Mijn titel',
+			description: 'Beschrijving',
+			path: '/'
+		}) as unknown as SchemaNode;
 		expect(result['@type']).toBe('WebPage');
 		expect(result['name']).toBe('Mijn titel');
 		expect(result['description']).toBe('Beschrijving');
@@ -89,13 +91,22 @@ describe('webpage.ts — WebPage builder', () => {
 
 	it('SEO-09: buildWebPage with dateModified includes the key', async () => {
 		const { buildWebPage } = await loadWebPage();
-		const result = buildWebPage({ title: 't', description: 'd', path: '/', dateModified: '2026-06-15' }) as unknown as SchemaNode;
+		const result = buildWebPage({
+			title: 't',
+			description: 'd',
+			path: '/',
+			dateModified: '2026-06-15'
+		}) as unknown as SchemaNode;
 		expect(result['dateModified']).toBe('2026-06-15');
 	});
 
 	it('SEO-09: buildWebPage without dateModified OMITS the key (never undefined)', async () => {
 		const { buildWebPage } = await loadWebPage();
-		const result = buildWebPage({ title: 't', description: 'd', path: '/' }) as unknown as SchemaNode;
+		const result = buildWebPage({
+			title: 't',
+			description: 'd',
+			path: '/'
+		}) as unknown as SchemaNode;
 		// Key must be absent entirely — not set to undefined
 		expect(Object.hasOwn(result, 'dateModified')).toBe(false);
 	});
@@ -131,7 +142,11 @@ describe('buildGraph.ts — @graph composer', () => {
 
 	it('Test 3: buildGraph with pageSpecific WebPage returns 9 nodes', async () => {
 		const { buildGraph } = await loadBuildGraph();
-		const webPage = { '@type': 'WebPage' as const, name: 'Home', url: 'https://trinity-breath-healing.vercel.app/' };
+		const webPage = {
+			'@type': 'WebPage' as const,
+			name: 'Home',
+			url: 'https://trinity-breath-healing.vercel.app/'
+		};
 		const result = buildGraph({ pageSpecific: [webPage], path: '/' });
 		expect(result).toHaveLength(9);
 	});

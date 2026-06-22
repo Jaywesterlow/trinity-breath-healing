@@ -15,7 +15,12 @@
  *   - The shared node @ids are stable (per interfaces block in 00-03-PLAN.md).
  */
 import type { Thing } from 'schema-dts';
-import { organizationNode, professionalServiceNode, personNode, webSiteNode } from '$lib/schema/shared';
+import {
+	organizationNode,
+	professionalServiceNode,
+	personNode,
+	webSiteNode
+} from '$lib/schema/shared';
 import { allServiceNodes } from '$lib/schema/services';
 
 /** Generic schema.org node — schema-dts Thing covers all Schema.org types */

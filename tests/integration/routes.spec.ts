@@ -67,27 +67,39 @@ test.describe.parallel('14 stub routes — SEO scaffolding', () => {
 			const titleEl = root.querySelector('title');
 			expect(titleEl, `${path}: should have <title>`).not.toBeNull();
 			const titleText = titleEl!.text.trim();
-			expect(
-				titleText,
-				`${path}: <title> should start with STUB_META base title`
-			).toContain(stub.title);
+			expect(titleText, `${path}: <title> should start with STUB_META base title`).toContain(
+				stub.title
+			);
 			// The full title must be at least 50 chars (base title minimum) and not more than 120
 			// (base 60 + ' | TRINITY Breath & Healing' suffix 27 = max ~87)
-			expect(titleText.length, `${path}: <title> should be at least 50 chars`).toBeGreaterThanOrEqual(50);
+			expect(
+				titleText.length,
+				`${path}: <title> should be at least 50 chars`
+			).toBeGreaterThanOrEqual(50);
 
 			// 4. meta description matches STUB_META and is 150-160 chars
 			const metaDesc = root.querySelector('meta[name="description"]');
 			expect(metaDesc, `${path}: should have meta description`).not.toBeNull();
 			const descContent = metaDesc!.getAttribute('content') ?? '';
-			expect(descContent, `${path}: meta description should match STUB_META`).toBe(stub.description);
-			expect(descContent.length, `${path}: meta description should be 150-160 chars`).toBeGreaterThanOrEqual(150);
-			expect(descContent.length, `${path}: meta description should be 150-160 chars`).toBeLessThanOrEqual(160);
+			expect(descContent, `${path}: meta description should match STUB_META`).toBe(
+				stub.description
+			);
+			expect(
+				descContent.length,
+				`${path}: meta description should be 150-160 chars`
+			).toBeGreaterThanOrEqual(150);
+			expect(
+				descContent.length,
+				`${path}: meta description should be 150-160 chars`
+			).toBeLessThanOrEqual(160);
 
 			// 5. Canonical link href === SITE_URL + path
 			const canonical = root.querySelector('link[rel="canonical"]');
 			expect(canonical, `${path}: should have canonical link`).not.toBeNull();
 			const canonicalHref = canonical!.getAttribute('href') ?? '';
-			expect(canonicalHref, `${path}: canonical href should match SITE_URL + path`).toBe(`${SITE_URL}${path}`);
+			expect(canonicalHref, `${path}: canonical href should match SITE_URL + path`).toBe(
+				`${SITE_URL}${path}`
+			);
 
 			// 6. Exactly one JSON-LD script; @graph has BreadcrumbList with correct crumbs
 			const ldScripts = root.querySelectorAll('script[type="application/ld+json"]');
@@ -100,7 +112,9 @@ test.describe.parallel('14 stub routes — SEO scaffolding', () => {
 			const breadcrumb = graph.find((n) => n['@type'] === 'BreadcrumbList');
 			expect(breadcrumb, `${path}: @graph should contain BreadcrumbList`).not.toBeUndefined();
 			const items = (breadcrumb!['itemListElement'] as Array<Record<string, unknown>>) ?? [];
-			expect(items.length, `${path}: BreadcrumbList should have ${stub.crumbs.length} items`).toBe(stub.crumbs.length);
+			expect(items.length, `${path}: BreadcrumbList should have ${stub.crumbs.length} items`).toBe(
+				stub.crumbs.length
+			);
 			// Verify crumb names match
 			stub.crumbs.forEach((crumb, i) => {
 				expect(items[i]!['name'], `${path}: crumb[${i}].name`).toBe(crumb.name);
@@ -110,15 +124,19 @@ test.describe.parallel('14 stub routes — SEO scaffolding', () => {
 			const slug = path.replace('/diensten/', '');
 			if ((SERVICE_SLUGS as readonly string[]).includes(slug)) {
 				const serviceId = `${SITE_URL}/#service-${slug}`;
-				const serviceNode = graph.find(
-					(n) => n['@type'] === 'Service' && n['@id'] === serviceId
-				);
-				expect(serviceNode, `${path}: @graph should contain Service node with @id ${serviceId}`).not.toBeUndefined();
+				const serviceNode = graph.find((n) => n['@type'] === 'Service' && n['@id'] === serviceId);
+				expect(
+					serviceNode,
+					`${path}: @graph should contain Service node with @id ${serviceId}`
+				).not.toBeUndefined();
 			}
 
 			// 9. Stubs do NOT render <time datetime> (SEO-09 is landing-only in Phase 0)
 			const timeEls = root.querySelectorAll('time[datetime]');
-			expect(timeEls.length, `${path}: stubs must NOT contain <time datetime> (SEO-09 is landing-only)`).toBe(0);
+			expect(
+				timeEls.length,
+				`${path}: stubs must NOT contain <time datetime> (SEO-09 is landing-only)`
+			).toBe(0);
 		});
 	}
 
@@ -126,6 +144,8 @@ test.describe.parallel('14 stub routes — SEO scaffolding', () => {
 	test('no two stubs have identical meta description content', () => {
 		const descriptions = STUB_PATHS.map((p) => STUB_META[p]!.description);
 		const unique = new Set(descriptions);
-		expect(unique.size, 'All stub meta descriptions must be unique (Pitfall #7)').toBe(descriptions.length);
+		expect(unique.size, 'All stub meta descriptions must be unique (Pitfall #7)').toBe(
+			descriptions.length
+		);
 	});
 });

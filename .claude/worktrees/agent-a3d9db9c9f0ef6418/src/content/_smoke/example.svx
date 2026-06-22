@@ -1,0 +1,7 @@
+---
+title: Smoke fixture
+datePublished: '2026-06-18'
+author: Trinity Breath & Healing
+---
+
+This is a smoke-test fixture for the FND-03 content pipeline. It lives under `_smoke/` and never ships in production routes.
