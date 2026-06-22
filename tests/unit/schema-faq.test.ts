@@ -16,6 +16,8 @@
  * runtime assertions. Type safety in implementation confirmed by `pnpm check`.
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { existsSync } from 'fs';
+import path from 'path';
 
 type SchemaNode = Record<string, unknown>;
 
@@ -173,4 +175,34 @@ describe('buildGraph.ts — @graph composer', () => {
 		expect(types).toContain('Person');
 		expect(types).toContain('WebSite');
 	});
+});
+
+// ---------------------------------------------------------------------------
+// faqItems content guard (Plan 01-00 — gated until sub-unit 01-07 ships)
+// Guards on src/lib/content/faq/index.ts existence at FILE-SYSTEM level.
+// Vite resolves aliases at transform time — dynamic import of a missing alias
+// target causes a transform error, not a runtime exception. We therefore use
+// fs.existsSync to gate the test before Vite ever attempts to resolve it.
+// Once sub-unit 01-07 creates the file this test turns green automatically.
+// ---------------------------------------------------------------------------
+
+const FAQ_CONTENT_PATH = path.resolve('src/lib/content/faq/index.ts');
+const faqContentExists = existsSync(FAQ_CONTENT_PATH);
+
+describe('faq/index.ts — faqItems content guard', () => {
+	it.skipIf(!faqContentExists)(
+		'faqItems.length >= 8 once faq/index.ts exists (LND-07)',
+		async () => {
+			// Use the absolute filesystem path so Vite does NOT attempt alias resolution
+			// at transform time. Without a literal alias string, vite:import-analysis
+			// defers resolution to runtime — safe because faqContentExists guards the call.
+			const faqModule = await import(/* @vite-ignore */ FAQ_CONTENT_PATH);
+			const items = (faqModule as { faqItems?: unknown[] }).faqItems;
+			expect(Array.isArray(items), 'faqItems must be an array').toBe(true);
+			expect(
+				(items ?? []).length,
+				`faqItems.length must be >= 8 for adequate FAQ coverage (LND-07), got ${(items ?? []).length}`
+			).toBeGreaterThanOrEqual(8);
+		}
+	);
 });

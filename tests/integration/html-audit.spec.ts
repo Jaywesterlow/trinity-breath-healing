@@ -142,3 +142,86 @@ for (const file of htmlFiles) {
 		});
 	}
 }
+
+// ---------------------------------------------------------------------------
+// Phase 1 landing-page assertions (Plan 01-00)
+// These tests operate on index.html only and assert contracts that sub-unit
+// plans 01-01 through 01-06 must satisfy. They will FAIL until those plans
+// implement the relevant sections — that is correct and expected behaviour.
+// ---------------------------------------------------------------------------
+
+const indexPath = path.join(PAGES_DIR, 'index.html');
+
+describe('Phase 1 landing-page assertions', () => {
+	let indexHtml = '';
+	let root: ReturnType<typeof parse>;
+
+	try {
+		indexHtml = readFileSync(indexPath, 'utf8');
+		root = parse(indexHtml);
+	} catch {
+		// Build output absent — every test in this block will fail with a clear message
+		indexHtml = '';
+		root = parse('');
+	}
+
+	test('PRF-02: <link rel="preload" as="image"> present for hero image', () => {
+		expect(indexHtml.length).toBeGreaterThan(0);
+		const preloadLink = root.querySelector("link[rel='preload'][as='image']");
+		expect(preloadLink, '<link rel="preload" as="image"> missing — hero image preload required (PRF-02)').not.toBeNull();
+	});
+
+	test('PRF-03: loading="eager" appears exactly once (hero image only)', () => {
+		expect(indexHtml.length).toBeGreaterThan(0);
+		const matches = (indexHtml.match(/loading="eager"/g) ?? []).length;
+		expect(
+			matches,
+			`loading="eager" found ${matches} time(s) — must appear exactly once (hero image only, PRF-03)`
+		).toBe(1);
+	});
+
+	test('A11Y-01: role="dialog" present (overlay/modal)', () => {
+		expect(indexHtml.length).toBeGreaterThan(0);
+		const dialog = root.querySelector('[role="dialog"]');
+		expect(dialog, 'role="dialog" missing — overlay/modal ARIA role required (A11Y-01)').not.toBeNull();
+	});
+
+	test('LND-05: at least 5 <a> elements linking to /diensten/ paths (service carousel)', () => {
+		expect(indexHtml.length).toBeGreaterThan(0);
+		const dienstenLinks = root
+			.querySelectorAll('a[href]')
+			.filter((a) => (a.getAttribute('href') ?? '').includes('/diensten/'));
+		expect(
+			dienstenLinks.length,
+			`Found ${dienstenLinks.length} /diensten/ links — need at least 5 for service carousel (LND-05)`
+		).toBeGreaterThanOrEqual(5);
+	});
+
+	test('A11Y-02: every <input> has an associated <label> (input count === label count)', () => {
+		expect(indexHtml.length).toBeGreaterThan(0);
+		const inputs = root.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"])');
+		const labels = root.querySelectorAll('label');
+		expect(
+			inputs.length,
+			'No <input> elements found — contact form not yet implemented'
+		).toBeGreaterThan(0);
+		expect(
+			labels.length,
+			`Found ${inputs.length} input(s) but ${labels.length} label(s) — every input needs a label (A11Y-02)`
+		).toBe(inputs.length);
+	});
+
+	test('PRF-07: no <script src> pointing to external (third-party) domains', () => {
+		expect(indexHtml.length).toBeGreaterThan(0);
+		const scripts = root.querySelectorAll('script[src]');
+		const external = scripts.filter((s) => {
+			const src = s.getAttribute('src') ?? '';
+			// External = starts with http:// or https:// (not relative, not root-relative)
+			return /^https?:\/\//i.test(src);
+		});
+		expect(
+			external.length,
+			`Found ${external.length} external <script src> — third-party scripts degrade LCP and INP (PRF-07). Found: ${external.map((s) => s.getAttribute('src')).join(', ')}`
+		).toBe(0);
+	});
+});
