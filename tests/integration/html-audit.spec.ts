@@ -124,9 +124,9 @@ for (const file of htmlFiles) {
 			const root = parse(readFileSync(file, 'utf8'));
 			const times = root.querySelectorAll('time[datetime]');
 			expect(times.length).toBe(1);
-			const dt = times[0].getAttribute('datetime') ?? '';
+			const dt = times[0]?.getAttribute('datetime') ?? '';
 			expect(dt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
-			expect(times[0].text.trim()).toBe(dt);
+			expect(times[0]?.text.trim()).toBe(dt);
 		});
 
 		test(`index.html: JSON-LD WebPage.dateModified matches <time datetime> (cross-check / SEO-09)`, () => {
