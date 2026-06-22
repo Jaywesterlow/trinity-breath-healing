@@ -12,3 +12,6 @@ bun.lockb
 .planning/
 *.md
 lighthouserc.json
+.pa11yci.json
+test-results/
+.claude/

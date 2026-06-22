@@ -1,8 +1,0 @@
-{
-  "defaults": {
-    "standard": "WCAG2AA",
-    "timeout": 30000,
-    "wait": 1000,
-    "ignore": []
-  }
-}
