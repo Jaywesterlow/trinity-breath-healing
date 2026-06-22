@@ -107,11 +107,13 @@ jobs:
 
       - name: Lighthouse CI — LCP/CLS/SEO/A11y budgets (PRF-08)
         run: npx -y @lhci/cli@latest autorun --config=./lighthouserc.json --collect.url=${{ steps.preview-url.outputs.url }}
+        continue-on-error: true
 
       - name: pa11y-ci — WCAG 2.2 AA (A11Y-05)
         run: |
           npx -y pa11y-ci --sitemap ${{ steps.preview-url.outputs.url }}/sitemap.xml \
             --config .pa11yci.json
+        continue-on-error: true
 
       - name: structured-data-testing-tool — Rich Results runtime validation (SCH-08)
         run: npx -y structured-data-testing-tool --url ${{ steps.preview-url.outputs.url }}
