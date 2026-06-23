@@ -1,53 +1,35 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-23T09:25:02Z",
+  "timestamp": "2026-06-24T00:48:08Z",
   "phase": "01",
   "phase_name": "landing-sections",
   "phase_dir": ".planning/phases/01-landing-sections",
-  "plan": 9,
-  "task": "human-checkpoint",
-  "total_tasks": 10,
+  "plan": null,
+  "task": "frontend-rebuild-start",
+  "total_tasks": null,
   "status": "paused",
   "completed_tasks": [
     {"id": "01-00", "name": "Wave 0 — test contracts, image stubs, check-copy.sh, ci.yml", "status": "done", "commit": "de04883"},
-    {"id": "01-01", "name": "HeroSection.svelte + Head.svelte preload + page.svelte", "status": "done", "commit": "see branch"},
-    {"id": "01-02", "name": "SiteNav full implementation", "status": "done", "commit": "see branch"},
-    {"id": "01-03", "name": "WerkwijzeSection accordion", "status": "done", "commit": "see branch"},
-    {"id": "01-04", "name": "AboutSection + brand.ts stats", "status": "done", "commit": "see branch"},
-    {"id": "01-05", "name": "BehandelingenSection carousel", "status": "done", "commit": "see branch"},
-    {"id": "01-06", "name": "ContactSection form + AVG checkbox", "status": "done", "commit": "see branch"},
-    {"id": "01-07", "name": "FaqSection accordion", "status": "done", "commit": "6ca8b58"},
-    {"id": "01-08", "name": "SiteFooter", "status": "done", "commit": "see branch"},
-    {"id": "01-09", "name": "Cross-cutting gates — automated verification all pass", "status": "done", "commit": "01692f4"}
+    {"id": "01-01–09", "name": "All Phase 1 section components (HeroSection through SiteFooter)", "status": "done_then_reset", "commit": "df0cc13"},
+    {"id": "reset", "name": "Frontend reset — deleted all section components, wired SEO emitters, added Nav/Footer stubs", "status": "done", "commit": "c2c398b"},
+    {"id": "stubs", "name": "Nav + Footer minimal visible implementation + global.css linked in app.html", "status": "done", "commit": "b926016"}
   ],
   "remaining_tasks": [
-    {"id": "01-09-human", "name": "Plan 01-09 human visual checkpoint — approve Vercel preview", "status": "blocked_on_human"}
+    {"id": "nav", "name": "Build out Nav.svelte with real content (logo, links, mobile menu)", "status": "not_started"},
+    {"id": "footer", "name": "Build out Footer.svelte with real content", "status": "not_started"},
+    {"id": "home", "name": "Rebuild home page sections from scratch", "status": "not_started"}
   ],
-  "blockers": [
-    {
-      "description": "Plan 01-09 is autonomous:false — requires human visual approval of Vercel preview before Phase 1 can be marked complete",
-      "type": "human_action",
-      "workaround": "none — this is intentional"
-    }
-  ],
-  "human_actions_pending": [
-    {
-      "action": "Visual check of Vercel preview on mobile (390px) and JS-disabled mode",
-      "context": "PR #5 on github.com/Jaywesterlow/trinity-breath-healing — Vercel preview URL in PR comments. Check each section: Hero, Header, Werkwijze, About, Behandelingen, Contact, FAQ, Footer. Then disable JS and verify email form still visible.",
-      "blocking": true
-    },
-    {
-      "action": "Reply 'approved' (or describe issues) to complete Plan 01-09 and Phase 1",
-      "context": "After visual check passes, start fresh session and merge PR #5 + run /gsd-execute-phase 2 --wave 0",
-      "blocking": true
-    }
-  ],
+  "blockers": [],
+  "human_actions_pending": [],
   "decisions": [
-    {"decision": "Added Write/Edit/Bash permissions to settings.local.json", "rationale": "Bootstrap catch — executor agents were blocked mid-task", "phase": "01"},
-    {"decision": "Prettier fix via node directly (not npm/npx)", "rationale": "Ampersand in project folder name 'Trinity Breath & Healing' breaks CMD batch scripts", "phase": "01"},
-    {"decision": "CI requires PR branch — branch protection blocks direct push to main", "rationale": "2 required status checks on main", "phase": "01"}
+    {"decision": "Full frontend reset — deleted all Phase 1 section components", "rationale": "User decided to start fresh visually rather than continue with existing implementations", "phase": "01"},
+    {"decision": "SiteNav/SiteFooter renamed to Nav/Footer", "rationale": "New component names for the fresh start", "phase": "01"},
+    {"decision": "Head.svelte + JsonLd.svelte restored (SEO infrastructure, not visual)", "rationale": "SEO/AEO must remain wired on every route — these are not frontend components", "phase": "01"},
+    {"decision": "StubLayout/Breadcrumbs/PageTitle restored for 14 stub routes", "rationale": "Those routes still need basic content to avoid build failures", "phase": "01"},
+    {"decision": "global.css linked via app.html <link> tag", "rationale": "Was not linked anywhere — design tokens and fonts were not loading", "phase": "01"},
+    {"decision": "npm clean install — package-lock deleted and regenerated", "rationale": "@rolldown/pluginutils dist artifact was missing, causing ERR_MODULE_NOT_FOUND on build", "phase": "01"}
   ],
   "uncommitted_files": [],
-  "next_action": "User opens Vercel preview URL from PR #5, checks all 8 sections on mobile, disables JS, then approves",
-  "context_notes": "All 10 Phase 1 plans automated work complete. 33+ commits on phase-1-landing-sections branch. CI passed lint after prettier fix (ce751fb). Vercel preview rebuilding after latest push. Waiting only on human visual sign-off for Plan 01-09."
+  "next_action": "Build Nav.svelte with real content — logo, navigation links, mobile hamburger menu. Refer to Figma design and CLAUDE.md for design tokens.",
+  "context_notes": "Phase 1 was previously completed (all 9 plans done, CI passing), then reset by user decision. npm was also broken (missing @rolldown/pluginutils). Both fixed. Site now builds and serves cleanly with blank home page, Nav + Footer stubs (forest green bars), and all SEO tags emitting correctly on every route. Ready to rebuild frontend from blank slate."
 }
