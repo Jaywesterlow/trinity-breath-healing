@@ -62,5 +62,11 @@ export const BRAND = {
 		{ slug: 'goldhealing', name: 'Goldhealing' },
 		{ slug: 'raster-energie', name: 'Raster Energie' },
 		{ slug: 'spinal-touch', name: 'Spinal Touch' }
-	] as const
+	] as const,
+
+	stats: {
+		yearsExperience: '8+',
+		clientsHelped: '65+',
+		satisfaction: '∞',
+	} as const
 } as const;
