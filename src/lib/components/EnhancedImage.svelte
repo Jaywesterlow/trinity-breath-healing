@@ -54,15 +54,25 @@
   (browser default). This is preferred over conditional rendering for a single attribute.
   See Plan 00-07 SUMMARY.md for decision rationale.
 -->
-<enhanced:img
-	{src}
-	{alt}
-	{width}
-	{height}
-	{loading}
-	fetchpriority={fetchpriority ?? undefined}
-	class={className}
-/>
+{#if typeof src === 'string'}
+	<img
+		{src}
+		{alt}
+		{width}
+		{height}
+		{loading}
+		fetchpriority={fetchpriority ?? undefined}
+		class={className}
+	/>
+{:else}
+	<enhanced:img
+		{src}
+		{alt}
+		{loading}
+		fetchpriority={fetchpriority ?? undefined}
+		class={className}
+	/>
+{/if}
 
 <style>
 	/* Reset baseline: image fills its container, no CLS-inducing reflow.
