@@ -96,9 +96,14 @@ function auditFile(file: string): void {
 
 	const types = graph.map((n) => n['@type'] as string);
 
-	// WARNING-2: FAQPage with mainEntity=[] is valid in Phase 0.
-	// Phase 1 LND-07 will flip this gate to require mainEntity.length > 0.
-	// (No assertion on FAQPage mainEntity here — intentional Phase 0 contract)
+	// WARNING-2 gate (Phase 1 LND-07 flip): FAQPage mainEntity must not be empty.
+	const faqPage = graph.find((n) => n['@type'] === 'FAQPage') as Record<string, unknown> | undefined;
+	if (faqPage) {
+		const mainEntity = faqPage['mainEntity'];
+		if (!Array.isArray(mainEntity) || mainEntity.length === 0) {
+			fail(rel, 'FAQPage.mainEntity must be a non-empty array (WARNING-2 gate — Phase 1 LND-07)');
+		}
+	}
 
 	if (rel === 'index.html') {
 		// Landing: required singleton types
