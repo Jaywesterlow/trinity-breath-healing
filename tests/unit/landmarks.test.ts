@@ -15,17 +15,17 @@ import SiteNav from '$lib/components/SiteNav.svelte';
 import SiteFooter from '$lib/components/SiteFooter.svelte';
 
 describe('SiteNav component (src/lib/components/SiteNav.svelte)', () => {
-	it('Test 9: renders a single <nav> with aria-label="Hoofdnavigatie"', () => {
+	it('Test 9: renders a <nav> with aria-label="Hoofdnavigatie" (Phase 1: desktop nav)', () => {
 		const { container } = render(SiteNav);
-		const navs = container.querySelectorAll('nav');
-		expect(navs.length).toBe(1);
-		expect(navs[0]!.getAttribute('aria-label')).toBe('Hoofdnavigatie');
+		const hoofdNav = container.querySelector('nav[aria-label="Hoofdnavigatie"]');
+		expect(hoofdNav, 'nav[aria-label="Hoofdnavigatie"] must exist').not.toBeNull();
 	});
 
-	it('Test 9b: Phase 0 <nav> contains no <a> link children', () => {
+	it('Test 9b: Phase 1 desktop <nav> contains navigation links', () => {
 		const { container } = render(SiteNav);
-		const links = container.querySelectorAll('nav a');
-		expect(links.length).toBe(0);
+		const hoofdNav = container.querySelector('nav[aria-label="Hoofdnavigatie"]');
+		const links = hoofdNav?.querySelectorAll('a') ?? [];
+		expect(links.length).toBeGreaterThan(0);
 	});
 });
 

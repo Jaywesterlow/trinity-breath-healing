@@ -51,13 +51,13 @@
 		</a>
 		<nav aria-label="Hoofdnavigatie" class="desktop-nav">
 			<a href="/">Home</a>
-			<a href="#werkwijze">Werkwijze</a>
-			<a href="#over-mij">Over mij</a>
-			<a href="#behandelingen">Behandelingen</a>
-			<a href="#contact">Contact</a>
+			<a href="/#werkwijze">Werkwijze</a>
+			<a href="/#over-mij">Over mij</a>
+			<a href="/#behandelingen">Behandelingen</a>
+			<a href="/#contact">Contact</a>
 		</nav>
 		<div class="header-actions">
-			<a href="#contact" class="btn-cta">Maak een afspraak</a>
+			<a href="/#contact" class="btn-cta">Maak een afspraak</a>
 			<div class="social-icons">
 				<a
 					href={BRAND.socials.instagram && BRAND.socials.instagram !== 'TODO_INSTAGRAM_HANDLE'
@@ -151,12 +151,12 @@
 	</div>
 	<nav aria-label="Mobiele navigatie" class="overlay-nav">
 		<a href="/" onclick={closeOverlay}>Home</a>
-		<a href="#werkwijze" onclick={closeOverlay}>Werkwijze</a>
-		<a href="#over-mij" onclick={closeOverlay}>Over mij</a>
-		<a href="#behandelingen" onclick={closeOverlay}>Behandelingen</a>
-		<a href="#contact" onclick={closeOverlay}>Contact</a>
+		<a href="/#werkwijze" onclick={closeOverlay}>Werkwijze</a>
+		<a href="/#over-mij" onclick={closeOverlay}>Over mij</a>
+		<a href="/#behandelingen" onclick={closeOverlay}>Behandelingen</a>
+		<a href="/#contact" onclick={closeOverlay}>Contact</a>
 	</nav>
-	<a href="#contact" class="btn-cta overlay-cta" onclick={closeOverlay}>Maak een afspraak</a>
+	<a href="/#contact" class="btn-cta overlay-cta" onclick={closeOverlay}>Maak een afspraak</a>
 </div>
 
 <style>

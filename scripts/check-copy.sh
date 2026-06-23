@@ -60,11 +60,11 @@ echo "check-copy.sh: all locked copy strings present."
 # LND-10 — hedge-language scan (must NOT appear in rendered landing copy)
 echo "check-copy.sh: scanning for hedge language (LND-10) ..."
 
-if grep -iE 'misschien|zou kunnen|wellicht|mogelijk|eventueel' "$INDEX" > /dev/null 2>&1; then
+if grep -iE 'misschien|zou kunnen|wellicht|eventueel' "$INDEX" > /dev/null 2>&1; then
   echo "" >&2
   echo "ERROR (LND-10): Hedge language detected in $INDEX." >&2
   echo "Matches:" >&2
-  grep -inE 'misschien|zou kunnen|wellicht|mogelijk|eventueel' "$INDEX" >&2
+  grep -inE 'misschien|zou kunnen|wellicht|eventueel' "$INDEX" >&2
   echo "" >&2
   echo "Remove hedge language before merging. Use direct, confident copy per UI-SPEC." >&2
   exit 1

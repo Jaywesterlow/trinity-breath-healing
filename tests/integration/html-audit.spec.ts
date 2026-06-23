@@ -197,18 +197,20 @@ test.describe('Phase 1 landing-page assertions', () => {
 		).toBeGreaterThanOrEqual(5);
 	});
 
-	test('A11Y-02: every <input> has an associated <label> (input count === label count)', () => {
+	test('A11Y-02: every <input> has an associated <label> (input+textarea count === label count)', () => {
 		expect(indexHtml.length).toBeGreaterThan(0);
 		const inputs = root.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"])');
+		const textareas = root.querySelectorAll('textarea');
+		const formControls = inputs.length + textareas.length;
 		const labels = root.querySelectorAll('label');
 		expect(
-			inputs.length,
-			'No <input> elements found — contact form not yet implemented'
+			formControls,
+			'No form controls found — contact form not yet implemented'
 		).toBeGreaterThan(0);
 		expect(
 			labels.length,
-			`Found ${inputs.length} input(s) but ${labels.length} label(s) — every input needs a label (A11Y-02)`
-		).toBe(inputs.length);
+			`Found ${formControls} form control(s) but ${labels.length} label(s) — every form control needs a label (A11Y-02)`
+		).toBe(formControls);
 	});
 
 	test('PRF-07: no <script src> pointing to external (third-party) domains', () => {

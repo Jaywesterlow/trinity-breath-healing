@@ -14,8 +14,9 @@
 	function goTo(idx: number) {
 		currentIndex = ((idx % CARD_COUNT) + CARD_COUNT) % CARD_COUNT;
 		const cards = Array.from(trackEl.querySelectorAll('.carousel-card')) as HTMLElement[];
-		if (cards[currentIndex]) {
-			cards[currentIndex].scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest', inline: 'center' });
+		const targetCard = cards[currentIndex];
+		if (targetCard) {
+			targetCard.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest', inline: 'center' });
 		}
 	}
 
