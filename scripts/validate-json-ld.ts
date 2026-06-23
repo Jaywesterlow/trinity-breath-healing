@@ -97,7 +97,9 @@ function auditFile(file: string): void {
 	const types = graph.map((n) => n['@type'] as string);
 
 	// WARNING-2 gate (Phase 1 LND-07 flip): FAQPage mainEntity must not be empty.
-	const faqPage = graph.find((n) => n['@type'] === 'FAQPage') as Record<string, unknown> | undefined;
+	const faqPage = graph.find((n) => n['@type'] === 'FAQPage') as
+		| Record<string, unknown>
+		| undefined;
 	if (faqPage) {
 		const mainEntity = faqPage['mainEntity'];
 		if (!Array.isArray(mainEntity) || mainEntity.length === 0) {

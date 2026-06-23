@@ -37,10 +37,14 @@ describe('faq.ts — FAQPage builder', () => {
 	it('WARNING-2 flipped (Phase 1 LND-07): buildFaqPage(faqItems) has mainEntity.length >= 8', async () => {
 		const { buildFaqPage } = await loadFaq();
 		const result = buildFaqPage([
-			{ question: 'q1', answer: 'a1' }, { question: 'q2', answer: 'a2' },
-			{ question: 'q3', answer: 'a3' }, { question: 'q4', answer: 'a4' },
-			{ question: 'q5', answer: 'a5' }, { question: 'q6', answer: 'a6' },
-			{ question: 'q7', answer: 'a7' }, { question: 'q8', answer: 'a8' }
+			{ question: 'q1', answer: 'a1' },
+			{ question: 'q2', answer: 'a2' },
+			{ question: 'q3', answer: 'a3' },
+			{ question: 'q4', answer: 'a4' },
+			{ question: 'q5', answer: 'a5' },
+			{ question: 'q6', answer: 'a6' },
+			{ question: 'q7', answer: 'a7' },
+			{ question: 'q8', answer: 'a8' }
 		]) as unknown as Record<string, unknown>;
 		expect(result['@type']).toBe('FAQPage');
 		expect((result['mainEntity'] as unknown[]).length).toBeGreaterThanOrEqual(8);

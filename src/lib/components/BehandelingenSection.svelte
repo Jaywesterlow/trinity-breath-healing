@@ -3,7 +3,7 @@
 	import { BRAND } from '$lib/constants/brand';
 
 	const services = [
-		...BRAND.services.map(s => ({ slug: s.slug, name: s.name })),
+		...BRAND.services.map((s) => ({ slug: s.slug, name: s.name })),
 		{ slug: '', name: 'Meer diensten' }
 	];
 
@@ -16,7 +16,11 @@
 		const cards = Array.from(trackEl.querySelectorAll('.carousel-card')) as HTMLElement[];
 		const targetCard = cards[currentIndex];
 		if (targetCard) {
-			targetCard.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'nearest', inline: 'center' });
+			targetCard.scrollIntoView({
+				behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth',
+				block: 'nearest',
+				inline: 'center'
+			});
 		}
 	}
 
@@ -53,12 +57,16 @@
 					href={service.slug ? `/diensten/${service.slug}` : '/diensten/'}
 					class="carousel-card"
 					class:active={i === currentIndex}
-					onclick={() => { currentIndex = i; }}
+					onclick={() => {
+						currentIndex = i;
+					}}
 				>
 					<div class="card-icon" class:inactive={i !== currentIndex}>
 						<svg width="40" height="40" viewBox="0 0 40 40" aria-hidden="true">
-							<circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="2"/>
-							<text x="50%" y="55%" text-anchor="middle" font-size="14" fill="currentColor">{service.name.charAt(0)}</text>
+							<circle cx="20" cy="20" r="18" fill="none" stroke="currentColor" stroke-width="2" />
+							<text x="50%" y="55%" text-anchor="middle" font-size="14" fill="currentColor"
+								>{service.name.charAt(0)}</text
+							>
 						</svg>
 					</div>
 					<span class="card-name">{service.name}</span>

@@ -23,16 +23,30 @@
 					{/if}
 				</address>
 				<dl class="footer-credentials">
-					<dt>KvK</dt><dd>TODO_KVK</dd>
-					<dt>Opleiding</dt><dd>TODO_BIG</dd>
+					<dt>KvK</dt>
+					<dd>TODO_KVK</dd>
+					<dt>Opleiding</dt>
+					<dd>TODO_BIG</dd>
 				</dl>
 				<div class="footer-social">
 					<a
-						href={BRAND.socials.instagram !== 'TODO_INSTAGRAM_HANDLE' ? `https://instagram.com/${BRAND.socials.instagram}` : '#'}
+						href={BRAND.socials.instagram !== 'TODO_INSTAGRAM_HANDLE'
+							? `https://instagram.com/${BRAND.socials.instagram}`
+							: '#'}
 						aria-label="Volg ons op Instagram"
 						class="social-link"
 					>
-						<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+						<svg
+							width="20"
+							height="20"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							aria-hidden="true"
+						>
 							<rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
 							<circle cx="12" cy="12" r="5"></circle>
 							<circle cx="17.5" cy="6.5" r="1.5" fill="currentColor" stroke="none"></circle>
@@ -40,15 +54,29 @@
 					</a>
 					{#if BRAND.socials.facebook !== null}
 						<a href={BRAND.socials.facebook} aria-label="Volg ons op Facebook" class="social-link">
-							<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-								<path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/>
+							<svg
+								width="20"
+								height="20"
+								viewBox="0 0 24 24"
+								fill="currentColor"
+								aria-hidden="true"
+							>
+								<path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" />
 							</svg>
 						</a>
 					{/if}
 					{#if BRAND.socials.x !== null}
 						<a href={BRAND.socials.x} aria-label="Volg ons op X" class="social-link">
-							<svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-								<path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+							<svg
+								width="20"
+								height="20"
+								viewBox="0 0 24 24"
+								fill="currentColor"
+								aria-hidden="true"
+							>
+								<path
+									d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"
+								/>
 							</svg>
 						</a>
 					{/if}
@@ -90,7 +118,9 @@
 
 		<!-- Bottom bar -->
 		<div class="footer-bottom">
-			<p class="copyright">©Copyright 2026 Trinity Breath &amp; Healing, alle rechten voorbehouden</p>
+			<p class="copyright">
+				©Copyright 2026 Trinity Breath &amp; Healing, alle rechten voorbehouden
+			</p>
 			<div class="footer-bottom-links">
 				<a href="/privacyverklaring">Privacyverklaring</a>
 				<a href="/algemene-voorwaarden">Algemene voorwaarden</a>

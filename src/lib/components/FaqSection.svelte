@@ -12,7 +12,13 @@
 					<summary class="faq-question">
 						<span>{item.question}</span>
 						<svg class="chevron" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
-							<polyline points="5,8 10,13 15,8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+							<polyline
+								points="5,8 10,13 15,8"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="2"
+								stroke-linecap="round"
+							/>
 						</svg>
 					</summary>
 					<p class="faq-answer">{item.answer}</p>

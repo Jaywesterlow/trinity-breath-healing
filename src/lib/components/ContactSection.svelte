@@ -12,18 +12,30 @@
 		<p class="eyebrow">Contact</p>
 		<h2>Een eerste stap hoeft niet groot te zijn.</h2>
 		<p class="contact-body">
-			Of je nu wilt mailen, bellen of direct een online afspraak wilt inplannen — kies wat voor jou werkt.
-			Ik reageer zo snel mogelijk, meestal binnen één werkdag.
+			Of je nu wilt mailen, bellen of direct een online afspraak wilt inplannen — kies wat voor jou
+			werkt. Ik reageer zo snel mogelijk, meestal binnen één werkdag.
 		</p>
 
 		<!-- Toggle group — hidden when no JS (js-enabled class approach) -->
 		<div class="toggle-group" role="radiogroup" aria-label="Contactmethode kiezen">
 			<label class="toggle-pill" class:active={activeTab === 'email'}>
-				<input type="radio" name="contact-method" value="email" checked={activeTab === 'email'} onchange={() => activeTab = 'email'} />
+				<input
+					type="radio"
+					name="contact-method"
+					value="email"
+					checked={activeTab === 'email'}
+					onchange={() => (activeTab = 'email')}
+				/>
 				Email formulier
 			</label>
 			<label class="toggle-pill" class:active={activeTab === 'online'}>
-				<input type="radio" name="contact-method" value="online" checked={activeTab === 'online'} onchange={() => activeTab = 'online'} />
+				<input
+					type="radio"
+					name="contact-method"
+					value="online"
+					checked={activeTab === 'online'}
+					onchange={() => (activeTab = 'online')}
+				/>
 				Online meeting
 			</label>
 		</div>
@@ -50,7 +62,9 @@
 					<input type="tel" id="phone" name="phone" autocomplete="tel" placeholder="+31" />
 				</div>
 				<p class="disclaimer">
-					Trinity Breath &amp; Healing begeleidt bij lichaamsgerichte therapie. Wij zijn geen medische zorgverlener en behandelen geen diagnoses. Bij medische klachten raadpleeg altijd een arts.
+					Trinity Breath &amp; Healing begeleidt bij lichaamsgerichte therapie. Wij zijn geen
+					medische zorgverlener en behandelen geen diagnoses. Bij medische klachten raadpleeg altijd
+					een arts.
 				</p>
 				<div class="form-field">
 					<label for="message">Bericht *</label>
@@ -59,7 +73,9 @@
 				<div class="form-field form-field--checkbox">
 					<input type="checkbox" id="avg-consent" name="avg-consent" required />
 					<label for="avg-consent">
-						Ik ga akkoord met de verwerking van mijn gegevens conform de <a href="/privacyverklaring">privacyverklaring</a>. *
+						Ik ga akkoord met de verwerking van mijn gegevens conform de <a
+							href="/privacyverklaring">privacyverklaring</a
+						>. *
 					</label>
 				</div>
 				<button type="submit" class="btn-submit">Verstuur email</button>
@@ -140,7 +156,7 @@
 		color: var(--color-fg-forest);
 	}
 
-	.toggle-pill input[type="radio"] {
+	.toggle-pill input[type='radio'] {
 		position: absolute;
 		opacity: 0;
 		width: 0;

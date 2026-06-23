@@ -67,6 +67,6 @@ export const BRAND = {
 	stats: {
 		yearsExperience: '8+',
 		clientsHelped: '65+',
-		satisfaction: '∞',
+		satisfaction: '∞'
 	} as const
 } as const;

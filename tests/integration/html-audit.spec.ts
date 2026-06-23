@@ -168,7 +168,10 @@ test.describe('Phase 1 landing-page assertions', () => {
 	test('PRF-02: <link rel="preload" as="image"> present for hero image', () => {
 		expect(indexHtml.length).toBeGreaterThan(0);
 		const preloadLink = root.querySelector("link[rel='preload'][as='image']");
-		expect(preloadLink, '<link rel="preload" as="image"> missing — hero image preload required (PRF-02)').not.toBeNull();
+		expect(
+			preloadLink,
+			'<link rel="preload" as="image"> missing — hero image preload required (PRF-02)'
+		).not.toBeNull();
 	});
 
 	test('PRF-03: loading="eager" appears exactly once (hero image only)', () => {
@@ -183,7 +186,10 @@ test.describe('Phase 1 landing-page assertions', () => {
 	test('A11Y-01: role="dialog" present (overlay/modal)', () => {
 		expect(indexHtml.length).toBeGreaterThan(0);
 		const dialog = root.querySelector('[role="dialog"]');
-		expect(dialog, 'role="dialog" missing — overlay/modal ARIA role required (A11Y-01)').not.toBeNull();
+		expect(
+			dialog,
+			'role="dialog" missing — overlay/modal ARIA role required (A11Y-01)'
+		).not.toBeNull();
 	});
 
 	test('LND-05: at least 5 <a> elements linking to /diensten/ paths (service carousel)', () => {
@@ -199,7 +205,9 @@ test.describe('Phase 1 landing-page assertions', () => {
 
 	test('A11Y-02: every <input> has an associated <label> (input+textarea count === label count)', () => {
 		expect(indexHtml.length).toBeGreaterThan(0);
-		const inputs = root.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"])');
+		const inputs = root.querySelectorAll(
+			'input:not([type="hidden"]):not([type="submit"]):not([type="button"])'
+		);
 		const textareas = root.querySelectorAll('textarea');
 		const formControls = inputs.length + textareas.length;
 		const labels = root.querySelectorAll('label');
