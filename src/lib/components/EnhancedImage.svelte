@@ -9,9 +9,11 @@
 	// BELOW-FOLD USAGE (omit loading and fetchpriority for safe defaults):
 	//   <EnhancedImage src={IconImg} alt="Service icon" width={48} height={48} />
 
+	import type { Picture } from 'vite-imagetools';
+
 	type Props = {
-		/** Import path via ?enhanced or plain URL. Required. */
-		src: string;
+		/** Import path via ?enhanced (Picture object) or plain URL string. Required. */
+		src: Picture | string;
 		/** Alt text — required for A11Y-04 AND PRF-01 (missing → TS compile error). */
 		alt: string;
 		/** Explicit width in px — required for CLS=0 (missing → TS compile error). */
