@@ -13,6 +13,7 @@
 	import AboutSection from '$lib/components/AboutSection.svelte';
 	import BehandelingenSection from '$lib/components/BehandelingenSection.svelte';
 	import ContactSection from '$lib/components/ContactSection.svelte';
+	import FaqSection from '$lib/components/FaqSection.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -27,6 +28,8 @@
 <BehandelingenSection />
 
 <ContactSection />
+
+<FaqSection />
 
 <!--
 	SEO-09 recency signal (BLOCKER-3).
