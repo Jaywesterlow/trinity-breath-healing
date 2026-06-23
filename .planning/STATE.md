@@ -28,12 +28,12 @@ progress:
 ## Current Position
 
 **Phase:** 1 — Landing Sections
-**Plan:** Wave 0 complete (Plan 01-00 done). Wave 1 next: Plans 01-01 through 01-03.
-**Status:** Phase 1 Wave 0 complete. CI floor set: check-copy.sh gate, Phase 1 html-audit red tests, image stubs, logo placeholder. 139 unit tests pass + 1 skip.
-**Progress:** [█████░░░░░] 53%
+**Plan:** Wave 1 in progress. Plan 01-01 (Hero) done. Plans 01-02, 01-03 next.
+**Status:** Plan 01-01 complete. HeroSection.svelte built, +page.svelte updated, 0 TS errors. Build verification pending (npm run build blocked in sandbox — user must verify).
+**Progress:** [█████░░░░░] 55%
 
 ```
-[█████░░░░░] 53% — Phase 1 Wave 0 done; Wave 1 (Plans 01-01, 01-02, 01-03) next
+[█████░░░░░] 55% — Phase 1 Wave 1 in progress (01-01 done; 01-02, 01-03 next)
 ```
 
 ## Performance Metrics
@@ -72,6 +72,8 @@ progress:
 | **jsdom installed separately** | Vitest 4 no longer bundles jsdom; must be explicit devDependency | Plan 01 execution |
 | **`fs.existsSync` guard before dynamic import in Vitest** | Vite `vite:import-analysis` resolves alias targets at transform time — try/catch and `@vite-ignore` do not suppress the error when the alias target file is absent. Gate on `fs.existsSync` + use absolute path via `path.resolve` | Plan 01-00 execution |
 | **`test.describe` not bare `describe` in Playwright specs** | `@playwright/test` does not export a top-level `describe` — use `test.describe()` to avoid TypeScript errors in `svelte-check` | Plan 01-00 execution |
+| **`?enhanced` imports resolve to `Picture` type, not `string`** | `*?enhanced` ambient module declaration resolves to `vite-imagetools` `Picture` object `{ sources, img: { src, w, h } }`. EnhancedImage `src` prop must accept `Picture \| string`. Preload href = `(HeroImg as Picture).img.src` | Plan 01-01 execution |
+| **svelte:head inside section component for LCP preload** | Simpler than prop-threading heroPreload through Head.svelte; SSR-safe (no browser guard needed); co-located with hero imports | Plan 01-01 execution |
 
 ### Todos (Roadmap-level)
 
@@ -105,7 +107,9 @@ None. Wave 4 complete. Wave 5 (Plan 08) ready.
 
 ## Session Continuity
 
-**Last action (2026-06-23, session 14):** Phase 1 Wave 0 complete. Plan 01-00 done. check-copy.sh (LND-09/LND-10), Phase 1 html-audit red tests (6 assertions), schema-faq conditional guard, 5 PNG stubs, logo.svg, ci.yml updated. 139 unit tests pass + 1 skip. Wave 1 next: Plans 01-01 through 01-03.
+**Last action (2026-06-23, session 15):** Plan 01-01 complete. HeroSection.svelte (H1, eager LCP image, svelte:head preload, 3 service tiles, mobile-first CSS). +page.svelte Phase 0 placeholder replaced; SEO-09 time block preserved. EnhancedImage src type fixed: string → Picture|string. 0 TS errors (522 files). Build sandbox-blocked — user must run: PUBLIC_SITE_URL=https://trinity-breath-healing.vercel.app npm run build. Commits: 53ddf58 (HeroSection), 682d347 (+page.svelte).
+
+**Previously (2026-06-23, session 14):** Phase 1 Wave 0 complete. Plan 01-00 done. check-copy.sh (LND-09/LND-10), Phase 1 html-audit red tests (6 assertions), schema-faq conditional guard, 5 PNG stubs, logo.svg, ci.yml updated. 139 unit tests pass + 1 skip. Wave 1 next: Plans 01-01 through 01-03.
 
 **Previously (2026-06-22, session 13):** Phase 1 context gathered. 01-CONTEXT.md + 01-DISCUSSION-LOG.md written and committed. 40 decisions locked (D-01–D-40). User must provide 6 image assets before Phase 1 execution. Next: `/gsd-plan-phase` (Phase 1).
 
