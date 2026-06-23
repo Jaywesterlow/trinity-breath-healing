@@ -1,72 +1,35 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-21T00:00:00.000Z",
-  "phase": "00",
-  "phase_name": "foundation-seo-scaffolding",
-  "phase_dir": ".planning/phases/00-foundation-seo-scaffolding",
-  "plan": 9,
-  "task": 2,
-  "total_tasks": 4,
+  "timestamp": "2026-06-24T00:48:08Z",
+  "phase": "01",
+  "phase_name": "landing-sections",
+  "phase_dir": ".planning/phases/01-landing-sections",
+  "plan": null,
+  "task": "frontend-rebuild-start",
+  "total_tasks": null,
   "status": "paused",
   "completed_tasks": [
-    {
-      "id": 1,
-      "name": "Create GitHub repo + push Phase 0 PR",
-      "status": "done",
-      "commit": "e022e71",
-      "notes": "Repo: https://github.com/Jaywesterlow/trinity-breath-healing (PRIVATE). PR #1: https://github.com/Jaywesterlow/trinity-breath-healing/pull/1 (phase-0-foundation -> main). main reset to initial commit 79d0c9a so PR has a diff."
-    }
+    {"id": "01-00", "name": "Wave 0 — test contracts, image stubs, check-copy.sh, ci.yml", "status": "done", "commit": "de04883"},
+    {"id": "01-01–09", "name": "All Phase 1 section components (HeroSection through SiteFooter)", "status": "done_then_reset", "commit": "df0cc13"},
+    {"id": "reset", "name": "Frontend reset — deleted all section components, wired SEO emitters, added Nav/Footer stubs", "status": "done", "commit": "c2c398b"},
+    {"id": "stubs", "name": "Nav + Footer minimal visible implementation + global.css linked in app.html", "status": "done", "commit": "b926016"}
   ],
   "remaining_tasks": [
-    {
-      "id": 2,
-      "name": "Connect Vercel to GitHub repo + set PUBLIC_SITE_URL env var",
-      "status": "not_started",
-      "notes": "User must do manually via Vercel dashboard. See PLAN.md Task 2."
-    },
-    {
-      "id": 3,
-      "name": "Configure main-branch protection with Plan 08 gates as required status checks",
-      "status": "not_started",
-      "notes": "Agent can do via gh CLI after CI run names confirmed from a real workflow run."
-    },
-    {
-      "id": 4,
-      "name": "Search Console verification + production smoke test + PHASE0-LAUNCH-CHECKLIST.md",
-      "status": "not_started",
-      "notes": "Needs production deploy. Search Console HTML file -> static/. PHASE0-LAUNCH-CHECKLIST.md template already exists."
-    }
+    {"id": "nav", "name": "Build out Nav.svelte with real content (logo, links, mobile menu)", "status": "not_started"},
+    {"id": "footer", "name": "Build out Footer.svelte with real content", "status": "not_started"},
+    {"id": "home", "name": "Rebuild home page sections from scratch", "status": "not_started"}
   ],
-  "blockers": [
-    {
-      "description": "Task 2 requires user to connect Vercel to GitHub in the Vercel dashboard — cannot be automated",
-      "type": "human_action",
-      "workaround": "None"
-    }
-  ],
-  "human_actions_pending": [
-    {
-      "action": "Connect Vercel to trinity-breath-healing GitHub repo via vercel.com",
-      "context": "Add New Project -> import from GitHub -> select trinity-breath-healing -> SvelteKit auto-detected -> deploy -> Settings -> Env Vars -> PUBLIC_SITE_URL=https://trinity-breath-healing.vercel.app for Production AND Preview",
-      "blocking": true
-    }
-  ],
+  "blockers": [],
+  "human_actions_pending": [],
   "decisions": [
-    {
-      "decision": "main branch reset to initial commit 79d0c9a; all Phase 0 work on phase-0-foundation",
-      "rationale": "GitHub needs base/head to differ to create a PR. main = seed commit, phase-0-foundation = all work.",
-      "phase": "00"
-    },
-    {
-      "decision": "gh CLI invoked via full path C:\\Program Files\\GitHub CLI\\gh.exe with GH_CONFIG_DIR set",
-      "rationale": "gh not on PATH in Claude shell. Must use: $env:GH_CONFIG_DIR = '$env:APPDATA\\GitHub CLI'; & 'C:\\Program Files\\GitHub CLI\\gh.exe' ...",
-      "phase": "00"
-    }
+    {"decision": "Full frontend reset — deleted all Phase 1 section components", "rationale": "User decided to start fresh visually rather than continue with existing implementations", "phase": "01"},
+    {"decision": "SiteNav/SiteFooter renamed to Nav/Footer", "rationale": "New component names for the fresh start", "phase": "01"},
+    {"decision": "Head.svelte + JsonLd.svelte restored (SEO infrastructure, not visual)", "rationale": "SEO/AEO must remain wired on every route — these are not frontend components", "phase": "01"},
+    {"decision": "StubLayout/Breadcrumbs/PageTitle restored for 14 stub routes", "rationale": "Those routes still need basic content to avoid build failures", "phase": "01"},
+    {"decision": "global.css linked via app.html <link> tag", "rationale": "Was not linked anywhere — design tokens and fonts were not loading", "phase": "01"},
+    {"decision": "npm clean install — package-lock deleted and regenerated", "rationale": "@rolldown/pluginutils dist artifact was missing, causing ERR_MODULE_NOT_FOUND on build", "phase": "01"}
   ],
-  "uncommitted_files": [
-    ".planning/phases/00-foundation-seo-scaffolding/PHASE0-LAUNCH-CHECKLIST.md",
-    ".planning/HANDOFF.json"
-  ],
-  "next_action": "User connects Vercel via dashboard. Once preview deploy + CI run exist, agent wires branch protection (Task 3) via gh CLI, then guides Search Console verification (Task 4).",
-  "context_notes": "Plan 09 is all human checkpoints. Task 1 done. CI will run once Vercel preview deploy exists. Branch protection can be set by agent via gh CLI after first CI run. Task 4 (Search Console) always manual."
+  "uncommitted_files": [],
+  "next_action": "Build Nav.svelte with real content — logo, navigation links, mobile hamburger menu. Refer to Figma design and CLAUDE.md for design tokens.",
+  "context_notes": "Phase 1 was previously completed (all 9 plans done, CI passing), then reset by user decision. npm was also broken (missing @rolldown/pluginutils). Both fixed. Site now builds and serves cleanly with blank home page, Nav + Footer stubs (forest green bars), and all SEO tags emitting correctly on every route. Ready to rebuild frontend from blank slate."
 }

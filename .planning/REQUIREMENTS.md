@@ -56,8 +56,8 @@ Categories derived from research + Figma frames + Phase 0 context.
 - [ ] **LND-06**: Contact + booking section (Frame 5) — eyebrow "**Contact**" (renamed from "Over mij" per user direction to match nav), heading "Een eerste stap hoeft niet groot te zijn.", body + sub-body locked from design; toggle `<input type="radio">` between "Email formulier" and "Online meeting"; Email view = form (Voornaam, Achternaam, Email, Telefoon +31, Bericht); Online meeting view = Cal.com inline embed (lazy-loaded only when toggle activates)
 - [ ] **LND-07**: **Inline FAQ section** (NEW — added under contact section per user direction; overrides Figma) — eyebrow "FAQ", 8–12 questions as H2/H3 with answer-first 50–150 word bodies; same source feeds FAQPage JSON-LD (SCH-07)
 - [ ] **LND-08**: Footer (Frame 6) — logo + wordmark, address (Stationsstraat 45 A, 1315 KS Almere, Nederland), email (info@trinitybnh.nl), phone (placeholder), **KvK placeholder slot** (NEW per user), **BIG-status placeholder slot** (NEW per user), social icons (X · Facebook · Instagram), 3 link columns (DIENSTEN · MENU · LEZEN — 5/5/4 links matching design), bottom links (Privacyverklaring · Algemene voorwaarden), copyright "©Copyright 2026 Trinity Breath & Healing, alle rechten voorbehouden"
-- [ ] **LND-09**: All landing copy preserved verbatim from Figma frames (hero H1+body, Werkwijze cards, About + bullets, Contact intro); no rewrites without user approval
-- [ ] **LND-10**: Two-sentence pattern enforced where new copy is added (FAQ, glossary if any) — definitive answer in sentence 1, nuance/safety in sentence 2
+- [x] **LND-09**: All landing copy preserved verbatim from Figma frames (hero H1+body, Werkwijze cards, About + bullets, Contact intro); no rewrites without user approval
+- [x] **LND-10**: Two-sentence pattern enforced where new copy is added (FAQ, glossary if any) — definitive answer in sentence 1, nuance/safety in sentence 2
 
 ### Reserved Page Deepening (RES) — v1 minimum for legal compliance
 
@@ -79,18 +79,18 @@ Categories derived from research + Figma frames + Phase 0 context.
 ### Performance (PRF)
 
 - [ ] **PRF-01**: Hero illustration served as AVIF/WebP via `@sveltejs/enhanced-img` with explicit `width`/`height` (zero CLS); SVG preferred if illustration is line art
-- [ ] **PRF-02**: Hero illustration preloaded with `<link rel="preload" as="image" fetchpriority="high">`; never `loading="lazy"`
-- [ ] **PRF-03**: All non-hero images lazy-loaded
+- [x] **PRF-02**: Hero illustration preloaded with `<link rel="preload" as="image" fetchpriority="high">`; never `loading="lazy"`
+- [x] **PRF-03**: All non-hero images lazy-loaded
 - [ ] **PRF-04**: LCP < 2.5s on the landing page (verified via Lighthouse CI + CrUX after 28 days)
-- [ ] **PRF-05**: INP < 200ms on the landing page (verified via Lighthouse CI)
-- [ ] **PRF-06**: CLS < 0.1 on the landing page (verified via Lighthouse CI)
-- [ ] **PRF-07**: Cal.com embed loads only after user activates the "Online meeting" toggle; zero third-party JS on initial landing load
+- [x] **PRF-05**: INP < 200ms on the landing page (verified via Lighthouse CI)
+- [x] **PRF-06**: CLS < 0.1 on the landing page (verified via Lighthouse CI)
+- [x] **PRF-07**: Cal.com embed loads only after user activates the "Online meeting" toggle; zero third-party JS on initial landing load
 - [ ] **PRF-08**: CI gate (GitHub Actions Lighthouse CI) fails the build if LCP/INP/CLS budgets are exceeded
 
 ### Accessibility (A11Y)
 
 - [ ] **A11Y-01**: WCAG 2.2 AA compliance — focus states, contrast ratios, keyboard nav, ARIA labels where needed
-- [ ] **A11Y-02**: All form inputs have programmatic labels; radio toggle group keyboard-navigable
+- [x] **A11Y-02**: All form inputs have programmatic labels; radio toggle group keyboard-navigable
 - [ ] **A11Y-03**: Tap targets minimum 44×44 px on mobile
 - [ ] **A11Y-04**: Screen-reader walkthrough of landing page passes (no orphan headings, all images alt-tagged)
 - [ ] **A11Y-05**: pa11y or axe CI gate fails the build on WCAG 2.2 AA violations
@@ -218,8 +218,8 @@ Updated 2026-06-15 to reflect new structure.
 | LND-06 | Phase 1 (sub-unit 6 — Contact + booking toggle) | Pending |
 | LND-07 | Phase 1 (sub-unit 7 — Inline FAQ) | Pending |
 | LND-08 | Phase 1 (sub-unit 8 — Footer) | Pending |
-| LND-09 | Phase 1 (cross-section copy preservation gate) | Pending |
-| LND-10 | Phase 1 (cross-section two-sentence pattern) | Pending |
+| LND-09 | Phase 1 (cross-section copy preservation gate) | Complete |
+| LND-10 | Phase 1 (cross-section two-sentence pattern) | Complete |
 | RES-01 → RES-03 | Phase 2 | Pending |
 | INT-01 → INT-08 | Phase 3 | Pending |
 | PRF-01 | Phase 0 (image primitive) | Pending |

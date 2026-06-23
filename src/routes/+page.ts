@@ -2,6 +2,8 @@ import type { PageLoad } from './$types';
 import { defaults } from '$lib/seo/defaults';
 import { buildGraph } from '$lib/schema/buildGraph';
 import { buildWebPage } from '$lib/schema/webpage';
+import { faqItems } from '$lib/content/faq/index';
+import { buildFaqPage } from '$lib/schema/faq';
 
 /**
  * Landing page load — SEO-09 / BLOCKER-3.
@@ -25,7 +27,8 @@ export const load: PageLoad = async () => ({
 				description: defaults.description,
 				path: '/',
 				dateModified: __BUILD_DATE__
-			})
+			}),
+			buildFaqPage(faqItems)
 		],
 		path: '/'
 	})

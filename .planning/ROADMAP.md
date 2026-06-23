@@ -1,7 +1,7 @@
 # Roadmap: Trinity Breath & Healing
 
 **Created:** 2026-06-14
-**Last revised:** 2026-06-15 (Vercel swap + Figma-driven overrides from Phase 0 CONTEXT.md)
+**Last revised:** 2026-06-23 (Phase 1 plans created — 10 plans, 5 waves)
 **Granularity:** fine
 **Mode:** yolo
 **Coverage:** 81/81 v1 requirements mapped (100%)
@@ -84,7 +84,18 @@ Plans:
   4. The inline FAQ section and `FAQPage` JSON-LD are generated from a single source so the rendered Q/A list and the structured data are guaranteed to match.
   5. All Figma-verbatim copy (hero H1+body, Werkwijze 3 cards, About + stats, Contact section, footer NAP) appears unchanged in the rendered HTML; any copy that was inferred or added (mobile body variant choice, FAQ questions, glossary) is recorded in the sub-unit PR description.
 
-**Plans**: TBD
+**Plans**: 10 plans
+Plans:
+- [x] 01-00-PLAN.md — Wave 0: CI/test infra, image stubs, logo placeholder, check-copy.sh, html-audit Phase 1 assertions, ci.yml update (Wave 0)
+- [ ] 01-01-PLAN.md — Hero section: HeroSection.svelte, Head.svelte heroPreload, +page.svelte replacement (Wave 1)
+- [ ] 01-02-PLAN.md — Header + mobile menu overlay: SiteNav.svelte full replacement, +layout.svelte (Wave 1)
+- [ ] 01-03-PLAN.md — Werkwijze 3-card / accordion: WerkwijzeSection.svelte, +page.svelte (Wave 2)
+- [ ] 01-04-PLAN.md — About + stats: brand.ts BRAND.stats, AboutSection.svelte, +page.svelte (Wave 2)
+- [ ] 01-05-PLAN.md — Behandelingen carousel: BehandelingenSection.svelte, +page.svelte (Wave 3)
+- [ ] 01-06-PLAN.md — Contact + booking toggle: ContactSection.svelte, +page.svelte (Wave 3)
+- [ ] 01-07-PLAN.md — Inline FAQ + FAQPage JSON-LD: faq/index.ts, FaqSection.svelte, +page.ts, +page.svelte (Wave 4)
+- [ ] 01-08-PLAN.md — Footer: SiteFooter.svelte full replacement (Wave 4)
+- [ ] 01-09-PLAN.md — Cross-cutting gates: check-copy.sh finalization, html-audit verification, human visual checkpoint (Wave 5)
 **UI hint**: yes
 
 ### Phase 2: Reserved-Page v1 Content
@@ -168,9 +179,9 @@ Plans:
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 0. Foundation & SEO Scaffolding | 0/? | Not started | - |
-| 1. Landing Sections (8 sub-units) | 0/8 | Not started | - |
-| 2. Reserved-Page v1 Content | 0/3 | Not started | - |
+| 0. Foundation & SEO Scaffolding | 9/9 | COMPLETE | 2026-06-22 |
+| 1. Landing Sections (8 sub-units) | 1/10 | In Progress|  |
+| 2. Reserved-Page v1 Content | 0/? | Not started | - |
 | 3. Integrations | 0/? | Not started | - |
 | 4. Legal & Copy Gate | 0/? | Not started | - |
 | 5. Launch & Monitoring | 0/? | Not started | - |
@@ -230,4 +241,4 @@ See `.planning/phases/00-foundation-seo-scaffolding/UNKNOWNS.md` for full invent
 
 ---
 *Roadmap created: 2026-06-14*
-*Last updated: 2026-06-15 after Figma frame review + Vercel/design overrides in Phase 0 CONTEXT.md*
+*Last updated: 2026-06-23 — Phase 1 planned: 10 plans, 5 waves. Phase 0 marked COMPLETE.*
