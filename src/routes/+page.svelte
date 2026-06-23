@@ -11,6 +11,8 @@
 	import HeroSection from '$lib/components/HeroSection.svelte';
 	import WerkwijzeSection from '$lib/components/WerkwijzeSection.svelte';
 	import AboutSection from '$lib/components/AboutSection.svelte';
+	import BehandelingenSection from '$lib/components/BehandelingenSection.svelte';
+	import ContactSection from '$lib/components/ContactSection.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -21,6 +23,10 @@
 <WerkwijzeSection />
 
 <AboutSection />
+
+<BehandelingenSection />
+
+<ContactSection />
 
 <!--
 	SEO-09 recency signal (BLOCKER-3).
