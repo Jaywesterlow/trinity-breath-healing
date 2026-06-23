@@ -30,12 +30,23 @@ check_string() {
 }
 
 # LND-09 — locked Figma copy strings (must appear verbatim in rendered HTML)
+# Hero (Plan 01-01)
 check_string "Rust in je hoofd. Ontspanning in je lichaam."
-check_string "Rustig, persoonlijk en op jouw tempo."
-check_string "Vanuit eigen ervaring weet ik wat jij doormaakt."
-check_string "Een eerste stap hoeft niet groot te zijn."
 check_string "Maak een afspraak"
+# Werkwijze (Plan 01-03)
+check_string "Rustig, persoonlijk en op jouw tempo."
+check_string "Kennismaking"
+check_string "De sessie"
+check_string "Verdieping"
+# About (Plan 01-04)
+check_string "Vanuit eigen ervaring weet ik wat jij doormaakt."
+# Contact (Plan 01-06)
+check_string "Een eerste stap hoeft niet groot te zijn."
 check_string "Verstuur email"
+# FAQ (Plan 01-07)
+check_string "Veelgestelde vragen"
+# Footer (Plan 01-08)
+check_string "info@trinitybnh.nl"
 
 if [ "$FAILED" -ne 0 ]; then
   echo "" >&2
