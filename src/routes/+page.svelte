@@ -9,12 +9,18 @@
 	 * Single source: UI date === JSON-LD WebPage.dateModified === __BUILD_DATE__.
 	 */
 	import HeroSection from '$lib/components/HeroSection.svelte';
+	import WerkwijzeSection from '$lib/components/WerkwijzeSection.svelte';
+	import AboutSection from '$lib/components/AboutSection.svelte';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
 </script>
 
 <HeroSection />
+
+<WerkwijzeSection />
+
+<AboutSection />
 
 <!--
 	SEO-09 recency signal (BLOCKER-3).
