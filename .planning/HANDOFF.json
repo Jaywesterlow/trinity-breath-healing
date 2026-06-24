@@ -1,35 +1,82 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-24T00:48:08Z",
+  "timestamp": "2026-06-24T16:21:38.482Z",
   "phase": "01",
   "phase_name": "landing-sections",
   "phase_dir": ".planning/phases/01-landing-sections",
   "plan": null,
-  "task": "frontend-rebuild-start",
+  "task": null,
   "total_tasks": null,
   "status": "paused",
   "completed_tasks": [
     {"id": "01-00", "name": "Wave 0 — test contracts, image stubs, check-copy.sh, ci.yml", "status": "done", "commit": "de04883"},
-    {"id": "01-01–09", "name": "All Phase 1 section components (HeroSection through SiteFooter)", "status": "done_then_reset", "commit": "df0cc13"},
-    {"id": "reset", "name": "Frontend reset — deleted all section components, wired SEO emitters, added Nav/Footer stubs", "status": "done", "commit": "c2c398b"},
-    {"id": "stubs", "name": "Nav + Footer minimal visible implementation + global.css linked in app.html", "status": "done", "commit": "b926016"}
+    {"id": "01-01-09", "name": "All Phase 1 section components — done then reset by user decision", "status": "done_then_reset", "commit": "df0cc13"},
+    {"id": "reset", "name": "Frontend reset — deleted section components, wired SEO emitters, added Nav/Footer stubs", "status": "done", "commit": "c2c398b"},
+    {"id": "stubs", "name": "Nav + Footer stubs + global.css linked in app.html", "status": "done", "commit": "b926016"},
+    {"id": "nav-partial", "name": "Nav.svelte — real content (logo, links, mobile hamburger, CTA button)", "status": "done", "commit": "05191d5"},
+    {
+      "id": "fluid-partial",
+      "name": "Fluid typography first attempt — PARTIAL, SUPERSEDED",
+      "status": "in_progress",
+      "progress": "Added --font-size-fluid-* tokens (375→1440px, rem-based) to global.css. Updated Nav.svelte with fluid font-size and STEPPED breakpoint padding at 1024/1200/1440. This approach is WRONG per new spec — must be replaced."
+    }
   ],
   "remaining_tasks": [
-    {"id": "nav", "name": "Build out Nav.svelte with real content (logo, links, mobile menu)", "status": "not_started"},
-    {"id": "footer", "name": "Build out Footer.svelte with real content", "status": "not_started"},
-    {"id": "home", "name": "Rebuild home page sections from scratch", "status": "not_started"}
+    {
+      "id": "fluid-cleanup",
+      "name": "Remove wrong fluid tokens from global.css",
+      "status": "not_started",
+      "notes": "Delete the --font-size-fluid-* block added this session. It used 375px min (wrong) and rem units (wrong) and wrong token names."
+    },
+    {
+      "id": "fluid-step1",
+      "name": "Step 1: Add correct --fs-* and --space-* :root blocks to global.css",
+      "status": "not_started",
+      "notes": "Use 768px min, 1440px max, 672px denominator. Use px units inside calc. Print full :root block. STOP and wait for user approval before touching any .svelte file."
+    },
+    {
+      "id": "fluid-step2",
+      "name": "Step 2: Refactor all .svelte files under src/",
+      "status": "not_started",
+      "notes": "Only after user approves :root block. Replace raw px font-size with var(--fs-*), raw px padding/margin with var(--space-*). Delete any media query that ONLY overrides font-size or padding. Leave layout/structural queries untouched."
+    },
+    {
+      "id": "footer",
+      "name": "Build Footer.svelte with real content",
+      "status": "not_started"
+    },
+    {
+      "id": "home",
+      "name": "Rebuild home page sections from scratch",
+      "status": "not_started"
+    }
   ],
   "blockers": [],
-  "human_actions_pending": [],
-  "decisions": [
-    {"decision": "Full frontend reset — deleted all Phase 1 section components", "rationale": "User decided to start fresh visually rather than continue with existing implementations", "phase": "01"},
-    {"decision": "SiteNav/SiteFooter renamed to Nav/Footer", "rationale": "New component names for the fresh start", "phase": "01"},
-    {"decision": "Head.svelte + JsonLd.svelte restored (SEO infrastructure, not visual)", "rationale": "SEO/AEO must remain wired on every route — these are not frontend components", "phase": "01"},
-    {"decision": "StubLayout/Breadcrumbs/PageTitle restored for 14 stub routes", "rationale": "Those routes still need basic content to avoid build failures", "phase": "01"},
-    {"decision": "global.css linked via app.html <link> tag", "rationale": "Was not linked anywhere — design tokens and fonts were not loading", "phase": "01"},
-    {"decision": "npm clean install — package-lock deleted and regenerated", "rationale": "@rolldown/pluginutils dist artifact was missing, causing ERR_MODULE_NOT_FOUND on build", "phase": "01"}
+  "human_actions_pending": [
+    {
+      "action": "Approve the :root block printed in Step 1 before any component is touched",
+      "context": "Prompt-master spec requires explicit user approval of MIN/MAX token values before the refactor begins",
+      "blocking": true
+    }
   ],
-  "uncommitted_files": [],
-  "next_action": "Build Nav.svelte with real content — logo, navigation links, mobile hamburger menu. Refer to Figma design and CLAUDE.md for design tokens.",
-  "context_notes": "Phase 1 was previously completed (all 9 plans done, CI passing), then reset by user decision. npm was also broken (missing @rolldown/pluginutils). Both fixed. Site now builds and serves cleanly with blank home page, Nav + Footer stubs (forest green bars), and all SEO tags emitting correctly on every route. Ready to rebuild frontend from blank slate."
+  "decisions": [
+    {"decision": "Use --fs-* and --space-* token names (NOT --font-size-fluid-*)", "rationale": "Prompt-master spec. Previous session used wrong scheme — delete those tokens.", "phase": "01"},
+    {"decision": "Clamp range: 768px min → 1440px max, denominator 672", "rationale": "Mobile-first. 768px = default base state. Previous attempt used 375px min — wrong.", "phase": "01"},
+    {"decision": "Clamp formula uses px units inside calc, not rem", "rationale": "Per spec: clamp(MINpx, MINpx + (MAX−MIN)*(100vw−768px)/672, MAXpx)", "phase": "01"},
+    {"decision": "Zero per-breakpoint font-size or padding overrides in any component", "rationale": "Clamp covers continuous scaling. Stepped breakpoint padding added to Nav.svelte this session must be deleted.", "phase": "01"},
+    {"decision": "Static --space-1 through --space-16 tokens remain untouched", "rationale": "New --space-xs/sm/md/lg/xl tokens are additive. Old static tokens stay for layout use.", "phase": "01"},
+    {"decision": "Full frontend reset — deleted all Phase 1 section components", "rationale": "User decided to start fresh visually", "phase": "01"},
+    {"decision": "global.css linked via app.html <link> tag", "rationale": "Was not linked — design tokens not loading", "phase": "01"}
+  ],
+  "uncommitted_files": [
+    "src/lib/components/Nav.svelte",
+    "static/global.css"
+  ],
+  "untracked_files": [
+    "figma-preview/",
+    "src/lib/components/Button.svelte",
+    "static/images/"
+  ],
+  "next_action": "1) Remove --font-size-fluid-* block from global.css. 2) Compute MIN/MAX pairs for all --fs-* and --space-* tokens. 3) Write :root blocks, print them, STOP for approval. 4) After approval: refactor components one-by-one, removing stepped breakpoints from Nav.svelte.",
+  "context_notes": "Session: user asked about breadcrumb hook, then described nav overflow at mid-widths. Made first fluid attempt (wrong scheme). User pasted prompt-master spec which supersedes it. Summary confirmed — pausing before correct implementation."
 }
