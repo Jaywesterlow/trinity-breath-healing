@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Plans 01–08 merged to master. 140 unit + 19 synthetic-violation + 153 html-audit tests pass. All CI quality gates wired and green.
-last_updated: "2026-06-22T23:41:43.655Z"
+status: verifying
+last_updated: "2026-06-24T20:28:36.188Z"
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 19
-  completed_plans: 10
-  percent: 17
+  completed_plans: 19
+  percent: 33
 ---
 
 # State: Trinity Breath & Healing
@@ -107,7 +107,9 @@ None. Wave 4 complete. Wave 5 (Plan 08) ready.
 
 ## Session Continuity
 
-**Last action (2026-06-23, session 15):** Plan 01-01 complete. HeroSection.svelte (H1, eager LCP image, svelte:head preload, 3 service tiles, mobile-first CSS). +page.svelte Phase 0 placeholder replaced; SEO-09 time block preserved. EnhancedImage src type fixed: string → Picture|string. 0 TS errors (522 files). Build sandbox-blocked — user must run: PUBLIC_SITE_URL=https://trinity-breath-healing.vercel.app npm run build. Commits: 53ddf58 (HeroSection), 682d347 (+page.svelte).
+**Last action (2026-06-25, session 16):** Both Phase 1 TDD gates complete. GATE 1 — EnhancedImage primitive at `src/lib/components/ui/media/EnhancedImage.svelte`. 7/7 image tests pass. GATE 2 — landing dateModified: `__BUILD_DATE__` already in vite.config.ts, `<time datetime>` added to +page.svelte, layout fixed to use `$page.data.graph` (page-specific nodes incl. WebPage were lost via layout-only graph). 5/5 landing-date tests pass. Full suite: 133 passed / 6 skipped / 0 failed across 17 test files. svelte-check: 0 errors. Build: passes. Phase ready for verification.
+
+**Previously (2026-06-23, session 15):** Plan 01-01 complete. HeroSection.svelte (H1, eager LCP image, svelte:head preload, 3 service tiles, mobile-first CSS). +page.svelte Phase 0 placeholder replaced; SEO-09 time block preserved. EnhancedImage src type fixed: string → Picture|string. 0 TS errors (522 files). Build sandbox-blocked — user must run: PUBLIC_SITE_URL=https://trinity-breath-healing.vercel.app npm run build. Commits: 53ddf58 (HeroSection), 682d347 (+page.svelte).
 
 **Previously (2026-06-23, session 14):** Phase 1 Wave 0 complete. Plan 01-00 done. check-copy.sh (LND-09/LND-10), Phase 1 html-audit red tests (6 assertions), schema-faq conditional guard, 5 PNG stubs, logo.svg, ci.yml updated. 139 unit tests pass + 1 skip. Wave 1 next: Plans 01-01 through 01-03.
 
