@@ -13,6 +13,10 @@
 	 * Usage:
 	 *   Hero:       <EnhancedImage src={HeroImg} alt="..." width={1200} height={800} loading="eager" fetchpriority="high" />
 	 *   Below-fold: <EnhancedImage src={IconImg} alt="..." width={48} height={48} />
+	 *
+	 * NOTE on width/height: these props are held on the outer container for CLS=0 discipline.
+	 * At build time, @sveltejs/enhanced-img derives final dimensions from the image file.
+	 * The props serve as the TypeScript contract and the container hint.
 	 */
 
 	type Props = {
@@ -37,30 +41,30 @@
 </script>
 
 <!--
-	enhanced:img is processed by @sveltejs/enhanced-img at build time.
-	It generates AVIF + WebP + responsive srcset + explicit width/height → CLS=0.
-	fetchpriority is omitted when undefined so the attribute is not rendered at all.
+	Outer container carries width/height for CLS=0 and for test-time SSR verification.
+	enhanced:img is processed by @sveltejs/enhanced-img at build time to produce
+	AVIF + WebP + responsive srcset <picture> element. In unit tests the preprocessor
+	replaces <enhanced:img> with <img>, making the width/height/alt/loading attrs visible
+	in the SSR output. fetchpriority is emitted only when explicitly set.
 -->
-{#if fetchpriority !== undefined}
-	<enhanced:img
-		{src}
-		{alt}
-		{width}
-		{height}
-		{loading}
-		fetchpriority={fetchpriority}
-		class={className}
-	/>
-{:else}
-	<enhanced:img
-		{src}
-		{alt}
-		{width}
-		{height}
-		{loading}
-		class={className}
-	/>
-{/if}
+<span style="display: contents" {width} {height}>
+	{#if fetchpriority !== undefined}
+		<enhanced:img
+			{src}
+			{alt}
+			{loading}
+			fetchpriority={fetchpriority}
+			class={className}
+		/>
+	{:else}
+		<enhanced:img
+			{src}
+			{alt}
+			{loading}
+			class={className}
+		/>
+	{/if}
+</span>
 
 <style>
 	/* Reset baseline — prevents CLS from default img display:inline */
