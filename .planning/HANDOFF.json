@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-24T16:21:38.482Z",
+  "timestamp": "2026-06-25T09:14:17.959Z",
   "phase": "01",
   "phase_name": "landing-sections",
   "phase_dir": ".planning/phases/01-landing-sections",
@@ -9,74 +9,65 @@
   "total_tasks": null,
   "status": "paused",
   "completed_tasks": [
-    {"id": "01-00", "name": "Wave 0 — test contracts, image stubs, check-copy.sh, ci.yml", "status": "done", "commit": "de04883"},
-    {"id": "01-01-09", "name": "All Phase 1 section components — done then reset by user decision", "status": "done_then_reset", "commit": "df0cc13"},
-    {"id": "reset", "name": "Frontend reset — deleted section components, wired SEO emitters, added Nav/Footer stubs", "status": "done", "commit": "c2c398b"},
-    {"id": "stubs", "name": "Nav + Footer stubs + global.css linked in app.html", "status": "done", "commit": "b926016"},
-    {"id": "nav-partial", "name": "Nav.svelte — real content (logo, links, mobile hamburger, CTA button)", "status": "done", "commit": "05191d5"},
     {
-      "id": "fluid-partial",
-      "name": "Fluid typography first attempt — PARTIAL, SUPERSEDED",
-      "status": "in_progress",
-      "progress": "Added --font-size-fluid-* tokens (375→1440px, rem-based) to global.css. Updated Nav.svelte with fluid font-size and STEPPED breakpoint padding at 1024/1200/1440. This approach is WRONG per new spec — must be replaced."
+      "name": "Compare DJ-Webapp + apex-automotive repos against current project",
+      "status": "done"
+    },
+    {
+      "name": "Restructure src/lib/components into global/seo/ui/sections with barrel exports",
+      "status": "done",
+      "commit": "633bd2e"
+    },
+    {
+      "name": "Fix pre-existing errors: JsonLd graph type, Footer empty script, landmarks test rewrite, robots CRLF split",
+      "status": "done",
+      "commit": "633bd2e"
     }
   ],
   "remaining_tasks": [
     {
-      "id": "fluid-cleanup",
-      "name": "Remove wrong fluid tokens from global.css",
-      "status": "not_started",
-      "notes": "Delete the --font-size-fluid-* block added this session. It used 375px min (wrong) and rem units (wrong) and wrong token names."
-    },
-    {
-      "id": "fluid-step1",
-      "name": "Step 1: Add correct --fs-* and --space-* :root blocks to global.css",
-      "status": "not_started",
-      "notes": "Use 768px min, 1440px max, 672px denominator. Use px units inside calc. Print full :root block. STOP and wait for user approval before touching any .svelte file."
-    },
-    {
-      "id": "fluid-step2",
-      "name": "Step 2: Refactor all .svelte files under src/",
-      "status": "not_started",
-      "notes": "Only after user approves :root block. Replace raw px font-size with var(--fs-*), raw px padding/margin with var(--space-*). Delete any media query that ONLY overrides font-size or padding. Leave layout/structural queries untouched."
-    },
-    {
-      "id": "footer",
-      "name": "Build Footer.svelte with real content",
+      "name": "Build EnhancedImage primitive — src/lib/components/ui/media/EnhancedImage.svelte (wraps <enhanced:img>, props: src/alt/width/height required, loading default lazy, fetchpriority optional). Spec: phase 00 Plan 07 (PRF-01). Turns tests/unit/image.test.ts (4 red) green.",
       "status": "not_started"
     },
     {
-      "id": "home",
-      "name": "Rebuild home page sections from scratch",
+      "name": "Landing page visible <time datetime=YYYY-MM-DD> + dateModified single-source (SEO-09 / BLOCKER-3). Needs: __BUILD_DATE__ Vite define, one <time> on landing, WebPage JSON-LD dateModified == same date, then npm run build. Turns tests/unit/landing-date.test.ts (1 red) green.",
       "status": "not_started"
     }
   ],
-  "blockers": [],
+  "blockers": [
+    {
+      "description": "image.test.ts reads src/lib/components/EnhancedImage.svelte (old flat path). After restructure, either place new component at ui/media/ and update the test's componentPath, or keep the path the test expects. Decide during build.",
+      "type": "technical",
+      "workaround": "Update test componentPath to new location"
+    }
+  ],
   "human_actions_pending": [
     {
-      "action": "Approve the :root block printed in Step 1 before any component is touched",
-      "context": "Prompt-master spec requires explicit user approval of MIN/MAX token values before the refactor begins",
+      "action": "Switch session model to Sonnet 4.6 via /model",
+      "context": "Avoid Opus usage limit during the autonomous build run",
+      "blocking": true
+    },
+    {
+      "action": "Set GSD model profile to Sonnet via /gsd-settings BEFORE running autonomous",
+      "context": "init shows planner_model/executor_model = opus; spawned subagents ignore the session model and use the GSD-configured model. Without this, /gsd-autonomous still burns Opus.",
       "blocking": true
     }
   ],
   "decisions": [
-    {"decision": "Use --fs-* and --space-* token names (NOT --font-size-fluid-*)", "rationale": "Prompt-master spec. Previous session used wrong scheme — delete those tokens.", "phase": "01"},
-    {"decision": "Clamp range: 768px min → 1440px max, denominator 672", "rationale": "Mobile-first. 768px = default base state. Previous attempt used 375px min — wrong.", "phase": "01"},
-    {"decision": "Clamp formula uses px units inside calc, not rem", "rationale": "Per spec: clamp(MINpx, MINpx + (MAX−MIN)*(100vw−768px)/672, MAXpx)", "phase": "01"},
-    {"decision": "Zero per-breakpoint font-size or padding overrides in any component", "rationale": "Clamp covers continuous scaling. Stepped breakpoint padding added to Nav.svelte this session must be deleted.", "phase": "01"},
-    {"decision": "Static --space-1 through --space-16 tokens remain untouched", "rationale": "New --space-xs/sm/md/lg/xl tokens are additive. Old static tokens stay for layout use.", "phase": "01"},
-    {"decision": "Full frontend reset — deleted all Phase 1 section components", "rationale": "User decided to start fresh visually", "phase": "01"},
-    {"decision": "global.css linked via app.html <link> tag", "rationale": "Was not linked — design tokens not loading", "phase": "01"}
+    {
+      "decision": "Barrel re-exports kept; earlier wrong diagnosis corrected",
+      "rationale": "Footer 'implicitly any' was caused by Footer.svelte having no <script>, not by barrels. Added empty <script lang=ts> to Footer; barrels work fine."
+    },
+    {
+      "decision": "Section subfolders named by Dutch route slug (home, over-mij, werkwijze, diensten, contact)",
+      "rationale": "1:1 mapping with routes; user choice."
+    },
+    {
+      "decision": "Pause + switch to Sonnet, run /gsd-autonomous (NOT /goal — that command does not exist) to build the 2 gates without pauses or permission prompts",
+      "rationale": "User directive; ~1-1.5h of work, Opus limit risk."
+    }
   ],
-  "uncommitted_files": [
-    "src/lib/components/Nav.svelte",
-    "static/global.css"
-  ],
-  "untracked_files": [
-    "figma-preview/",
-    "src/lib/components/Button.svelte",
-    "static/images/"
-  ],
-  "next_action": "1) Remove --font-size-fluid-* block from global.css. 2) Compute MIN/MAX pairs for all --fs-* and --space-* tokens. 3) Write :root blocks, print them, STOP for approval. 4) After approval: refactor components one-by-one, removing stepped breakpoints from Nav.svelte.",
-  "context_notes": "Session: user asked about breadcrumb hook, then described nav overflow at mid-widths. Made first fluid attempt (wrong scheme). User pasted prompt-master spec which supersedes it. Summary confirmed — pausing before correct implementation."
+  "uncommitted_files": [],
+  "next_action": "On Sonnet: run /gsd-autonomous to build EnhancedImage + landing <time>/dateModified until tests/unit/image.test.ts and tests/unit/landing-date.test.ts pass green. Verify with: npm run check && npm run build && npx vitest run.",
+  "context_notes": "Component restructure complete, committed 633bd2e, svelte-check 0 errors. Remaining 5 test failures are unbuilt-feature TDD red gates: image.test.ts (4) + landing-date.test.ts (1). robots CRLF already fixed. Apex i18n (Paraglide/inlang) noted as v2 reference for EN/hreflang — not this run."
 }
