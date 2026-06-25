@@ -35,7 +35,7 @@ async function renderEnhancedImage(props: {
 	class?: string;
 }): Promise<string> {
 	const fs = await import('fs');
-	const componentPath = path.join(ROOT, 'src/lib/components/EnhancedImage.svelte');
+	const componentPath = path.join(ROOT, 'src/lib/components/ui/media/EnhancedImage.svelte');
 	const source = fs.readFileSync(componentPath, 'utf-8');
 
 	// Preprocess: replace <enhanced:img with <img (mirrors what Vite does at build-time)
