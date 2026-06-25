@@ -15,8 +15,8 @@ import { describe, it, expect, vi } from 'vitest';
 import { render } from '@testing-library/svelte';
 
 // Svelte components (imported after mocking env)
-import JsonLd from '$lib/components/JsonLd.svelte';
-import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
+import { JsonLd } from '$lib/components/seo';
+import { Breadcrumbs } from '$lib/components/ui';
 
 // Mock env — JsonLd doesn't need it directly but shared.ts is indirectly imported in tests
 // via Breadcrumbs. We mock here to avoid unset PUBLIC_SITE_URL errors.

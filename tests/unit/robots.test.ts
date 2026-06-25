@@ -34,7 +34,7 @@ describe('static/robots.txt', () => {
 
 	describe('content structure', () => {
 		const content = readFileSync(ROBOTS_PATH, 'utf8');
-		const lines = content.split('\n');
+		const lines = content.split(/\r?\n/);
 
 		for (const bot of NAMED_BOTS) {
 			it(`contains User-agent: ${bot} followed by Allow: /`, () => {

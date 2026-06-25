@@ -1,8 +1,5 @@
 <script lang="ts">
-	import Nav from '$lib/components/Nav.svelte';
-	import Footer from '$lib/components/Footer.svelte';
-	import Head from '$lib/components/Head.svelte';
-	import JsonLd from '$lib/components/JsonLd.svelte';
+	import { Nav, Footer, Head, JsonLd } from '$lib/components';
 	import type { LayoutData } from './$types';
 
 	let { children, data }: { children: any; data: LayoutData } = $props();

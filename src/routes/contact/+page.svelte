@@ -1,5 +1,5 @@
 <script lang="ts">
-	import StubLayout from '$lib/components/StubLayout.svelte';
+	import { StubLayout } from '$lib/components/global';
 	import { STUB_META } from '$lib/seo/stub-meta';
 	import type { PageData } from './$types';
 	let { data }: { data: PageData } = $props();

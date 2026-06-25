@@ -11,8 +11,7 @@
 	 * FND-08: 14 reserved stubs; Phase 2+ deepens content without changing structure.
 	 * RESEARCH Pattern 9: "Komt binnenkort beschikbaar" UX for stub routes.
 	 */
-	import Breadcrumbs from '$lib/components/Breadcrumbs.svelte';
-	import PageTitle from '$lib/components/PageTitle.svelte';
+	import { Breadcrumbs, PageTitle } from '$lib/components/ui';
 
 	let {
 		title,

@@ -8,7 +8,7 @@
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from '@testing-library/svelte';
-import Head from '$lib/components/Head.svelte';
+import { Head } from '$lib/components/seo';
 import type { PageMeta } from '$lib/seo/types';
 
 // Mock $lib/seo/defaults so SITE_URL is predictable in tests

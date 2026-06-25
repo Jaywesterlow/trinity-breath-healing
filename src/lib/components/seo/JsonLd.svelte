@@ -10,7 +10,9 @@
 	 *   - .replace(/<\/script/gi, '<\\/script') prevents </script injection in JSON values
 	 *   - Test 2 (jsonld.test.ts) verifies this escape fires when malicious string in graph
 	 */
-	let { graph }: { graph: object[] } = $props();
+	import type { AnyNode } from '$lib/schema/buildGraph';
+
+	let { graph }: { graph: AnyNode[] } = $props();
 
 	const serialized = $derived(
 		JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }).replace(

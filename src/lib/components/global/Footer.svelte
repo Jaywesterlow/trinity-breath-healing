@@ -1,3 +1,5 @@
+<script lang="ts"></script>
+
 <footer class="site-footer">
 	<div class="site-footer__inner"></div>
 </footer>

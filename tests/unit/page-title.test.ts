@@ -5,7 +5,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { render } from '@testing-library/svelte';
-import PageTitle from '$lib/components/PageTitle.svelte';
+import { PageTitle } from '$lib/components/ui';
 
 describe('PageTitle component (src/lib/components/PageTitle.svelte)', () => {
 	it('Test 6: renders exactly one <h1>', () => {
