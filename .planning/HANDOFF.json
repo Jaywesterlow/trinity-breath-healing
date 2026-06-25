@@ -1,73 +1,52 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-25T09:14:17.959Z",
+  "timestamp": "2026-06-25T10:30:00.000Z",
   "phase": "01",
   "phase_name": "landing-sections",
   "phase_dir": ".planning/phases/01-landing-sections",
   "plan": null,
-  "task": null,
-  "total_tasks": null,
+  "task": "build-2-tdd-gates",
+  "total_tasks": 2,
   "status": "paused",
   "completed_tasks": [
-    {
-      "name": "Compare DJ-Webapp + apex-automotive repos against current project",
-      "status": "done"
-    },
-    {
-      "name": "Restructure src/lib/components into global/seo/ui/sections with barrel exports",
-      "status": "done",
-      "commit": "633bd2e"
-    },
-    {
-      "name": "Fix pre-existing errors: JsonLd graph type, Footer empty script, landmarks test rewrite, robots CRLF split",
-      "status": "done",
-      "commit": "633bd2e"
-    }
+    {"name": "Compare DJ-Webapp + apex-automotive repos", "status": "done"},
+    {"name": "Restructure src/lib/components into global/seo/ui/sections with barrel exports", "status": "done", "commit": "633bd2e"},
+    {"name": "Fix pre-existing errors: JsonLd graph type, Footer empty script, landmarks test rewrite, robots CRLF split", "status": "done", "commit": "633bd2e"},
+    {"name": "Set GSD model profile to inherit (Sonnet 4.6) in .planning/config.json", "status": "done", "commit": "uncommitted"}
   ],
   "remaining_tasks": [
     {
-      "name": "Build EnhancedImage primitive — src/lib/components/ui/media/EnhancedImage.svelte (wraps <enhanced:img>, props: src/alt/width/height required, loading default lazy, fetchpriority optional). Spec: phase 00 Plan 07 (PRF-01). Turns tests/unit/image.test.ts (4 red) green.",
+      "name": "GATE 1 — EnhancedImage.svelte at src/lib/components/ui/media/. CRITICAL: tests/unit/image.test.ts line 38 reads old flat path src/lib/components/EnhancedImage.svelte — update componentPath to new location. 4 red tests.",
       "status": "not_started"
     },
     {
-      "name": "Landing page visible <time datetime=YYYY-MM-DD> + dateModified single-source (SEO-09 / BLOCKER-3). Needs: __BUILD_DATE__ Vite define, one <time> on landing, WebPage JSON-LD dateModified == same date, then npm run build. Turns tests/unit/landing-date.test.ts (1 red) green.",
+      "name": "GATE 2 — __BUILD_DATE__ Vite define + <time datetime=YYYY-MM-DD> on landing + WebPage JSON-LD dateModified single-source + npm run build. landing-date.test.ts reads .svelte-kit/output/prerendered/pages/index.html. 1 red test (5 assertions).",
       "status": "not_started"
     }
   ],
   "blockers": [
     {
-      "description": "image.test.ts reads src/lib/components/EnhancedImage.svelte (old flat path). After restructure, either place new component at ui/media/ and update the test's componentPath, or keep the path the test expects. Decide during build.",
+      "description": "All 10 phase-1 plans have SUMMARY.md — /gsd-execute-phase finds 0 incomplete plans and exits immediately. Cannot use execute-phase to run these gates.",
       "type": "technical",
-      "workaround": "Update test componentPath to new location"
-    }
-  ],
-  "human_actions_pending": [
-    {
-      "action": "Switch session model to Sonnet 4.6 via /model",
-      "context": "Avoid Opus usage limit during the autonomous build run",
-      "blocking": true
+      "workaround": "Dispatch gsd-executor directly using .continue-here.md as plan spec. Then run verifier after both gates are green."
     },
     {
-      "action": "Set GSD model profile to Sonnet via /gsd-settings BEFORE running autonomous",
-      "context": "init shows planner_model/executor_model = opus; spawned subagents ignore the session model and use the GSD-configured model. Without this, /gsd-autonomous still burns Opus.",
-      "blocking": true
+      "description": "GATE 2 requires npm run build before landing-date.test.ts can pass (reads prerendered HTML output).",
+      "type": "technical",
+      "workaround": "Executor must run: PUBLIC_SITE_URL=https://trinity-breath-healing.vercel.app npm run build"
     }
   ],
+  "human_actions_pending": [],
   "decisions": [
-    {
-      "decision": "Barrel re-exports kept; earlier wrong diagnosis corrected",
-      "rationale": "Footer 'implicitly any' was caused by Footer.svelte having no <script>, not by barrels. Added empty <script lang=ts> to Footer; barrels work fine."
-    },
-    {
-      "decision": "Section subfolders named by Dutch route slug (home, over-mij, werkwijze, diensten, contact)",
-      "rationale": "1:1 mapping with routes; user choice."
-    },
-    {
-      "decision": "Pause + switch to Sonnet, run /gsd-autonomous (NOT /goal — that command does not exist) to build the 2 gates without pauses or permission prompts",
-      "rationale": "User directive; ~1-1.5h of work, Opus limit risk."
-    }
+    {"decision": "Update image.test.ts componentPath to new ui/media/ path, not reverting restructure", "rationale": "Restructure was intentional; test should follow the new structure"},
+    {"decision": "GSD model profile: quality → inherit", "rationale": "All subagents use Sonnet 4.6 session model, not Opus"}
   ],
-  "uncommitted_files": [],
-  "next_action": "On Sonnet: run /gsd-autonomous to build EnhancedImage + landing <time>/dateModified until tests/unit/image.test.ts and tests/unit/landing-date.test.ts pass green. Verify with: npm run check && npm run build && npx vitest run.",
-  "context_notes": "Component restructure complete, committed 633bd2e, svelte-check 0 errors. Remaining 5 test failures are unbuilt-feature TDD red gates: image.test.ts (4) + landing-date.test.ts (1). robots CRLF already fixed. Apex i18n (Paraglide/inlang) noted as v2 reference for EN/hreflang — not this run."
+  "uncommitted_files": [
+    ".planning/config.json",
+    ".planning/STATE.md",
+    "static/global.css",
+    "static/logo.svg"
+  ],
+  "next_action": "Commit config.json separately. Then dispatch executor for GATE 1 (create EnhancedImage.svelte at ui/media/, fix image.test.ts line 38 componentPath). Then GATE 2 (vite define, <time datetime>, JSON-LD dateModified, build). Verify: npm run check && PUBLIC_SITE_URL=https://trinity-breath-healing.vercel.app npm run build && npx vitest run",
+  "context_notes": "Phase 1 unusual state: all 10 plans have summaries but 2 TDD gates still failing. Component restructure in 633bd2e moved paths but image.test.ts line 38 still reads old flat path. Both test files read and analyzed this session. Do NOT run /gsd-execute-phase — it exits immediately. Dispatch executor directly."
 }
