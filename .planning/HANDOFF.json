@@ -1,52 +1,56 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-25T10:30:00.000Z",
+  "timestamp": "2026-06-29T00:00:00Z",
   "phase": "01",
   "phase_name": "landing-sections",
   "phase_dir": ".planning/phases/01-landing-sections",
   "plan": null,
-  "task": "build-2-tdd-gates",
-  "total_tasks": 2,
+  "task": "nav-ui-polish",
   "status": "paused",
   "completed_tasks": [
-    {"name": "Compare DJ-Webapp + apex-automotive repos", "status": "done"},
-    {"name": "Restructure src/lib/components into global/seo/ui/sections with barrel exports", "status": "done", "commit": "633bd2e"},
-    {"name": "Fix pre-existing errors: JsonLd graph type, Footer empty script, landmarks test rewrite, robots CRLF split", "status": "done", "commit": "633bd2e"},
-    {"name": "Set GSD model profile to inherit (Sonnet 4.6) in .planning/config.json", "status": "done", "commit": "uncommitted"}
+    {"name": "Remove social icon from Nav.svelte", "status": "done"},
+    {"name": "Extract NavCta.svelte component (uses ButtonLink)", "status": "done"},
+    {"name": "Split Button into Button/ButtonLink/TextLink", "status": "done"},
+    {"name": "Fix nav overlap — --nav-height CSS var + main padding-top", "status": "done"},
+    {"name": "Hamburger always-clockwise rotation (+45 deg per toggle via $state)", "status": "done"},
+    {"name": "Slower transitions — 350ms dot-grid + mobile menu overlay", "status": "done"},
+    {"name": "Page fade via View Transitions API (onNavigate + CSS keyframes)", "status": "done"},
+    {"name": "ButtonLink CTA added to mobile menu (position:absolute bottom:40px)", "status": "in_progress", "progress": "Renders correctly and is position:absolute. BUT overlaps last nav link on short viewports — needs padding-bottom fix on .mobile-menu"}
   ],
   "remaining_tasks": [
     {
-      "name": "GATE 1 — EnhancedImage.svelte at src/lib/components/ui/media/. CRITICAL: tests/unit/image.test.ts line 38 reads old flat path src/lib/components/EnhancedImage.svelte — update componentPath to new location. 4 red tests.",
-      "status": "not_started"
+      "name": "Fix mobile menu CTA overlap",
+      "status": "in_progress",
+      "detail": "Add padding-bottom:120px to .mobile-menu in Nav.svelte so 5 centered flex nav links don't extend into absolute CTA zone. Browser JS confirmed: menuHeight=448, ctaRect.top=368 — flex content ends at ~439, overlaps CTA at 368. padding-bottom shrinks flex area so content stays above CTA."
     },
     {
-      "name": "GATE 2 — __BUILD_DATE__ Vite define + <time datetime=YYYY-MM-DD> on landing + WebPage JSON-LD dateModified single-source + npm run build. landing-date.test.ts reads .svelte-kit/output/prerendered/pages/index.html. 1 red test (5 assertions).",
+      "name": "Commit all session changes (user approval needed)",
       "status": "not_started"
     }
   ],
-  "blockers": [
-    {
-      "description": "All 10 phase-1 plans have SUMMARY.md — /gsd-execute-phase finds 0 incomplete plans and exits immediately. Cannot use execute-phase to run these gates.",
-      "type": "technical",
-      "workaround": "Dispatch gsd-executor directly using .continue-here.md as plan spec. Then run verifier after both gates are green."
-    },
-    {
-      "description": "GATE 2 requires npm run build before landing-date.test.ts can pass (reads prerendered HTML output).",
-      "type": "technical",
-      "workaround": "Executor must run: PUBLIC_SITE_URL=https://trinity-breath-healing.vercel.app npm run build"
-    }
+  "blockers": [],
+  "human_actions_pending": [
+    {"action": "Approve git commit for all session changes", "context": "No commits made this session — user must approve commit message before committing", "blocking": false}
   ],
-  "human_actions_pending": [],
   "decisions": [
-    {"decision": "Update image.test.ts componentPath to new ui/media/ path, not reverting restructure", "rationale": "Restructure was intentional; test should follow the new structure"},
-    {"decision": "GSD model profile: quality → inherit", "rationale": "All subagents use Sonnet 4.6 session model, not Opus"}
+    {"decision": "Split Button into Button / ButtonLink / TextLink", "rationale": "Three Figma button types: Button=<button> for form actions, ButtonLink=pill <a> link, TextLink=underline <a> link (forest green, Figma node 424-60)"},
+    {"decision": "NavCta.svelte extracted (mirrors NavLogo.svelte pattern)", "rationale": "User wanted CTA as component; follows existing NavLogo pattern in global/"},
+    {"decision": "Hamburger rotation via cumulative $state not CSS class toggle", "rationale": "CSS class toggle reverses direction on close; JS +45 state always rotates clockwise"},
+    {"decision": "Mobile menu CTA pinned via position:absolute bottom:40px", "rationale": "position:absolute removes element from flex flow — always visible at bottom regardless of content height. Flex content needs padding-bottom to avoid overlap."},
+    {"decision": "Page transitions via View Transitions API (onNavigate)", "rationale": "SvelteKit-native, zero extra deps, degrades gracefully, fade-out 180ms + fade-in 280ms"}
   ],
   "uncommitted_files": [
-    ".planning/config.json",
-    ".planning/STATE.md",
+    "src/lib/components/global/Nav.svelte",
+    "src/lib/components/global/NavCta.svelte (new)",
+    "src/lib/components/global/index.ts",
+    "src/lib/components/ui/interactions/Button.svelte",
+    "src/lib/components/ui/interactions/ButtonLink.svelte (new)",
+    "src/lib/components/ui/interactions/TextLink.svelte (new)",
+    "src/lib/components/ui/interactions/index.ts",
+    "src/routes/+layout.svelte",
     "static/global.css",
-    "static/logo.svg"
+    ".planning/quick/20260629-nav-cta-component/PLAN.md (new)"
   ],
-  "next_action": "Commit config.json separately. Then dispatch executor for GATE 1 (create EnhancedImage.svelte at ui/media/, fix image.test.ts line 38 componentPath). Then GATE 2 (vite define, <time datetime>, JSON-LD dateModified, build). Verify: npm run check && PUBLIC_SITE_URL=https://trinity-breath-healing.vercel.app npm run build && npx vitest run",
-  "context_notes": "Phase 1 unusual state: all 10 plans have summaries but 2 TDD gates still failing. Component restructure in 633bd2e moved paths but image.test.ts line 38 still reads old flat path. Both test files read and analyzed this session. Do NOT run /gsd-execute-phase — it exits immediately. Dispatch executor directly."
+  "next_action": "1. Add padding-bottom:120px to .mobile-menu in Nav.svelte (line ~192 area). 2. svelte-check to verify. 3. Propose commit for all session changes.",
+  "context_notes": "All svelte-check gates pass (0 errors, 0 warnings). Browser automation confirmed ButtonLink CTA IS rendered and IS position:absolute — just overlapping. Quick one-line CSS fix needed before committing."
 }
