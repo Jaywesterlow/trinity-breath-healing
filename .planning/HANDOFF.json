@@ -1,56 +1,37 @@
 {
   "version": "1.0",
-  "timestamp": "2026-06-29T00:00:00Z",
+  "timestamp": "2026-06-29T14:33:22.905Z",
   "phase": "01",
   "phase_name": "landing-sections",
   "phase_dir": ".planning/phases/01-landing-sections",
   "plan": null,
-  "task": "nav-ui-polish",
+  "task": null,
+  "total_tasks": null,
   "status": "paused",
   "completed_tasks": [
-    {"name": "Remove social icon from Nav.svelte", "status": "done"},
-    {"name": "Extract NavCta.svelte component (uses ButtonLink)", "status": "done"},
-    {"name": "Split Button into Button/ButtonLink/TextLink", "status": "done"},
-    {"name": "Fix nav overlap — --nav-height CSS var + main padding-top", "status": "done"},
-    {"name": "Hamburger always-clockwise rotation (+45 deg per toggle via $state)", "status": "done"},
-    {"name": "Slower transitions — 350ms dot-grid + mobile menu overlay", "status": "done"},
-    {"name": "Page fade via View Transitions API (onNavigate + CSS keyframes)", "status": "done"},
-    {"name": "ButtonLink CTA added to mobile menu (position:absolute bottom:40px)", "status": "in_progress", "progress": "Renders correctly and is position:absolute. BUT overlaps last nav link on short viewports — needs padding-bottom fix on .mobile-menu"}
+    {"id": "nav", "name": "Nav UI polish — NavLogo, NavCta, ButtonLink, TextLink, scroll-hide header", "status": "done", "commit": "e79cba8"},
+    {"id": "footer", "name": "Footer component from Figma — NavLogo(footer+inverted), TextLink(inverted), 3-col nav, social, bottom bar", "status": "done_uncommitted", "commit": null}
   ],
   "remaining_tasks": [
-    {
-      "name": "Fix mobile menu CTA overlap",
-      "status": "in_progress",
-      "detail": "Add padding-bottom:120px to .mobile-menu in Nav.svelte so 5 centered flex nav links don't extend into absolute CTA zone. Browser JS confirmed: menuHeight=448, ctaRect.top=368 — flex content ends at ~439, overlaps CTA at 368. padding-bottom shrinks flex area so content stays above CTA."
-    },
-    {
-      "name": "Commit all session changes (user approval needed)",
-      "status": "not_started"
-    }
+    {"id": "footer-commit", "name": "Commit footer work (Footer.svelte, NavLogo footer prop, TextLink inverted prop, layout font loading)", "status": "pending_approval"},
+    {"id": "visual-verify", "name": "Run dev server and visually verify nav + footer against Figma", "status": "not_started"},
+    {"id": "sections", "name": "Build remaining landing page sections (Hero, Werkwijze, Behandelingen, etc.)", "status": "not_started"}
   ],
   "blockers": [],
-  "human_actions_pending": [
-    {"action": "Approve git commit for all session changes", "context": "No commits made this session — user must approve commit message before committing", "blocking": false}
-  ],
+  "human_actions_pending": [],
   "decisions": [
-    {"decision": "Split Button into Button / ButtonLink / TextLink", "rationale": "Three Figma button types: Button=<button> for form actions, ButtonLink=pill <a> link, TextLink=underline <a> link (forest green, Figma node 424-60)"},
-    {"decision": "NavCta.svelte extracted (mirrors NavLogo.svelte pattern)", "rationale": "User wanted CTA as component; follows existing NavLogo pattern in global/"},
-    {"decision": "Hamburger rotation via cumulative $state not CSS class toggle", "rationale": "CSS class toggle reverses direction on close; JS +45 state always rotates clockwise"},
-    {"decision": "Mobile menu CTA pinned via position:absolute bottom:40px", "rationale": "position:absolute removes element from flex flow — always visible at bottom regardless of content height. Flex content needs padding-bottom to avoid overlap."},
-    {"decision": "Page transitions via View Transitions API (onNavigate)", "rationale": "SvelteKit-native, zero extra deps, degrades gracefully, fade-out 180ms + fade-in 280ms"}
+    {"decision": "NavLogo: added `footer` boolean prop for larger sizing (77px/99px mark, 2rem/3rem name)", "rationale": "Footer needs larger logo than nav; prop keeps component reuse clean", "phase": "01"},
+    {"decision": "TextLink: added `inverted` boolean prop (white color + border on dark background)", "rationale": "Footer contact links (email/phone) need white text on dark green background", "phase": "01"},
+    {"decision": "Font loading: restored Cinzel + Montserrat Google Fonts in +layout.svelte", "rationale": "Was removed from old Nav.svelte during polish, never re-added; both nav logo and footer logo need these fonts. TODO: self-host woff2 (FND-06)", "phase": "01"},
+    {"decision": "Footer links: only link to existing routes (omitted /reviews — route does not exist)", "rationale": "UAT test 10 requires no 404s on footer link click", "phase": "01"}
   ],
   "uncommitted_files": [
-    "src/lib/components/global/Nav.svelte",
-    "src/lib/components/global/NavCta.svelte (new)",
-    "src/lib/components/global/index.ts",
-    "src/lib/components/ui/interactions/Button.svelte",
-    "src/lib/components/ui/interactions/ButtonLink.svelte (new)",
-    "src/lib/components/ui/interactions/TextLink.svelte (new)",
-    "src/lib/components/ui/interactions/index.ts",
-    "src/routes/+layout.svelte",
-    "static/global.css",
-    ".planning/quick/20260629-nav-cta-component/PLAN.md (new)"
+    ".planning/STATE.md",
+    "src/lib/components/global/Footer.svelte",
+    "src/lib/components/global/NavLogo.svelte",
+    "src/lib/components/ui/interactions/TextLink.svelte",
+    "src/routes/+layout.svelte"
   ],
-  "next_action": "1. Add padding-bottom:120px to .mobile-menu in Nav.svelte (line ~192 area). 2. svelte-check to verify. 3. Propose commit for all session changes.",
-  "context_notes": "All svelte-check gates pass (0 errors, 0 warnings). Browser automation confirmed ButtonLink CTA IS rendered and IS position:absolute — just overlapping. Quick one-line CSS fix needed before committing."
+  "next_action": "Commit footer work: git add the 5 uncommitted files, then commit as feat(footer). Then run dev server and visually verify nav + footer at mobile and desktop breakpoints.",
+  "context_notes": "Phase 01-landing-sections. Session built nav (committed e79cba8) and footer (built, uncommitted). Footer uses NavLogo with footer+inverted props, TextLink with inverted prop for email/phone. svelte-check: 0 errors 0 warnings. Commit was proposed but user paused before approving."
 }
