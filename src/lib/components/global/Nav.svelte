@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { Button } from '$lib/components/ui/interactions';
+	import NavLogo from './NavLogo.svelte';
+	import NavCta from './NavCta.svelte';
+	import { ButtonLink } from '$lib/components/ui/interactions';
 
 	const NAV_LINKS = [
 		{ path: '/', label: 'Home' },
@@ -11,33 +13,48 @@
 	] as const;
 
 	let menuOpen = $state(false);
+	let hamburgerEl: HTMLButtonElement | null = $state(null);
+	let scrollY = $state(0);
+	let prevScrollY = 0;
+	let hidden = $state(false);
+	let rotation = $state(0);
+
+	$effect(() => {
+		if (scrollY > 80 && scrollY > prevScrollY) {
+			hidden = true;
+		} else if (scrollY < prevScrollY) {
+			hidden = false;
+		}
+		prevScrollY = scrollY;
+	});
+
+	function closeMenu() {
+		rotation += 45;
+		menuOpen = false;
+		hamburgerEl?.focus();
+	}
+
+	function toggleMenu() {
+		rotation += 45;
+		if (menuOpen) {
+			menuOpen = false;
+			hamburgerEl?.focus();
+		} else {
+			menuOpen = true;
+		}
+	}
+
+	function handleKeydown(e: KeyboardEvent) {
+		if (e.key === 'Escape' && menuOpen) closeMenu();
+	}
 </script>
 
-<!-- TODO: self-host Cinzel + Montserrat woff2 to static/fonts/ and remove Google Fonts -->
-<svelte:head>
-	<link rel="preconnect" href="https://fonts.googleapis.com" />
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
-	<link href="https://fonts.googleapis.com/css2?family=Cinzel&family=Montserrat:wght@300&display=swap" rel="stylesheet" />
-</svelte:head>
+<svelte:window bind:scrollY={scrollY} onkeydown={handleKeydown} />
 
-<header class:header--open={menuOpen}>
+<header class="header" class:header--hidden={hidden} class:header--open={menuOpen}>
 	<nav class="nav" class:nav--open={menuOpen} aria-label="Site navigatie">
 
-		<!-- Logo -->
-		<a href="/" class="logo" aria-label="TRINITY Breath &amp; Healing — naar home">
-			<img
-				class="logo__mark"
-				src="/logo.svg"
-				alt=""
-				aria-hidden="true"
-				width="49"
-				height="40"
-			/>
-			<div class="logo__wordmark">
-				<span class="logo__name">TRINITY</span>
-				<span class="logo__sub">Breath &amp; Healing</span>
-			</div>
-		</a>
+		<NavLogo inverted={menuOpen} />
 
 		<!-- Desktop nav links — hidden on mobile -->
 		<div class="nav__links" aria-label="Hoofdnavigatie">
@@ -54,37 +71,27 @@
 		</div>
 
 		<!-- Desktop CTA — hidden on mobile -->
-		<div class="nav__cta">
-			<Button label="Maak een afspraak" href="/contact" withArrow={true} />
-			<!-- TODO: replace href with Instagram URL from PROJECT.md NAP block once confirmed -->
-			<a href="/contact" class="nav__social-btn" aria-label="Volg ons op Instagram">
-				<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-					<rect x="2" y="2" width="20" height="20" rx="5" stroke="currentColor" stroke-width="1.5"/>
-					<circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.5"/>
-					<circle cx="17.5" cy="6.5" r="1" fill="currentColor"/>
-				</svg>
-			</a>
-		</div>
+		<NavCta />
 
-		<!-- Mobile hamburger -->
+		<!-- Mobile hamburger — 44×44 touch target -->
 		<button
+			bind:this={hamburgerEl}
 			class="hamburger"
-			class:hamburger--open={menuOpen}
 			aria-label={menuOpen ? 'Menu sluiten' : 'Menu openen'}
 			aria-expanded={menuOpen}
 			aria-controls="mobile-menu"
-			onclick={() => (menuOpen = !menuOpen)}
+			onclick={toggleMenu}
 		>
-			<svg class="dot-grid" width="21" height="21" viewBox="0 0 21 21" aria-hidden="true">
-				<circle cx="1.5"  cy="1.5"  r="1.5"/>
-				<circle cx="10.5" cy="1.5"  r="1.5"/>
-				<circle cx="19.5" cy="1.5"  r="1.5"/>
-				<circle cx="1.5"  cy="10.5" r="1.5"/>
-				<circle cx="10.5" cy="10.5" r="1.5"/>
-				<circle cx="19.5" cy="10.5" r="1.5"/>
-				<circle cx="1.5"  cy="19.5" r="1.5"/>
-				<circle cx="10.5" cy="19.5" r="1.5"/>
-				<circle cx="19.5" cy="19.5" r="1.5"/>
+			<svg class="dot-grid" style="transform: rotate({rotation}deg)" width="21" height="21" viewBox="0 0 21 21" aria-hidden="true">
+				<circle cx="1.5"  cy="1.5"  r="1.5" />
+				<circle cx="10.5" cy="1.5"  r="1.5" />
+				<circle cx="19.5" cy="1.5"  r="1.5" />
+				<circle cx="1.5"  cy="10.5" r="1.5" />
+				<circle cx="10.5" cy="10.5" r="1.5" />
+				<circle cx="19.5" cy="10.5" r="1.5" />
+				<circle cx="1.5"  cy="19.5" r="1.5" />
+				<circle cx="10.5" cy="19.5" r="1.5" />
+				<circle cx="19.5" cy="19.5" r="1.5" />
 			</svg>
 		</button>
 
@@ -103,76 +110,46 @@
 				class="mobile-menu__link"
 				class:mobile-menu__link--active={$page.url.pathname === link.path}
 				aria-current={$page.url.pathname === link.path ? 'page' : undefined}
-				onclick={() => (menuOpen = false)}
+				onclick={closeMenu}
+				tabindex={menuOpen ? 0 : -1}
 			>
 				{link.label}
 			</a>
 		{/each}
+		<div class="mobile-menu__cta">
+			<ButtonLink label="Maak een afspraak" href="/contact" onclick={closeMenu} />
+		</div>
 	</div>
 </header>
 
 <style>
-	header {
-		position: relative;
+	/* ─── Fixed header — hides on scroll down, reappears on scroll up ─── */
+	.header {
+		position: fixed;
+		top: 0;
+		left: 0;
+		right: 0;
+		z-index: 100;
+		transition: transform var(--motion-base) var(--ease-out);
+	}
+
+	.header--hidden {
+		transform: translateY(-100%);
 	}
 
 	.nav {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 20px 24px;
+		padding: var(--space-5) var(--space-6);
 		background: var(--color-bg-sand);
 		position: relative;
 		z-index: 20;
 		transition: background var(--motion-base) var(--ease-out);
 	}
 
-	/* ─── Logo ─── */
-	.logo {
-		display: flex;
-		align-items: center;
-		gap: 10px;
-		text-decoration: none;
-		flex-shrink: 0;
-	}
-
-	.logo__mark {
-		width: 49px;
-		height: 40px;
-		object-fit: contain;
-	}
-
-	.logo__wordmark {
-		display: flex;
-		flex-direction: column;
-		gap: 3px;
-	}
-
-	.logo__name {
-		/* Cinzel loaded via svelte:head; TODO: self-host woff2 */
-		font-family: 'Cinzel', Georgia, serif;
-		font-size: 1.5rem;
-		font-weight: 400;
-		letter-spacing: 0.18em;
-		color: #404040;
-		line-height: 1;
-		transition: color var(--motion-base);
-	}
-
-	.logo__sub {
-		/* Montserrat loaded via svelte:head; TODO: self-host woff2 */
-		font-family: 'Montserrat', system-ui, sans-serif;
-		font-weight: 300;
-		font-size: 0.625rem;
-		letter-spacing: 0.15em;
-		color: #7a6f4f;
-		line-height: 1;
-		transition: color var(--motion-base);
-	}
-
 	/* ─── Desktop elements hidden on mobile ─── */
-	.nav__links,
-	.nav__cta {
+	.nav__links {
 		display: none;
 	}
 
@@ -181,36 +158,24 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		width: 39px;
-		height: 39px;
+		width: 44px;
+		height: 44px;
 		border-radius: var(--radius-full);
 		background: var(--color-border);
 		border: none;
 		cursor: pointer;
 		flex-shrink: 0;
-		transition: transform var(--motion-base) var(--ease-out);
-	}
-
-	.hamburger--open {
-		transform: rotate(45deg);
 	}
 
 	.dot-grid {
 		display: block;
 		fill: var(--color-bg-sand);
+		transition: transform 350ms var(--ease-out); /* ← tweak ms to change rotation speed */
 	}
 
 	/* ─── Nav open state (mobile) ─── */
 	.nav--open {
 		background: var(--color-fg-forest);
-	}
-
-	.nav--open .logo__name {
-		color: #f2f2f2;
-	}
-
-	.nav--open .logo__sub {
-		color: #afa483;
 	}
 
 	/* ─── Mobile menu — full-screen overlay ─── */
@@ -223,11 +188,11 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 40px;
-		padding-top: 80px; /* clear the nav bar */
+		gap: var(--space-10);
+		padding-top: var(--nav-height);
 		opacity: 0;
 		pointer-events: none;
-		transition: opacity var(--motion-base) var(--ease-out);
+		transition: opacity 350ms var(--ease-out); /* ← tweak ms to change overlay fade speed */
 	}
 
 	.mobile-menu--open {
@@ -235,13 +200,27 @@
 		pointer-events: auto;
 	}
 
+	.mobile-menu__cta {
+		position: absolute;
+		bottom: var(--space-10);
+		left: 0;
+		right: 0;
+		display: flex;
+		justify-content: center;
+		pointer-events: none;
+	}
+
+	.mobile-menu--open .mobile-menu__cta {
+		pointer-events: auto;
+	}
+
 	.mobile-menu__link {
 		font-family: var(--font-display);
-		font-size: 24px;
+		font-size: 1.5rem;
 		font-weight: 500;
 		color: var(--color-bg-sand);
 		text-decoration: none;
-		padding: 4px 6px;
+		padding: var(--space-1) 0.375rem;
 		border-bottom: 1px solid transparent;
 		transition: border-color var(--motion-fast);
 	}
@@ -254,9 +233,9 @@
 	/* ─── Desktop ≥ 1024px ─── */
 	@media (min-width: 1024px) {
 		.nav {
-			height: 100px;
+			height: var(--nav-height);
 			padding: 0 8.33vw;
-			gap: 24px;
+			gap: var(--space-6);
 		}
 
 		.hamburger {
@@ -270,7 +249,7 @@
 		.nav__links {
 			display: flex;
 			align-items: center;
-			gap: 18px;
+			gap: 1.125rem;
 			flex: 1;
 			justify-content: center;
 		}
@@ -278,10 +257,10 @@
 		.nav__link {
 			font-family: var(--font-display);
 			font-weight: 500;
-			font-size: 20px;
+			font-size: var(--font-size-xl);
 			color: var(--color-muted);
 			text-decoration: none;
-			padding: 4px 6px;
+			padding: var(--space-1) 0.375rem;
 			white-space: nowrap;
 			border-bottom: 1px solid transparent;
 			transition: color var(--motion-fast);
@@ -292,37 +271,12 @@
 			border-bottom-color: var(--color-fg-forest);
 		}
 
-		.nav__cta {
-			display: flex;
-			align-items: center;
-			gap: 8px;
-			flex-shrink: 0;
-		}
-
-		.nav__social-btn {
-			display: inline-flex;
-			align-items: center;
-			justify-content: center;
-			width: 40px;
-			height: 40px;
-			border-radius: 50%;
-			border: 2px solid var(--color-border);
-			color: var(--color-border);
-			text-decoration: none;
-			flex-shrink: 0;
-			transition: border-color var(--motion-fast), color var(--motion-fast);
-		}
-
-		.nav__social-btn:hover {
-			border-color: var(--color-fg-forest);
-			color: var(--color-fg-forest);
-		}
 	}
 
 	/* ─── ≥ 1440px — Figma desktop spec ─── */
 	@media (min-width: 1440px) {
 		.nav {
-			padding: 0 120px;
+			padding: 0 7.5rem;
 		}
 	}
 </style>

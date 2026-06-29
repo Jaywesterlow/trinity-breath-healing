@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Nav, Footer, Head, JsonLd } from '$lib/components';
 	import { page } from '$app/stores';
+	import { onNavigate } from '$app/navigation';
 	import type { LayoutData } from './$types';
 
 	let { children, data }: { children: any; data: LayoutData } = $props();
@@ -11,10 +12,28 @@
 	// layout load; $page.data.graph contains the fully merged graph where the page's data wins.
 	// This ensures a single JSON-LD script per page with all required nodes (Pitfall #6).
 	const graph = $derived($page.data.graph ?? data.graph);
+
+	onNavigate((navigation) => {
+		if (!document.startViewTransition) return;
+		return new Promise((resolve) => {
+			document.startViewTransition(async () => {
+				resolve();
+				await navigation.complete;
+			});
+		});
+	});
 </script>
 
 <Head meta={data.meta} />
 <JsonLd graph={graph} />
 <Nav />
-{@render children()}
+<main class="page-content" style="view-transition-name: page-content">
+	{@render children()}
+</main>
 <Footer />
+
+<style>
+	.page-content {
+		padding-top: var(--nav-height);
+	}
+</style>

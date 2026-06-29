@@ -1,0 +1,80 @@
+<script lang="ts">
+	interface Props {
+		label: string;
+		href: string;
+		withArrow?: boolean;
+		onclick?: () => void;
+	}
+
+	let { label, href, withArrow = false, onclick }: Props = $props();
+</script>
+
+<a {href} {onclick} class="btn-link" class:btn-link--arrow={withArrow}>
+	<span class="btn-link__label">{label}</span>
+	{#if withArrow}
+		<span class="btn-link__circle" aria-hidden="true">
+			<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+				<path
+					d="M4 12L12 4M12 4H7M12 4V9"
+					stroke="currentColor"
+					stroke-width="1.5"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
+			</svg>
+		</span>
+	{/if}
+</a>
+
+<style>
+	.btn-link {
+		display: inline-flex;
+		align-items: center;
+		text-decoration: none;
+		transition: opacity var(--motion-fast);
+	}
+
+	.btn-link:not(.btn-link--arrow) {
+		gap: var(--space-2);
+	}
+
+	.btn-link--arrow {
+		gap: 0;
+	}
+
+	.btn-link__label {
+		display: flex;
+		align-items: center;
+		height: var(--space-10);
+		padding: 0 var(--space-6);
+		border-radius: var(--radius-full);
+		background: var(--color-border);
+		color: var(--color-bg-sand);
+		font-family: var(--font-display);
+		font-size: var(--font-size-xl);
+		font-weight: 400;
+		white-space: nowrap;
+		line-height: 1;
+	}
+
+	.btn-link--arrow .btn-link__label {
+		margin-right: -2px; /* slight overlap with circle, per Figma */
+	}
+
+	.btn-link__circle {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: var(--space-10);
+		height: var(--space-10);
+		border-radius: 50%;
+		border: 2px solid var(--color-border);
+		background: transparent;
+		color: var(--color-border);
+		flex-shrink: 0;
+	}
+
+	.btn-link:hover {
+		opacity: 0.88;
+	}
+</style>
