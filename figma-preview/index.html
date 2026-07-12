@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Trinity Breath &amp; Healing — Figma Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel&family=Cormorant+Garamond:wght@400;500&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&family=Montserrat:wght@300&display=swap" rel="stylesheet">
+
+  <style>
+    /* ─── Reset ─── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    img { display: block; }
+    a, button { cursor: pointer; }
+
+    /* ─── Tokens ─── */
+    :root {
+      --bg:     #faf0e6;
+      --accent: #b68a6b;
+      --green:  #3d4a35;
+      --gray:   #848981;
+      --gold:   #7a6f4f;
+      --muted:  #7a8c6e;
+      --cream:  #f7efe4;
+      --dark:   #404040;
+    }
+
+    html {
+      overflow-x: hidden;
+      background: var(--bg);
+    }
+
+    body {
+      background: var(--bg);
+      overflow-x: hidden;
+      min-height: 100vh;
+      /* Prevent iOS rubber-band scroll from showing white */
+      -webkit-overflow-scrolling: touch;
+    }
+
+    /* ══════════════════════════════════
+       NAV
+    ══════════════════════════════════ */
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 24px;
+      position: relative;
+      z-index: 20;
+      background: var(--bg);
+    }
+
+    /* Logo */
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+
+    .logo__img {
+      width: 49px;
+      height: auto;
+      flex-shrink: 0;
+    }
+
+    .logo__text {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .logo__name {
+      font-family: 'Cinzel', serif;
+      font-size: 24px;
+      font-weight: 400;
+      letter-spacing: 2.88px;
+      color: var(--dark);
+      line-height: 1;
+    }
+
+    .logo__sub {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 300;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      color: var(--gold);
+      line-height: 1;
+    }
+
+    /* Hamburger – mobile only */
+    .hamburger {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 39px;
+      height: 39px;
+      border-radius: 100px;
+      background: var(--accent);
+      border: none;
+      flex-shrink: 0;
+    }
+
+    .dot-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 3px);
+      grid-template-rows: repeat(3, 3px);
+      gap: 6px;
+    }
+
+    .dot-grid span {
+      display: block;
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: var(--bg);
+    }
+
+    /* Desktop nav – hidden until 1024px */
+    .nav__links,
+    .nav__ctas { display: none; }
+
+    /* ══════════════════════════════════
+       PAGE LAYOUT (flex column → row)
+    ══════════════════════════════════ */
+
+    .page-main {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    /* ─── Hero right (image column) ─── */
+
+    .hero__right {
+      /* Mobile: image comes first via negative order */
+      order: -1;
+      /* Bleed left -12% and extend 126% width to overflow right too;
+         both sides are clipped by overflow-x:hidden on body/html */
+      margin-left: -12%;
+      width: 126%;
+      flex-shrink: 0;
+    }
+
+    .hero__img {
+      width: 100%;
+      height: auto;
+    }
+
+    /* ─── Hero left (content column) ─── */
+
+    .hero__left {
+      order: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    /* ─── Content block (heading + body + CTA) ─── */
+
+    .hero-content {
+      padding: 0 24px;
+      margin-top: -20px; /* slight overlap with image bottom, matches Figma */
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero__heading {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 500;
+      font-size: 40px;
+      line-height: 1.15;
+      color: var(--green);
+      margin-bottom: 20px;
+    }
+
+    .hero__body {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 400;
+      font-size: 12px;
+      line-height: 1.8;
+      color: var(--gray);
+      font-variation-settings: 'opsz' 14;
+      margin-bottom: 32px;
+    }
+
+    .btn-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 9px 24px;
+      border-radius: 45px;
+      background: var(--accent);
+      color: var(--cream);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 14px;
+      font-weight: 400;
+      text-decoration: none;
+      border: none;
+      white-space: nowrap;
+    }
+
+    /* ══════════════════════════════════
+       SERVICE CARDS
+    ══════════════════════════════════ */
+
+    .cards {
+      display: flex;
+      gap: 16px;
+      padding: 40px 24px 56px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      /* Prevent the cards scroll from making the page scroll horizontally */
+      max-width: 100%;
+    }
+
+    .cards::-webkit-scrollbar { display: none; }
+
+    .card {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      flex-shrink: 0;
+    }
+
+    /* Photo cards (Goldhealing, Spinal Touch) */
+    .card--img {
+      width: 130px;
+      height: 130px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      padding: 10px;
+    }
+
+    .card--green { background: var(--green); }
+    .card--brown { background: var(--accent); }
+
+    .card__bg-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      pointer-events: none;
+    }
+
+    .card__label {
+      position: relative;
+      z-index: 1;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 16px;
+      text-align: center;
+      color: #fff;
+      font-variation-settings: 'opsz' 14;
+    }
+
+    .card--brown .card__label { color: var(--cream); }
+
+    .card__arrow {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      width: 24px;
+      height: 24px;
+      z-index: 2;
+    }
+
+    /* Text card (Meer klachten) */
+    .card--txt {
+      border: 2px solid var(--green);
+      background: transparent;
+      padding: 24px 20px;
+      width: 200px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card__head {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .card__title {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+      font-size: 18px;
+      color: var(--green);
+      font-variation-settings: 'opsz' 14;
+    }
+
+    .card__desc {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 300;
+      font-size: 12px;
+      line-height: 1.55;
+      color: var(--gray);
+      font-variation-settings: 'opsz' 14;
+    }
+
+    /* ══════════════════════════════════
+       SOCIAL ICONS — hidden on mobile
+    ══════════════════════════════════ */
+
+    .social { display: none; }
+
+    /* ══════════════════════════════════
+       DESKTOP ≥ 1024px
+    ══════════════════════════════════ */
+
+    @media (min-width: 1024px) {
+
+      /* Nav */
+      .nav {
+        padding: 0 8.33vw;
+        height: 100px;
+        gap: 24px;
+      }
+
+      .hamburger { display: none; }
+
+      .nav__links {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        flex: 1;
+        justify-content: center;
+      }
+
+      .nav__link {
+        font-family: 'Cormorant Garamond', serif;
+        font-weight: 500;
+        font-size: 20px;
+        color: var(--muted);
+        text-decoration: none;
+        padding: 4px 10px;
+        white-space: nowrap;
+        border-bottom: 1.5px solid transparent;
+        transition: color 0.15s;
+      }
+
+      .nav__link--active {
+        color: var(--green);
+        border-bottom-color: var(--green);
+      }
+
+      .nav__ctas {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
+      }
+
+      .btn-nav {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        height: 40px;
+        padding: 0 24px;
+        border-radius: 45px;
+        background: var(--accent);
+        color: var(--cream);
+        font-family: 'Cormorant Garamond', serif;
+        font-size: 20px;
+        font-weight: 400;
+        text-decoration: none;
+        white-space: nowrap;
+        border: none;
+      }
+
+      .btn-nav-circle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        border: 2px solid var(--accent);
+        background: transparent;
+        flex-shrink: 0;
+      }
+
+      .btn-nav-circle img {
+        width: 24px;
+        height: 24px;
+      }
+
+      /* ─── Two-column layout ─── */
+
+      .page-main {
+        flex-direction: row;
+        align-items: flex-start;
+        min-height: calc(100vh - 100px);
+        overflow: visible;
+      }
+
+      /* Left column – content + cards */
+      .hero__left {
+        order: 1;
+        width: 40%;
+        flex-shrink: 0;
+        min-width: 0;
+        /* Keeps column from blowing out */
+      }
+
+      .hero-content {
+        padding: 160px 40px 48px 8.33vw;
+        margin-top: 0;
+      }
+
+      .hero__heading {
+        font-size: clamp(36px, 3.6vw, 48px);
+        max-width: 400px;
+        margin-bottom: 28px;
+      }
+
+      .hero__body {
+        font-size: 16px;
+        max-width: 440px;
+        margin-bottom: 40px;
+      }
+
+      .btn-cta {
+        font-size: 20px;
+        padding: 10px 28px;
+      }
+
+      /* Cards within left column */
+      .cards {
+        padding: 64px 0 80px 8.33vw;
+        /* Clip overflow within the column; page won't scroll */
+        overflow-x: auto;
+        max-width: 100%;
+      }
+
+      /* Right column – image */
+      .hero__right {
+        order: 2;
+        flex: 1;
+        min-width: 0;
+        margin-left: 0;
+        width: auto;
+        align-self: flex-start;
+        padding-top: 40px;
+        overflow: hidden;
+        position: relative;
+      }
+
+      .hero__img {
+        /* Extend slightly beyond column width to match Figma bleed */
+        width: 115%;
+        max-width: none;
+        margin-left: -5%;
+        height: auto;
+      }
+
+      /* Social icons – right edge of hero right column */
+      .social {
+        display: flex;
+        flex-direction: column;
+        gap: 24px;
+        position: absolute;
+        right: 8.33vw;
+        top: 160px;
+        z-index: 5;
+      }
+
+      .social__link { display: block; }
+
+      .social__link img {
+        width: 40px;
+        height: 40px;
+      }
+    }
+
+    /* ─── Extra-wide: lock at Figma's 1440px spec ─── */
+    @media (min-width: 1440px) {
+      .hero-content { padding-left: 120px; }
+      .cards        { padding-left: 120px; }
+      .nav          { padding-left: 120px; padding-right: 120px; }
+      .social       { right: 120px; }
+    }
+
+    /* ─── Mid-range guard (tablet 600–1023px) ─── */
+    @media (min-width: 600px) and (max-width: 1023px) {
+      .hero-content { padding: 0 40px; }
+      .hero__heading { font-size: 48px; }
+      .hero__body    { font-size: 14px; }
+      .btn-cta       { font-size: 16px; }
+      .cards         { padding: 40px 40px 64px; }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- ══════════ NAV ══════════ -->
+  <header>
+    <nav class="nav" aria-label="Site navigatie">
+
+      <a href="#" class="logo">
+        <img
+          class="logo__img"
+          src="https://www.figma.com/api/mcp/asset/0320d6ba-e873-4dd7-96a9-6b5af75a7319"
+          alt="Trinity logo"
+          width="49"
+          height="40"
+        >
+        <div class="logo__text">
+          <span class="logo__name">TRINITY</span>
+          <span class="logo__sub">Breath &amp; Healing</span>
+        </div>
+      </a>
+
+      <!-- Desktop centre links -->
+      <div class="nav__links" role="navigation" aria-label="Hoofdnavigatie">
+        <a href="#"             class="nav__link nav__link--active">Home</a>
+        <a href="#werkwijze"    class="nav__link">Werkwijze</a>
+        <a href="#over-mij"     class="nav__link">Over mij</a>
+        <a href="#behandelingen" class="nav__link">Behandelingen</a>
+        <a href="#contact"      class="nav__link">Contact</a>
+      </div>
+
+      <!-- Desktop right CTAs -->
+      <div class="nav__ctas">
+        <a href="#contact" class="btn-nav">Maak een afspraak</a>
+        <button class="btn-nav-circle" aria-label="Extern delen">
+          <img
+            src="https://www.figma.com/api/mcp/asset/40c878dd-95d3-4291-91e4-7feab1a3f973"
+            alt=""
+            aria-hidden="true"
+            width="24"
+            height="24"
+          >
+        </button>
+      </div>
+
+      <!-- Mobile hamburger -->
+      <button class="hamburger" aria-label="Menu openen" aria-expanded="false">
+        <div class="dot-grid" aria-hidden="true">
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+          <span></span><span></span><span></span>
+        </div>
+      </button>
+
+    </nav>
+  </header>
+
+  <!-- ══════════ MAIN ══════════ -->
+  <main class="page-main">
+
+    <!-- Left column: heading · body · CTA · cards -->
+    <div class="hero__left">
+
+      <div class="hero-content">
+        <h1 class="hero__heading">
+          Rust in je hoofd.
+          Ontspanning in je lichaam.
+        </h1>
+        <p class="hero__body">
+          Ik weet hoe het voelt om vast te lopen, fysiek, mentaal en emotioneel.
+          Via lichaamsgerichte therapie, ademwerk en energetische behandelingen
+          help ik jou terug naar rust, herstel en jezelf.
+        </p>
+        <a href="#contact" class="btn-cta">Maak een afspraak</a>
+      </div>
+
+      <!-- Service cards -->
+      <div class="cards" aria-label="Behandelingen">
+
+        <!-- Goldhealing -->
+        <article class="card card--img card--green">
+          <img
+            class="card__bg-img"
+            src="https://www.figma.com/api/mcp/asset/7a2d3f13-a45b-434a-b8f9-0ceea69ac4e3"
+            alt=""
+            aria-hidden="true"
+          >
+          <img
+            class="card__arrow"
+            src="https://www.figma.com/api/mcp/asset/3392e192-6035-45aa-b463-cf1fd1505c30"
+            alt=""
+            aria-hidden="true"
+            width="24"
+            height="24"
+          >
+          <span class="card__label">Goldhealing</span>
+        </article>
+
+        <!-- Spinal Touch -->
+        <article class="card card--img card--brown">
+          <img
+            class="card__bg-img"
+            src="https://www.figma.com/api/mcp/asset/f5d0b042-6d98-4643-9a36-ec169fcec864"
+            alt=""
+            aria-hidden="true"
+          >
+          <img
+            class="card__arrow"
+            src="https://www.figma.com/api/mcp/asset/51ee34db-af30-4f32-86ad-03ddb27f3b0d"
+            alt=""
+            aria-hidden="true"
+            width="24"
+            height="24"
+          >
+          <span class="card__label">Spinal Touch</span>
+        </article>
+
+        <!-- Meer klachten -->
+        <article class="card card--txt">
+          <div class="card__head">
+            <span class="card__title">Meer klachten</span>
+            <img
+              src="https://www.figma.com/api/mcp/asset/50997965-24f0-4961-a23a-08ab31bcc4d1"
+              alt=""
+              aria-hidden="true"
+              width="24"
+              height="24"
+            >
+          </div>
+          <p class="card__desc">
+            Er altijd is een aanpak die bij jou past.
+            Ik leg per therapie uit wat je kunt verwachten.
+          </p>
+        </article>
+
+      </div>
+      <!-- /cards -->
+
+    </div>
+    <!-- /hero__left -->
+
+    <!-- Right column: illustration + social icons -->
+    <div class="hero__right">
+
+      <picture>
+        <!-- Desktop: larger, higher-res illustration -->
+        <source
+          media="(min-width: 1024px)"
+          srcset="https://www.figma.com/api/mcp/asset/9dd501cb-accd-4152-a604-59ab396571d4"
+        >
+        <!-- Mobile: portrait-cropped illustration -->
+        <img
+          class="hero__img"
+          src="https://www.figma.com/api/mcp/asset/1cf91823-57f3-4f5d-85dc-b47245977b17"
+          alt=""
+          aria-hidden="true"
+          fetchpriority="high"
+          loading="eager"
+        >
+      </picture>
+
+      <!-- Social icons – desktop only (hidden via CSS on mobile) -->
+      <nav class="social" aria-label="Sociale media">
+        <a href="#" class="social__link">
+          <img
+            src="https://www.figma.com/api/mcp/asset/ae3f5ebf-454f-4de1-965c-cdcdbcc11fe9"
+            alt="X / Twitter"
+            width="40"
+            height="40"
+          >
+        </a>
+        <a href="#" class="social__link">
+          <img
+            src="https://www.figma.com/api/mcp/asset/4ee83869-50b3-4ae6-b5a6-93a831ccd9b5"
+            alt="Facebook"
+            width="40"
+            height="40"
+          >
+        </a>
+        <a href="#" class="social__link">
+          <img
+            src="https://www.figma.com/api/mcp/asset/e804c833-dff2-4bf3-bf31-44a87e90093d"
+            alt="Instagram"
+            width="40"
+            height="40"
+          >
+        </a>
+      </nav>
+
+    </div>
+    <!-- /hero__right -->
+
+  </main>
+
+</body>
+</html>

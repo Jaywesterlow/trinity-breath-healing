@@ -1,0 +1,53 @@
+{
+  "version": "1.0",
+  "timestamp": "2026-07-06T16:02:02.058Z",
+  "phase": "none",
+  "phase_name": "ad-hoc-carousel-debugging",
+  "phase_dir": null,
+  "plan": null,
+  "task": null,
+  "total_tasks": null,
+  "status": "paused",
+  "completed_tasks": [
+    { "id": 1, "name": "Delete old CSS-only fake carousel, research Embla Carousel", "status": "done", "commit": "uncommitted" },
+    { "id": 2, "name": "Build Embla-based carousel: 7 slides, active-card scale, 7-dot pagination with grid-stacked progress rings, fade edges, 70vh/100vh section height", "status": "done", "commit": "uncommitted" },
+    { "id": 3, "name": "Add click-to-scroll (shortest path), native drag, custom eased autoscroll ticker replacing stock embla-carousel-auto-scroll plugin (uninstalled)", "status": "done", "commit": "uncommitted" },
+    { "id": 4, "name": "Fix: engine.animation.stop() never restarted after Embla's own render() judged settled+idle", "status": "done", "commit": "uncommitted" },
+    { "id": 5, "name": "Fix: pagination/active-card never updated from pure ticker motion (Embla only emits 'select' from ScrollTo.scrollTo()) — added emitSelectIfIndexChanged()", "status": "done", "commit": "uncommitted" },
+    { "id": 6, "name": "Change hover from full-stop to 30% slowdown (HOVER_FACTOR) so it never conflicts with drag", "status": "done", "commit": "uncommitted" },
+    { "id": 7, "name": "Fix: hard flick could freeze permanently — gated ticker delta application on defaultScrollBody.settled() since native momentum decay measured at 1.5+ seconds", "status": "done", "commit": "uncommitted" },
+    { "id": 8, "name": "Fix: cycleDurationMs corrupted by intermediate 'select' events during settle-glide — suppression now clears at the settled()-gate", "status": "done", "commit": "uncommitted" },
+    { "id": 9, "name": "Fix: ticker permanently dying on any resize-triggered reInit() — wireEngine() now re-wires composed scrollBody on every 'reInit', not just at mount", "status": "done", "commit": "uncommitted" },
+    { "id": 10, "name": "Diagnose fresh-page-load freeze (ticker never starts moving without manual interaction)", "status": "in_progress", "progress": "Confirmed real via user's browser console log (transform frozen at x=-96.98 from t=0 through t=1084ms, past the 750ms resume delay). Strong hypothesis: the settled()-gate from fix #7 can block the ticker indefinitely if the carousel's true initial resting state at mount isn't perfectly settled (sub-pixel residual from startIndex/align:center math), since settled()'s threshold (0.001px) may take a very long time to cross naturally. A manual flick forces real settlement, unsticking it — matches reported behavior exactly. NOT YET 100% confirmed — was waiting on user to report whether a JUMP ever logs spontaneously in the console-watch script before /gsd-pause-work was called." }
+  ],
+  "remaining_tasks": [
+    { "id": 11, "name": "Confirm root cause of fresh-load freeze definitively (re-run console-watch snippet, or add temporary ramp-state logging) before fixing", "status": "not_started" },
+    { "id": 12, "name": "Fix fresh-load freeze — likely needs a safety-valve on the settled()-gate (e.g. also allow ticker contribution once a max wait time has elapsed since resume was requested, even if settled() hasn't crossed threshold) rather than removing the gate outright (which would reintroduce the hard-flick-freeze bug from fix #7)", "status": "not_started" },
+    { "id": 13, "name": "Re-verify all previously-fixed bugs still hold after the safety-valve fix lands (hover-slow, drag-priority, pagination-sync, reInit-resilience, hard-flick momentum)", "status": "not_started" },
+    { "id": 14, "name": "User has not yet confirmed the fresh-load bug is resolved in their own real (non-automation) browser — final verification must happen there, not just in Claude's backgrounded automation tab", "status": "not_started" },
+    { "id": 15, "name": "Nothing this session has been committed to git — user will decide when to commit (per git-ask-before-commit skill, active this session)", "status": "not_started" }
+  ],
+  "blockers": [
+    {
+      "description": "Fresh-page-load freeze bug is real (confirmed via user's own browser console output) and NOT yet fixed — deliberately deferred this turn per user's explicit 'find bugs, don't fix' instruction",
+      "type": "technical",
+      "workaround": "Manual drag/flick unsticks it (forces real settlement), but this is not an acceptable permanent workaround for production"
+    }
+  ],
+  "human_actions_pending": [
+    { "action": "Re-run the console-watch snippet (already given to the user) on a fresh page load and report whether a JUMP line ever appears spontaneously, or whether it stays frozen at the initial transform value until manually flicked", "context": "Needed to fully confirm the settled()-gate hypothesis before attempting a fix", "blocking": true }
+  ],
+  "decisions": [
+    { "decision": "Replaced embla-carousel-auto-scroll plugin with a hand-rolled composed scrollBody", "rationale": "Stock plugin has zero ease-in/out support and its speed option is not live-mutable after init (verified by reading its source)", "phase": "none" },
+    { "decision": "Used native Embla option skipSnaps: true instead of custom drag-momentum physics", "rationale": "Exactly solves 'flick travels multiple cards before locking in' with zero custom code — found via source reading, not docs", "phase": "none" },
+    { "decision": "7 total slides (4 real treatments + 3 filler) instead of 15", "rationale": "Explicit user request for a tighter, simpler pagination row", "phase": "none" },
+    { "decision": "Gated ticker's location/target mutation on defaultScrollBody.settled()", "rationale": "Fixed the hard-flick-freeze bug (measured native momentum decay at 1.5+ seconds, far exceeding the fixed 750ms resume timer) — but this decision is the suspected source of the NEW fresh-load-freeze bug and may need refinement, not reversal", "phase": "none" }
+  ],
+  "uncommitted_files": [
+    "src/lib/components/global/Behandelingen.svelte",
+    "package.json",
+    "package-lock.json"
+  ],
+  "next_action": "Confirm the settled()-gate hypothesis for the fresh-load freeze (re-run console-watch snippet or add temporary logging of rampFrom/rampTo/currentFactor alongside the transform watcher), then design a safety-valve fix that preserves the hard-flick-freeze fix while guaranteeing the ticker eventually starts even if native settled() never quite crosses its tight 0.001px threshold from the initial mount state.",
+  "context_notes": "Long single-session carousel build+debug on Behandelingen.svelte (treatments carousel), branch fix/hero-fit-cards, nothing committed all session. User explicitly wants every bug scoured out before this is considered done. Critical structural note for whoever resumes: Claude's own browser automation tab runs backgrounded (document.hidden: true) which throttles rAF/setTimeout so severely that real-time animation behavior cannot be reliably observed there — verification this session relied on direct engine-state inspection via temporary window-exposed debug hooks, fake-clock patching of performance.now(), and forced synthetic event dispatch (mousedown/mousemove/mouseup/pointerdown etc.) rather than literally watching it animate. Also hit the same test-methodology trap twice: Embla's settled()/offsetLocation is only updated inside its render() step, not seek() — pumping seek() alone without also simulating the alpha-interpolation step gives false 'frozen' readings that look exactly like real bugs. Any resuming agent testing settled()-dependent logic must simulate the full update+render cycle, not just seek()."
+}
