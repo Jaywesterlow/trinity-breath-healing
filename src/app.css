@@ -28,6 +28,57 @@
   --radius-full: 9999px;
 }
 
+/* --- shadcn-svelte semantic tokens (Slice 1 Task 3) --- */
+/* shadcn-svelte@1.4.1 was initialized (components.json + src/lib/utils.ts created via the
+   real CLI). Its init flow is now preset/registry-driven and its TUI would not complete
+   non-interactively in this environment (raw-mode prompts, no pty available here), so this
+   block — the only piece init would otherwise have written to this file — was authored by
+   hand, following shadcn-svelte's standard Tailwind v4 pattern (plain semantic vars in :root,
+   re-exposed to Tailwind's utility generator via @theme inline) with values substituted
+   directly from Trinity's palette instead of shadcn's neutral defaults, per this task's brief.
+   ZERO components added — nothing in the app renders these tokens yet. Only the tokens listed
+   in the Task 3 brief are mapped; --popover/--destructive/--chart/--sidebar etc. are NOT
+   defined and should be added in Slice 2 if/when a component needs them.
+   IMPORTANT: --radius-sm/--radius-md/--radius-lg are intentionally NOT redeclared here (shadcn's
+   usual scaffold derives them from --radius via calc()) — Trinity's own --radius-* scale above
+   is authoritative and must not be overwritten; --radius below just points at it. */
+:root {
+  --background: var(--color-bg-sand);
+  --foreground: var(--color-fg-forest);
+  --card: var(--color-card-warm);
+  --card-foreground: var(--color-fg-forest);
+  --primary: var(--color-fg-forest);
+  --primary-foreground: var(--color-bg-sand);
+  --secondary: var(--color-accent-gold);
+  --secondary-foreground: var(--color-fg-forest);
+  --accent: var(--color-accent-gold);
+  --accent-foreground: var(--color-fg-forest);
+  --muted: var(--color-muted);
+  --muted-foreground: var(--color-text-subtle);
+  --border: var(--color-border);
+  --input: var(--color-border);
+  --ring: var(--color-accent-gold);
+  --radius: var(--radius-md);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+}
+
 :root {
   /* --- color-mix() derived variants (still plain :root vars, reference the @theme tokens above) --- */
   --color-bg-sand-25: color-mix(in srgb, var(--color-bg-sand) 25%, transparent);
