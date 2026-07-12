@@ -11,7 +11,7 @@ Categories derived from research + Figma frames + Phase 0 context.
 ### Foundation (FND)
 
 - [ ] **FND-01**: SvelteKit + Svelte 5 (runes) + TS strict scaffolded with `@sveltejs/adapter-vercel` (region `fra1`); SSG via `export const prerender = true` in root `+layout.ts`
-- [ ] **FND-02**: Plain CSS architecture — single `static/global.css` for CSS variables (design tokens), CSS reset, typography baseline, truly-global utility classes; every other style lives inside its respective `.svelte` component file in a `<style>` block (Svelte scopes automatically). NO Tailwind, NO CSS-in-JS, NO SCSS/SASS, NO shared CSS files beyond `global.css`.
+- [ ] **FND-02**: Plain CSS architecture — single `static/global.css` for CSS variables (design tokens), CSS reset, typography baseline, truly-global utility classes; every other style lives inside its respective `.svelte` component file in a `<style>` block (Svelte scopes automatically). NO Tailwind, NO CSS-in-JS, NO SCSS/SASS, NO shared CSS files beyond `global.css`. — **SUPERSEDED 2026-07-12 (D-09, see CLAUDE.md):** reversed by the Tailwind v4 + shadcn-svelte migration (Slice 1); tokens/reset/typography now live in `src/app.css`'s `@theme` block, processed via Vite, plus shadcn component styles. Requirement text kept as historical record.
 - [ ] **FND-03**: `mdsvex` configured for `.svx` files in `src/content/`; Vite glob imports for collection-style access; Zod schemas for type-safe frontmatter
 - [ ] **FND-04**: Design tokens placeholder set (CSS variables for color, spacing, radius, type, motion) marked `/* TODO */`; real values from Figma provided in a later phase
 - [ ] **FND-05**: Mobile-first reset + responsive grid system

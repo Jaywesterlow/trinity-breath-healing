@@ -33,10 +33,7 @@ jobs:
       - name: Unit tests
         run: npm run test:unit -- --run
 
-      - name: CSS shape gate — no shared CSS beyond global.css (FND-02)
-        run: bash scripts/no-shared-css.sh
-
-      - name: Token enforcement — all colour/spacing/font vars from tokens (FND-04)
+      - name: Token enforcement — brand/design tokens present in src/app.css @theme (FND-04)
         run: bash scripts/check-tokens.sh
 
       - name: robots.txt order — AI bots before wildcard (SEO-08)

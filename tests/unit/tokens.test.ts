@@ -4,7 +4,7 @@ import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 
-const CSS_PATH = 'static/global.css';
+const CSS_PATH = 'src/app.css';
 
 const REQUIRED_TOKENS = [
 	'--color-bg-sand',
@@ -44,7 +44,7 @@ const bashAvailable = (() => {
 	}
 })();
 
-describe('static/global.css — token presence (FND-04)', () => {
+describe('src/app.css — token presence (FND-04)', () => {
 	const css = readFileSync(CSS_PATH, 'utf8');
 
 	for (const token of REQUIRED_TOKENS) {
@@ -65,26 +65,26 @@ describe('static/global.css — token presence (FND-04)', () => {
 		expect(css).toContain('.visually-hidden');
 	});
 
-	it('does NOT contain @import (no @import chains per D-09)', () => {
-		expect(css).not.toContain('@import');
-	});
-
-	it('does NOT contain @apply (no Tailwind directive per D-09)', () => {
-		expect(css).not.toContain('@apply');
+	// D-09 (plain-CSS lock, "no @import / no @apply") superseded 2026-07-12 by the
+	// Tailwind v4 + shadcn migration (Slice 1) — see CLAUDE.md. src/app.css now legitimately
+	// starts with `@import 'tailwindcss';`; asserting its absence would be testing for a
+	// regression to a decision this repo no longer holds.
+	it('imports the Tailwind entrypoint (Slice 1 — D-09 superseded)', () => {
+		expect(css).toContain("@import 'tailwindcss'");
 	});
 });
 
 describe('scripts/check-tokens.sh (FND-04 enforcement)', () => {
 	const scriptPath = 'scripts/check-tokens.sh';
 
-	it.skipIf(!bashAvailable)('exits 0 on committed global.css', () => {
+	it.skipIf(!bashAvailable)('exits 0 on committed src/app.css', () => {
 		expect(() => execSync(`bash "${scriptPath}"`, { stdio: 'pipe' })).not.toThrow();
 	});
 
 	it.skipIf(!bashAvailable)('exits 1 when a required token is missing', () => {
 		const tmpDir = join(tmpdir(), 'gsd-tokens-test');
 		mkdirSync(tmpDir, { recursive: true });
-		const tmpCss = join(tmpDir, 'global-missing.css');
+		const tmpCss = join(tmpDir, 'app-missing.css');
 		// CSS missing --color-bg-sand entirely
 		writeFileSync(tmpCss, ':root { --color-fg-forest: #3D4A35; font-display: swap; }\n');
 		expect(() => execSync(`bash "${scriptPath}" "${tmpCss}"`, { stdio: 'pipe' })).toThrow();
@@ -92,20 +92,8 @@ describe('scripts/check-tokens.sh (FND-04 enforcement)', () => {
 	});
 });
 
-describe('scripts/no-shared-css.sh (FND-02 enforcement)', () => {
-	const scriptPath = 'scripts/no-shared-css.sh';
-
-	it.skipIf(!bashAvailable)('exits 0 on current repo (only static/global.css exists)', () => {
-		expect(() => execSync(`bash "${scriptPath}"`, { stdio: 'pipe' })).not.toThrow();
-	});
-
-	it.skipIf(!bashAvailable)('exits 1 when a rogue CSS file exists in src/', () => {
-		const violationPath = 'src/lib/components/Button.css';
-		try {
-			writeFileSync(violationPath, '.btn { color: red; }\n');
-			expect(() => execSync(`bash "${scriptPath}"`, { stdio: 'pipe' })).toThrow();
-		} finally {
-			rmSync(violationPath, { force: true });
-		}
-	});
-});
+// scripts/no-shared-css.sh (FND-02 "single shared CSS file" enforcement) was removed in
+// Slice 1 Task 4 — it asserted the plain-CSS-lock (D-09), which is superseded by the
+// Tailwind v4 + shadcn migration. Tailwind's utility/theme model requires importing
+// tailwindcss into src/app.css and (from Slice 2) shadcn component files may ship their
+// own scoped styles; "only one shared CSS file" is no longer a rule this repo enforces.

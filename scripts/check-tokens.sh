@@ -1,13 +1,14 @@
 #!/usr/bin/env bash
-# check-tokens.sh — Assert all required CSS design tokens exist in static/global.css (or a given file).
-# FND-04 + FND-05 + FND-06 enforcement per CONTEXT.md D-09.
+# check-tokens.sh — Assert Trinity's brand/design tokens still exist in src/app.css (or a given file).
+# FND-04 + FND-05 + FND-06 intent, re-pointed at the Tailwind v4 + shadcn stack (Slice 1, D-09
+# superseded — see CLAUDE.md). Tokens now live in src/app.css's @theme block, processed via Vite.
 #
-# Usage: bash scripts/check-tokens.sh [path/to/global.css]
-#        Defaults to static/global.css.
-# Wired into CI by Plan 08.
+# Usage: bash scripts/check-tokens.sh [path/to/app.css]
+#        Defaults to src/app.css.
+# Wired into CI by Plan 08; re-pointed by Slice 1 Task 4.
 set -euo pipefail
 
-CSS_FILE="${1:-static/global.css}"
+CSS_FILE="${1:-src/app.css}"
 
 if [ ! -f "$CSS_FILE" ]; then
   echo "ERROR: CSS file not found at $CSS_FILE" >&2
