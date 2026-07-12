@@ -27,3 +27,7 @@ test-results/
 # Vite
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# subagent-driven scratch (not committed)
+.superpowers/
+docs/superpowers/.baseline/
