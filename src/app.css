@@ -4,19 +4,34 @@
 /* NO component styles in this file. Component styles live in each .svelte <style> block. */
 /* Slice 1 (2026-07-12): migrated from static/global.css to route through Vite/Tailwind. D-09 (plain CSS locked) superseded — see CLAUDE.md. */
 
-:root {
-  /* --- Color tokens (Figma-derived 2026-06-19; audit against final design file before launch) --- */
-  /* TODO: confirm --color-accent-gold hex from Figma (see UNKNOWNS.md) */
+/* --- Brand tokens (Figma-derived 2026-06-19; audit against final design file before launch) --- */
+/* TODO: confirm --color-accent-gold hex from Figma (see UNKNOWNS.md) */
+/* Moved into @theme (Slice 1 Task 2) so Tailwind emits them to :root (existing var() refs keep
+   resolving) AND generates utilities (bg-fg-forest, rounded-md, font-display, ...). Same names,
+   same values as before — nothing here changes computed output. */
+@theme {
   --color-bg-sand: #FAF0E6;      /* warm cream/linen — main background */
-  --color-bg-sand-25: color-mix(in srgb, var(--color-bg-sand) 25%, transparent);
   --color-fg-forest: #3D4A35;    /* forest green — primary text + brand dark */
-  --color-fg-forest-92: color-mix(in srgb, var(--color-fg-forest) 92%, transparent);
   --color-accent-gold: #D4A968;  /* gold accent — CTA buttons, focus rings */
   --color-card-warm: #EDE8D0;    /* pale sage — card backgrounds */
   --color-muted: #7A8C6E;        /* mid sage — secondary text, borders */
   --color-text-subtle: #848981;  /* neutral stone gray — body text on light bg (Figma) */
   --color-border: #B68A6B;       /* dark cream — dividers, input borders */
   --color-accent-gold-soft: #C7A27A; /* Figma-sourced — Over mij mobile CTA/link accents on dark overlay */
+
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body:    'DM Sans', system-ui, sans-serif;
+
+  --radius-sm:   0.25rem;
+  --radius-md:   0.5rem;
+  --radius-lg:   1rem;
+  --radius-full: 9999px;
+}
+
+:root {
+  /* --- color-mix() derived variants (still plain :root vars, reference the @theme tokens above) --- */
+  --color-bg-sand-25: color-mix(in srgb, var(--color-bg-sand) 25%, transparent);
+  --color-fg-forest-92: color-mix(in srgb, var(--color-fg-forest) 92%, transparent);
 
   /* --- Spacing scale (base: 0.25rem / 4px) --- */
   --space-1:  0.25rem;
@@ -30,16 +45,7 @@
   --space-12: 3rem;
   --space-16: 4rem;
 
-  /* --- Border radius --- */
-  --radius-sm:   0.25rem;
-  --radius-md:   0.5rem;
-  --radius-lg:   1rem;
-  --radius-full: 9999px;
-
   /* --- Typography --- */
-  --font-display: 'Cormorant Garamond', Georgia, serif;
-  --font-body:    'DM Sans', system-ui, sans-serif;
-
   --font-size-xs:   0.75rem;
   --font-size-sm:   0.875rem;
   --font-size-base: 1rem;
@@ -138,6 +144,10 @@
    - a { color: inherit; text-decoration: inherit }
    - headings are unstyled (no bold/serif) — Trinity's h1-h6 rule below is still needed.
    Trinity-specific rules NOT covered by Preflight are kept below. */
+html {
+  -webkit-text-size-adjust: 100%; /* Preflight sets only this prefixed form */
+  text-size-adjust: 100%; /* unprefixed form dropped in Task 1 — restored here (Task 2 review fix) */
+}
 body {
   background: var(--color-bg-sand);
   color: var(--color-fg-forest);
