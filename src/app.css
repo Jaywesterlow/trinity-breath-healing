@@ -1,6 +1,8 @@
-/* static/global.css — design tokens + reset + typography baseline + utilities */
+@import 'tailwindcss';
+
+/* src/app.css — design tokens + reset + typography baseline + utilities */
 /* NO component styles in this file. Component styles live in each .svelte <style> block. */
-/* D-09: plain CSS locked. NO Tailwind / SCSS / CSS-in-JS / no-import chains. */
+/* Slice 1 (2026-07-12): migrated from static/global.css to route through Vite/Tailwind. D-09 (plain CSS locked) superseded — see CLAUDE.md. */
 
 :root {
   /* --- Color tokens (Figma-derived 2026-06-19; audit against final design file before launch) --- */
@@ -125,17 +127,17 @@
   font-display: swap;
 }
 
-/* --- Minimal reset --- */
-*, *::before, *::after {
-  box-sizing: border-box;
-}
-* {
-  margin: 0;
-}
-html {
-  -webkit-text-size-adjust: 100%;
-  text-size-adjust: 100%;
-}
+/* --- Reset (reconciled with Tailwind Preflight, Slice 1 Task 1) --- */
+/* Preflight (pulled in by `@import 'tailwindcss'` above) already provides:
+   - *, ::before, ::after { box-sizing: border-box }
+   - margin: 0 on all elements (html, body, headings, paragraphs, etc.)
+   - html { -webkit-text-size-adjust: 100% } (line-height: 1.5 + tab-size etc. too)
+   - img, svg, video, canvas, audio, iframe, embed, object { display: block; vertical-align: middle }
+   - img, video { max-width: 100%; height: auto }
+   - button, input, optgroup, select, textarea { font: inherit; ... }
+   - a { color: inherit; text-decoration: inherit }
+   - headings are unstyled (no bold/serif) — Trinity's h1-h6 rule below is still needed.
+   Trinity-specific rules NOT covered by Preflight are kept below. */
 body {
   background: var(--color-bg-sand);
   color: var(--color-fg-forest);
@@ -146,16 +148,19 @@ body {
   text-rendering: optimizeLegibility;
   overflow-x: hidden; /* guards intentional hero image bleed from causing horizontal scroll */
 }
-img, picture, svg, video {
+/* Preflight covers img/video max-width+height and display:block+vertical-align:middle for
+   img/svg/video/canvas/audio/iframe/embed/object, but NOT picture at all, and NOT
+   max-width/height:auto for svg. Restore Trinity's original combined behavior for both
+   (Behandelingen.svelte's .treatments__dot-ring depends on svg's max-width:100% reset
+   being present so it can explicitly neutralize it with max-width: none). */
+picture {
   display: block;
   max-width: 100%;
   height: auto;
 }
-input, button, textarea, select {
-  font: inherit;
-}
-a {
-  color: inherit;
+svg {
+  max-width: 100%;
+  height: auto;
 }
 a:focus-visible, button:focus-visible {
   outline: 2px solid var(--color-accent-gold);

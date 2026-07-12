@@ -1,4 +1,5 @@
 <script lang="ts">
+	import '../app.css';
 	import { Nav, Footer, Head, JsonLd } from '$lib/components';
 	import { page } from '$app/stores';
 	import { onNavigate } from '$app/navigation';
