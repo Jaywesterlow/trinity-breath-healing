@@ -84,15 +84,40 @@
  *    (Enforced by the operator/CI step, not by this file — documented here so it isn't
  *    missed.)
  *
- * maxDiffPixelRatio: 0.001 (0.1%) — chosen empirically, not guessed. Three consecutive
- * clean `npm run test:visual` runs against an unmodified build produced a byte-for-byte
- * pixel match (0 differing pixels at maxDiffPixelRatio: 0) — this repo's true noise floor
- * is zero, but a small allowance is kept for font-antialiasing drift across machines/GPU
- * drivers that didn't show up here. The sabotage proof (`--brand-border: transparent` in
- * src/app.css, reproducing the exact Slice 1 bug class) produced diffs of 0.336%-0.662% of
- * total image pixels across the four route/viewport combinations (measured directly) — so
- * 0.1% sits with 3x+ margin above the real noise floor and 3x+ margin below the smallest
- * real bug signal observed.
+ * THRESHOLD — maxDiffPixels: 50 (an absolute pixel budget, not a ratio). History: this spec
+ * originally used `maxDiffPixelRatio: 0.001` (0.1%), calibrated only against a large-element
+ * sabotage (`--brand-border: transparent`, which blanks the tan CTA buttons). That ratio is
+ * BLIND to small-text regressions: setting `--brand-muted: transparent` makes the "Werkwijze"/
+ * "Over mij" eyebrow labels render literally invisible (`color: rgba(0,0,0,0)`), and because
+ * that text occupies well under 0.1% of a 1440x3763 page's pixels, all 4 tests still PASSED.
+ * A ratio scales with page size, which is exactly what created the blind spot — an absolute
+ * pixel budget does not.
+ *
+ * Measurements behind the 50px number (all captured with `maxDiffPixels: 0`, i.e. zero
+ * tolerance, to read the real diff count off each failure):
+ *   - Noise floor: 5 consecutive clean-build runs (3 at the original ratio config, 2 more at
+ *     maxDiffPixels: 0) produced 0 differing pixels every time — byte-for-byte identical
+ *     screenshots. This machine's real noise floor is exactly zero.
+ *   - Small-text regression (`--brand-muted: transparent`, rebuilt): home-desktop 4177px,
+ *     contact-desktop 404px, home-mobile 577px, contact-mobile 0px (that route/viewport has
+ *     no muted-colored text, so this token change is simply invisible there — not a threshold
+ *     problem). Smallest real signal: 404px.
+ *   - Large regression (`--brand-border: transparent`, rebuilt): home-desktop 35851px,
+ *     contact-desktop 6581px, home-mobile 6419px, contact-mobile 1343px. Smallest real
+ *     signal: 1343px.
+ *   - Both sabotage measurements were reproduced twice each and were exactly reproducible
+ *     (identical pixel counts run to run) — this app's Playwright/vite-preview pipeline on
+ *     this machine is deterministic, not merely "usually stable."
+ *
+ * 50px sits comfortably above the measured noise floor (0) while remaining 8x below the
+ * smallest real small-text signal (404px) and ~27x below the smallest real large-element
+ * signal (1343px) — enough margin to never miss either bug class, tight enough that neither
+ * bug class can hide behind it the way 0.1% of a tall page could.
+ *
+ * threshold: 0.2 (Playwright's per-pixel color-diff sensitivity default, kept rather than
+ * loosened) — the noise-floor measurements above already hit exactly 0 diff pixels at this
+ * setting, so antialiasing/GPU jitter is not being miscounted as diff and there was no reason
+ * to move it.
  */
 import { test, expect, type Page } from '@playwright/test';
 
@@ -152,7 +177,8 @@ for (const [viewportName, viewport] of Object.entries(VIEWPORTS)) {
 					fullPage: true,
 					animations: 'disabled',
 					mask,
-					maxDiffPixelRatio: 0.001
+					maxDiffPixels: 50,
+					threshold: 0.2
 				});
 			});
 		}
