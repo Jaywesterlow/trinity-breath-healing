@@ -409,7 +409,7 @@
 		font-family: var(--font-body);
 		font-size: var(--font-size-xl);
 		font-weight: var(--font-weight-light);
-		color: var(--color-muted);
+		color: var(--brand-muted);
 		margin-bottom: var(--space-2);
 	}
 

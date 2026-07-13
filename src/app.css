@@ -6,17 +6,21 @@
 
 /* --- Brand tokens (Figma-derived 2026-06-19; audit against final design file before launch) --- */
 /* TODO: confirm --color-accent-gold hex from Figma (see UNKNOWNS.md) */
-/* Moved into @theme (Slice 1 Task 2) so Tailwind emits them to :root (existing var() refs keep
-   resolving) AND generates utilities (bg-fg-forest, rounded-md, font-display, ...). Same names,
-   same values as before — nothing here changes computed output. */
+/* Moved into @theme (Slice 1 Task 2) so Tailwind emits them to :root and generates utilities
+   (bg-fg-forest, rounded-md, font-display, ...).
+   Any raw token that shadcn also names (border, muted, input, ring, ...) MUST live in the
+   --brand-* namespace, NOT --color-*: the @theme inline block below re-declares those --color-*
+   names as aliases of the shadcn vars, and because @theme inline emits no :root custom property,
+   a raw token sharing the name resolves to "" at runtime instead of erroring.
+   Guarded by tests/integration/no-dead-css-vars.spec.ts. */
 @theme {
   --color-bg-sand: #FAF0E6;      /* warm cream/linen — main background */
   --color-fg-forest: #3D4A35;    /* forest green — primary text + brand dark */
   --color-accent-gold: #D4A968;  /* gold accent — CTA buttons, focus rings */
   --color-card-warm: #EDE8D0;    /* pale sage — card backgrounds */
-  --color-muted: #7A8C6E;        /* mid sage — secondary text, borders */
+  --brand-muted: #7A8C6E;        /* mid sage — secondary text, borders */
   --color-text-subtle: #848981;  /* neutral stone gray — body text on light bg (Figma) */
-  --color-border: #B68A6B;       /* dark cream — dividers, input borders */
+  --brand-border: #B68A6B;       /* dark cream — dividers, input borders */
   --color-accent-gold-soft: #C7A27A; /* Figma-sourced — Over mij mobile CTA/link accents on dark overlay */
 
   --font-display: 'Cormorant Garamond', Georgia, serif;
@@ -53,10 +57,10 @@
   --secondary-foreground: var(--color-fg-forest);
   --accent: var(--color-accent-gold);
   --accent-foreground: var(--color-fg-forest);
-  --muted: var(--color-muted);
+  --muted: var(--brand-muted);
   --muted-foreground: var(--color-text-subtle);
-  --border: var(--color-border);
-  --input: var(--color-border);
+  --border: var(--brand-border);
+  --input: var(--brand-border);
   --ring: var(--color-accent-gold);
   --radius: var(--radius-md);
 }

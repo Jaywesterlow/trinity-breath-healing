@@ -55,7 +55,7 @@
 		height: var(--space-10);
 		padding: 0 var(--space-6);
 		border-radius: var(--radius-full);
-		background: var(--color-border);
+		background: var(--brand-border);
 		color: var(--color-bg-sand);
 		font-family: var(--font-display);
 		font-size: var(--btn-label-size, var(--font-size-xl)); /* overridable per context */
@@ -75,9 +75,9 @@
 		width: var(--space-10);
 		height: var(--space-10);
 		border-radius: 50%;
-		border: 2px solid var(--color-border);
+		border: 2px solid var(--brand-border);
 		background: transparent;
-		color: var(--color-border);
+		color: var(--brand-border);
 		flex-shrink: 0;
 	}
 

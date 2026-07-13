@@ -50,7 +50,7 @@
 							icon="x"
 							href="https://x.com/trinitybnh"
 							label="Volg ons op X (Twitter)"
-							color="var(--color-border)"
+							color="var(--brand-border)"
 							background="var(--color-bg-sand)"
 							responsiveSize={false}
 						/>
@@ -60,7 +60,7 @@
 							icon="facebook"
 							href="https://facebook.com/trinitybnh"
 							label="Volg ons op Facebook"
-							color="var(--color-border)"
+							color="var(--brand-border)"
 							background="var(--color-bg-sand)"
 							responsiveSize={false}
 						/>
@@ -70,7 +70,7 @@
 							icon="instagram"
 							href="https://instagram.com/trinitybnh"
 							label="Volg ons op Instagram"
-							color="var(--color-border)"
+							color="var(--brand-border)"
 							background="var(--color-bg-sand)"
 							responsiveSize={false}
 						/>

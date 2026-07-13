@@ -49,7 +49,7 @@
 	}
 
 	.card--border {
-		background: var(--color-border);
+		background: var(--brand-border);
 		color: var(--color-bg-sand);
 	}
 

@@ -28,7 +28,7 @@
 		height: 40px;
 		padding: 0 24px;
 		border-radius: var(--radius-full);
-		background: var(--color-border);
+		background: var(--brand-border);
 		color: var(--color-bg-sand);
 		font-family: var(--font-display);
 		font-size: var(--font-size-xl);

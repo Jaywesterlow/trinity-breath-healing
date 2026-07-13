@@ -66,7 +66,7 @@
 		color: var(--color-fg-forest);
 		align-items: flex-start;
 		justify-content: flex-end; /* art bleeds the top; text+CTA sit in the lower half, per Figma */
-		border: 2px solid var(--color-muted);
+		border: 2px solid var(--brand-muted);
 	}
 
 	.wcard__title {

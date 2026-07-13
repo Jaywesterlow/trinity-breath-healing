@@ -171,7 +171,7 @@
 		width: 44px;
 		height: 44px;
 		border-radius: var(--radius-full);
-		background: var(--color-border);
+		background: var(--brand-border);
 		border: none;
 		cursor: pointer;
 		flex-shrink: 0;
@@ -272,7 +272,7 @@
 			font-family: var(--font-display);
 			font-weight: 500;
 			font-size: var(--font-size-xl);
-			color: var(--color-muted);
+			color: var(--brand-muted);
 			text-decoration: none;
 			padding: var(--space-1) 0.375rem;
 			white-space: nowrap;

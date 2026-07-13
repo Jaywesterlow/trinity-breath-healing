@@ -82,8 +82,8 @@
 	}
 
 	.text-link--muted {
-		color: var(--color-muted);
-		border-bottom-color: var(--color-muted);
+		color: var(--brand-muted);
+		border-bottom-color: var(--brand-muted);
 	}
 
 	.text-link--gold-soft {
