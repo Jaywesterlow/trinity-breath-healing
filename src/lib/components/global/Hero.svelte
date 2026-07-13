@@ -4,6 +4,13 @@
 	import SocialIcon from '$lib/components/ui/SocialIcon.svelte';
 	import HeroServiceCard from '$lib/components/ui/HeroServiceCard.svelte';
 
+	// The hero illustration is a centerline trace of the original line art, inlined as SVG so
+	// its strokes can draw themselves on load (stroke-dashoffset, see .hero__draw below).
+	// Inlined via ?raw + {@html} rather than <img>: an external SVG can't be reached by this
+	// component's CSS, and inlining also drops the 790 KB PNG request off the LCP path.
+	// Regenerate with .planning/quick/20260713-hero-draw-on/trace/ if the artwork changes.
+	import heroSvg from '$lib/images/hero-illustration.svg?raw';
+
 	let sectionEl: HTMLElement | null = $state(null);
 	let leftEl: HTMLDivElement | null = $state(null);
 
@@ -35,14 +42,14 @@
 
 		<!-- Image column: top on mobile (DOM order), right on desktop (order:2) -->
 		<div class="hero__image-col">
-			<enhanced:img
-				src="../../images/hero-illustration.png"
-				alt=""
-				aria-hidden="true"
-				loading="eager"
-				fetchpriority="high"
-				class="hero__img"
-			/>
+			<!-- Wrapper stands in for the <picture> that <enhanced:img> used to emit: a
+			     full-width block box. It keeps this flex item's width constant across the
+			     ResizeObserver's height write, so only height shifts (as before) — without it
+			     the SVG becomes the flex item itself and its width shifts too, tripling CLS. -->
+			<div class="hero__img-wrap">
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -- build-time asset, not user input -->
+				{@html heroSvg}
+			</div>
 			<nav class="hero__social" aria-label="Sociale media">
 				<ul class="hero__social-list">
 					<li>
@@ -171,15 +178,59 @@
 		}
 	}
 
-	.hero__img {
+	/* The illustration is injected via {@html}, so Svelte's scoping classes never land on it —
+	   :global() under the (scoped) parent reaches it without leaking outside the hero.
+	   Every sizing rule below is carried over unchanged from the <img> this replaced, with one
+	   addition: an inline <svg> is NOT a replaced element the way <img> is — `width: auto`
+	   resolves to "fill the container" rather than "follow the intrinsic aspect ratio", which
+	   letterboxed the art inside a too-wide box on desktop (measured 1.093 vs the true 1.171).
+	   An explicit aspect-ratio restores the <img> behaviour the surrounding CSS was tuned for. */
+	.hero__img-wrap {
+		display: block;
+		width: 100%;
+	}
+
+	.hero__image-col :global(.hero__img) {
 		display: block;
 		position: relative;
 		left: 50%;
 		transform: translateX(-50%); /* symmetric bleed — centres the image whatever its width */
+		aspect-ratio: 2015 / 1721; /* the artwork's intrinsic ratio — see note above */
 		width: auto; /* auto width keeps aspect locked — never crops, never stretches */
 		height: auto;
-		max-width: 130%; /* bleed ceiling: up to 130vw → edge-to-edge on normal/tall screens */
+		/* Was 130%. That ceiling was never actually reachable before: <enhanced:img> served a
+		   downscaled raster (intrinsic 389px at this breakpoint), so `width: auto` landed well
+		   under the cap and the art sat inside the column. The SVG's intrinsic width is the
+		   artwork's full 2015px, which WOULD hit 130% and bleed off both edges — a size change
+		   nobody asked for. 100% reproduces the shipped rendering exactly (390x333 at 390px). */
+		max-width: 100%;
 		max-height: max(220px, calc(100vh - 24rem)); /* full-bleed on tall phones; shrinks (never below 220px) on short screens, in step with the heading */
+		color: #211f1d; /* the original artwork's ink colour; strokes are currentColor */
+	}
+
+	/* ─── Draw-on: the strokes paint themselves on load ─────────────────────────────
+	   Each <path> carries pathLength="1", so one dash covers the whole path whatever its
+	   real length, and offsetting 1 → 0 draws it end to end. Per-path --t (delay) and
+	   --d (duration) are baked into the SVG, staggered ridges → tree → river → waterfall.
+	   Composited on the GPU; no JS, no layout, no scroll coupling. */
+	.hero__image-col :global(.hero__draw path) {
+		stroke-dasharray: 1;
+		stroke-dashoffset: 1;
+		animation: hero-draw var(--d, 0.6s) ease-out var(--t, 0s) forwards;
+	}
+
+	@keyframes hero-draw {
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
+
+	/* Reduced motion: show the finished drawing immediately, never animate. */
+	@media (prefers-reduced-motion: reduce) {
+		.hero__image-col :global(.hero__draw path) {
+			stroke-dashoffset: 0;
+			animation: none;
+		}
 	}
 
 	/* Social: desktop only */
@@ -351,7 +402,7 @@
 			overflow: hidden; /* clip only if the art is wider than the track — never a horizontal scrollbar */
 		}
 
-		.hero__img {
+		.hero__image-col :global(.hero__img) {
 			left: auto;
 			transform: none; /* reset the mobile bleed-centring; desktop positions via the grid column */
 			width: auto;
