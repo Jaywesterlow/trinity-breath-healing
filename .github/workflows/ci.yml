@@ -33,6 +33,21 @@ jobs:
       - name: Unit tests
         run: npm run test:unit -- --run
 
+      - name: Install Playwright browsers (Chromium only — dead CSS var guard)
+        run: npx playwright install --with-deps chromium
+
+      # Runs ONLY no-dead-css-vars.spec.ts (not the full integration suite) — that spec is
+      # platform-independent (it resolves var(--x) via getComputedStyle, no screenshots involved).
+      # visual-regression.spec.ts is deliberately NOT run here: its committed baselines are
+      # -win32 suffixed (generated on Windows) and this job runs on ubuntu-latest, so Playwright
+      # would find no matching snapshot, auto-generate one, and fail/pass misleadingly. See
+      # tests/integration/visual-regression.spec.ts and npm run test:visual for that guard,
+      # which stays a local/Windows-run check until Linux baselines are captured deliberately
+      # (`playwright test tests/integration/visual-regression.spec.ts --update-snapshots` on a
+      # Linux runner, committed once) — not done here to avoid silently seeding baselines in CI.
+      - name: Dead CSS variable guard — var(--x) must not resolve to "" on / or /contact (regression: Slice 1 silently-blanked CTAs)
+        run: npx playwright test tests/integration/no-dead-css-vars.spec.ts
+
       - name: Token enforcement — brand/design tokens present in src/app.css @theme (FND-04)
         run: bash scripts/check-tokens.sh
 
