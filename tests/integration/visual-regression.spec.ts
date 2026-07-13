@@ -1,0 +1,160 @@
+/**
+ * visual-regression.spec.ts — committed screenshot baselines guarding against silent
+ * visual regressions.
+ *
+ * Why this exists: Slice 1 shipped a bug where two CSS design tokens
+ * (--color-border / --color-muted) silently resolved to "" via a circular var() chain.
+ * Every unit test, svelte-check, and the build stayed green — four CTA buttons rendered
+ * invisible. It was caught only by screenshot-diffing against the pre-migration app, a
+ * comparison that will not always be available. This spec is this repo's OWN committed
+ * baseline, so future changes self-detect visual drift without needing an external
+ * reference app. (See tests/integration/no-dead-css-vars.spec.ts for the companion
+ * cascade-walking guard against the root cause itself.)
+ *
+ * Routes: / and /contact. Viewports: desktop 1440x900, mobile 390x844.
+ * Full-page screenshots via toHaveScreenshot() — baselines are committed PNG files
+ * under visual-regression.spec.ts-snapshots/; `--update-snapshots` regenerates them
+ * after an intentional visual change (see package.json's test:visual script).
+ *
+ * Determinism — every known nondeterminism source in this app is neutralized below,
+ * not hidden behind a loose diff threshold:
+ *
+ * 1. Hero draw-on animation (src/lib/components/global/Hero.svelte, .hero__draw path):
+ *    a ~2.9s staggered stroke-dashoffset animation. `page.emulateMedia({ reducedMotion:
+ *    'reduce' })` (called in settle() below — see item 5 for why this and not the
+ *    context option) makes the browser match `prefers-reduced-motion: reduce`, which
+ *    triggers Hero.svelte's own media-query rule setting `stroke-dashoffset: 0` and
+ *    `animation: none` — the fully-drawn final state, with no timing dependency.
+ *    Confirmed by reading the component's <style> block, not assumed.
+ *
+ * 2. AboutStat count-up (src/lib/components/ui/AboutStat.svelte): an rAF-driven number
+ *    count-up whose onMount opens with
+ *    `if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;` — reduced
+ *    motion disables it entirely, leaving the SSR-rendered final value ("65+" etc.) at
+ *    rest, never counting from 0.
+ *
+ * 3. Werkwijze mobile scroll-jack (src/lib/components/global/Werkwijze.svelte): its
+ *    scroll lock is gated on `mobileMq.matches && !motionMq.matches` in onMount — reduced
+ *    motion disables it outright (phase stays 'disabled'), so the full-page screenshot
+ *    (which scrolls the real page to stitch a tall capture) can never trip the lock.
+ *
+ * 4. Behandelingen treatments carousel (src/lib/components/global/Behandelingen.svelte):
+ *    Embla + a hand-rolled autoscroll ticker driven by engine.animation's own rAF loop
+ *    and a composed scrollBody — a genuinely JS-driven transform, NOT a CSS animation,
+ *    so Playwright's `animations: 'disabled'` (which only finalizes CSS
+ *    animations/transitions) does not stop it. It also has no
+ *    prefers-reduced-motion gate anywhere in the file (confirmed: no matchMedia call
+ *    exists in Behandelingen.svelte). Stopping it cleanly from outside would mean
+ *    reaching into a component-local, non-exported EmblaCarouselType instance with no
+ *    exposed hook. Per the task brief's own offered alternative, this region is masked
+ *    instead: `.treatments__carousel-wrap` covers both the moving card track AND the
+ *    dots' active-ring animation (whose animation-duration is itself live-measured from
+ *    the ticker's real scroll cadence, so it is equally non-deterministic). This trades
+ *    away pixel coverage for that one region in exchange for a test that can never flake
+ *    on it — the CTA-background bug class this suite exists to catch is fully covered
+ *    everywhere else on both routes (hero CTA, service cards, nav, footer, contact stub).
+ *
+ * 5. IMPORTANT: `test.use({ reducedMotion: 'reduce' })` does NOT reliably apply in this
+ *    repo's Playwright setup — confirmed empirically (a throwaway spec asserting
+ *    `matchMedia('(prefers-reduced-motion: reduce)').matches` via the context option
+ *    came back `false`). `page.emulateMedia({ reducedMotion: 'reduce' })` does work
+ *    (confirmed `true`, and it's the pattern tests/integration/werkwijze-scrolljack.spec.ts
+ *    already relies on) — so it is called explicitly in settle() below, before goto,
+ *    rather than trusted to the context option. Without this fix, items 1-3 above are
+ *    NOT neutralized and AboutStat in particular renders whatever count-up value a
+ *    ~600ms delay + rAF race happens to land on — caught here because the very first
+ *    seeded baseline showed "0+" instead of the real "8+"/"65+" stat values.
+ *
+ * 6. NavLogo (src/lib/components/global/NavLogo.svelte, rendered in Nav + Footer on every
+ *    route): loads Cinzel/Montserrat from Google Fonts at runtime with
+ *    `display=swap` — a live network dependency with no guarantee in a sandboxed/offline
+ *    test run, and even when reachable its swap timing races the screenshot.
+ *    fonts.googleapis.com and fonts.gstatic.com requests are aborted via page.route()
+ *    below, forcing the same fallback-font rendering every run regardless of network.
+ *    (The primary body/heading fonts — DM Sans, Cormorant Garamond — are self-hosted
+ *    woff2 under /fonts/, no network dependency; this spec still awaits
+ *    `document.fonts.ready` before capturing so a slow local decode can't race it either.)
+ *
+ * 7. Lazy-loaded below-fold images: the deterministic scroll pass (bottom, settle, back
+ *    to top) below exercises native lazy-loading before the screenshot, and a
+ *    networkidle wait after it gives any newly-triggered image fetches time to resolve.
+ *
+ * 8. Stale build: Playwright's webServer runs `vite preview` against .svelte-kit/output —
+ *    run `npm run build` immediately before every `npm run test:visual` invocation.
+ *    (Enforced by the operator/CI step, not by this file — documented here so it isn't
+ *    missed.)
+ *
+ * maxDiffPixelRatio: 0.001 (0.1%) — chosen empirically, not guessed. Three consecutive
+ * clean `npm run test:visual` runs against an unmodified build produced a byte-for-byte
+ * pixel match (0 differing pixels at maxDiffPixelRatio: 0) — this repo's true noise floor
+ * is zero, but a small allowance is kept for font-antialiasing drift across machines/GPU
+ * drivers that didn't show up here. The sabotage proof (`--brand-border: transparent` in
+ * src/app.css, reproducing the exact Slice 1 bug class) produced diffs of 0.336%-0.662% of
+ * total image pixels across the four route/viewport combinations (measured directly) — so
+ * 0.1% sits with 3x+ margin above the real noise floor and 3x+ margin below the smallest
+ * real bug signal observed.
+ */
+import { test, expect, type Page } from '@playwright/test';
+
+const ROUTES = [
+	{ path: '/', label: 'home' },
+	{ path: '/contact', label: 'contact' }
+] as const;
+
+const VIEWPORTS = {
+	desktop: { width: 1440, height: 900 },
+	mobile: { width: 390, height: 844 }
+} as const;
+
+/** Aborts Google Fonts requests so NavLogo always renders its fallback font — see file header #5. */
+async function blockGoogleFonts(page: Page): Promise<void> {
+	await page.route(/^https:\/\/fonts\.(googleapis|gstatic)\.com\//, (route) => route.abort());
+}
+
+/**
+ * Deterministic settle sequence, run before every capture: blocks the Google Fonts
+ * network dependency, navigates, waits for the self-hosted webfonts to finish decoding,
+ * then drives a full scroll to the bottom and back to the top so any lazy-loaded image
+ * or scroll-position-dependent state is exercised and rested at a known position (top)
+ * before the screenshot. This app has no IntersectionObserver-triggered fade-ins beyond
+ * the two already neutralized by reducedMotion (Werkwijze, AboutStat) — the scroll pass
+ * is kept anyway as a cheap, generic guard against any future scroll-triggered effect.
+ */
+async function settle(page: Page, route: string): Promise<void> {
+	// Explicit emulateMedia, NOT the `reducedMotion` context option — see file header #5.
+	await page.emulateMedia({ reducedMotion: 'reduce' });
+	await blockGoogleFonts(page);
+	await page.goto(route, { waitUntil: 'load' });
+	await page.waitForLoadState('networkidle');
+	await page.evaluate(() => document.fonts.ready);
+
+	await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+	await page.waitForLoadState('networkidle');
+	await page.waitForTimeout(150);
+	await page.evaluate(() => window.scrollTo(0, 0));
+	await page.waitForTimeout(150);
+}
+
+test.use({ deviceScaleFactor: 1 });
+
+for (const [viewportName, viewport] of Object.entries(VIEWPORTS)) {
+	test.describe(`${viewportName} (${viewport.width}x${viewport.height})`, () => {
+		test.use({ viewport });
+
+		for (const { path, label } of ROUTES) {
+			test(`${label} matches baseline`, async ({ page }) => {
+				await settle(page, path);
+
+				// Only the home route renders the treatments carousel — see file header #4.
+				const mask = label === 'home' ? [page.locator('.treatments__carousel-wrap')] : [];
+
+				await expect(page).toHaveScreenshot(`${label}-${viewportName}.png`, {
+					fullPage: true,
+					animations: 'disabled',
+					mask,
+					maxDiffPixelRatio: 0.001
+				});
+			});
+		}
+	});
+}
