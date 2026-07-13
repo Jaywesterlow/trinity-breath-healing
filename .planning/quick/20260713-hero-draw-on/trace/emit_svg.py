@@ -40,7 +40,7 @@ def fmt(pts):
 
 lines = [
     f'<svg class="hero__img hero__draw" width="{W}" height="{H}" '
-    f'viewBox="0 0 {W} {H}" fill="none" stroke="currentColor" stroke-width="3.4" '
+    f'viewBox="0 0 {W} {H}" fill="none" stroke="currentColor" '
     f'stroke-linecap="round" stroke-linejoin="round" '
     f'xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">'
 ]
@@ -55,8 +55,8 @@ for layer, (start, window, base) in TIMING.items():
         scale = min(max((p['len'] / med) ** 0.5, 0.65), 1.6)
         dur = base * scale
         lines.append(
-            f'\t\t<path pathLength="1" style="--t:{t:.2f}s;--d:{dur:.2f}s" '
-            f'd="{fmt(p["pts"])}"/>'
+            f'\t\t<path pathLength="1" stroke-width="{p["sw"]}" '
+            f'style="--t:{t:.2f}s;--d:{dur:.2f}s" d="{fmt(p["pts"])}"/>'
         )
     lines.append('\t</g>')
 
