@@ -14,6 +14,12 @@
 	// This ensures a single JSON-LD script per page with all required nodes (Pitfall #6).
 	const graph = $derived($page.data.graph ?? data.graph);
 
+	// SEO fix: same pattern as SCH-01 above. data.meta is the LAYOUT's own load data (root
+	// defaults only); $page.data.meta is the merged store where the route's +page.ts meta wins.
+	// Without this, every route rendered the same layout-default title/description regardless
+	// of the per-page meta each +page.ts already computes from stub-meta.ts.
+	const meta = $derived($page.data.meta ?? data.meta);
+
 	onNavigate((navigation) => {
 		if (!document.startViewTransition) return;
 		return new Promise((resolve) => {
@@ -35,7 +41,7 @@
 	/>
 </svelte:head>
 
-<Head meta={data.meta} />
+<Head meta={meta} />
 <JsonLd graph={graph} />
 <Nav />
 <main class="page-content" style="view-transition-name: page-content">
