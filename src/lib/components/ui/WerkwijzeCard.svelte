@@ -1,18 +1,22 @@
 <script lang="ts">
 	import ButtonLink from '$lib/components/ui/interactions/ButtonLink.svelte';
+	import DrawOn from '$lib/components/ui/DrawOn.svelte';
 
 	let {
 		variant,
 		title,
 		body,
 		imgSrc,
+		artSvg,
 		ctaHref,
 		ctaLabel
 	}: {
 		variant: 'filled' | 'outline';
 		title: string;
 		body: string;
-		imgSrc: string;
+		imgSrc?: string;
+		/** Raw inline SVG for the outline variant's backdrop art — draws itself on scroll-in. */
+		artSvg?: string;
 		ctaHref?: string;
 		ctaLabel?: string;
 	} = $props();
@@ -20,7 +24,11 @@
 
 <article class="wcard" class:wcard--filled={variant === 'filled'} class:wcard--outline={variant === 'outline'}>
 	{#if variant === 'outline'}
-		<img src={imgSrc} alt="" aria-hidden="true" class="wcard__art" />
+		{#if artSvg}
+			<DrawOn svg={artSvg} class="wcard__art-draw" />
+		{:else if imgSrc}
+			<img src={imgSrc} alt="" aria-hidden="true" class="wcard__art" />
+		{/if}
 	{/if}
 
 	<h3 class="wcard__title">{title}</h3>
@@ -104,7 +112,12 @@
 		object-fit: cover;
 	}
 
-	.wcard__art {
+	/* Same geometry whether the art is a raster <img> or the inlined, self-drawing <svg>.
+	   object-fit has no effect on an inline SVG — its equivalent, preserveAspectRatio="slice",
+	   is baked into the generated file. :global() because {@html} content gets no scoping
+	   class; the scoped .wcard parent keeps it contained. */
+	.wcard__art,
+	.wcard :global(svg.lt) {
 		position: absolute;
 		top: 1.723rem; /* 27.56px — Figma spec offset, rounded to 3dp */
 		left: -0.125rem; /* -2px — Figma spec */

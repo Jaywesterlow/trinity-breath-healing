@@ -4,14 +4,21 @@
 	import AboutFeature from '$lib/components/ui/AboutFeature.svelte';
 	import TextLink from '$lib/components/ui/interactions/TextLink.svelte';
 	import ButtonLink from '$lib/components/ui/interactions/ButtonLink.svelte';
+	import DrawOn from '$lib/components/ui/DrawOn.svelte';
+
+	// Centerline traces of the portrait line art, inlined so their strokes can draw
+	// themselves when the section scrolls into view. Regenerate with the tracer in
+	// .planning/quick/20260713-hero-draw-on/trace/ if the artwork changes.
+	import portrait1 from '$lib/images/about-portrait-1.svg?raw';
+	import portrait2 from '$lib/images/about-portrait-2.svg?raw';
 
 	const bodyText =
 		'Ik ben 53 jaar en weet uit eigen ervaring hoe het voelt om vast te lopen. Mijn aanpak is geen theorie, het is wat mij zelf heeft geholpen. Ik werk vanuit rust, veiligheid en echte ervaring.';
 </script>
 
-{#snippet portraitCard(src: string, modifier: string)}
+{#snippet portraitCard(svg: string, modifier: string)}
 	<div class="about__card {modifier}">
-		<img {src} alt="" aria-hidden="true" class="about__card-img" />
+		<DrawOn {svg} class="about__card-draw" />
 	</div>
 {/snippet}
 
@@ -24,7 +31,7 @@
 
 		<div class="about__media">
 			<div class="about__card about__card--mobile">
-				<img src="/images/about-portrait-2.png" alt="" aria-hidden="true" class="about__card-img" />
+				<DrawOn svg={portrait2} class="about__card-draw" />
 				<div class="about__gradient-blur" aria-hidden="true">
 					<div></div>
 					<div></div>
@@ -42,8 +49,8 @@
 				</div>
 			</div>
 
-			{@render portraitCard('/images/about-portrait-1.png', 'about__card--desktop-1')}
-			{@render portraitCard('/images/about-portrait-2.png', 'about__card--desktop-2')}
+			{@render portraitCard(portrait1, 'about__card--desktop-1')}
+			{@render portraitCard(portrait2, 'about__card--desktop-2')}
 		</div>
 
 		<div class="about__content">
@@ -51,14 +58,14 @@
 			<ul class="about__features">
 				<li>
 					<AboutFeature
-						iconSrc="/images/heart.png"
+						iconSrc="/images/heart.svg"
 						title="Vanuit eigen ervaring"
 						body="Geen aangeleerde theorie, maar een aanpak die ik zelf heb doorleefd."
 					/>
 				</li>
 				<li>
 					<AboutFeature
-						iconSrc="/images/sprout.png"
+						iconSrc="/images/sprout.svg"
 						iconScale={1.2}
 						title="Vakkundig opgeleid"
 						body="Geen aangeleerde theorie, maar een aanpak die ik zelf heb doorleefd."
@@ -123,10 +130,15 @@
 		overflow: hidden;
 	}
 
-	.about__card-img {
+	/* The portraits are now inlined SVG (so their strokes can draw). DrawOn is display:contents,
+	   so the <svg> lands exactly where the <img> did and inherits its box. object-fit has no
+	   effect on an inline SVG — its equivalent is preserveAspectRatio="xMidYMid slice", which
+	   is baked into the generated file. :global() because {@html} content carries no scoping
+	   class; it stays contained by the scoped .about__card parent. */
+	.about__card :global(svg.lt) {
+		display: block;
 		width: 100%;
 		height: 100%;
-		object-fit: cover;
 	}
 
 	/* Mobile: single full-bleed card with overlay pill + scrim */

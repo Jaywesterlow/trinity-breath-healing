@@ -106,7 +106,7 @@
 					<HeroServiceCard
 						href="/diensten/goldhealing"
 						label="Goldhealing"
-						imgSrc="/images/card-goldhealing.png"
+						imgSrc="/images/card-goldhealing.svg"
 						variant="forest"
 					/>
 				</li>
@@ -114,7 +114,7 @@
 					<HeroServiceCard
 						href="/diensten/spinal-touch"
 						label="Spinal Touch"
-						imgSrc="/images/card-spinal-touch.png"
+						imgSrc="/images/card-spinal-touch.svg"
 						variant="border"
 					/>
 				</li>

@@ -2,6 +2,10 @@
 	import { onMount } from 'svelte';
 	import WerkwijzeCard from '$lib/components/ui/WerkwijzeCard.svelte';
 
+	// Centerline trace of the Verdieping card's backdrop art, inlined so it draws itself when
+	// the card scrolls into view. Regenerate with .planning/quick/20260713-hero-draw-on/trace/.
+	import verdiepingSvg from '$lib/images/card-verdieping-bg.svg?raw';
+
 	let pinEl: HTMLDivElement | null = $state(null);
 	let cardsEl: HTMLUListElement | null = $state(null);
 	let scrolljack = $state(false);
@@ -257,7 +261,7 @@
 						variant="filled"
 						title="Kennismaking"
 						body="Wat loskomt, laten we landen. Stap voor stap groeit er meer rust en ruimte, in je hoofd én je lijf."
-						imgSrc="/images/card-kennismaking.png"
+						imgSrc="/images/card-kennismaking.svg"
 					/>
 				</li>
 				<li>
@@ -265,7 +269,7 @@
 						variant="filled"
 						title="De sessie"
 						body="Met adem en lichaamswerk kom je in contact met wat er onder de oppervlakte leeft."
-						imgSrc="/images/card-sessie.png"
+						imgSrc="/images/card-sessie.svg"
 					/>
 				</li>
 				<li>
@@ -273,7 +277,7 @@
 						variant="outline"
 						title="Verdieping"
 						body="We beginnen rustig. In een eerste gesprek kijken we samen wat er speelt en wat je nodig hebt."
-						imgSrc="/images/card-verdieping-bg.png"
+						artSvg={verdiepingSvg}
 						ctaHref="/contact"
 						ctaLabel="Maak een afspraak"
 					/>

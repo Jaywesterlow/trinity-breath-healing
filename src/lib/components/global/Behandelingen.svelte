@@ -22,10 +22,10 @@
 	}
 
 	const ICONS: Record<string, string> = {
-		'mahatma-healing': '/images/card-mahatma-healing.png',
-		goldhealing: '/images/card-goldhealing.png',
+		'mahatma-healing': '/images/card-mahatma-healing.svg',
+		goldhealing: '/images/card-goldhealing.svg',
 		'raster-energie': '/images/infinity.png',
-		'spinal-touch': '/images/card-spinal-touch.png'
+		'spinal-touch': '/images/card-spinal-touch.svg'
 	};
 
 	const CARD_COUNT = 7;
