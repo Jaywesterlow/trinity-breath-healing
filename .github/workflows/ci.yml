@@ -45,6 +45,19 @@ jobs:
       # which stays a local/Windows-run check until Linux baselines are captured deliberately
       # (`playwright test tests/integration/visual-regression.spec.ts --update-snapshots` on a
       # Linux runner, committed once) — not done here to avoid silently seeding baselines in CI.
+      #
+      # NOTE for the `playwright-integration` job below: unlike this step, that job's
+      # `npm run test:integration` is a bare `playwright test` over the WHOLE
+      # tests/integration/ directory (not a single spec), and it's PR-triggered on
+      # ubuntu-latest same as this job. Without a guard, visual-regression.spec.ts would hit
+      # the exact same missing-linux-baseline problem there — and CI=true makes a missing
+      # snapshot a hard failure, not a silent pass, so every PR would go red. That job is
+      # NOT filtered at the command level (no `-g`/path exclusion) the way this step is;
+      # instead tests/integration/visual-regression.spec.ts carries its own
+      # `test.skip(process.platform !== 'win32', ...)` guard at file scope, so the suite
+      # is skipped (reported, not failed) on ubuntu-latest and still runs in full on
+      # Windows via `npm run test:visual`. See that file's guard comment for how to add
+      # `*-linux.png` baselines and lift the restriction later.
       - name: Dead CSS variable guard — var(--x) must not resolve to "" on / or /contact (regression: Slice 1 silently-blanked CTAs)
         run: npx playwright test tests/integration/no-dead-css-vars.spec.ts
 

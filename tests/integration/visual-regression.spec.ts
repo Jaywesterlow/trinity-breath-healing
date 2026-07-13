@@ -162,6 +162,36 @@ async function settle(page: Page, route: string): Promise<void> {
 
 test.use({ deviceScaleFactor: 1 });
 
+/**
+ * Platform guard — see file header #8 and the note in .github/workflows/ci.yml above
+ * playwright-integration's `npm run test:integration` step.
+ *
+ * The committed baselines under visual-regression.spec.ts-snapshots/ are suffixed
+ * `-win32.png` (generated on Windows; Playwright's toHaveScreenshot() auto-appends the
+ * platform name to the snapshot filename). `npm run test:integration` is a bare
+ * `playwright test` — the WHOLE tests/integration/ directory, including this spec — and
+ * the `playwright-integration` CI job runs it on `ubuntu-latest`. On Linux, Playwright
+ * looks for `*-linux.png` baselines, finds none, and with `CI=true` a missing snapshot
+ * is a hard failure (not an auto-pass) — every PR would go red as soon as win32-only
+ * baselines existed here.
+ *
+ * Skip the whole suite when not on win32, so the guard still runs in full (still
+ * catches the Slice-1 class of silently-blanked-CTA regressions) on the only platform
+ * it has real baselines for, instead of either failing CI everywhere or being deleted
+ * from the PR-triggered run.
+ *
+ * To enable Linux coverage later: generate baselines on a Linux runner —
+ * `npx playwright test tests/integration/visual-regression.spec.ts --update-snapshots`
+ * — commit the resulting `*-linux.png` files alongside the existing `*-win32.png` ones,
+ * then narrow or remove this guard accordingly.
+ */
+test.skip(
+	process.platform !== 'win32',
+	'Visual regression baselines are win32-only (see visual-regression.spec.ts-snapshots/*-win32.png). ' +
+		'Run on Windows via `npm run test:visual`, or generate `*-linux.png` baselines on a Linux ' +
+		'runner with --update-snapshots and commit them to enable this platform.'
+);
+
 for (const [viewportName, viewport] of Object.entries(VIEWPORTS)) {
 	test.describe(`${viewportName} (${viewport.width}x${viewport.height})`, () => {
 		test.use({ viewport });
