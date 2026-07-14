@@ -11,7 +11,7 @@
 
 <a href="/" class="logo" class:logo--inverted={inverted} class:logo--footer={footer} aria-label="TRINITY Breath & Healing — naar home">
 	<div class="logo__icon">
-		<img src="/trinity-logo.png" alt="" aria-hidden="true" />
+		<img src="/trinity-logo.svg" alt="" aria-hidden="true" />
 	</div>
 	<div class="logo__text">
 		<span class="logo__name">TRINITY</span>
