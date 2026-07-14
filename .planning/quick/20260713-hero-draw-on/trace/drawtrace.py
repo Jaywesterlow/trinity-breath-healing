@@ -18,13 +18,23 @@ What this does instead:
 
 Usage:
   python drawtrace.py in.png out.svg --color "#FFFBF5" [--animate] [--order y|len]
+                      [--bands 3] [--faint 0.08]
+
+  --bands N   split ink into N alpha bands (default 3), each its own fill-opacity fill.
+              Faint art (background treelines, steam wisps, ...) stays faint instead of
+              being flattened to the same flat colour as the foreground. All bands share
+              ONE skeleton mask, so with --animate a single pen sweep reveals every band
+              in lockstep -- no separate timeline for faint vs. solid ink. --bands 1
+              reproduces the old single flat-fill behaviour.
+  --faint X   lowest alpha kept as ink at all (default 0.08). Old hard-coded threshold was
+              ~0.4-0.5, which silently deleted anything painted fainter than that.
 """
 import argparse
 import sys
 
 import numpy as np
 from PIL import Image
-from scipy.ndimage import distance_transform_edt
+from scipy.ndimage import distance_transform_edt, binary_dilation
 from skimage import measure
 from skimage.morphology import skeletonize, remove_small_objects
 
@@ -38,18 +48,29 @@ ap.add_argument('--duration', type=float, default=2.2)
 ap.add_argument('--klass', default='')
 ap.add_argument('--slice', action='store_true')
 ap.add_argument('--layers', action='store_true', help='hero-only: ridges/tree/river/waterfall')
+ap.add_argument('--bands', type=int, default=3,
+                 help='opacity bands the ink is split into (faint art keeps its depth '
+                      'instead of being flattened to one colour). 1 = single flat fill.')
+ap.add_argument('--faint', type=float, default=0.08,
+                 help='lowest alpha kept as ink. Old default (0.4) silently deleted anything '
+                      'painted fainter than that; this is the floor, not a per-band edge.')
 a = ap.parse_args()
 sys.setrecursionlimit(50000)
 
 img = Image.open(a.src).convert('RGBA')
+supersample = 1
 if min(img.size) < 700:                       # small sources trace to stair-stepped paths
-    s = int(np.ceil(700 / min(img.size)))
-    img = img.resize((img.width * s, img.height * s), Image.LANCZOS)
-    print(f'  supersampled x{s} -> {img.width}x{img.height}', file=sys.stderr)
+    supersample = int(np.ceil(700 / min(img.size)))
+    img = img.resize((img.width * supersample, img.height * supersample), Image.LANCZOS)
+    print(f'  supersampled x{supersample} -> {img.width}x{img.height}', file=sys.stderr)
 
 W, H = img.size
 alpha = np.array(img)[..., 3].astype(float) / 255.0
-ink = remove_small_objects(alpha > 0.4, min_size=6)
+# Low threshold so faint passages (background treelines, steam wisps, ...) are never
+# discarded. This is the ONE ink mask shared by both the fill bands below and the skeleton
+# mask further down -- one pen sweeps across all opacity bands at once, so faint art is
+# revealed in lockstep with foreground art, with no second timeline to keep in sync.
+ink = remove_small_objects(alpha > a.faint, min_size=6)
 
 
 def rdp(pts, eps):
@@ -86,7 +107,7 @@ def bez(pts, close=False):
     return ''.join(out)
 
 
-# ---------- 1. the exact artwork: outline contours -> one evenodd fill ----------
+# ---------- 1. the exact artwork: outline contours -> N evenodd fills, one per opacity band ----------
 def poly_area(p):
     x = np.array([q[0] for q in p])
     y = np.array([q[1] for q in p])
@@ -99,15 +120,73 @@ def poly_area(p):
 EPS_FILL = min(max(min(W, H) * 0.0025, 0.6), 4.0)
 MIN_AREA = max(8.0, (min(W, H) * 0.004) ** 2)
 
-fill_subpaths = []
-for c in measure.find_contours(alpha, 0.5):
-    pts = [(float(x), float(y)) for y, x in c]
-    if len(pts) < 4 or poly_area(pts) < MIN_AREA:
+
+def contour_subpaths(field, level):
+    """Closed bezier subpaths tracing where `field` crosses `level`."""
+    subs = []
+    for c in measure.find_contours(field, level):
+        pts = [(float(x), float(y)) for y, x in c]
+        if len(pts) < 4 or poly_area(pts) < MIN_AREA:
+            continue
+        simp = rdp(pts, EPS_FILL)
+        if len(simp) < 3:
+            continue
+        subs.append(bez(simp, close=True))
+    return subs
+
+
+# Opaque art (peak alpha ~1.0) is traced at level 0.5 -- exactly what the old single-band
+# code did -- so high-contrast images with no faint passages come out pixel-identical to
+# before. Only the range BELOW that (faint..0.5) gets subdivided, which is where the old
+# code silently deleted anything painted fainter than ~0.4-0.5.
+TOP_LEVEL = 0.5
+n_bands = max(1, a.bands)
+if n_bands == 1:
+    ranges = [(a.faint, None)]
+else:
+    inner = np.linspace(a.faint, TOP_LEVEL, n_bands)  # faint .. TOP_LEVEL, n_bands points
+    ranges = [(float(inner[i]), float(inner[i + 1])) for i in range(n_bands - 1)]
+    ranges.append((TOP_LEVEL, None))
+
+# Every antialiased edge -- even on flat, fully-opaque line art -- has a 1-2px rim where
+# alpha ramps smoothly from 0 to 1. Naively bucketing by alpha value alone means that rim
+# ends up classified as "faint ink" and gets its own duplicate, paler contour: a ghost
+# outline hugging every solid stroke. That's not faint ART, it's a strong stroke's own
+# antialiasing. So bands are built strongest-first, and any pixel within RIM px of a
+# STRONGER band's ink is claimed by that stronger band and excluded from every fainter one.
+# What survives into a fainter band is only ink that's genuinely isolated from anything
+# stronger -- a real background layer, not an edge falloff.
+RIM = max(2, round(supersample * 1.5))
+covered = np.zeros((H, W), dtype=bool)
+bands_rev = []  # built strongest -> faintest; reversed to faintest-first before emission
+for lo, hi in reversed(ranges):
+    raw = (alpha >= lo) & (alpha < hi) if hi is not None else (alpha >= lo)
+    excluded = raw & covered
+    keep = raw & ~covered
+    covered = covered | binary_dilation(raw, iterations=RIM)
+    if not keep.any():
         continue
-    simp = rdp(pts, EPS_FILL)
-    if len(simp) < 3:
+    # No exclusion happened (always true for the topmost/strongest band, since `covered`
+    # starts empty) -> trace the real alpha field, bit-identical to the old single-band
+    # code. Only bands that actually lost pixels to a stronger neighbour need the zeroed
+    # field, which keeps their contour from re-tracing into the excluded halo.
+    field = alpha if not excluded.any() else np.where(keep, alpha, 0.0)
+    subs = contour_subpaths(field, lo)
+    px = alpha[keep]
+    if not subs or px.size == 0:
         continue
-    fill_subpaths.append(bez(simp, close=True))
+    # The old code painted anything past its threshold at full, flat opacity -- it never
+    # rendered ink at its literal pixel alpha, since brush/antialiasing texture pulls that
+    # mean well below 1.0 even for confidently solid strokes. The topmost band is that same
+    # "confidently solid ink" population, so it stays fully opaque for parity with every
+    # high-contrast image that must render unchanged. Only bands below TOP_LEVEL represent
+    # deliberately faint art (a translucent wash, a background layer) and get their true
+    # mean alpha so that faintness actually reads as faint.
+    opacity = 1.0 if hi is None else float(px.mean())
+    bands_rev.append({'subs': subs, 'opacity': opacity})
+
+bands = list(reversed(bands_rev))  # faintest first (painted first = underneath), opaque last
+fill_subpaths = [sp for b in bands for sp in b['subs']]  # kept for the summary line at the end
 
 # ---------- 2. the pen: centerline skeleton, for the reveal mask ----------
 mask_paths = []
@@ -205,10 +284,18 @@ if a.animate and mask_paths:
         out.append(f'\t\t\t<path pathLength="1" stroke-width="{p["w"]}" '
                    f'style="--t:{t:.2f}s;--d:{dur:.2f}s" d="{p["d"]}"/>')
     out.append('\t\t</g>\n\t</defs>')
-    out.append(f'\t<path fill="{a.color}" fill-rule="evenodd" mask="url(#{uid})" '
-               f'd="{"".join(fill_subpaths)}"/>')
+    # One filled path per opacity band, faintest first (drawn first = underneath). Every
+    # band shares the SAME mask id -- one pen, one timeline. A dedicated mask per band would
+    # let faint background art "finish" on its own schedule, decoupled from the foreground
+    # it's supposed to sit behind; sharing the mask is what keeps them in lockstep.
+    for b in bands:
+        fo = '' if b['opacity'] >= 0.999 else f' fill-opacity="{b["opacity"]:.3f}"'
+        out.append(f'\t<path fill="{a.color}" fill-rule="evenodd"{fo} mask="url(#{uid})" '
+                   f'd="{"".join(b["subs"])}"/>')
 else:
-    out.append(f'\t<path fill="{a.color}" fill-rule="evenodd" d="{"".join(fill_subpaths)}"/>')
+    for b in bands:
+        fo = '' if b['opacity'] >= 0.999 else f' fill-opacity="{b["opacity"]:.3f}"'
+        out.append(f'\t<path fill="{a.color}" fill-rule="evenodd"{fo} d="{"".join(b["subs"])}"/>')
 
 out.append('</svg>')
 svg = '\n'.join(out)

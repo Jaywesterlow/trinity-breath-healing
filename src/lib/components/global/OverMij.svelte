@@ -12,6 +12,10 @@
 	import portrait1 from '$lib/images/about-portrait-1.svg?raw';
 	import portrait2 from '$lib/images/about-portrait-2.svg?raw';
 
+	// Heart and sprout feature icons, same treatment. Infinity stays a plain PNG (not traced).
+	import heartSvg from '$lib/images/heart.svg?raw';
+	import sproutSvg from '$lib/images/sprout.svg?raw';
+
 	const bodyText =
 		'Ik ben 53 jaar en weet uit eigen ervaring hoe het voelt om vast te lopen. Mijn aanpak is geen theorie, het is wat mij zelf heeft geholpen. Ik werk vanuit rust, veiligheid en echte ervaring.';
 </script>
@@ -58,14 +62,14 @@
 			<ul class="about__features">
 				<li>
 					<AboutFeature
-						iconSrc="/images/heart.svg"
+						artSvg={heartSvg}
 						title="Vanuit eigen ervaring"
 						body="Geen aangeleerde theorie, maar een aanpak die ik zelf heb doorleefd."
 					/>
 				</li>
 				<li>
 					<AboutFeature
-						iconSrc="/images/sprout.svg"
+						artSvg={sproutSvg}
 						iconScale={1.2}
 						title="Vakkundig opgeleid"
 						body="Geen aangeleerde theorie, maar een aanpak die ik zelf heb doorleefd."

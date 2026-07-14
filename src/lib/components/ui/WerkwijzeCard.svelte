@@ -15,7 +15,9 @@
 		title: string;
 		body: string;
 		imgSrc?: string;
-		/** Raw inline SVG for the outline variant's backdrop art — draws itself on scroll-in. */
+		/** Raw inline SVG for the card art — draws itself on scroll-in. Outline: backdrop art
+		 *  bleeding behind the text. Filled: the `.wcard__img` slot. `imgSrc` stays as a fallback
+		 *  for art that hasn't been traced yet (or never will be, e.g. raster-only assets). */
 		artSvg?: string;
 		ctaHref?: string;
 		ctaLabel?: string;
@@ -35,7 +37,11 @@
 	<p class="wcard__body">{body}</p>
 
 	{#if variant === 'filled'}
-		<img src={imgSrc} alt="" aria-hidden="true" class="wcard__img" />
+		{#if artSvg}
+			<DrawOn svg={artSvg} class="wcard__img-draw" />
+		{:else if imgSrc}
+			<img src={imgSrc} alt="" aria-hidden="true" class="wcard__img" />
+		{/if}
 	{/if}
 
 	{#if ctaHref && ctaLabel}
@@ -105,7 +111,19 @@
 		color: var(--color-text-subtle);
 	}
 
-	.wcard__img {
+	/* Same geometry whether the art is a raster <img> (fallback) or the inlined, self-drawing
+	   <svg> (DrawOn is display:contents, so it takes the <img>'s place in this flex layout).
+	   object-fit has no effect on an inline SVG; its equivalent, preserveAspectRatio="slice", is
+	   expected to be baked into the generated file, same as the outline variant's art. :global()
+	   because {@html} content gets no scoping class. Targeted via .wcard--filled (a real class
+	   binding on <article>, always present in this component's own template), not via the class
+	   prop passed down to <DrawOn> — that prop only becomes a class name inside DrawOn's own
+	   markup, a different component, so selecting on it here would be an always-unused selector
+	   as far as svelte-check's static analysis of this file can tell. Same precedent as the
+	   outline variant's .wcard--outline :global(svg.lt) below. */
+	.wcard__img,
+	.wcard--filled :global(svg.lt) {
+		display: block;
 		width: 100%;
 		flex: 1 1 0%; /* fills whatever vertical space the title+body don't use — never overflows the fixed card height */
 		min-height: 0;
@@ -115,9 +133,11 @@
 	/* Same geometry whether the art is a raster <img> or the inlined, self-drawing <svg>.
 	   object-fit has no effect on an inline SVG — its equivalent, preserveAspectRatio="slice",
 	   is baked into the generated file. :global() because {@html} content gets no scoping
-	   class; the scoped .wcard parent keeps it contained. */
+	   class; the scoped .wcard parent keeps it contained. Scoped to --outline only: the filled
+	   variant's inline svg (.wcard__img-draw above) needs normal flex-flow sizing, not this
+	   absolute-position backdrop treatment. */
 	.wcard__art,
-	.wcard :global(svg.lt) {
+	.wcard--outline :global(svg.lt) {
 		position: absolute;
 		top: 1.723rem; /* 27.56px — Figma spec offset, rounded to 3dp */
 		left: -0.125rem; /* -2px — Figma spec */
