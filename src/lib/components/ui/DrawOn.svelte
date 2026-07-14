@@ -17,6 +17,30 @@
 	 */
 	let { svg, class: klass = '' }: { svg: string; class?: string } = $props();
 
+	// The same traced SVG can be inlined more than once in one document (e.g. the About
+	// portraits render both a mobile and a desktop copy, shown/hidden by CSS media query,
+	// but both exist in the DOM at once). Each copy's <mask id> must be unique, or the
+	// second copy's `url(#id)` resolves to the FIRST copy's mask, cross-wiring the two.
+	// $props.id() gives a per-instance id that's identical between SSR and hydration
+	// (Svelte reads it back off a hydration marker), so this is safe for a prerendered site.
+	const uid = $props.id();
+
+	function uniquifyIds(markup: string, suffix: string): string {
+		const ids = new Set<string>();
+		for (const m of markup.matchAll(/\bid="([^"]+)"/g)) {
+			if (m[1]) ids.add(m[1]);
+		}
+		let out = markup;
+		for (const id of ids) {
+			const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+			const re = new RegExp(`(id="${escaped}"|url\\(#${escaped}\\))`, 'g');
+			out = out.replace(re, (match) => match.replace(id, `${id}-${suffix}`));
+		}
+		return out;
+	}
+
+	let uniqueSvg = $derived(uniquifyIds(svg, uid));
+
 	let el: HTMLElement | null = $state(null);
 	let armed = $state(false);
 	let drawn = $state(false);
@@ -55,7 +79,7 @@
 	class:drawon--drawn={drawn}
 >
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -- build-time asset, not user input -->
-	{@html svg}
+	{@html uniqueSvg}
 </div>
 
 <style>
