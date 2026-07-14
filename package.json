@@ -18,6 +18,7 @@
 		"test": "npm run test:unit -- --run",
 		"test:unit": "vitest",
 		"test:integration": "playwright test",
+		"test:visual": "playwright test tests/integration/visual-regression.spec.ts",
 		"audit:html": "node --import tsx/esm scripts/check-html.ts",
 		"audit:json-ld": "node --import tsx/esm scripts/validate-json-ld.ts",
 		"audit:initial-html-ai": "node --import tsx/esm scripts/check-initial-html-ai.ts",

@@ -22,6 +22,10 @@
   --color-text-subtle: #848981;  /* neutral stone gray — body text on light bg (Figma) */
   --brand-border: #B68A6B;       /* dark cream — dividers, input borders */
   --color-accent-gold-soft: #C7A27A; /* Figma-sourced — Over mij mobile CTA/link accents on dark overlay */
+  --brand-destructive: #B3402C;  /* rust/brick red — NOT in Figma's palette; chosen because Trinity's
+                                    palette has no existing red, and destructive/error states need a
+                                    hue that reads as "stop" while still sitting comfortably in a warm
+                                    earthy palette (leans terracotta rather than a stock alarm red) */
 
   --font-display: 'Cormorant Garamond', Georgia, serif;
   --font-body:    'DM Sans', system-ui, sans-serif;
@@ -40,9 +44,12 @@
    hand, following shadcn-svelte's standard Tailwind v4 pattern (plain semantic vars in :root,
    re-exposed to Tailwind's utility generator via @theme inline) with values substituted
    directly from Trinity's palette instead of shadcn's neutral defaults, per this task's brief.
-   ZERO components added — nothing in the app renders these tokens yet. Only the tokens listed
-   in the Task 3 brief are mapped; --popover/--destructive/--chart/--sidebar etc. are NOT
-   defined and should be added in Slice 2 if/when a component needs them.
+   ZERO components added — nothing in the app renders these tokens yet.
+   Slice 2 readiness: --popover/--popover-foreground, --destructive/--destructive-foreground,
+   --chart-1..5, and --sidebar* were added below to complete the standard shadcn-svelte semantic
+   surface, so a future `shadcn add <component>` referencing any of them does NOT reproduce this
+   project's Slice 1 bug class (a var() silently resolving to "" because the token it names was
+   never defined). Still ZERO components added — nothing renders these new tokens yet either.
    IMPORTANT: --radius-sm/--radius-md/--radius-lg are intentionally NOT redeclared here (shadcn's
    usual scaffold derives them from --radius via calc()) — Trinity's own --radius-* scale above
    is authoritative and must not be overwritten; --radius below just points at it. */
@@ -63,6 +70,29 @@
   --input: var(--brand-border);
   --ring: var(--color-accent-gold);
   --radius: var(--radius-md);
+
+  /* --- Slice 2: remaining standard shadcn-svelte semantic tokens --- */
+  --popover: var(--color-card-warm);              /* popover surface ≈ card surface */
+  --popover-foreground: var(--color-fg-forest);
+  --destructive: var(--brand-destructive);
+  --destructive-foreground: var(--color-bg-sand); /* light text on the dark destructive red */
+
+  /* Chart palette: reuses existing brand hues + the new destructive red as its 5th, distinct hue */
+  --chart-1: var(--color-fg-forest);
+  --chart-2: var(--color-accent-gold);
+  --chart-3: var(--brand-muted);
+  --chart-4: var(--color-accent-gold-soft);
+  --chart-5: var(--brand-destructive);
+
+  /* Sidebar: mirrors the card/primary/accent/border mapping above — no distinct Figma surface exists yet */
+  --sidebar: var(--color-card-warm);
+  --sidebar-foreground: var(--color-fg-forest);
+  --sidebar-primary: var(--color-fg-forest);
+  --sidebar-primary-foreground: var(--color-bg-sand);
+  --sidebar-accent: var(--color-accent-gold);
+  --sidebar-accent-foreground: var(--color-fg-forest);
+  --sidebar-border: var(--brand-border);
+  --sidebar-ring: var(--color-accent-gold);
 }
 
 @theme inline {
@@ -81,6 +111,23 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 :root {
