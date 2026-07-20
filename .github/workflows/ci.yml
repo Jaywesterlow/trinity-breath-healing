@@ -58,7 +58,7 @@ jobs:
       # is skipped (reported, not failed) on ubuntu-latest and still runs in full on
       # Windows via `npm run test:visual`. See that file's guard comment for how to add
       # `*-linux.png` baselines and lift the restriction later.
-      - name: Dead CSS variable guard — var(--x) must not resolve to "" on / or /contact (regression: Slice 1 silently-blanked CTAs)
+      - name: 'Dead CSS variable guard — var(--x) must not resolve to "" on / or /contact (regression: Slice 1 silently-blanked CTAs)'
         run: npx playwright test tests/integration/no-dead-css-vars.spec.ts
 
       - name: Token enforcement — brand/design tokens present in src/app.css @theme (FND-04)
