@@ -12,11 +12,22 @@
 	} = $props();
 </script>
 
-<a {href} class="card" class:card--forest={variant === 'forest'} class:card--border={variant === 'border'}>
+<a
+	{href}
+	class="card"
+	class:card--forest={variant === 'forest'}
+	class:card--border={variant === 'border'}
+>
 	<img src={imgSrc} alt="" aria-hidden="true" class="card__bg" />
 	<span class="card__arrow" aria-hidden="true">
 		<svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-			<path d="M6 18L18 6M18 6H11M18 6V13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+			<path
+				d="M6 18L18 6M18 6H11M18 6V13"
+				stroke="currentColor"
+				stroke-width="1.5"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			/>
 		</svg>
 	</span>
 	<span class="card__label">{label}</span>

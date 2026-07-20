@@ -44,9 +44,7 @@ async function scrollUntilLocked(page: Page): Promise<void> {
 		await page.mouse.wheel(0, 150);
 		await page.waitForTimeout(50);
 	}
-	throw new Error(
-		`Section never reached 'locked' phase after ${MAX_WHEEL_ITERATIONS} wheel ticks`
-	);
+	throw new Error(`Section never reached 'locked' phase after ${MAX_WHEEL_ITERATIONS} wheel ticks`);
 }
 
 test.describe('Werkwijze mobile scroll-jack — 3-state lock machine', () => {
@@ -85,9 +83,10 @@ test.describe('Werkwijze mobile scroll-jack — 3-state lock machine', () => {
 			await page.waitForTimeout(50);
 		}
 
-		expect(crossedMiddle, 'section should reach locked phase once its center crosses viewport center').toBe(
-			true
-		);
+		expect(
+			crossedMiddle,
+			'section should reach locked phase once its center crosses viewport center'
+		).toBe(true);
 	});
 
 	test('window.scrollY frozen while locked; wheel deltas move the card track instead', async ({
@@ -221,10 +220,7 @@ test.describe('Werkwijze mobile scroll-jack — 3-state lock machine', () => {
 				const isInViewport = await card.evaluate((el) => {
 					const rect = el.getBoundingClientRect();
 					return (
-						rect.left >= 0 &&
-						rect.right <= window.innerWidth &&
-						rect.width > 0 &&
-						rect.height > 0
+						rect.left >= 0 && rect.right <= window.innerWidth && rect.width > 0 && rect.height > 0
 					);
 				});
 				if (isInViewport) {
@@ -237,9 +233,7 @@ test.describe('Werkwijze mobile scroll-jack — 3-state lock machine', () => {
 				await page.waitForTimeout(50);
 			}
 
-			expect(visible, `card "${title}" should scroll into full view, not stay cut off`).toBe(
-				true
-			);
+			expect(visible, `card "${title}" should scroll into full view, not stay cut off`).toBe(true);
 		}
 	});
 
@@ -274,9 +268,7 @@ test.describe('Werkwijze mobile scroll-jack — 3-state lock machine', () => {
 		let focused = false;
 		for (let i = 0; i < MAX_TAB_ITERATIONS; i++) {
 			await page.keyboard.press('Tab');
-			const isFocused = await cta.evaluate(
-				(el) => el === document.activeElement
-			);
+			const isFocused = await cta.evaluate((el) => el === document.activeElement);
 			if (isFocused) {
 				focused = true;
 				break;

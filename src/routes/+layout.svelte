@@ -3,9 +3,10 @@
 	import { Nav, Footer, Head, JsonLd } from '$lib/components';
 	import { page } from '$app/stores';
 	import { onNavigate } from '$app/navigation';
+	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 
-	let { children, data }: { children: any; data: LayoutData } = $props();
+	let { children, data }: { children: Snippet; data: LayoutData } = $props();
 
 	// SCH-01: Use $page.data.graph instead of data.graph so that page-specific JSON-LD nodes
 	// (WebPage, FAQPage etc.) returned by individual +page.ts load functions are included.
@@ -41,8 +42,8 @@
 	/>
 </svelte:head>
 
-<Head meta={meta} />
-<JsonLd graph={graph} />
+<Head {meta} />
+<JsonLd {graph} />
 <Nav />
 <main class="page-content" style="view-transition-name: page-content">
 	{@render children()}

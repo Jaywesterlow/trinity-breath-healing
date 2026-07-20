@@ -24,7 +24,11 @@
 	} = $props();
 </script>
 
-<article class="wcard" class:wcard--filled={variant === 'filled'} class:wcard--outline={variant === 'outline'}>
+<article
+	class="wcard"
+	class:wcard--filled={variant === 'filled'}
+	class:wcard--outline={variant === 'outline'}
+>
 	{#if variant === 'outline'}
 		{#if artSvg}
 			<DrawOn svg={artSvg} class="wcard__art-draw" />

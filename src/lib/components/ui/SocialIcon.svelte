@@ -35,6 +35,7 @@
 	style="color: {color}; background: {background};"
 >
 	<svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
+		<!-- eslint-disable-next-line svelte/no-at-html-tags -- ICONS is a hardcoded constant of trusted inline SVG keyed by a typed union; no user input -->
 		{@html ICONS[icon]}
 	</svg>
 </a>

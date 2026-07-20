@@ -49,17 +49,16 @@
 	}
 </script>
 
-<svelte:window bind:scrollY={scrollY} onkeydown={handleKeydown} />
+<svelte:window bind:scrollY onkeydown={handleKeydown} />
 
 <header class="header" class:header--hidden={hidden} class:header--open={menuOpen}>
 	<nav class="nav" class:nav--open={menuOpen} aria-label="Site navigatie">
 		<div class="nav__inner">
-
 			<NavLogo inverted={menuOpen} />
 
 			<!-- Desktop nav links — hidden on mobile -->
 			<div class="nav__links" aria-label="Hoofdnavigatie">
-				{#each NAV_LINKS as link}
+				{#each NAV_LINKS as link (link.path)}
 					<a
 						href={link.path}
 						class="nav__link"
@@ -83,19 +82,25 @@
 				aria-controls="mobile-menu"
 				onclick={toggleMenu}
 			>
-				<svg class="dot-grid" style="transform: rotate({rotation}deg)" width="21" height="21" viewBox="0 0 21 21" aria-hidden="true">
-					<circle cx="1.5"  cy="1.5"  r="1.5" />
-					<circle cx="10.5" cy="1.5"  r="1.5" />
-					<circle cx="19.5" cy="1.5"  r="1.5" />
-					<circle cx="1.5"  cy="10.5" r="1.5" />
+				<svg
+					class="dot-grid"
+					style="transform: rotate({rotation}deg)"
+					width="21"
+					height="21"
+					viewBox="0 0 21 21"
+					aria-hidden="true"
+				>
+					<circle cx="1.5" cy="1.5" r="1.5" />
+					<circle cx="10.5" cy="1.5" r="1.5" />
+					<circle cx="19.5" cy="1.5" r="1.5" />
+					<circle cx="1.5" cy="10.5" r="1.5" />
 					<circle cx="10.5" cy="10.5" r="1.5" />
 					<circle cx="19.5" cy="10.5" r="1.5" />
-					<circle cx="1.5"  cy="19.5" r="1.5" />
+					<circle cx="1.5" cy="19.5" r="1.5" />
 					<circle cx="10.5" cy="19.5" r="1.5" />
 					<circle cx="19.5" cy="19.5" r="1.5" />
 				</svg>
 			</button>
-
 		</div>
 	</nav>
 
@@ -106,7 +111,7 @@
 		class:mobile-menu--open={menuOpen}
 		aria-hidden={!menuOpen}
 	>
-		{#each NAV_LINKS as link}
+		{#each NAV_LINKS as link (link.path)}
 			<a
 				href={link.path}
 				class="mobile-menu__link"
@@ -284,6 +289,5 @@
 			color: var(--color-fg-forest);
 			border-bottom-color: var(--color-fg-forest);
 		}
-
 	}
 </style>

@@ -11,7 +11,7 @@
 <section class="col">
 	<h2 class="col__heading">{heading}</h2>
 	<ul class="col__links">
-		{#each links as link}
+		{#each links as link (link.href)}
 			<li><a href={link.href}>{link.label}</a></li>
 		{/each}
 	</ul>

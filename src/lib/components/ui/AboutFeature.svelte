@@ -46,7 +46,9 @@
 		height: 4.688rem;
 		border-radius: 50%;
 		overflow: hidden;
-		background: var(--color-fg-forest); /* matches the icon art's own baked-in background, so the shrunk-down margin below blends in seamlessly */
+		background: var(
+			--color-fg-forest
+		); /* matches the icon art's own baked-in background, so the shrunk-down margin below blends in seamlessly */
 		display: flex;
 		align-items: center;
 		justify-content: center;

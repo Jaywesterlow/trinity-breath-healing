@@ -14,26 +14,26 @@
    a raw token sharing the name resolves to "" at runtime instead of erroring.
    Guarded by tests/integration/no-dead-css-vars.spec.ts. */
 @theme {
-  --color-bg-sand: #FAF0E6;      /* warm cream/linen — main background */
-  --color-fg-forest: #3D4A35;    /* forest green — primary text + brand dark */
-  --color-accent-gold: #D4A968;  /* gold accent — CTA buttons, focus rings */
-  --color-card-warm: #EDE8D0;    /* pale sage — card backgrounds */
-  --brand-muted: #7A8C6E;        /* mid sage — secondary text, borders */
-  --color-text-subtle: #848981;  /* neutral stone gray — body text on light bg (Figma) */
-  --brand-border: #B68A6B;       /* dark cream — dividers, input borders */
-  --color-accent-gold-soft: #C7A27A; /* Figma-sourced — Over mij mobile CTA/link accents on dark overlay */
-  --brand-destructive: #B3402C;  /* rust/brick red — NOT in Figma's palette; chosen because Trinity's
+	--color-bg-sand: #faf0e6; /* warm cream/linen — main background */
+	--color-fg-forest: #3d4a35; /* forest green — primary text + brand dark */
+	--color-accent-gold: #d4a968; /* gold accent — CTA buttons, focus rings */
+	--color-card-warm: #ede8d0; /* pale sage — card backgrounds */
+	--brand-muted: #7a8c6e; /* mid sage — secondary text, borders */
+	--color-text-subtle: #848981; /* neutral stone gray — body text on light bg (Figma) */
+	--brand-border: #b68a6b; /* dark cream — dividers, input borders */
+	--color-accent-gold-soft: #c7a27a; /* Figma-sourced — Over mij mobile CTA/link accents on dark overlay */
+	--brand-destructive: #b3402c; /* rust/brick red — NOT in Figma's palette; chosen because Trinity's
                                     palette has no existing red, and destructive/error states need a
                                     hue that reads as "stop" while still sitting comfortably in a warm
                                     earthy palette (leans terracotta rather than a stock alarm red) */
 
-  --font-display: 'Cormorant Garamond', Georgia, serif;
-  --font-body:    'DM Sans', system-ui, sans-serif;
+	--font-display: 'Cormorant Garamond', Georgia, serif;
+	--font-body: 'DM Sans', system-ui, sans-serif;
 
-  --radius-sm:   0.25rem;
-  --radius-md:   0.5rem;
-  --radius-lg:   1rem;
-  --radius-full: 9999px;
+	--radius-sm: 0.25rem;
+	--radius-md: 0.5rem;
+	--radius-lg: 1rem;
+	--radius-full: 9999px;
 }
 
 /* --- shadcn-svelte semantic tokens (Slice 1 Task 3) --- */
@@ -54,185 +54,189 @@
    usual scaffold derives them from --radius via calc()) — Trinity's own --radius-* scale above
    is authoritative and must not be overwritten; --radius below just points at it. */
 :root {
-  --background: var(--color-bg-sand);
-  --foreground: var(--color-fg-forest);
-  --card: var(--color-card-warm);
-  --card-foreground: var(--color-fg-forest);
-  --primary: var(--color-fg-forest);
-  --primary-foreground: var(--color-bg-sand);
-  --secondary: var(--color-accent-gold);
-  --secondary-foreground: var(--color-fg-forest);
-  --accent: var(--color-accent-gold);
-  --accent-foreground: var(--color-fg-forest);
-  --muted: var(--brand-muted);
-  --muted-foreground: var(--color-text-subtle);
-  --border: var(--brand-border);
-  --input: var(--brand-border);
-  --ring: var(--color-accent-gold);
-  --radius: var(--radius-md);
+	--background: var(--color-bg-sand);
+	--foreground: var(--color-fg-forest);
+	--card: var(--color-card-warm);
+	--card-foreground: var(--color-fg-forest);
+	--primary: var(--color-fg-forest);
+	--primary-foreground: var(--color-bg-sand);
+	--secondary: var(--color-accent-gold);
+	--secondary-foreground: var(--color-fg-forest);
+	--accent: var(--color-accent-gold);
+	--accent-foreground: var(--color-fg-forest);
+	--muted: var(--brand-muted);
+	--muted-foreground: var(--color-text-subtle);
+	--border: var(--brand-border);
+	--input: var(--brand-border);
+	--ring: var(--color-accent-gold);
+	--radius: var(--radius-md);
 
-  /* --- Slice 2: remaining standard shadcn-svelte semantic tokens --- */
-  --popover: var(--color-card-warm);              /* popover surface ≈ card surface */
-  --popover-foreground: var(--color-fg-forest);
-  --destructive: var(--brand-destructive);
-  --destructive-foreground: var(--color-bg-sand); /* light text on the dark destructive red */
+	/* --- Slice 2: remaining standard shadcn-svelte semantic tokens --- */
+	--popover: var(--color-card-warm); /* popover surface ≈ card surface */
+	--popover-foreground: var(--color-fg-forest);
+	--destructive: var(--brand-destructive);
+	--destructive-foreground: var(--color-bg-sand); /* light text on the dark destructive red */
 
-  /* Chart palette: reuses existing brand hues + the new destructive red as its 5th, distinct hue */
-  --chart-1: var(--color-fg-forest);
-  --chart-2: var(--color-accent-gold);
-  --chart-3: var(--brand-muted);
-  --chart-4: var(--color-accent-gold-soft);
-  --chart-5: var(--brand-destructive);
+	/* Chart palette: reuses existing brand hues + the new destructive red as its 5th, distinct hue */
+	--chart-1: var(--color-fg-forest);
+	--chart-2: var(--color-accent-gold);
+	--chart-3: var(--brand-muted);
+	--chart-4: var(--color-accent-gold-soft);
+	--chart-5: var(--brand-destructive);
 
-  /* Sidebar: mirrors the card/primary/accent/border mapping above — no distinct Figma surface exists yet */
-  --sidebar: var(--color-card-warm);
-  --sidebar-foreground: var(--color-fg-forest);
-  --sidebar-primary: var(--color-fg-forest);
-  --sidebar-primary-foreground: var(--color-bg-sand);
-  --sidebar-accent: var(--color-accent-gold);
-  --sidebar-accent-foreground: var(--color-fg-forest);
-  --sidebar-border: var(--brand-border);
-  --sidebar-ring: var(--color-accent-gold);
+	/* Sidebar: mirrors the card/primary/accent/border mapping above — no distinct Figma surface exists yet */
+	--sidebar: var(--color-card-warm);
+	--sidebar-foreground: var(--color-fg-forest);
+	--sidebar-primary: var(--color-fg-forest);
+	--sidebar-primary-foreground: var(--color-bg-sand);
+	--sidebar-accent: var(--color-accent-gold);
+	--sidebar-accent-foreground: var(--color-fg-forest);
+	--sidebar-border: var(--brand-border);
+	--sidebar-ring: var(--color-accent-gold);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-destructive: var(--destructive);
-  --color-destructive-foreground: var(--destructive-foreground);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-ring: var(--sidebar-ring);
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-card: var(--card);
+	--color-card-foreground: var(--card-foreground);
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-secondary: var(--secondary);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-accent: var(--accent);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-muted: var(--muted);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-border: var(--border);
+	--color-input: var(--input);
+	--color-ring: var(--ring);
+	--color-popover: var(--popover);
+	--color-popover-foreground: var(--popover-foreground);
+	--color-destructive: var(--destructive);
+	--color-destructive-foreground: var(--destructive-foreground);
+	--color-chart-1: var(--chart-1);
+	--color-chart-2: var(--chart-2);
+	--color-chart-3: var(--chart-3);
+	--color-chart-4: var(--chart-4);
+	--color-chart-5: var(--chart-5);
+	--color-sidebar: var(--sidebar);
+	--color-sidebar-foreground: var(--sidebar-foreground);
+	--color-sidebar-primary: var(--sidebar-primary);
+	--color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+	--color-sidebar-accent: var(--sidebar-accent);
+	--color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+	--color-sidebar-border: var(--sidebar-border);
+	--color-sidebar-ring: var(--sidebar-ring);
 }
 
 :root {
-  /* --- color-mix() derived variants (still plain :root vars, reference the @theme tokens above) --- */
-  --color-bg-sand-25: color-mix(in srgb, var(--color-bg-sand) 25%, transparent);
-  --color-fg-forest-92: color-mix(in srgb, var(--color-fg-forest) 92%, transparent);
+	/* --- color-mix() derived variants (still plain :root vars, reference the @theme tokens above) --- */
+	--color-bg-sand-25: color-mix(in srgb, var(--color-bg-sand) 25%, transparent);
+	--color-fg-forest-92: color-mix(in srgb, var(--color-fg-forest) 92%, transparent);
 
-  /* --- Spacing scale (base: 0.25rem / 4px) --- */
-  --space-1:  0.25rem;
-  --space-2:  0.5rem;
-  --space-3:  0.75rem;
-  --space-4:  1rem;
-  --space-5:  1.25rem;
-  --space-6:  1.5rem;
-  --space-8:  2rem;
-  --space-10: 2.5rem;
-  --space-12: 3rem;
-  --space-16: 4rem;
+	/* --- Spacing scale (base: 0.25rem / 4px) --- */
+	--space-1: 0.25rem;
+	--space-2: 0.5rem;
+	--space-3: 0.75rem;
+	--space-4: 1rem;
+	--space-5: 1.25rem;
+	--space-6: 1.5rem;
+	--space-8: 2rem;
+	--space-10: 2.5rem;
+	--space-12: 3rem;
+	--space-16: 4rem;
 
-  /* --- Typography --- */
-  --font-size-xs:   0.75rem;
-  --font-size-sm:   0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg:   1.125rem;
-  --font-size-xl:        1.25rem;
-  --font-size-heading-sm: 1.75rem;
-  --font-size-2xl:       clamp(1.5rem, 4vw, 2rem);
-  --font-size-3xl:  clamp(2rem, 6vw, 3rem);
+	/* --- Typography --- */
+	--font-size-xs: 0.75rem;
+	--font-size-sm: 0.875rem;
+	--font-size-base: 1rem;
+	--font-size-lg: 1.125rem;
+	--font-size-xl: 1.25rem;
+	--font-size-heading-sm: 1.75rem;
+	--font-size-2xl: clamp(1.5rem, 4vw, 2rem);
+	--font-size-3xl: clamp(2rem, 6vw, 3rem);
 
-  /* --- Semantic fluid type scale                                              */
-  /* Each token: 2 sizes (mobile @ 375px, desktop @ 1440px) + one clamp.      */
-  /* Formula: clamp(MIN, calc(intercept + slope·vw), MAX)                      */
-  /* Range: 375px → 1440px (1065px denominator). All values in px.             */
-  --fs-display:  clamp(36px, calc(24.74px + 3.005vw), 68px);  /* hero H1        36→68 */
-  --fs-title:    clamp(36px, calc(31.77px + 1.127vw), 48px);  /* hero H1 (Figma) 36→48 */
-  --fs-title-sm: clamp(30px, 4vw, 36px);                      /* hero H1, tablet 768–1023 (smaller than --fs-title) */
-  --fs-h2:       clamp(28px, calc(23.77px + 1.127vw), 40px);  /* section H2     28→40; was 28→48, colliding with H1's 48px ceiling */
-  --fs-h3:       clamp(22px, calc(18.48px + 0.939vw), 32px);  /* sub-heading H3 22→32 */
-  --fs-body-lg:  clamp(17px, calc(15.94px + 0.282vw), 20px);  /* lead / intro   17→20 */
-  --fs-body:     clamp(15px, calc(14.30px + 0.188vw), 17px);  /* body copy      15→17 */
-  --fs-body-sm:  clamp(13px, calc(12.30px + 0.188vw), 15px);  /* captions       13→15 */
-  --fs-body-xs:  clamp(12px, calc(10.59px + 0.376vw), 16px);  /* hero intro      12→16 */
-  --fs-label:    clamp(13px, calc(12.65px + 0.094vw), 14px);  /* nav / labels   13→14 */
-  --fs-cta:      clamp(14px, calc(13.30px + 0.188vw), 16px);  /* button text    14→16 */
+	/* --- Semantic fluid type scale                                              */
+	/* Each token: 2 sizes (mobile @ 375px, desktop @ 1440px) + one clamp.      */
+	/* Formula: clamp(MIN, calc(intercept + slope·vw), MAX)                      */
+	/* Range: 375px → 1440px (1065px denominator). All values in px.             */
+	--fs-display: clamp(36px, calc(24.74px + 3.005vw), 68px); /* hero H1        36→68 */
+	--fs-title: clamp(36px, calc(31.77px + 1.127vw), 48px); /* hero H1 (Figma) 36→48 */
+	--fs-title-sm: clamp(30px, 4vw, 36px); /* hero H1, tablet 768–1023 (smaller than --fs-title) */
+	--fs-h2: clamp(
+		28px,
+		calc(23.77px + 1.127vw),
+		40px
+	); /* section H2     28→40; was 28→48, colliding with H1's 48px ceiling */
+	--fs-h3: clamp(22px, calc(18.48px + 0.939vw), 32px); /* sub-heading H3 22→32 */
+	--fs-body-lg: clamp(17px, calc(15.94px + 0.282vw), 20px); /* lead / intro   17→20 */
+	--fs-body: clamp(15px, calc(14.3px + 0.188vw), 17px); /* body copy      15→17 */
+	--fs-body-sm: clamp(13px, calc(12.3px + 0.188vw), 15px); /* captions       13→15 */
+	--fs-body-xs: clamp(12px, calc(10.59px + 0.376vw), 16px); /* hero intro      12→16 */
+	--fs-label: clamp(13px, calc(12.65px + 0.094vw), 14px); /* nav / labels   13→14 */
+	--fs-cta: clamp(14px, calc(13.3px + 0.188vw), 16px); /* button text    14→16 */
 
-  --line-height-snug:   1;
-  --line-height-tight:  1.2;
-  --line-height-normal: 1.5;
-  --line-height-loose:  1.75;
+	--line-height-snug: 1;
+	--line-height-tight: 1.2;
+	--line-height-normal: 1.5;
+	--line-height-loose: 1.75;
 
-  --font-weight-light:   300;
-  --font-weight-regular: 400;
-  --font-weight-medium:  500;
-  --font-weight-bold:    700;
+	--font-weight-light: 300;
+	--font-weight-regular: 400;
+	--font-weight-medium: 500;
+	--font-weight-bold: 700;
 
-  /* --- Motion --- */
-  --motion-fast: 150ms;
-  --motion-base: 250ms;
-  --motion-slow: 400ms;
-  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+	/* --- Motion --- */
+	--motion-fast: 150ms;
+	--motion-base: 250ms;
+	--motion-slow: 400ms;
+	--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+	--ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 
-  /* --- Layout --- */
-  --container-max: 1200px;
-  --nav-height: 80px; /* mobile: 20px padding × 2 + 40px logo */
+	/* --- Layout --- */
+	--container-max: 1200px;
+	--nav-height: 80px; /* mobile: 20px padding × 2 + 40px logo */
 }
 
 @media (min-width: 1024px) {
-  :root {
-    --nav-height: 100px; /* desktop: explicit height from Nav.svelte */
-  }
+	:root {
+		--nav-height: 100px; /* desktop: explicit height from Nav.svelte */
+	}
 }
 
 /* --- @font-face declarations (FND-06 — self-hosted woff2 + font-display: swap) --- */
 /* TODO: add size-adjust, ascent-override, descent-override from Fontaine for CLS=0 metric match */
 @font-face {
-  font-family: 'DM Sans';
-  src: url('/fonts/dm-sans/dm-sans-regular.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
+	font-family: 'DM Sans';
+	src: url('/fonts/dm-sans/dm-sans-regular.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
 }
 
 @font-face {
-  font-family: 'DM Sans';
-  src: url('/fonts/dm-sans/dm-sans-bold.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
+	font-family: 'DM Sans';
+	src: url('/fonts/dm-sans/dm-sans-bold.woff2') format('woff2');
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
 }
 
 @font-face {
-  font-family: 'Cormorant Garamond';
-  src: url('/fonts/cormorant-garamond/cormorant-garamond-regular.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
+	font-family: 'Cormorant Garamond';
+	src: url('/fonts/cormorant-garamond/cormorant-garamond-regular.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
 }
 
 @font-face {
-  font-family: 'Cormorant Garamond';
-  src: url('/fonts/cormorant-garamond/cormorant-garamond-bold.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
+	font-family: 'Cormorant Garamond';
+	src: url('/fonts/cormorant-garamond/cormorant-garamond-bold.woff2') format('woff2');
+	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
 }
 
 /* --- Reset (reconciled with Tailwind Preflight, Slice 1 Task 1) --- */
@@ -247,18 +251,18 @@
    - headings are unstyled (no bold/serif) — Trinity's h1-h6 rule below is still needed.
    Trinity-specific rules NOT covered by Preflight are kept below. */
 html {
-  -webkit-text-size-adjust: 100%; /* Preflight sets only this prefixed form */
-  text-size-adjust: 100%; /* unprefixed form dropped in Task 1 — restored here (Task 2 review fix) */
+	-webkit-text-size-adjust: 100%; /* Preflight sets only this prefixed form */
+	text-size-adjust: 100%; /* unprefixed form dropped in Task 1 — restored here (Task 2 review fix) */
 }
 body {
-  background: var(--color-bg-sand);
-  color: var(--color-fg-forest);
-  font-family: var(--font-body);
-  font-size: var(--font-size-base);
-  line-height: var(--line-height-normal);
-  -webkit-font-smoothing: antialiased;
-  text-rendering: optimizeLegibility;
-  overflow-x: hidden; /* guards intentional hero image bleed from causing horizontal scroll */
+	background: var(--color-bg-sand);
+	color: var(--color-fg-forest);
+	font-family: var(--font-body);
+	font-size: var(--font-size-base);
+	line-height: var(--line-height-normal);
+	-webkit-font-smoothing: antialiased;
+	text-rendering: optimizeLegibility;
+	overflow-x: hidden; /* guards intentional hero image bleed from causing horizontal scroll */
 }
 /* Preflight covers img/video max-width+height and display:block+vertical-align:middle for
    img/svg/video/canvas/audio/iframe/embed/object, but NOT picture at all, and NOT
@@ -266,62 +270,78 @@ body {
    (Behandelingen.svelte's .treatments__dot-ring depends on svg's max-width:100% reset
    being present so it can explicitly neutralize it with max-width: none). */
 picture {
-  display: block;
-  max-width: 100%;
-  height: auto;
+	display: block;
+	max-width: 100%;
+	height: auto;
 }
 svg {
-  max-width: 100%;
-  height: auto;
+	max-width: 100%;
+	height: auto;
 }
-a:focus-visible, button:focus-visible {
-  outline: 2px solid var(--color-accent-gold);
-  outline-offset: 2px;
+a:focus-visible,
+button:focus-visible {
+	outline: 2px solid var(--color-accent-gold);
+	outline-offset: 2px;
 }
 
 /* --- Typography baseline --- */
-h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-display);
-  line-height: var(--line-height-tight);
-  font-weight: var(--font-weight-bold);
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+	font-family: var(--font-display);
+	line-height: var(--line-height-tight);
+	font-weight: var(--font-weight-bold);
 }
 
 /* --- Global utilities (the only "components" allowed in global.css) --- */
 .visually-hidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
 }
 
 /* --- Page transitions (View Transitions API — degrades gracefully) --- */
-@keyframes fade-in  { from { opacity: 0; } }
-@keyframes fade-out { to   { opacity: 0; } }
+@keyframes fade-in {
+	from {
+		opacity: 0;
+	}
+}
+@keyframes fade-out {
+	to {
+		opacity: 0;
+	}
+}
 
 /* Root covers persistent layout (nav, footer) — no animation, stays static */
 ::view-transition-old(root),
 ::view-transition-new(root) {
-  animation: none;
+	animation: none;
 }
 
 /* Only page content fades between navigations — sequential: old fades out, then new fades in */
 ::view-transition-old(page-content) {
-  animation: 180ms ease-in both fade-out;
+	animation: 180ms ease-in both fade-out;
 }
 ::view-transition-new(page-content) {
-  animation: 280ms 180ms ease-out both fade-in; /* 180ms delay = wait for old to finish */
+	animation: 280ms 180ms ease-out both fade-in; /* 180ms delay = wait for old to finish */
 }
 
 /* --- Reduced motion --- */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
 }

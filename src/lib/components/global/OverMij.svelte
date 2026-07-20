@@ -129,7 +129,9 @@
 
 	.about__card {
 		position: relative;
-		background: var(--color-fg-forest); /* portrait art is transparent-bg line work; needs this behind it */
+		background: var(
+			--color-fg-forest
+		); /* portrait art is transparent-bg line work; needs this behind it */
 		border-radius: 1.563rem; /* 25px — Figma spec, matches WerkwijzeCard convention */
 		overflow: hidden;
 	}
@@ -194,48 +196,120 @@
 		z-index: 1;
 		backdrop-filter: blur(0.5px);
 		-webkit-backdrop-filter: blur(0.5px);
-		mask-image: linear-gradient(to bottom, transparent 0%, black 12.5%, black 25%, transparent 37.5%);
-		-webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 12.5%, black 25%, transparent 37.5%);
+		mask-image: linear-gradient(
+			to bottom,
+			transparent 0%,
+			black 12.5%,
+			black 25%,
+			transparent 37.5%
+		);
+		-webkit-mask-image: linear-gradient(
+			to bottom,
+			transparent 0%,
+			black 12.5%,
+			black 25%,
+			transparent 37.5%
+		);
 	}
 
 	.about__gradient-blur > div:nth-of-type(1) {
 		z-index: 2;
 		backdrop-filter: blur(1px);
 		-webkit-backdrop-filter: blur(1px);
-		mask-image: linear-gradient(to bottom, transparent 12.5%, black 25%, black 37.5%, transparent 50%);
-		-webkit-mask-image: linear-gradient(to bottom, transparent 12.5%, black 25%, black 37.5%, transparent 50%);
+		mask-image: linear-gradient(
+			to bottom,
+			transparent 12.5%,
+			black 25%,
+			black 37.5%,
+			transparent 50%
+		);
+		-webkit-mask-image: linear-gradient(
+			to bottom,
+			transparent 12.5%,
+			black 25%,
+			black 37.5%,
+			transparent 50%
+		);
 	}
 
 	.about__gradient-blur > div:nth-of-type(2) {
 		z-index: 3;
 		backdrop-filter: blur(2px);
 		-webkit-backdrop-filter: blur(2px);
-		mask-image: linear-gradient(to bottom, transparent 25%, black 37.5%, black 50%, transparent 62.5%);
-		-webkit-mask-image: linear-gradient(to bottom, transparent 25%, black 37.5%, black 50%, transparent 62.5%);
+		mask-image: linear-gradient(
+			to bottom,
+			transparent 25%,
+			black 37.5%,
+			black 50%,
+			transparent 62.5%
+		);
+		-webkit-mask-image: linear-gradient(
+			to bottom,
+			transparent 25%,
+			black 37.5%,
+			black 50%,
+			transparent 62.5%
+		);
 	}
 
 	.about__gradient-blur > div:nth-of-type(3) {
 		z-index: 4;
 		backdrop-filter: blur(4px);
 		-webkit-backdrop-filter: blur(4px);
-		mask-image: linear-gradient(to bottom, transparent 37.5%, black 50%, black 62.5%, transparent 75%);
-		-webkit-mask-image: linear-gradient(to bottom, transparent 37.5%, black 50%, black 62.5%, transparent 75%);
+		mask-image: linear-gradient(
+			to bottom,
+			transparent 37.5%,
+			black 50%,
+			black 62.5%,
+			transparent 75%
+		);
+		-webkit-mask-image: linear-gradient(
+			to bottom,
+			transparent 37.5%,
+			black 50%,
+			black 62.5%,
+			transparent 75%
+		);
 	}
 
 	.about__gradient-blur > div:nth-of-type(4) {
 		z-index: 5;
 		backdrop-filter: blur(8px);
 		-webkit-backdrop-filter: blur(8px);
-		mask-image: linear-gradient(to bottom, transparent 50%, black 62.5%, black 75%, transparent 87.5%);
-		-webkit-mask-image: linear-gradient(to bottom, transparent 50%, black 62.5%, black 75%, transparent 87.5%);
+		mask-image: linear-gradient(
+			to bottom,
+			transparent 50%,
+			black 62.5%,
+			black 75%,
+			transparent 87.5%
+		);
+		-webkit-mask-image: linear-gradient(
+			to bottom,
+			transparent 50%,
+			black 62.5%,
+			black 75%,
+			transparent 87.5%
+		);
 	}
 
 	.about__gradient-blur > div:nth-of-type(5) {
 		z-index: 6;
 		backdrop-filter: blur(var(--space-4)); /* 16px */
 		-webkit-backdrop-filter: blur(var(--space-4));
-		mask-image: linear-gradient(to bottom, transparent 62.5%, black 75%, black 87.5%, transparent 100%);
-		-webkit-mask-image: linear-gradient(to bottom, transparent 62.5%, black 75%, black 87.5%, transparent 100%);
+		mask-image: linear-gradient(
+			to bottom,
+			transparent 62.5%,
+			black 75%,
+			black 87.5%,
+			transparent 100%
+		);
+		-webkit-mask-image: linear-gradient(
+			to bottom,
+			transparent 62.5%,
+			black 75%,
+			black 87.5%,
+			transparent 100%
+		);
 	}
 
 	.about__gradient-blur > div:nth-of-type(6) {
@@ -265,7 +339,11 @@
 		flex-direction: column;
 		align-items: flex-start; /* flex default (stretch) was stretching the link's own box — and its border-bottom underline with it — to the scrim's full width */
 		gap: var(--space-4);
-		background: linear-gradient(to top, var(--color-fg-forest-92) 0%, transparent 55%); /* tint — plain background gradient, no mask needed, fades on its own */
+		background: linear-gradient(
+			to top,
+			var(--color-fg-forest-92) 0%,
+			transparent 55%
+		); /* tint — plain background gradient, no mask needed, fades on its own */
 		z-index: 1; /* above .about__gradient-blur (that wrapper is its own stacking context at z-index: 0, so its internal 1–8 layers don't leak out and collide with this) */
 	}
 
@@ -422,7 +500,9 @@
 		}
 
 		.about__content :global(.text-link) {
-			--text-link-size: var(--font-size-xl); /* 1.25rem — a little smaller than TextLink's 1.5rem default, desktop only */
+			--text-link-size: var(
+				--font-size-xl
+			); /* 1.25rem — a little smaller than TextLink's 1.5rem default, desktop only */
 		}
 
 		.about__stats {

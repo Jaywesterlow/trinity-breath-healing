@@ -39,7 +39,6 @@
 
 <section class="hero" bind:this={sectionEl}>
 	<div class="hero__inner">
-
 		<!-- Image column: top on mobile (DOM order), right on desktop (order:2) -->
 		<div class="hero__image-col">
 			<!-- Wrapper stands in for the <picture> that <enhanced:img> used to emit: a
@@ -94,9 +93,9 @@
 					Ontspanning in je lichaam.
 				</h1>
 				<p class="hero__body">
-					Ik weet hoe het voelt om vast te lopen, fysiek, mentaal en emotioneel.
-					Via lichaamsgerichte therapie, ademwerk en energetische behandelingen
-					help ik jou terug naar rust, herstel en jezelf.
+					Ik weet hoe het voelt om vast te lopen, fysiek, mentaal en emotioneel. Via
+					lichaamsgerichte therapie, ademwerk en energetische behandelingen help ik jou terug naar
+					rust, herstel en jezelf.
 				</p>
 				<ButtonLink href="/contact" label="Maak een afspraak" />
 			</div>
@@ -124,19 +123,24 @@
 							<span class="card__title">Meer klachten</span>
 							<span class="card__arrow" aria-hidden="true">
 								<svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-									<path d="M6 18L18 6M18 6H11M18 6V13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+									<path
+										d="M6 18L18 6M18 6H11M18 6V13"
+										stroke="currentColor"
+										stroke-width="1.5"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									/>
 								</svg>
 							</span>
 						</div>
 						<p class="card__desc">
-							Er altijd is een aanpak die bij jou past.
-							Ik leg per therapie uit wat je kunt verwachten.
+							Er altijd is een aanpak die bij jou past. Ik leg per therapie uit wat je kunt
+							verwachten.
 						</p>
 					</a>
 				</li>
 			</ul>
 		</div>
-
 	</div>
 </section>
 
@@ -204,7 +208,10 @@
 		   artwork's full 2015px, which WOULD hit 130% and bleed off both edges — a size change
 		   nobody asked for. 100% reproduces the shipped rendering exactly (390x333 at 390px). */
 		max-width: 100%;
-		max-height: max(220px, calc(100vh - 24rem)); /* full-bleed on tall phones; shrinks (never below 220px) on short screens, in step with the heading */
+		max-height: max(
+			220px,
+			calc(100vh - 24rem)
+		); /* full-bleed on tall phones; shrinks (never below 220px) on short screens, in step with the heading */
 		color: #211f1d; /* the original artwork's ink colour; strokes are currentColor */
 	}
 
@@ -252,7 +259,10 @@
 
 	.hero__heading {
 		font-family: var(--font-display);
-		font-size: min(var(--fs-title), 4.8vh); /* mobile: token size, but shrinks with the image on short screens */
+		font-size: min(
+			var(--fs-title),
+			4.8vh
+		); /* mobile: token size, but shrinks with the image on short screens */
 		font-weight: var(--font-weight-medium);
 		color: var(--color-fg-forest);
 		line-height: var(--line-height-tight);
@@ -366,12 +376,16 @@
 
 		.hero__content {
 			padding: var(--space-12) var(--space-10) 0 0; /* left is 0 — max-width + centering sets the edge */
-			margin-bottom: var(--space-8); /* desktop-only floor gap so content never butts the service cards */
+			margin-bottom: var(
+				--space-8
+			); /* desktop-only floor gap so content never butts the service cards */
 			--btn-label-size: var(--font-size-xl); /* 20px on desktop */
 		}
 
 		.hero__heading {
-			font-size: var(--fs-title-sm); /* tablet 768–1023: smaller token; ≥1024 restores full --fs-title */
+			font-size: var(
+				--fs-title-sm
+			); /* tablet 768–1023: smaller token; ≥1024 restores full --fs-title */
 			max-width: 25rem;
 			margin-bottom: var(--space-4);
 		}

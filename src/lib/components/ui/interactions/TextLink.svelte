@@ -54,7 +54,10 @@
 
 	.text-link__label {
 		font-family: var(--font-display);
-		font-size: var(--text-link-size, 1.5rem); /* overridable per context, same pattern as ButtonLink's --btn-label-size */
+		font-size: var(
+			--text-link-size,
+			1.5rem
+		); /* overridable per context, same pattern as ButtonLink's --btn-label-size */
 		font-weight: 600;
 		white-space: nowrap;
 		line-height: 1;

@@ -26,6 +26,7 @@
 	const uid = $props.id();
 
 	function uniquifyIds(markup: string, suffix: string): string {
+		// eslint-disable-next-line svelte/prefer-svelte-reactivity -- non-reactive local, built and consumed inside this pure function; SvelteSet would be wrong here
 		const ids = new Set<string>();
 		for (const m of markup.matchAll(/\bid="([^"]+)"/g)) {
 			if (m[1]) ids.add(m[1]);
@@ -72,12 +73,7 @@
 	});
 </script>
 
-<div
-	bind:this={el}
-	class="drawon {klass}"
-	class:drawon--armed={armed}
-	class:drawon--drawn={drawn}
->
+<div bind:this={el} class="drawon {klass}" class:drawon--armed={armed} class:drawon--drawn={drawn}>
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -- build-time asset, not user input -->
 	{@html uniqueSvg}
 </div>

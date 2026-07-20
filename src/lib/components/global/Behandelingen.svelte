@@ -131,7 +131,9 @@
 				engine.animation.start();
 				setTargetFactor(isHovering ? HOVER_FACTOR : 1);
 				// TEMP DEBUG — remove once fresh-load freeze is confirmed/fixed.
-				console.log(`[carousel-debug] resume timer FIRED t=${performance.now().toFixed(0)} rampTo=${rampTo}`);
+				console.log(
+					`[carousel-debug] resume timer FIRED t=${performance.now().toFixed(0)} rampTo=${rampTo}`
+				);
 			}, RESUME_DELAY_MS);
 		}
 
@@ -261,7 +263,9 @@
 <section class="treatments" aria-label="Behandelingen">
 	<header class="treatments__header">
 		<p class="treatments__eyebrow">Diensten</p>
-		<h2 class="treatments__heading">Elke behandeling is uniek, met een centraal doel: jouw herstel.</h2>
+		<h2 class="treatments__heading">
+			Elke behandeling is uniek, met een centraal doel: jouw herstel.
+		</h2>
 	</header>
 
 	<div class="treatments__carousel-wrap">
@@ -270,7 +274,10 @@
 				<ul class="embla__container">
 					{#each items as item, i (item.key)}
 						<li class="embla__slide">
-							<div class="embla__slide__card" class:embla__slide__card--active={i === selectedIndex}>
+							<div
+								class="embla__slide__card"
+								class:embla__slide__card--active={i === selectedIndex}
+							>
 								{#if item.icon}
 									<img src={item.icon} alt="" aria-hidden="true" class="embla__slide__icon" />
 								{/if}
@@ -293,11 +300,7 @@
 					></button>
 					{#if i === selectedIndex}
 						<svg class="treatments__dot-ring" viewBox="0 0 20 20">
-							<circle
-								cx="10"
-								cy="10"
-								r="8.5"
-								style="animation-duration: {cycleDurationMs}ms"
+							<circle cx="10" cy="10" r="8.5" style="animation-duration: {cycleDurationMs}ms"
 							></circle>
 						</svg>
 					{/if}

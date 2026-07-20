@@ -63,20 +63,9 @@
 -->
 <span style="display: contents" {...dimensionAttrs}>
 	{#if fetchpriority !== undefined}
-		<enhanced:img
-			{src}
-			{alt}
-			{loading}
-			fetchpriority={fetchpriority}
-			class={className}
-		/>
+		<enhanced:img {src} {alt} {loading} {fetchpriority} class={className} />
 	{:else}
-		<enhanced:img
-			{src}
-			{alt}
-			{loading}
-			class={className}
-		/>
+		<enhanced:img {src} {alt} {loading} class={className} />
 	{/if}
 </span>
 

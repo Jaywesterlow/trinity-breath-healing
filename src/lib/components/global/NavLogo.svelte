@@ -6,10 +6,19 @@
 <svelte:head>
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
-	<link href="https://fonts.googleapis.com/css2?family=Cinzel&family=Montserrat:wght@300&display=swap" rel="stylesheet" />
+	<link
+		href="https://fonts.googleapis.com/css2?family=Cinzel&family=Montserrat:wght@300&display=swap"
+		rel="stylesheet"
+	/>
 </svelte:head>
 
-<a href="/" class="logo" class:logo--inverted={inverted} class:logo--footer={footer} aria-label="TRINITY Breath & Healing — naar home">
+<a
+	href="/"
+	class="logo"
+	class:logo--inverted={inverted}
+	class:logo--footer={footer}
+	aria-label="TRINITY Breath & Healing — naar home"
+>
 	<div class="logo__icon">
 		<img src="/trinity-logo.svg" alt="" aria-hidden="true" />
 	</div>

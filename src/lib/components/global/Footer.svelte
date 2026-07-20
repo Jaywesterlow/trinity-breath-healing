@@ -41,7 +41,6 @@
 <footer class="footer">
 	<div class="footer__inner">
 		<div class="footer__main">
-
 			<!-- Brand: logo + contact -->
 			<ul class="footer__brand">
 				<li><NavLogo inverted={true} footer={true} /></li>
@@ -75,19 +74,39 @@
 			<!-- Social icons — row on mobile, vertical column on desktop (order: 3) -->
 			<nav class="footer__social" aria-label="Sociale media links">
 				<ul class="footer__social-list">
-					<li><SocialIcon icon="x" href="https://x.com/trinitybnh" label="Volg ons op X (Twitter)" color={SOCIAL_COLOR} /></li>
-					<li><SocialIcon icon="facebook" href="https://facebook.com/trinitybnh" label="Volg ons op Facebook" color={SOCIAL_COLOR} /></li>
-					<li><SocialIcon icon="instagram" href="https://instagram.com/trinitybnh" label="Volg ons op Instagram" color={SOCIAL_COLOR} /></li>
+					<li>
+						<SocialIcon
+							icon="x"
+							href="https://x.com/trinitybnh"
+							label="Volg ons op X (Twitter)"
+							color={SOCIAL_COLOR}
+						/>
+					</li>
+					<li>
+						<SocialIcon
+							icon="facebook"
+							href="https://facebook.com/trinitybnh"
+							label="Volg ons op Facebook"
+							color={SOCIAL_COLOR}
+						/>
+					</li>
+					<li>
+						<SocialIcon
+							icon="instagram"
+							href="https://instagram.com/trinitybnh"
+							label="Volg ons op Instagram"
+							color={SOCIAL_COLOR}
+						/>
+					</li>
 				</ul>
 			</nav>
 
 			<!-- Nav columns — order: 2 on desktop, after social on mobile -->
 			<nav class="footer__nav" aria-label="Footer navigatie">
-				{#each NAV_COLUMNS as col}
+				{#each NAV_COLUMNS as col (col.heading)}
 					<FooterNavColumn heading={col.heading} links={[...col.links]} />
 				{/each}
 			</nav>
-
 		</div>
 
 		<hr class="footer__divider" />
@@ -226,7 +245,11 @@
 
 		.footer__brand {
 			flex: 0 0 auto;
-			width: clamp(16.25rem, 24%, 21.5rem); /* Figma spec 260px–344px; no spacing token applies to layout widths */
+			width: clamp(
+				16.25rem,
+				24%,
+				21.5rem
+			); /* Figma spec 260px–344px; no spacing token applies to layout widths */
 		}
 
 		.footer__contact {

@@ -140,7 +140,9 @@
 		   synthetically emboldens beyond the actual 700 file. No heavier weight token
 		   exists to reach for instead. */
 		font-weight: 900;
-		font-size: var(--fs-h2); /* bumped up from --fs-h3 (22→32) to 28→40 — was too small for the circle */
+		font-size: var(
+			--fs-h2
+		); /* bumped up from --fs-h3 (22→32) to 28→40 — was too small for the circle */
 		color: var(--color-fg-forest);
 	}
 
