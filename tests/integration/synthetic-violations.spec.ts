@@ -380,7 +380,7 @@ test('non-ISO WebPage.dateModified causes validate-json-ld.ts to exit 1 (SEO-09)
 });
 
 // WARNING-2 positive control: FAQPage with mainEntity=[] must be VALID in Phase 0
-test('FAQPage with mainEntity=[] passes validate-json-ld.ts (WARNING-2 Phase 0 contract)', () => {
+test('FAQPage with mainEntity=[] is rejected by validate-json-ld.ts (WARNING-2 Phase 1 contract)', () => {
 	const tmp = makeTmpDir();
 	try {
 		const graphWithFaq = [
@@ -388,8 +388,8 @@ test('FAQPage with mainEntity=[] passes validate-json-ld.ts (WARNING-2 Phase 0 c
 			{
 				'@type': 'FAQPage',
 				'@id': `${SITE_URL}/#faq`,
-				// WARNING-2 / Phase 0 contract: FAQPage with mainEntity=[] is valid.
-				// Phase 1 LND-07 raises the threshold; flip the gate there.
+				// WARNING-2 / Phase 1 contract: an empty FAQPage (mainEntity: []) is INVALID —
+				// Phase 1 (LND-07) raised the threshold to require mainEntity.length > 0.
 				mainEntity: []
 			}
 		];
@@ -400,8 +400,9 @@ test('FAQPage with mainEntity=[] passes validate-json-ld.ts (WARNING-2 Phase 0 c
 		);
 		writeIndex(tmp, mutated);
 		const { exitCode } = runValidateJsonLd(tmp);
-		// Must exit 0 — empty FAQPage is VALID in Phase 0
-		expect(exitCode).toBe(0);
+		// Must exit 1 — Phase 1 (LND-07) flipped WARNING-2: an empty FAQPage (mainEntity: []) is
+		// now INVALID. See scripts/validate-json-ld.ts.
+		expect(exitCode).toBe(1);
 	} finally {
 		cleanup(tmp);
 	}
