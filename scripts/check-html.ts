@@ -121,7 +121,10 @@ function auditFile(file: string): void {
 
 	// Landmarks (BLOCKER-5 / SEO-03)
 	const navCount = root.querySelectorAll('nav').length;
-	const mainCount = root.querySelectorAll('main').length;
+	// node-html-parser does not register <main> as a queryable element (querySelectorAll('main')
+	// returns 0 even when the landmark is present), so count it from the raw HTML instead.
+	// nav/footer are recognized by the parser and stay on the DOM API.
+	const mainCount = (html.match(/<main[\s/>]/gi) ?? []).length;
 	const footerCount = root.querySelectorAll('footer').length;
 	if (navCount < 1) fail(rel, 'missing <nav> landmark (BLOCKER-5)');
 	if (mainCount !== 1) fail(rel, `expected 1 <main>, found ${mainCount} (BLOCKER-5)`);

@@ -33,6 +33,21 @@
 </script>
 
 <svelte:head>
+	<!-- Preload self-hosted primary fonts (FND-06) — body (DM Sans) + display (Cormorant Garamond) -->
+	<link
+		rel="preload"
+		href="/fonts/dm-sans/dm-sans-regular.woff2"
+		as="font"
+		type="font/woff2"
+		crossorigin="anonymous"
+	/>
+	<link
+		rel="preload"
+		href="/fonts/cormorant-garamond/cormorant-garamond-regular.woff2"
+		as="font"
+		type="font/woff2"
+		crossorigin="anonymous"
+	/>
 	<!-- Cinzel + Montserrat via Google Fonts — TODO: self-host woff2 (FND-06) -->
 	<link rel="preconnect" href="https://fonts.googleapis.com" />
 	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
