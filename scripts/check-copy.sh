@@ -45,13 +45,15 @@ check_string "De sessie"
 check_string "Verdieping"
 # About (Plan 01-04)
 check_string "Vanuit eigen ervaring weet ik wat jij doormaakt."
-# Contact (Plan 01-06) + FAQ (Plan 01-07) — DEFERRED.
-# These sections are not built yet (next on the roadmap). Re-enable these assertions when the
-# Contact + FAQ sections ship so LND-09 covers their locked copy again. See also the FAQPage
-# JSON-LD in src/routes/+page.ts, which is emitted before the visible FAQ section exists.
+# FAQ (Plan 01-07) — restored 2026-07-24. The visible section now backs the FAQPage JSON-LD
+# emitted from src/routes/+page.ts; Google requires the markup to match on-page content, so
+# this assertion is what keeps the two from drifting apart again.
+check_string "Veelgestelde vragen"
+# Contact (Plan 01-06) — DEFERRED.
+# Not built yet (next on the roadmap). Re-enable when the Contact section ships so LND-09
+# covers its locked copy again.
 # check_string "Een eerste stap hoeft niet groot te zijn."
 # check_string "Verstuur email"
-# check_string "Veelgestelde vragen"
 # Footer (Plan 01-08)
 check_string "info@trinitybnh.nl"
 

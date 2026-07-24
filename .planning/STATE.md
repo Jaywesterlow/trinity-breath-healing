@@ -110,6 +110,7 @@ None. Wave 4 complete. Wave 5 (Plan 08) ready.
 | # | Description | Date | Commit | Directory |
 |---|-------------|------|--------|-----------|
 | 260705-wub | Update Behandelingen section eyebrow from 'Werkwijze' to 'Diensten' and rewrite the heading to fit a services/treatments section instead of reusing the Werkwijze process copy | 2026-07-05 | uncommitted (applied directly to working tree — file is untracked, part of larger in-progress feature) | [260705-wub-update-behandelingen-section-eyebrow-fro](./quick/260705-wub-update-behandelingen-section-eyebrow-fro/) |
+| 260724-fvq | Restore the FAQ section to the landing page. Component was removed 2026-06-24 by `c2c398b` (blank-slate reset); `main` is an orphan-root fork taken after it, so it never carried the file — nothing lost to a merge. Recovered from `ce751fb`, renamed `global/Faq.svelte`, tokens remapped to the Tailwind v4 `@theme` surface. Closes a live SEO gap: `+page.ts` was already emitting FAQPage JSON-LD with no visible FAQ on the page. | 2026-07-24 | pending | [20260724-restore-faq-section](./quick/20260724-restore-faq-section/) |
 | 260713-myi | Hero illustration draws itself on load — centerline-traced to SVG (285 paths, 4 layers), CSS `stroke-dashoffset` staggered ridges → tree → river → waterfall (~2.9s), `prefers-reduced-motion` honoured. Replaces `<enhanced:img>`; drops the 790 KB PNG off the critical path. Geometry, CLS and LCP verified identical to baseline. | 2026-07-13 | pending | [20260713-hero-draw-on](./quick/20260713-hero-draw-on/) |
 
 ## Session Continuity

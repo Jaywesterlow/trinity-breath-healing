@@ -6,7 +6,7 @@
 	 * Both are driven by __BUILD_DATE__ (injected by vite.config.ts define block) via +page.ts load().
 	 * data.meta.dateModified is the single source of truth — never use __BUILD_DATE__ directly here.
 	 */
-	import { Hero, Werkwijze, Behandelingen, OverMij } from '$lib/components';
+	import { Hero, Werkwijze, Behandelingen, OverMij, Faq } from '$lib/components';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -16,6 +16,7 @@
 <Werkwijze />
 <OverMij />
 <Behandelingen />
+<Faq />
 
 <!--
 	SEO-09 / BLOCKER-3: Visible dateModified element.
