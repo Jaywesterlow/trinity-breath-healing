@@ -14,8 +14,11 @@
  *   2. `.werkwijze__sticky` is `position: sticky; top: 0`, so it visually holds still
  *      while the page scrolls through the tall pin.
  *   3. A scroll listener reads how far the pin has scrolled past the sticky point and
- *      writes that as `--progress` (0..1) on the `#werkwijze` section root; CSS maps
- *      `--progress * --travel` onto the card track's `translateX`.
+ *      writes `translate3d(-progress * travel, 0, 0)` straight onto the card track as an
+ *      inline style. Deliberately an inline transform rather than a custom property on an
+ *      ancestor: custom properties are inherited, so mutating one per frame invalidates the
+ *      cascade across the track's ~490 inlined SVG <path> descendants. Progress is therefore
+ *      observable here only through the resulting transform — see readProgressAndTranslateX.
  *
  * Native scroll is never intercepted — `window.scrollY` keeps advancing throughout,
  * which is the exact INVERSE of this file's old "scrollY frozen while locked"
@@ -26,7 +29,7 @@
  *   - "native": default / desktop / reduced-motion / pre-hydration — plain
  *     `overflow-x: auto` snap slider, every card present in the initial HTML.
  *   - "pinned": mobile + !prefers-reduced-motion, after mount — tall pin + sticky +
- *     transform, driven by `--travel` / `--progress`.
+ *     an inline transform on the track, sized against `--travel`.
  *
  * This is a poor fit for jsdom unit tests (no real scroll geometry / layout), hence a
  * live-interaction Playwright spec, consistent with the previous version of this file.
@@ -42,14 +45,17 @@ test.use({ viewport: { width: 390, height: 844 } });
 
 const MAX_SCROLL_ITERATIONS = 60;
 
-/** Reads --progress as a number, and the computed translateX (px) of .werkwijze__cards. */
+/**
+ * Reads the computed translateX (px) of .werkwijze__cards, and derives progress from it.
+ *
+ * Progress is not exposed as a custom property (that would cost a per-frame style recalc
+ * across the track's SVG subtree — see the header). The transform IS the observable state:
+ * the component sets translateX to `-(progress * travel)`, so progress is `-x / travel`.
+ */
 async function readProgressAndTranslateX(page: Page): Promise<{ progress: number; x: number }> {
 	return page.evaluate(() => {
 		const section = document.querySelector('#werkwijze') as HTMLElement | null;
 		const cards = document.querySelector('.werkwijze__cards') as HTMLElement | null;
-		const progress = section
-			? parseFloat(getComputedStyle(section).getPropertyValue('--progress'))
-			: NaN;
 		let x = 0;
 		if (cards) {
 			const transform = getComputedStyle(cards).transform;
@@ -62,6 +68,10 @@ async function readProgressAndTranslateX(page: Page): Promise<{ progress: number
 				}
 			}
 		}
+		const travel = section
+			? parseFloat(getComputedStyle(section).getPropertyValue('--travel'))
+			: NaN;
+		const progress = Number.isFinite(travel) && travel > 0 ? -x / travel : 0;
 		return { progress, x };
 	});
 }

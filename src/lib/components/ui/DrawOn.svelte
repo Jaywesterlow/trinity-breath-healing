@@ -15,7 +15,19 @@
 	 * blank box. Arming from JS means the failure mode is "no animation", not "no image".
 	 * The element is below the fold when armed, so hiding it is never visible to the reader.
 	 */
-	let { svg, class: klass = '' }: { svg: string; class?: string } = $props();
+	let {
+		svg,
+		class: klass = '',
+		animate = true
+	}: {
+		svg: string;
+		class?: string;
+		/** Set false to inline the art fully drawn, with no scroll trigger and no stroke
+		 *  animation. The markup and geometry are identical either way — only the reveal is
+		 *  skipped — so this is safe to flip per call site while the draw order is being
+		 *  reworked. */
+		animate?: boolean;
+	} = $props();
 
 	// The same traced SVG can be inlined more than once in one document (e.g. the About
 	// portraits render both a mobile and a desktop copy, shown/hidden by CSS media query,
@@ -47,7 +59,7 @@
 	let drawn = $state(false);
 
 	onMount(() => {
-		if (!el) return;
+		if (!el || !animate) return;
 		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
 		armed = true;

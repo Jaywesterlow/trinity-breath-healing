@@ -31,7 +31,11 @@
 >
 	{#if variant === 'outline'}
 		{#if artSvg}
-			<DrawOn svg={artSvg} class="wcard__art-draw" />
+			<!-- animate={false}: the card art draws all its paths at once in raw trace order,
+			     which reads as noise rather than as an illustration being drawn. Parked fully
+			     drawn until the traces are regrouped semantically — see
+			     .planning/notes/KNOWN-ISSUES.md. -->
+			<DrawOn svg={artSvg} class="wcard__art-draw" animate={false} />
 		{:else if imgSrc}
 			<img src={imgSrc} alt="" aria-hidden="true" class="wcard__art" />
 		{/if}
@@ -42,7 +46,8 @@
 
 	{#if variant === 'filled'}
 		{#if artSvg}
-			<DrawOn svg={artSvg} class="wcard__img-draw" />
+			<!-- animate={false} — same reason as the outline variant above. -->
+			<DrawOn svg={artSvg} class="wcard__img-draw" animate={false} />
 		{:else if imgSrc}
 			<img src={imgSrc} alt="" aria-hidden="true" class="wcard__img" />
 		{/if}

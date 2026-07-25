@@ -27,6 +27,9 @@
 
 	// Non-reactive: read/written inside the rAF-throttled scroll/resize handlers only.
 	let ticking = false;
+	// Vertical distance the pin spans beyond its sticky slice — the denominator for progress.
+	// Cached, not re-read per frame: see measureSpan().
+	let span = 0;
 
 	function clamp(value: number, min: number, max: number) {
 		return Math.min(Math.max(value, min), max);
@@ -52,15 +55,20 @@
 		travel = Math.max(0, last.offsetLeft - first.offsetLeft);
 	}
 
+	// Measured from real heights rather than reused from `travel`, so sub-pixel layout rounding
+	// can't desync the two — but cached rather than re-read every frame. offsetHeight forces a
+	// synchronous layout, and doing that inside the scroll handler (which then writes a style
+	// back out) is a read/write thrash that stalls the frame. Only ever changes on resize.
+	function measureSpan() {
+		span = pinEl && stickyEl ? pinEl.offsetHeight - stickyEl.offsetHeight : 0;
+	}
+
 	function update() {
-		if (!pinEl || !stickyEl) {
+		if (!pinEl || span <= 0) {
 			progress = 0;
 			return;
 		}
-		// Derived from real measured heights, not reused from `travel` — keeps progress from
-		// desyncing against `--travel` under sub-pixel layout rounding.
-		const total = pinEl.offsetHeight - stickyEl.offsetHeight;
-		progress = total > 0 ? clamp(-pinEl.getBoundingClientRect().top / total, 0, 1) : 0;
+		progress = clamp(-pinEl.getBoundingClientRect().top / span, 0, 1);
 	}
 
 	function onScrollOrResize() {
@@ -74,7 +82,12 @@
 
 	function onResize() {
 		measure();
-		onScrollOrResize();
+		// One frame later: the pin's height is derived from --travel, which Svelte has not
+		// written to the DOM yet, so measuring the span now would read the old layout.
+		requestAnimationFrame(() => {
+			measureSpan();
+			update();
+		});
 	}
 
 	function addListeners() {
@@ -100,12 +113,16 @@
 				// Deferred one frame: `mode = 'pinned'` hasn't been committed to the DOM yet
 				// (Svelte batches the class/style update), so pinEl/stickyEl would still report
 				// their pre-pin heights if read synchronously here.
-				requestAnimationFrame(update);
+				requestAnimationFrame(() => {
+					measureSpan();
+					update();
+				});
 			} else if (!shouldPin && mode !== 'native') {
 				removeListeners();
 				mode = 'native';
 				progress = 0;
 				travel = 0;
+				span = 0;
 			}
 		}
 
@@ -127,7 +144,6 @@
 	class:werkwijze--pinned={mode === 'pinned'}
 	data-scroll-mode={mode}
 	style:--travel="{travel}px"
-	style:--progress={progress}
 >
 	<div class="werkwijze__pin" bind:this={pinEl}>
 		<div class="werkwijze__sticky" bind:this={stickyEl}>
@@ -136,7 +152,16 @@
 				<h2 class="werkwijze__heading">Rustig, persoonlijk en op jouw tempo.</h2>
 			</header>
 
-			<ul class="werkwijze__cards" bind:this={cardsEl}>
+			<!-- The per-frame value is written straight onto this element as `transform`, not as a
+			     custom property on the section. A custom property is inherited, so changing one on
+			     an ancestor invalidates the inherited-property cascade for every descendant — and
+			     the descendants here are three inlined SVG traces totalling ~490 <path> elements.
+			     That is a style recalc over ~490 nodes on every scroll frame, to move one box. -->
+			<ul
+				class="werkwijze__cards"
+				bind:this={cardsEl}
+				style:transform={mode === 'pinned' ? `translate3d(${-(progress * travel)}px, 0, 0)` : null}
+			>
 				<li>
 					<WerkwijzeCard
 						variant="filled"
@@ -260,10 +285,10 @@
 		justify-content: center;
 	}
 
-	/* Scroll is never blocked. --progress (0..1) comes from JS reading scroll position against
-	   the pin's tall height; the track's horizontal position is a pure function of it. No
-	   transition here on purpose — the transform must track the scroll position exactly,
-	   1:1, every frame; a transition would make it visibly lag behind the finger. */
+	/* Scroll is never blocked: JS reads scroll position against the pin's tall height and writes
+	   the resulting translate directly onto this element as an inline style (see the template).
+	   No transform here, and no transition on purpose — the transform must track the scroll
+	   position exactly, 1:1, every frame; a transition would make it visibly lag the finger. */
 	.werkwijze--pinned .werkwijze__cards {
 		/* overflow: visible is load-bearing. The clip MUST NOT live on the element being
 		   transformed: an element's overflow clip is part of the element, so translating it
@@ -272,7 +297,6 @@
 		   .werkwijze (overflow-x: clip), which never moves. */
 		overflow: visible;
 		scroll-snap-type: none;
-		transform: translate3d(calc(-1 * var(--progress, 0) * var(--travel, 0px)), 0, 0);
 		will-change: transform;
 	}
 
