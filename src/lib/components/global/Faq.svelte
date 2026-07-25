@@ -81,8 +81,44 @@
 		flex-direction: column;
 	}
 
+	/* Opening a <details> is, by default, instantaneous: the answer appears in one frame and the
+	   bottom rule jumps down with it. To ease that, the panel needs to be a box whose size can
+	   be transitioned — so the <details> itself becomes a two-row grid (summary, then content)
+	   and the content row is animated from 0fr to 1fr. The bottom rule lives on this element,
+	   so it rides the growing row down rather than jumping.
+
+	   `grid-template-rows` rather than `block-size: auto`, which cannot be transitioned without
+	   `interpolate-size: allow-keywords` — Chromium-only as of mid-2026, where Firefox and
+	   Safari would simply snap. The fr-unit transition works in every engine that supports
+	   ::details-content, which has been Baseline since September 2025. */
 	.faq__item {
 		border-bottom: 1px solid var(--color-border);
+		display: grid;
+		grid-template-rows: auto 0fr;
+		transition: grid-template-rows var(--motion-base) var(--ease-out);
+	}
+
+	.faq__item[open] {
+		grid-template-rows: auto 1fr;
+	}
+
+	/* The UA sets content-visibility: hidden on this box while the panel is closed, which would
+	   otherwise cut the transition off at the first frame — there is nothing to animate if the
+	   content is not being rendered. `allow-discrete` holds it visible for the whole duration
+	   instead, so the open and the close both play out. */
+	.faq__item::details-content {
+		overflow: hidden;
+		opacity: 0;
+		transition:
+			opacity var(--motion-fast) var(--ease-out),
+			content-visibility var(--motion-base) allow-discrete;
+	}
+
+	.faq__item[open]::details-content {
+		opacity: 1;
+		/* The fade trails the opening slightly, so the text arrives into space that has already
+		   started to make room for it rather than appearing against a closed edge. */
+		transition-delay: 90ms, 0s;
 	}
 
 	.faq__question {
@@ -119,8 +155,15 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.faq__chevron {
+		.faq__chevron,
+		.faq__item,
+		.faq__item::details-content {
 			transition: none;
+		}
+
+		/* Without the transition the opacity rule would leave the answer permanently invisible. */
+		.faq__item::details-content {
+			opacity: 1;
 		}
 	}
 
