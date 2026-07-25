@@ -2,11 +2,19 @@
 	import { onMount } from 'svelte';
 	import WerkwijzeCard from '$lib/components/ui/WerkwijzeCard.svelte';
 
-	// Centerline traces of the card art, inlined so it draws itself when the card scrolls into
-	// view. Regenerate with .planning/quick/20260713-hero-draw-on/trace/.
-	import verdiepingSvg from '$lib/images/card-verdieping-bg.svg?raw';
-	import kennismakingSvg from '$lib/images/card-kennismaking.svg?raw';
-	import sessieSvg from '$lib/images/card-sessie.svg?raw';
+	// Centerline traces of the card art. Regenerate with .planning/quick/20260713-hero-draw-on/trace/.
+	//
+	// Referenced by URL, not inlined (?url, not ?raw), while the draw-on animation is parked —
+	// see .planning/notes/KNOWN-ISSUES.md. Each of these files is one compound fill path gated
+	// by a <mask> built from up to 367 stroked paths. Inlined, that mask is live DOM the browser
+	// must rasterise into an alpha surface every time this card's layer needs re-rastering — and
+	// this is the one part of the page that moves during scroll, so it is the one place that
+	// cost is paid per frame. As an <img> the browser rasterises the whole thing once and the
+	// pan becomes a plain texture move. Inlining only buys anything when the paths need to be
+	// individually animated, which right now they do not.
+	import verdiepingArt from '$lib/images/card-verdieping-bg.svg?url';
+	import kennismakingArt from '$lib/images/card-kennismaking.svg?url';
+	import sessieArt from '$lib/images/card-sessie.svg?url';
 
 	// Sticky-pin + tall-spacer horizontal scroll — see .planning/notes/RESEARCH-werkwijze-scroll.md.
 	// Native scroll is never blocked: the section is made taller than the viewport, the inner
@@ -189,7 +197,7 @@
 						variant="filled"
 						title="Kennismaking"
 						body="Wat loskomt, laten we landen. Stap voor stap groeit er meer rust en ruimte, in je hoofd én je lijf."
-						artSvg={kennismakingSvg}
+						imgSrc={kennismakingArt}
 					/>
 				</li>
 				<li>
@@ -197,7 +205,7 @@
 						variant="filled"
 						title="De sessie"
 						body="Met adem en lichaamswerk kom je in contact met wat er onder de oppervlakte leeft."
-						artSvg={sessieSvg}
+						imgSrc={sessieArt}
 					/>
 				</li>
 				<li>
@@ -205,7 +213,7 @@
 						variant="outline"
 						title="Verdieping"
 						body="We beginnen rustig. In een eerste gesprek kijken we samen wat er speelt en wat je nodig hebt."
-						artSvg={verdiepingSvg}
+						imgSrc={verdiepingArt}
 						ctaHref="/contact"
 						ctaLabel="Maak een afspraak"
 					/>

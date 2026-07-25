@@ -22,6 +22,9 @@ was true as of that date and may have been fixed since.
 
 - Transitions between the service cards are janky / not right yet.
 - Owner said: leave alone, fix in a later pass.
+- Separately: `Behandelingen.svelte` still ships `[carousel-debug]` `console.log` calls, one
+  of which fires on every seek. Noticed 2026-07-25 while profiling; not touched because this
+  section is off limits for now. Should go when the transitions are fixed.
 
 ---
 
@@ -35,6 +38,20 @@ was true as of that date and may have been fixed since.
   in **one** group with uniform micro-delays baked in path-index order. Result: everything
   appears to draw at once, in no meaningful order.
 - Fix: group paths semantically and re-stagger, matching the hero's approach.
+
+### 1b. Card art is parked as `<img>`, not inline
+
+While the draw order is being reworked, the three Werkwijze card traces are referenced by
+URL (`?url`) and rendered as plain `<img>`, with `DrawOn animate={false}` left in
+`WerkwijzeCard` for whenever inline comes back. Reasons, in order of weight:
+
+- Each trace is one compound fill path gated by a `<mask>` of up to 367 stroked paths.
+  Inlined, that mask is live DOM the browser re-rasterises whenever the card's layer is
+  re-rastered — and Werkwijze is the only part of the page that moves during scroll.
+- It removed ~129 KB from the prerendered landing page HTML.
+
+Re-inlining is a one-line switch back to `?raw` + `artSvg`, and is required before the
+per-path draw animation can be restored.
 
 ### 2. No scroll fade-in
 
