@@ -8,213 +8,75 @@
 	import kennismakingSvg from '$lib/images/card-kennismaking.svg?raw';
 	import sessieSvg from '$lib/images/card-sessie.svg?raw';
 
+	// Sticky-pin + tall-spacer horizontal scroll — see .planning/notes/RESEARCH-werkwijze-scroll.md.
+	// Native scroll is never blocked: the section is made taller than the viewport, the inner
+	// content sticks in place while the page scrolls through it, and scroll progress through
+	// the tall section is mapped to a horizontal translate on the card track. No preventDefault,
+	// no scrollLeft driving, nothing to desync from a touch fling.
+
 	let pinEl: HTMLDivElement | null = $state(null);
+	let stickyEl: HTMLDivElement | null = $state(null);
 	let cardsEl: HTMLUListElement | null = $state(null);
-	let scrolljack = $state(false);
-	let offset = $state(0);
 
-	// 'disabled': matchMedia gate off (desktop or reduced-motion).
-	// 'idle-before'/'idle-after': mobile mode active, native scroll, lock not engaged (yet / anymore).
-	// 'locked': vertical scroll frozen, wheel/touch/keydown drive the card track.
-	let phase: 'disabled' | 'idle-before' | 'locked' | 'idle-after' = $state('disabled');
+	// 'native': default / desktop / reduced-motion / pre-hydration — plain overflow-x: auto
+	// snap slider, every card in the initial HTML.
+	// 'pinned': mobile + !prefers-reduced-motion, after mount — tall pin + sticky + transform.
+	let mode: 'native' | 'pinned' = $state('native');
+	let travel = $state(0); // px the track must move, measured while still in native layout
+	let progress = $state(0); // 0..1, clamped
 
-	// Non-reactive: read/written inside imperative scroll/wheel/touch/keydown/resize handlers only.
-	let maxOffset = 0;
-	let lastTouchY = 0;
-	// Tracks which side of the viewport's vertical center the pin's own center was on at
-	// the last check — null until the first sample. A flip since the last sample means the
-	// pin's center just crossed the viewport's middle, in either scroll direction.
-	let wasAboveCenter: boolean | null = null;
-	let triggerTicking = false;
+	// Non-reactive: read/written inside the rAF-throttled scroll/resize handlers only.
+	let ticking = false;
 
-	function computeMaxOffset() {
-		return cardsEl ? Math.max(0, cardsEl.scrollWidth - cardsEl.clientWidth) : 0;
+	function clamp(value: number, min: number, max: number) {
+		return Math.min(Math.max(value, min), max);
 	}
 
-	function onResize() {
-		if (!scrolljack) return;
-		maxOffset = computeMaxOffset();
-		offset = Math.min(offset, maxOffset);
-		if (cardsEl) cardsEl.scrollLeft = offset;
-	}
-
-	// Shared boundary/clamp/release-passthrough logic for wheel, touch, and keydown input.
-	function applyDelta(rawDelta: number, event: WheelEvent | TouchEvent | KeyboardEvent) {
-		const next = offset + rawDelta;
-
-		if (next >= maxOffset && offset >= maxOffset) {
-			// Already at (or past) the last card and still pushing forward — let this event
-			// fall through to native scroll and release the lock going forward.
-			releaseLock('forward');
+	// Must run while the track is still laid out natively (overflow-x: auto) — once
+	// `.werkwijze--pinned .werkwijze__cards` switches to overflow-x: hidden, scrollWidth still
+	// reflects the track's full unclipped content width in every browser tested, but this is
+	// still called before that class ever applies (measure-then-pin ordering below), so there
+	// is no reliance on that behaviour holding across engines.
+	function measure() {
+		if (!cardsEl) {
+			travel = 0;
 			return;
 		}
+		travel = Math.max(0, cardsEl.scrollWidth - cardsEl.clientWidth);
+	}
 
-		if (next <= 0 && offset <= 0) {
-			// Already at (or past) the first card and still pulling backward — release
-			// symmetrically so upward scroll resumes.
-			releaseLock('backward');
+	function update() {
+		if (!pinEl || !stickyEl) {
+			progress = 0;
 			return;
 		}
-
-		event.preventDefault();
-		offset = Math.min(Math.max(next, 0), maxOffset);
-		// Drive the native scroll position directly — a CSS transform on this same
-		// overflow-hidden element would just slide the whole clipped box sideways as
-		// a rigid unit instead of revealing the next card (transform moves the box's
-		// own clip region along with it; scrollLeft moves content within a fixed box).
-		if (cardsEl) cardsEl.scrollLeft = offset;
+		// Derived from real measured heights, not reused from `travel` — keeps progress from
+		// desyncing against `--travel` under sub-pixel layout rounding.
+		const total = pinEl.offsetHeight - stickyEl.offsetHeight;
+		progress = total > 0 ? clamp(-pinEl.getBoundingClientRect().top / total, 0, 1) : 0;
 	}
 
-	function onWheel(e: WheelEvent) {
-		if (phase !== 'locked') return;
-
-		let normalizedDelta = e.deltaY;
-		if (e.deltaMode === 1) {
-			// DOM_DELTA_LINE
-			normalizedDelta *= 16;
-		} else if (e.deltaMode === 2) {
-			// DOM_DELTA_PAGE
-			normalizedDelta *= window.innerHeight;
-		}
-
-		applyDelta(normalizedDelta, e);
-	}
-
-	function onTouchStart(e: TouchEvent) {
-		if (phase !== 'locked') return;
-		lastTouchY = e.touches[0]!.clientY;
-	}
-
-	function onTouchMove(e: TouchEvent) {
-		if (phase !== 'locked') return;
-		const currentY = e.touches[0]!.clientY;
-		// Finger moving up (currentY decreases) = positive delta = forward/next-card
-		// direction, matching wheel's deltaY sign convention.
-		const rawDelta = lastTouchY - currentY;
-		lastTouchY = currentY;
-		applyDelta(rawDelta, e);
-	}
-
-	function onKeydown(e: KeyboardEvent) {
-		if (phase !== 'locked') return;
-
-		const active = document.activeElement;
-		if (
-			active instanceof HTMLInputElement ||
-			active instanceof HTMLTextAreaElement ||
-			active instanceof HTMLSelectElement ||
-			(active as HTMLElement | null)?.isContentEditable
-		) {
-			return;
-		}
-
-		const cardWidth = cardsEl?.clientWidth ?? 300;
-		let rawDelta: number;
-
-		switch (e.key) {
-			case ' ':
-			case 'PageDown':
-			case 'ArrowDown':
-				rawDelta = cardWidth;
-				break;
-			case 'PageUp':
-			case 'ArrowUp':
-				rawDelta = -cardWidth;
-				break;
-			case 'Home':
-				rawDelta = -offset;
-				break;
-			case 'End':
-				rawDelta = maxOffset - offset;
-				break;
-			default:
-				// Not a scroll-relevant key (includes Tab/Shift+Tab) — never intercepted.
-				return;
-		}
-
-		applyDelta(rawDelta, e);
-	}
-
-	// Checks whether the pin's own vertical center just crossed the viewport's vertical
-	// center since the last sample, engaging the lock if so. Driven by a scroll listener
-	// (see onTriggerScroll) rather than IntersectionObserver: a rootMargin band thin enough
-	// to approximate "exactly centered" fires unreliably in practice (confirmed empirically —
-	// only the initial observe callback ever arrives, never subsequent crossings), and a band
-	// wide enough to fire reliably re-introduces the original "triggers too early" bug this
-	// is fixing. Direct position comparison is exact and reliable in both directions.
-	function checkTriggerCrossing() {
-		if (!pinEl || phase === 'locked') return;
-		const rect = pinEl.getBoundingClientRect();
-		const centerY = rect.top + rect.height / 2;
-		const isAboveCenter = centerY < window.innerHeight / 2;
-		if (wasAboveCenter !== null && isAboveCenter !== wasAboveCenter) {
-			engageLock();
-		}
-		wasAboveCenter = isAboveCenter;
-	}
-
-	function onTriggerScroll() {
-		if (triggerTicking) return;
-		triggerTicking = true;
+	function onScrollOrResize() {
+		if (ticking) return;
+		ticking = true;
 		requestAnimationFrame(() => {
-			checkTriggerCrossing();
-			triggerTicking = false;
+			update();
+			ticking = false;
 		});
 	}
 
-	function engageLock() {
-		phase = 'locked';
-		// Guard against a resize since the last measurement.
-		maxOffset = computeMaxOffset();
-
-		window.addEventListener('wheel', onWheel, { passive: false });
-		window.addEventListener('touchstart', onTouchStart, { passive: true });
-		window.addEventListener('touchmove', onTouchMove, { passive: false });
-		window.addEventListener('keydown', onKeydown);
-
-		// Defense-in-depth backstops only — the primary mechanism is preventDefault()
-		// in the wheel/touchmove/keydown handlers above.
-		document.documentElement.classList.add('werkwijze-locked');
-		document.body.style.overflow = 'hidden';
+	function onResize() {
+		measure();
+		onScrollOrResize();
 	}
 
-	function releaseLockListeners() {
-		window.removeEventListener('wheel', onWheel);
-		window.removeEventListener('touchstart', onTouchStart);
-		window.removeEventListener('touchmove', onTouchMove);
-		window.removeEventListener('keydown', onKeydown);
-
-		document.documentElement.classList.remove('werkwijze-locked');
-		document.body.style.overflow = '';
-	}
-
-	function releaseLock(direction: 'forward' | 'backward') {
-		releaseLockListeners();
-		phase = direction === 'forward' ? 'idle-after' : 'idle-before';
-	}
-
-	function activate() {
-		maxOffset = computeMaxOffset();
-		scrolljack = true;
-		phase = 'idle-before';
-		offset = 0;
-		if (cardsEl) cardsEl.scrollLeft = 0;
-
-		wasAboveCenter = null;
-		checkTriggerCrossing(); // establish baseline; guarded by the null check, won't engage yet
-		window.addEventListener('scroll', onTriggerScroll, { passive: true });
+	function addListeners() {
+		window.addEventListener('scroll', onScrollOrResize, { passive: true });
 		window.addEventListener('resize', onResize);
 	}
 
-	function deactivate() {
-		window.removeEventListener('scroll', onTriggerScroll);
-		wasAboveCenter = null;
-		releaseLockListeners();
-
-		phase = 'disabled';
-		offset = 0;
-		scrolljack = false;
-
+	function removeListeners() {
+		window.removeEventListener('scroll', onScrollOrResize);
 		window.removeEventListener('resize', onResize);
 	}
 
@@ -223,11 +85,22 @@
 		const motionMq = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 		function evaluate() {
-			const shouldEnable = mobileMq.matches && !motionMq.matches;
-			if (shouldEnable && phase === 'disabled') {
-				activate();
-			} else if (!shouldEnable && phase !== 'disabled') {
-				deactivate();
+			const shouldPin = mobileMq.matches && !motionMq.matches;
+			if (shouldPin && mode !== 'pinned') {
+				// Measure before flipping the mode class, so the track is still in its native
+				// (scrollable) layout when scrollWidth is read.
+				measure();
+				mode = 'pinned';
+				addListeners();
+				// Deferred one frame: `mode = 'pinned'` hasn't been committed to the DOM yet
+				// (Svelte batches the class/style update), so pinEl/stickyEl would still report
+				// their pre-pin heights if read synchronously here.
+				requestAnimationFrame(update);
+			} else if (!shouldPin && mode !== 'native') {
+				removeListeners();
+				mode = 'native';
+				progress = 0;
+				travel = 0;
 			}
 		}
 
@@ -238,7 +111,7 @@
 		return () => {
 			mobileMq.removeEventListener('change', evaluate);
 			motionMq.removeEventListener('change', evaluate);
-			deactivate();
+			removeListeners();
 		};
 	});
 </script>
@@ -246,12 +119,13 @@
 <section
 	class="werkwijze"
 	id="werkwijze"
-	class:werkwijze--scrolljack={scrolljack}
-	class:werkwijze--locked={phase === 'locked'}
-	data-scroll-phase={phase}
+	class:werkwijze--pinned={mode === 'pinned'}
+	data-scroll-mode={mode}
+	style:--travel="{travel}px"
+	style:--progress={progress}
 >
 	<div class="werkwijze__pin" bind:this={pinEl}>
-		<div class="werkwijze__sticky">
+		<div class="werkwijze__sticky" bind:this={stickyEl}>
 			<header class="werkwijze__header">
 				<p class="werkwijze__eyebrow">Werkwijze</p>
 				<h2 class="werkwijze__heading">Rustig, persoonlijk en op jouw tempo.</h2>
@@ -293,7 +167,13 @@
 	.werkwijze {
 		background: var(--color-bg-sand);
 		padding: var(--space-16) 0;
-		overflow: hidden;
+		/* overflow-x: clip, NOT overflow: hidden. `overflow: hidden` on an ancestor turns it
+		   into a scroll container, which silently breaks `position: sticky` on every
+		   descendant (including .werkwijze__sticky below) — the sticky element would just
+		   scroll away with the rest of the content instead of pinning. `overflow: clip` clips
+		   the same way without creating a scroll container, so sticky keeps working. Do not
+		   "simplify" this back to `overflow: hidden` — it looks equivalent and is not. */
+		overflow-x: clip;
 	}
 
 	.werkwijze__pin {
@@ -352,32 +232,38 @@
 		display: none;
 	}
 
-	/* Mobile scroll-jack: JS-toggled only (matchMedia mobile + !prefers-reduced-motion).
-	   Sticky wrapper pins the section at a fixed viewport position while phase === 'locked';
-	   native scrollY never advances during the lock, so no extra pin-wrapper height is needed. */
-	.werkwijze--scrolljack .werkwijze__sticky {
+	/* Mobile pin: JS-toggled only (matchMedia mobile + !prefers-reduced-motion), after mount.
+	   .werkwijze__pin is made taller than the viewport by --travel (the horizontal distance
+	   the track needs to move); .werkwijze__sticky then holds still at the top of the
+	   viewport for the whole tall pin, which is what turns vertical scroll distance into
+	   "dwell time" for the horizontal pan below. */
+	.werkwijze--pinned .werkwijze__pin {
+		/* svh, not vh: 100vh includes the mobile browser's collapsible toolbar in its
+		   calculation and changes value as that toolbar shows/hides mid-scroll, which would
+		   visibly re-jump the pin height (and therefore --progress) while the user is
+		   scrolling through it. 100svh is the small viewport height — stable regardless of
+		   toolbar state. */
+		height: calc(100svh + var(--travel, 0px));
+	}
+
+	.werkwijze--pinned .werkwijze__sticky {
 		position: sticky;
 		top: 0;
+		height: 100svh;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
 	}
 
-	/* Only while genuinely locked: hide the scrollbar and block direct touch/wheel-driven
-	   native scrolling — JS still moves this element via scrollLeft (not transform, which
-	   would drag the clip box along with the content instead of revealing it), so
-	   programmatic scrolling remains unaffected by overflow: hidden. scroll-snap-type is
-	   also suspended here — otherwise the browser hard-snaps to the nearest card after
-	   every scroll input, fighting our continuous scrollLeft assignment and making the
-	   motion feel like discrete jumps instead of tracking the scroll input fluidly. Native
-	   snap resumes automatically once unlocked, for the plain-swipe escape hatch. */
-	.werkwijze--locked .werkwijze__cards {
+	/* Scroll is never blocked. --progress (0..1) comes from JS reading scroll position against
+	   the pin's tall height; the track's horizontal position is a pure function of it. No
+	   transition here on purpose — the transform must track the scroll position exactly,
+	   1:1, every frame; a transition would make it visibly lag behind the finger. */
+	.werkwijze--pinned .werkwijze__cards {
 		overflow-x: hidden;
-		touch-action: none;
 		scroll-snap-type: none;
-	}
-
-	/* Defense-in-depth backstop only — the primary lock mechanism is preventDefault()
-	   in the wheel/touchmove/keydown handlers. */
-	:global(html.werkwijze-locked) {
-		overscroll-behavior: none;
+		transform: translate3d(calc(-1 * var(--progress, 0) * var(--travel, 0px)), 0, 0);
+		will-change: transform;
 	}
 
 	/* Desktop: static row, all cards visible — matches Figma exactly, no accordion/JS needed */

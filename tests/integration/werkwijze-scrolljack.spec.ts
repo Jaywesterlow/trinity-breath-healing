@@ -1,25 +1,37 @@
 /**
- * werkwijze-scrolljack.spec.ts — Playwright integration test for quick task 260704-h88.
+ * werkwijze-scrolljack.spec.ts — Playwright integration test for the sticky-pin +
+ * tall-spacer horizontal scroll in src/lib/components/global/Werkwijze.svelte.
  *
- * Verifies the 3-state scroll-lock machine (idle-before -> locked -> idle-after) in
- * src/lib/components/global/Werkwijze.svelte:
- *   1. Lock engages only when the pin's own vertical center crosses the viewport's
- *      vertical center — not at the top/bottom edge, in either scroll direction
- *      (a scroll-position comparison, not IntersectionObserver — a rootMargin band thin
- *      enough to approximate "exactly centered" was confirmed to fire unreliably in this
- *      browser, only ever delivering the initial observe callback)
- *   2. window.scrollY is frozen while locked; wheel deltas drive the card track's
- *      scrollLeft instead (not a CSS transform, which would slide the whole clipped box
- *      as a rigid unit rather than revealing the next card)
- *   3. Each card actually scrolls into full view during the locked sequence, not just cut off
- *   4. Vertical scroll resumes automatically once the last card is reached
- *   5. prefers-reduced-motion: reduce fully bypasses the mechanism
- *   6. Tab still moves focus through card CTAs regardless of lock state (no focus trap)
+ * Design doc: .planning/notes/RESEARCH-werkwijze-scroll.md
  *
- * This is a poor fit for jsdom unit tests (no real scroll geometry / wheel-event fidelity),
- * hence a live-interaction Playwright spec per RESEARCH.md's Validation Architecture section.
- * Uses standard Playwright page APIs directly (not the static-parse pattern of routes.spec.ts),
- * since this behavior is fundamentally about real scroll/wheel/touch input.
+ * This replaces the old scroll-lock (preventDefault + body.overflow: hidden +
+ * hand-driven scrollLeft) machine, which could not survive an iOS touch fling — a
+ * fling's momentum phase belongs to the OS compositor after touchend, with no event
+ * left to cancel. The new model never blocks scroll at all:
+ *
+ *   1. `.werkwijze__pin` is made taller than the viewport by `--travel` (the horizontal
+ *      distance the card track needs to move).
+ *   2. `.werkwijze__sticky` is `position: sticky; top: 0`, so it visually holds still
+ *      while the page scrolls through the tall pin.
+ *   3. A scroll listener reads how far the pin has scrolled past the sticky point and
+ *      writes that as `--progress` (0..1) on the `#werkwijze` section root; CSS maps
+ *      `--progress * --travel` onto the card track's `translateX`.
+ *
+ * Native scroll is never intercepted — `window.scrollY` keeps advancing throughout,
+ * which is the exact INVERSE of this file's old "scrollY frozen while locked"
+ * assertion (see the "window.scrollY genuinely advances" test below, called out
+ * explicitly because it is easy to misread as a regression of the old behaviour).
+ *
+ * `#werkwijze` carries `data-scroll-mode`, one of:
+ *   - "native": default / desktop / reduced-motion / pre-hydration — plain
+ *     `overflow-x: auto` snap slider, every card present in the initial HTML.
+ *   - "pinned": mobile + !prefers-reduced-motion, after mount — tall pin + sticky +
+ *     transform, driven by `--travel` / `--progress`.
+ *
+ * This is a poor fit for jsdom unit tests (no real scroll geometry / layout), hence a
+ * live-interaction Playwright spec, consistent with the previous version of this file.
+ * Uses standard Playwright page APIs directly (not the static-parse pattern of
+ * routes.spec.ts), since this behavior is fundamentally about real scroll geometry.
  *
  * Playwright config: tests/integration/ dir, webServer: vite preview on port 4173.
  * Run: npx playwright test tests/integration/werkwijze-scrolljack.spec.ts
@@ -28,245 +40,240 @@ import { test, expect, type Page } from '@playwright/test';
 
 test.use({ viewport: { width: 390, height: 844 } });
 
-const MAX_WHEEL_ITERATIONS = 40;
-const MAX_TAB_ITERATIONS = 60;
+const MAX_SCROLL_ITERATIONS = 60;
 
-/** Reads the data-scroll-phase attribute off the #werkwijze section root. */
-async function getPhase(page: Page): Promise<string | null> {
-	return page.locator('#werkwijze').getAttribute('data-scroll-phase');
-}
-
-/** Scrolls the page down in wheel-tick steps until the section reports phase 'locked'. */
-async function scrollUntilLocked(page: Page): Promise<void> {
-	for (let i = 0; i < MAX_WHEEL_ITERATIONS; i++) {
-		const phase = await getPhase(page);
-		if (phase === 'locked') return;
-		await page.mouse.wheel(0, 150);
-		await page.waitForTimeout(50);
-	}
-	throw new Error(`Section never reached 'locked' phase after ${MAX_WHEEL_ITERATIONS} wheel ticks`);
-}
-
-test.describe('Werkwijze mobile scroll-jack — 3-state lock machine', () => {
-	test('lock does not engage at top-edge, only at mid-viewport crossing', async ({ page }) => {
-		await page.goto('/');
-
-		// Section should exist and start in 'idle-before' (mobile mode active, not yet locked).
-		const section = page.locator('#werkwijze');
-		await expect(section).toHaveCount(1);
-
-		let crossedMiddle = false;
-		for (let i = 0; i < MAX_WHEEL_ITERATIONS; i++) {
-			const phase = await getPhase(page);
-			if (phase === 'locked') {
-				crossedMiddle = true;
-				break;
+/** Reads --progress as a number, and the computed translateX (px) of .werkwijze__cards. */
+async function readProgressAndTranslateX(page: Page): Promise<{ progress: number; x: number }> {
+	return page.evaluate(() => {
+		const section = document.querySelector('#werkwijze') as HTMLElement | null;
+		const cards = document.querySelector('.werkwijze__cards') as HTMLElement | null;
+		const progress = section
+			? parseFloat(getComputedStyle(section).getPropertyValue('--progress'))
+			: NaN;
+		let x = 0;
+		if (cards) {
+			const transform = getComputedStyle(cards).transform;
+			if (transform && transform !== 'none') {
+				// matrix(a, b, c, d, tx, ty) — tx is the 5th value.
+				const match = transform.match(/matrix\(([^)]+)\)/);
+				if (match) {
+					const parts = match[1]!.split(',').map((n) => parseFloat(n.trim()));
+					x = parts[4] ?? 0;
+				}
 			}
-
-			// While the section's vertical center is still below the viewport's vertical
-			// center, the phase must remain 'idle-before' — never 'locked' prematurely.
-			const stillBelowCenter = await page.evaluate(() => {
-				const el = document.querySelector('#werkwijze');
-				if (!el) return true;
-				const rect = el.getBoundingClientRect();
-				const elCenter = rect.top + rect.height / 2;
-				const viewportCenter = window.innerHeight / 2;
-				return elCenter > viewportCenter;
-			});
-			if (stillBelowCenter) {
-				expect(phase, 'phase must stay idle-before before mid-viewport crossing').toBe(
-					'idle-before'
-				);
-			}
-
-			await page.mouse.wheel(0, 150);
-			await page.waitForTimeout(50);
 		}
-
-		expect(
-			crossedMiddle,
-			'section should reach locked phase once its center crosses viewport center'
-		).toBe(true);
+		return { progress, x };
 	});
+}
 
-	test('window.scrollY frozen while locked; wheel deltas move the card track instead', async ({
+/** Reads --travel (px, parsed to a number) off the #werkwijze section root. */
+async function getTravel(page: Page): Promise<number> {
+	return page.evaluate(() => {
+		const section = document.querySelector('#werkwijze') as HTMLElement | null;
+		if (!section) return NaN;
+		const raw = getComputedStyle(section).getPropertyValue('--travel');
+		return parseFloat(raw);
+	});
+}
+
+test.describe('Werkwijze mobile horizontal scroll — sticky pin + tall spacer', () => {
+	test('mobile viewport: #werkwijze reports data-scroll-mode="pinned" after load', async ({
 		page
 	}) => {
 		await page.goto('/');
-		await scrollUntilLocked(page);
-
-		const scrollYBefore = await page.evaluate(() => window.scrollY);
-		const scrollLeftBefore = await page.evaluate(() => {
-			const cards = document.querySelector('.werkwijze__cards');
-			return cards ? cards.scrollLeft : null;
-		});
-
-		await page.mouse.wheel(0, 150);
-		await page.waitForTimeout(50);
-		await page.mouse.wheel(0, 150);
-		await page.waitForTimeout(50);
-
-		const scrollYAfter = await page.evaluate(() => window.scrollY);
-		const scrollLeftAfter = await page.evaluate(() => {
-			const cards = document.querySelector('.werkwijze__cards');
-			return cards ? cards.scrollLeft : null;
-		});
-		const phaseAfter = await getPhase(page);
-
-		expect(scrollYAfter, 'window.scrollY must not change while locked').toBe(scrollYBefore);
-		// Only assert the card track actually moved if we're still locked — a fast/aggressive
-		// wheel step could complete the sequence and release the lock, which is covered by
-		// the next test.
-		if (phaseAfter === 'locked') {
-			expect(scrollLeftAfter, 'card track scrollLeft should change while locked').not.toBe(
-				scrollLeftBefore
-			);
-		}
+		const section = page.locator('#werkwijze');
+		await expect(section).toHaveCount(1);
+		await expect(section).toHaveAttribute('data-scroll-mode', 'pinned');
+		await expect(section).toHaveClass(/werkwijze--pinned/);
 	});
 
-	test('vertical scroll resumes after the last card is reached', async ({ page }) => {
+	test('pin is taller than the sticky viewport slice: --travel > 0 and the section spans more than one viewport', async ({
+		page
+	}) => {
 		await page.goto('/');
-		await scrollUntilLocked(page);
+		await expect(page.locator('#werkwijze')).toHaveAttribute('data-scroll-mode', 'pinned');
 
-		let reachedIdleAfter = false;
-		for (let i = 0; i < MAX_WHEEL_ITERATIONS; i++) {
-			const phase = await getPhase(page);
-			if (phase === 'idle-after') {
-				reachedIdleAfter = true;
+		const travel = await getTravel(page);
+		expect(travel, '--travel should be a positive px length once pinned').toBeGreaterThan(0);
+
+		const { pinHeight, viewportHeight } = await page.evaluate(() => ({
+			pinHeight: document.querySelector('.werkwijze__pin')?.getBoundingClientRect().height ?? 0,
+			viewportHeight: window.innerHeight
+		}));
+		expect(
+			pinHeight,
+			'.werkwijze__pin should be taller than one viewport (100svh + --travel)'
+		).toBeGreaterThan(viewportHeight);
+	});
+
+	test('scrolling through the section increases --progress monotonically toward 1, and translateX becomes increasingly negative', async ({
+		page
+	}) => {
+		await page.goto('/');
+		await expect(page.locator('#werkwijze')).toHaveAttribute('data-scroll-mode', 'pinned');
+
+		// Scroll to just above the section so the pin is about to enter its sticky range.
+		const pinTop = await page.evaluate(() => {
+			const pin = document.querySelector('.werkwijze__pin');
+			return pin ? window.scrollY + pin.getBoundingClientRect().top : 0;
+		});
+		await page.evaluate((y) => window.scrollTo(0, Math.max(0, y - 50)), pinTop);
+		await page.waitForTimeout(50);
+
+		let lastProgress = -Infinity;
+		let lastX = Infinity;
+		let sawIncrease = false;
+		let reachedOne = false;
+
+		for (let i = 0; i < MAX_SCROLL_ITERATIONS; i++) {
+			await page.mouse.wheel(0, 120);
+			await page.waitForTimeout(40);
+
+			const { progress, x } = await readProgressAndTranslateX(page);
+
+			// Monotonic (non-decreasing) progress toward 1.
+			expect(
+				progress,
+				'progress must never decrease while scrolling forward'
+			).toBeGreaterThanOrEqual(lastProgress === -Infinity ? -1 : lastProgress);
+			if (progress > lastProgress + 1e-6) sawIncrease = true;
+
+			// translateX should become increasingly negative (or stay equal) as progress rises.
+			expect(
+				x,
+				'translateX must never move forward (less negative) while scrolling forward'
+			).toBeLessThanOrEqual(lastX === Infinity ? 1 : lastX);
+
+			lastProgress = progress;
+			lastX = x;
+
+			if (progress >= 1) {
+				reachedOne = true;
 				break;
 			}
-			await page.mouse.wheel(0, 200);
-			await page.waitForTimeout(50);
 		}
 
-		expect(reachedIdleAfter, 'phase should become idle-after once the last card is reached').toBe(
-			true
-		);
+		expect(sawIncrease, 'progress should have increased at least once while scrolling').toBe(true);
+		expect(reachedOne, 'progress should reach 1 by the end of the pinned section').toBe(true);
+	});
+
+	test('window.scrollY genuinely advances while scrolling through the section — the inverse of the old scrollY-frozen lock', async ({
+		page
+	}) => {
+		await page.goto('/');
+		await expect(page.locator('#werkwijze')).toHaveAttribute('data-scroll-mode', 'pinned');
+
+		const pinTop = await page.evaluate(() => {
+			const pin = document.querySelector('.werkwijze__pin');
+			return pin ? window.scrollY + pin.getBoundingClientRect().top : 0;
+		});
+		await page.evaluate((y) => window.scrollTo(0, Math.max(0, y - 50)), pinTop);
+		await page.waitForTimeout(50);
 
 		const scrollYBefore = await page.evaluate(() => window.scrollY);
-		await page.mouse.wheel(0, 200);
-		await page.waitForTimeout(50);
-		const scrollYAfter = await page.evaluate(() => window.scrollY);
 
+		// The old spec asserted scrollY stayed FROZEN here. The new architecture never
+		// blocks scroll, so scrollY must instead keep climbing through the whole section.
+		for (let i = 0; i < 10; i++) {
+			await page.mouse.wheel(0, 150);
+			await page.waitForTimeout(40);
+		}
+
+		const scrollYAfter = await page.evaluate(() => window.scrollY);
 		expect(
 			scrollYAfter,
-			'the next wheel tick after idle-after should resume native vertical scroll'
+			'window.scrollY must advance while scrolling through the pinned section (native scroll is never blocked)'
 		).toBeGreaterThan(scrollYBefore);
 	});
 
-	test('locking re-engages at mid-viewport when scrolling back up from below', async ({ page }) => {
-		await page.goto('/');
-		await scrollUntilLocked(page);
-
-		// Clear the section forward, then keep scrolling well past it.
-		for (let i = 0; i < MAX_WHEEL_ITERATIONS; i++) {
-			if ((await getPhase(page)) === 'idle-after') break;
-			await page.mouse.wheel(0, 200);
-			await page.waitForTimeout(50);
-		}
-		for (let i = 0; i < 10; i++) {
-			await page.mouse.wheel(0, 300);
-			await page.waitForTimeout(50);
-		}
-		expect(await getPhase(page), 'should have cleared the section going forward').toBe(
-			'idle-after'
-		);
-
-		// Scroll back up. Lock must not re-engage the instant the section's top/bottom
-		// edge appears — only once its own center crosses the viewport's center.
-		let sawPrematureLock = false;
-		let reachedLocked = false;
-		for (let i = 0; i < MAX_WHEEL_ITERATIONS; i++) {
-			const phase = await getPhase(page);
-			if (phase === 'locked') {
-				reachedLocked = true;
-				break;
-			}
-			const stillBelowCenter = await page.evaluate(() => {
-				const pin = document.querySelector('.werkwijze__pin');
-				if (!pin) return true;
-				const rect = pin.getBoundingClientRect();
-				const pinCenter = rect.top + rect.height / 2;
-				return pinCenter > window.innerHeight / 2 + 40; // small tolerance
-			});
-			if (!stillBelowCenter && phase !== 'idle-after' && phase !== 'idle-before') {
-				sawPrematureLock = true;
-			}
-			await page.mouse.wheel(0, -150);
-			await page.waitForTimeout(50);
-		}
-
-		expect(reachedLocked, 'lock should re-engage when scrolling back up through the section').toBe(
-			true
-		);
-		expect(sawPrematureLock, 'lock must not engage before the pin is actually centered').toBe(
-			false
-		);
-	});
-
-	test('locked forward scroll actually reveals each next card in the viewport', async ({
+	test('at progress === 1 the third card ("Verdieping") is visible in the viewport', async ({
 		page
 	}) => {
 		await page.goto('/');
-		await scrollUntilLocked(page);
+		await expect(page.locator('#werkwijze')).toHaveAttribute('data-scroll-mode', 'pinned');
 
-		const cardTitles = ['Kennismaking', 'De sessie', 'Verdieping'];
+		const pinTop = await page.evaluate(() => {
+			const pin = document.querySelector('.werkwijze__pin');
+			return pin ? window.scrollY + pin.getBoundingClientRect().top : 0;
+		});
+		await page.evaluate((y) => window.scrollTo(0, Math.max(0, y - 50)), pinTop);
+		await page.waitForTimeout(50);
 
-		for (const title of cardTitles) {
-			const card = page.locator('#werkwijze').getByText(title, { exact: true });
-
-			let visible = false;
-			for (let i = 0; i < MAX_WHEEL_ITERATIONS; i++) {
-				const isInViewport = await card.evaluate((el) => {
-					const rect = el.getBoundingClientRect();
-					return (
-						rect.left >= 0 && rect.right <= window.innerWidth && rect.width > 0 && rect.height > 0
-					);
-				});
-				if (isInViewport) {
-					visible = true;
-					break;
-				}
-				const phase = await getPhase(page);
-				if (phase !== 'locked') break; // sequence ended before reaching this card
-				await page.mouse.wheel(0, 150);
-				await page.waitForTimeout(50);
+		let reachedOne = false;
+		for (let i = 0; i < MAX_SCROLL_ITERATIONS; i++) {
+			const { progress } = await readProgressAndTranslateX(page);
+			if (progress >= 1) {
+				reachedOne = true;
+				break;
 			}
-
-			expect(visible, `card "${title}" should scroll into full view, not stay cut off`).toBe(true);
+			await page.mouse.wheel(0, 150);
+			await page.waitForTimeout(40);
 		}
+		expect(reachedOne, 'should be able to reach progress === 1 by scrolling forward').toBe(true);
+
+		const verdieping = page.locator('#werkwijze').getByText('Verdieping', { exact: true });
+		const isInViewport = await verdieping.evaluate((el) => {
+			const rect = el.getBoundingClientRect();
+			return rect.left >= 0 && rect.right <= window.innerWidth && rect.width > 0 && rect.height > 0;
+		});
+		expect(
+			isInViewport,
+			'"Verdieping" card should be fully in the viewport at progress === 1'
+		).toBe(true);
 	});
 
-	test('prefers-reduced-motion: reduce fully bypasses the mechanism', async ({ page }) => {
+	test('prefers-reduced-motion: reduce → data-scroll-mode stays "native", no transform on the track', async ({
+		page
+	}) => {
 		await page.emulateMedia({ reducedMotion: 'reduce' });
 		await page.goto('/');
 
-		for (let i = 0; i < 15; i++) {
-			const scrollYBefore = await page.evaluate(() => window.scrollY);
-			await page.mouse.wheel(0, 200);
-			await page.waitForTimeout(50);
-			const scrollYAfter = await page.evaluate(() => window.scrollY);
-			const phase = await getPhase(page);
+		const section = page.locator('#werkwijze');
+		await expect(section).toHaveAttribute('data-scroll-mode', 'native');
+		await expect(section).not.toHaveClass(/werkwijze--pinned/);
 
-			expect(phase, 'phase must remain disabled under prefers-reduced-motion: reduce').toBe(
-				'disabled'
+		for (let i = 0; i < 10; i++) {
+			await page.mouse.wheel(0, 200);
+			await page.waitForTimeout(40);
+			await expect(section, 'mode must stay native under reduced motion').toHaveAttribute(
+				'data-scroll-mode',
+				'native'
 			);
-			// Native scroll should keep advancing freely (no freeze) until the page bottoms out.
-			expect(
-				scrollYAfter,
-				'scrollY should change freely with each wheel tick under reduced motion'
-			).toBeGreaterThanOrEqual(scrollYBefore);
+		}
+
+		const transform = await page.evaluate(() => {
+			const cards = document.querySelector('.werkwijze__cards');
+			return cards ? getComputedStyle(cards).transform : null;
+		});
+		expect(transform, 'card track should have no transform under reduced motion').toBe('none');
+	});
+
+	test('desktop viewport → data-scroll-mode stays "native"', async ({ page }) => {
+		await page.setViewportSize({ width: 1440, height: 900 });
+		await page.goto('/');
+
+		const section = page.locator('#werkwijze');
+		await expect(section).toHaveAttribute('data-scroll-mode', 'native');
+		await expect(section).not.toHaveClass(/werkwijze--pinned/);
+
+		for (let i = 0; i < 6; i++) {
+			await page.mouse.wheel(0, 300);
+			await page.waitForTimeout(40);
+			await expect(section, 'mode must stay native on desktop').toHaveAttribute(
+				'data-scroll-mode',
+				'native'
+			);
 		}
 	});
 
-	test('Tab still moves focus through card CTAs regardless of lock state', async ({ page }) => {
+	test('Tab still moves focus through card CTAs in pinned mode', async ({ page }) => {
 		await page.goto('/');
-		await scrollUntilLocked(page);
+		await expect(page.locator('#werkwijze')).toHaveAttribute('data-scroll-mode', 'pinned');
 
 		const cta = page.locator('#werkwijze').getByRole('link', { name: 'Maak een afspraak' });
 
 		let focused = false;
-		for (let i = 0; i < MAX_TAB_ITERATIONS; i++) {
+		for (let i = 0; i < 60; i++) {
 			await page.keyboard.press('Tab');
 			const isFocused = await cta.evaluate((el) => el === document.activeElement);
 			if (isFocused) {
