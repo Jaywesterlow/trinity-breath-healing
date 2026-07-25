@@ -24,6 +24,9 @@
 	let mode: 'native' | 'pinned' = $state('native');
 	let travel = $state(0); // px the track must move, measured while still in native layout
 	let progress = $state(0); // 0..1, clamped
+	// Is the pin within roughly a viewport of the screen? Gates both the compositing layer and
+	// the per-frame work — see the observer in onMount and the will-change note in the styles.
+	let near = $state(false);
 
 	// Non-reactive: read/written inside the rAF-throttled scroll/resize handlers only.
 	let ticking = false;
@@ -68,6 +71,11 @@
 			progress = 0;
 			return;
 		}
+		// The scroll listener is attached for as long as the component is pinned, which means
+		// it fires for every scroll frame of the whole page — including the metres of page
+		// nowhere near this section. Without this guard each of those frames still recomputes
+		// progress and writes a fresh inline transform, for a section that is offscreen.
+		if (!near) return;
 		progress = clamp(-pinEl.getBoundingClientRect().top / span, 0, 1);
 	}
 
@@ -104,6 +112,18 @@
 		const mobileMq = window.matchMedia('(max-width: 1023.98px)');
 		const motionMq = window.matchMedia('(prefers-reduced-motion: reduce)');
 
+		// One viewport of margin either side: the layer is promoted (and progress starts being
+		// computed) slightly before the section can be seen, so the promotion never lands on
+		// the same frame as the first scroll into it.
+		const proximity = new IntersectionObserver(
+			(entries) => {
+				for (const e of entries) near = e.isIntersecting;
+				update();
+			},
+			{ rootMargin: '100% 0px 100% 0px' }
+		);
+		if (pinEl) proximity.observe(pinEl);
+
 		function evaluate() {
 			const shouldPin = mobileMq.matches && !motionMq.matches;
 			if (shouldPin && mode !== 'pinned') {
@@ -131,6 +151,7 @@
 		motionMq.addEventListener('change', evaluate);
 
 		return () => {
+			proximity.disconnect();
 			mobileMq.removeEventListener('change', evaluate);
 			motionMq.removeEventListener('change', evaluate);
 			removeListeners();
@@ -142,6 +163,7 @@
 	class="werkwijze"
 	id="werkwijze"
 	class:werkwijze--pinned={mode === 'pinned'}
+	class:werkwijze--near={mode === 'pinned' && near}
 	data-scroll-mode={mode}
 	style:--travel="{travel}px"
 >
@@ -297,6 +319,16 @@
 		   .werkwijze (overflow-x: clip), which never moves. */
 		overflow: visible;
 		scroll-snap-type: none;
+	}
+
+	/* will-change is scoped to "section is within a viewport", never left on permanently.
+	   It asks the browser to hold this subtree on its own compositing layer, and this subtree
+	   is three cards of inlined vector art — roughly 1100x460 CSS px, which at a phone's 3x
+	   DPR is a ~4.5 megapixel texture kept in GPU memory. Left on for the whole page life that
+	   is memory a mid-range phone will eventually reclaim, and reclaiming it means re-rasterising
+	   all of it the next time the section is approached — landing exactly on the frames where
+	   the pan starts. Promoted a viewport early instead, and released again afterwards. */
+	.werkwijze--near .werkwijze__cards {
 		will-change: transform;
 	}
 
