@@ -32,9 +32,11 @@
 	let mode: 'native' | 'pinned' = $state('native');
 	let travel = $state(0); // px the track must move, measured while still in native layout
 	let progress = $state(0); // 0..1, clamped
-	// Is the pin within roughly a viewport of the screen? Gates both the compositing layer and
-	// the per-frame work — see the observer in onMount and the will-change note in the styles.
+	// Is the pin within roughly a viewport of the screen? Gates the per-frame work only.
 	let near = $state(false);
+	// Latches true the first time the pin is approached and never goes back. Gates the
+	// compositing layer — deliberately one-way, see the will-change note in the styles.
+	let promoted = $state(false);
 
 	// Non-reactive: read/written inside the rAF-throttled scroll/resize handlers only.
 	let ticking = false;
@@ -120,12 +122,12 @@
 		const mobileMq = window.matchMedia('(max-width: 1023.98px)');
 		const motionMq = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-		// One viewport of margin either side: the layer is promoted (and progress starts being
-		// computed) slightly before the section can be seen, so the promotion never lands on
-		// the same frame as the first scroll into it.
+		// One viewport of margin either side, so both the promotion and the per-frame work
+		// begin before the section can be seen rather than on the frame it appears.
 		const proximity = new IntersectionObserver(
 			(entries) => {
 				for (const e of entries) near = e.isIntersecting;
+				if (near) promoted = true;
 				update();
 			},
 			{ rootMargin: '100% 0px 100% 0px' }
@@ -171,7 +173,7 @@
 	class="werkwijze"
 	id="werkwijze"
 	class:werkwijze--pinned={mode === 'pinned'}
-	class:werkwijze--near={mode === 'pinned' && near}
+	class:werkwijze--promoted={mode === 'pinned' && promoted}
 	data-scroll-mode={mode}
 	style:--travel="{travel}px"
 >
@@ -329,14 +331,20 @@
 		scroll-snap-type: none;
 	}
 
-	/* will-change is scoped to "section is within a viewport", never left on permanently.
-	   It asks the browser to hold this subtree on its own compositing layer, and this subtree
-	   is three cards of inlined vector art — roughly 1100x460 CSS px, which at a phone's 3x
-	   DPR is a ~4.5 megapixel texture kept in GPU memory. Left on for the whole page life that
-	   is memory a mid-range phone will eventually reclaim, and reclaiming it means re-rasterising
-	   all of it the next time the section is approached — landing exactly on the frames where
-	   the pan starts. Promoted a viewport early instead, and released again afterwards. */
-	.werkwijze--near .werkwijze__cards {
+	/* Applied a viewport before the section is reachable, and then never removed — the latch is
+	   one-way on purpose.
+
+	   will-change: transform asks for this subtree to live on its own compositing layer, and
+	   creating that layer means rasterising all of it in one go (three cards, ~1100x460 CSS px,
+	   which at a phone's 3x DPR is a ~4.5 megapixel texture). Destroying it means painting the
+	   content back into the parent. Both are real work, and a gate that toggles puts one of
+	   each on the frames either side of the section — precisely where a stutter is most
+	   visible, and in both scroll directions.
+
+	   So: pay it once, early, off to the side of the section, and never again. Holding the
+	   layer afterwards costs memory, not frames. Do not "tidy" this into a symmetric
+	   add/remove gate — that trade is the wrong way round. */
+	.werkwijze--promoted .werkwijze__cards {
 		will-change: transform;
 	}
 
