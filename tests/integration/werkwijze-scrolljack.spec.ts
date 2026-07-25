@@ -310,6 +310,33 @@ test.describe('Werkwijze mobile horizontal scroll — sticky pin + tall spacer',
 		}
 	});
 
+	// A landscape phone passes the mobile width but has nowhere near the height the pin needs.
+	// Pinning it put ~577px of content inside a 100svh sticky slice on a 390px-tall viewport:
+	// heading cropped off the top, cards running out of the bottom. Height is a condition of
+	// pinning, so short viewports keep the ordinary snap slider.
+	test('short viewport (landscape phone) → stays "native", content is not cropped', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 844, height: 390 });
+		await page.goto('/');
+
+		const section = page.locator('#werkwijze');
+		await expect(section).toHaveAttribute('data-scroll-mode', 'native');
+		await expect(section).not.toHaveClass(/werkwijze--pinned/);
+
+		const overflow = await page.evaluate(() => {
+			const sticky = document.querySelector('.werkwijze__sticky') as HTMLElement | null;
+			const header = document.querySelector('.werkwijze__header') as HTMLElement | null;
+			const cards = document.querySelector('.werkwijze__cards') as HTMLElement | null;
+			if (!sticky || !header || !cards) return -1;
+			return header.offsetHeight + cards.offsetHeight - sticky.offsetHeight;
+		});
+		expect(
+			overflow,
+			'pinned content must never be taller than the box it is pinned into'
+		).toBeLessThanOrEqual(0);
+	});
+
 	test('Tab still moves focus through card CTAs in pinned mode', async ({ page }) => {
 		await page.goto('/');
 		await expect(page.locator('#werkwijze')).toHaveAttribute('data-scroll-mode', 'pinned');

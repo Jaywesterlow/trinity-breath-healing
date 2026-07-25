@@ -67,7 +67,14 @@
 	}
 
 	onMount(() => {
-		const mobileMq = window.matchMedia('(max-width: 1023.98px)');
+		// Width alone is not enough to qualify for the pin. A landscape phone satisfies the
+		// mobile width but is far too short: the pinned content (header + a 459px card) measures
+		// ~577px, and inside a 100svh sticky slice on a 390px-tall viewport it overflows by
+		// ~187px — heading cropped off the top, cards running out of the bottom. The pin only
+		// makes sense when a viewport can actually hold what gets pinned into it, so the height
+		// is a condition of pinning, not an afterthought. Below it the section falls back to the
+		// native snap slider, which simply scrolls like any other content.
+		const mobileMq = window.matchMedia('(max-width: 1023.98px) and (min-height: 640px)');
 		const motionMq = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 		// Mirrors the @supports guard on the pinned styles. Without scroll-driven animations the
@@ -126,6 +133,8 @@
 						title="Kennismaking"
 						body="Wat loskomt, laten we landen. Stap voor stap groeit er meer rust en ruimte, in je hoofd én je lijf."
 						imgSrc={kennismakingArt}
+						imgWidth={1000}
+						imgHeight={1084}
 					/>
 				</li>
 				<li>
@@ -134,6 +143,8 @@
 						title="De sessie"
 						body="Met adem en lichaamswerk kom je in contact met wat er onder de oppervlakte leeft."
 						imgSrc={sessieArt}
+						imgWidth={1000}
+						imgHeight={1084}
 					/>
 				</li>
 				<li>
@@ -142,6 +153,8 @@
 						title="Verdieping"
 						body="We beginnen rustig. In een eerste gesprek kijken we samen wat er speelt en wat je nodig hebt."
 						imgSrc={verdiepingArt}
+						imgWidth={1641}
+						imgHeight={895}
 						ctaHref="/contact"
 						ctaLabel="Maak een afspraak"
 					/>
@@ -200,19 +213,23 @@
 	   padding-inline centers the snapped card in the viewport (card is a fixed 17.625rem);
 	   the large gap keeps neighbours fully offscreen so only one card shows at a time. */
 	.werkwijze__cards {
+		/* One card's width, in one place. It sets the centring padding and the gap below, and
+		   it has to agree with .wcard's own width in WerkwijzeCard — three literals of the same
+		   number is how they drift apart. */
+		--wcard-w: 17.625rem; /* 282px — Figma spec */
+
 		display: flex;
 		list-style: none;
 		margin: 0;
-		padding-inline: calc((100% - 17.625rem) / 2);
+		padding-inline: calc((100% - var(--wcard-w)) / 2);
 		/* vw, not %: % inside gap resolves against a different basis than % inside padding
 		   (the flex container's content-box width, already minus its own padding), which
 		   silently capped this at a flat 64px regardless of viewport width and let
 		   neighbouring cards peek in from ~412px up. vw always resolves against the real
 		   viewport, which is what this calc actually needs. */
-		gap: max(var(--space-16), calc((100vw - 17.625rem) / 2 + var(--space-4)));
+		gap: max(var(--space-16), calc((100vw - var(--wcard-w)) / 2 + var(--space-4)));
 		overflow-x: auto;
 		scroll-snap-type: x mandatory;
-		-webkit-overflow-scrolling: touch;
 		scrollbar-width: none;
 	}
 

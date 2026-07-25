@@ -7,6 +7,8 @@
 		title,
 		body,
 		imgSrc,
+		imgWidth,
+		imgHeight,
 		artSvg,
 		ctaHref,
 		ctaLabel
@@ -15,6 +17,12 @@
 		title: string;
 		body: string;
 		imgSrc?: string;
+		/** Intrinsic pixel dimensions of `imgSrc`. Present so the box is reserved before the
+		 *  image arrives — the CSS below fixes the rendered size either way, so these never
+		 *  change the layout, they only stop it from being unknown for a frame. Both are
+		 *  required together; one alone would hand the UA a bogus aspect ratio. */
+		imgWidth?: number;
+		imgHeight?: number;
 		/** Raw inline SVG for the card art — draws itself on scroll-in. Outline: backdrop art
 		 *  bleeding behind the text. Filled: the `.wcard__img` slot. `imgSrc` stays as a fallback
 		 *  for art that hasn't been traced yet (or never will be, e.g. raster-only assets). */
@@ -37,7 +45,15 @@
 			     .planning/notes/KNOWN-ISSUES.md. -->
 			<DrawOn svg={artSvg} class="wcard__art-draw" animate={false} />
 		{:else if imgSrc}
-			<img src={imgSrc} alt="" aria-hidden="true" class="wcard__art" />
+			<img
+				src={imgSrc}
+				alt=""
+				aria-hidden="true"
+				class="wcard__art"
+				width={imgWidth}
+				height={imgHeight}
+				decoding="async"
+			/>
 		{/if}
 	{/if}
 
@@ -49,7 +65,15 @@
 			<!-- animate={false} — same reason as the outline variant above. -->
 			<DrawOn svg={artSvg} class="wcard__img-draw" animate={false} />
 		{:else if imgSrc}
-			<img src={imgSrc} alt="" aria-hidden="true" class="wcard__img" />
+			<img
+				src={imgSrc}
+				alt=""
+				aria-hidden="true"
+				class="wcard__img"
+				width={imgWidth}
+				height={imgHeight}
+				decoding="async"
+			/>
 		{/if}
 	{/if}
 
