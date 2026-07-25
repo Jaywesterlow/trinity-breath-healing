@@ -8,7 +8,7 @@
 <section class="contact" aria-labelledby="contact-heading">
 	<div class="contact__inner">
 		<div class="contact__text">
-			<p class="contact__eyebrow">Over mij</p>
+			<p class="contact__eyebrow">Contact</p>
 			<h2 id="contact-heading" class="contact__heading">
 				Een eerste stap hoeft niet groot te zijn.
 			</h2>
