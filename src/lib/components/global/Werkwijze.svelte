@@ -32,17 +32,24 @@
 		return Math.min(Math.max(value, min), max);
 	}
 
-	// Must run while the track is still laid out natively (overflow-x: auto) — once
-	// `.werkwijze--pinned .werkwijze__cards` switches to overflow-x: hidden, scrollWidth still
-	// reflects the track's full unclipped content width in every browser tested, but this is
-	// still called before that class ever applies (measure-then-pin ordering below), so there
-	// is no reliance on that behaviour holding across engines.
+	// Distance from the first card to the last one. Translating the track by exactly this much
+	// lands the last card where the first one started — i.e. centred, since the track's
+	// padding-inline centres whatever sits at offset 0.
+	//
+	// Deliberately NOT `scrollWidth - clientWidth`: that only reports a real value while the
+	// track is a scroll container, and in pinned mode it is not one (see the overflow: visible
+	// note in the styles below). It would read 0 on any re-measure after pinning — so a resize
+	// or orientation change would silently collapse the travel to nothing. Sibling offsets are
+	// true in either mode.
 	function measure() {
-		if (!cardsEl) {
+		const cards = cardsEl ? Array.from(cardsEl.children) : [];
+		const first = cards[0];
+		const last = cards[cards.length - 1];
+		if (!(first instanceof HTMLElement) || !(last instanceof HTMLElement)) {
 			travel = 0;
 			return;
 		}
-		travel = Math.max(0, cardsEl.scrollWidth - cardsEl.clientWidth);
+		travel = Math.max(0, last.offsetLeft - first.offsetLeft);
 	}
 
 	function update() {
@@ -87,8 +94,6 @@
 		function evaluate() {
 			const shouldPin = mobileMq.matches && !motionMq.matches;
 			if (shouldPin && mode !== 'pinned') {
-				// Measure before flipping the mode class, so the track is still in its native
-				// (scrollable) layout when scrollWidth is read.
 				measure();
 				mode = 'pinned';
 				addListeners();
@@ -260,7 +265,12 @@
 	   transition here on purpose — the transform must track the scroll position exactly,
 	   1:1, every frame; a transition would make it visibly lag behind the finger. */
 	.werkwijze--pinned .werkwijze__cards {
-		overflow-x: hidden;
+		/* overflow: visible is load-bearing. The clip MUST NOT live on the element being
+		   transformed: an element's overflow clip is part of the element, so translating it
+		   drags the clip along and the whole window slides off as a rigid unit — card 1 exits
+		   and cards 2/3 stay clipped forever. Clipping happens one level up instead, on
+		   .werkwijze (overflow-x: clip), which never moves. */
+		overflow: visible;
 		scroll-snap-type: none;
 		transform: translate3d(calc(-1 * var(--progress, 0) * var(--travel, 0px)), 0, 0);
 		will-change: transform;

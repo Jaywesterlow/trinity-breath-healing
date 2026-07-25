@@ -222,6 +222,40 @@ test.describe('Werkwijze mobile horizontal scroll — sticky pin + tall spacer',
 		).toBe(true);
 	});
 
+	// Regression guard for a real bug: the track was first shipped with `overflow-x: hidden`
+	// AND the transform on the same element. An element's overflow clip belongs to that
+	// element, so translating it drags the clip along — card 1 slid out and cards 2 and 3 were
+	// clipped out of sight for the whole pan, while still passing every geometry assertion
+	// above (getBoundingClientRect knows nothing about ancestor clipping, so the cards
+	// measured as "in the viewport" the entire time they were invisible on screen).
+	//
+	// Hence a structural assertion rather than a positional one: the element being transformed
+	// must not clip, and the clipping must live on an ancestor that never moves.
+	test('the transformed track does not clip; clipping lives on the static section', async ({
+		page
+	}) => {
+		await page.goto('/');
+		await expect(page.locator('#werkwijze')).toHaveAttribute('data-scroll-mode', 'pinned');
+
+		const overflows = await page.evaluate(() => {
+			const track = document.querySelector('.werkwijze__cards');
+			const section = document.querySelector('#werkwijze');
+			return {
+				track: track ? getComputedStyle(track).overflowX : null,
+				section: section ? getComputedStyle(section).overflowX : null
+			};
+		});
+
+		expect(
+			overflows.track,
+			'the transformed track must not be a clipping/scrolling box — its clip would move with it'
+		).toBe('visible');
+		expect(
+			overflows.section,
+			'clipping belongs on the static section ancestor (clip, not hidden — hidden would break position: sticky)'
+		).toBe('clip');
+	});
+
 	test('prefers-reduced-motion: reduce → data-scroll-mode stays "native", no transform on the track', async ({
 		page
 	}) => {
