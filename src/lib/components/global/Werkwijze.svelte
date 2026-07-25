@@ -16,37 +16,35 @@
 	import kennismakingArt from '$lib/images/card-kennismaking.svg?url';
 	import sessieArt from '$lib/images/card-sessie.svg?url';
 
-	// Sticky-pin + tall-spacer horizontal scroll — see .planning/notes/RESEARCH-werkwijze-scroll.md.
-	// Native scroll is never blocked: the section is made taller than the viewport, the inner
-	// content sticks in place while the page scrolls through it, and scroll progress through
-	// the tall section is mapped to a horizontal translate on the card track. No preventDefault,
-	// no scrollLeft driving, nothing to desync from a touch fling.
+	// Sticky-pin + tall-spacer horizontal scroll — see
+	// .planning/notes/RESEARCH-werkwijze-scroll.md (the pin) and
+	// .planning/notes/RESEARCH-werkwijze-stutter.md (why the pan is driven from CSS).
+	//
+	// The section is made taller than the viewport, its content sticks while the page scrolls
+	// through it, and that scroll distance drives a horizontal translate on the card track.
+	// Native scroll is never blocked, so a touch fling has nothing to desync from.
+	//
+	// The translate is driven by a CSS view-timeline, NOT by a scroll listener. That is the
+	// whole point: scrolling happens on the compositor thread and the scroll event reaches the
+	// main thread a frame later, so anything positioned from that event is positioned from a
+	// stale scroll offset — while the sticky frame around it, which the compositor owns, is
+	// exactly right. The resulting lag is invisible at constant speed and reads as stutter
+	// whenever the speed changes: entering the section, starting a fling, coasting to a stop.
+	// A CSS scroll-driven animation runs on the compositor too, so it cannot drift from the
+	// scroll position at all. Do not reintroduce a scroll handler here.
+	//
+	// JS is left with two jobs, neither of them per-frame: decide whether to pin at all, and
+	// measure how far the track has to travel.
 
-	let pinEl: HTMLDivElement | null = $state(null);
-	let stickyEl: HTMLDivElement | null = $state(null);
 	let cardsEl: HTMLUListElement | null = $state(null);
 
-	// 'native': default / desktop / reduced-motion / pre-hydration — plain overflow-x: auto
-	// snap slider, every card in the initial HTML.
-	// 'pinned': mobile + !prefers-reduced-motion, after mount — tall pin + sticky + transform.
+	// 'native': default / desktop / reduced-motion / no scroll-timeline support / pre-hydration.
+	// Plain overflow-x: auto snap slider — every card in the initial HTML, swipeable, and smooth
+	// because the browser scrolls it natively.
+	// 'pinned': mobile + !prefers-reduced-motion + scroll-driven animations. Tall pin + sticky +
+	// compositor-driven pan.
 	let mode: 'native' | 'pinned' = $state('native');
-	let travel = $state(0); // px the track must move, measured while still in native layout
-	let progress = $state(0); // 0..1, clamped
-	// Is the pin within roughly a viewport of the screen? Gates the per-frame work only.
-	let near = $state(false);
-	// Latches true the first time the pin is approached and never goes back. Gates the
-	// compositing layer — deliberately one-way, see the will-change note in the styles.
-	let promoted = $state(false);
-
-	// Non-reactive: read/written inside the rAF-throttled scroll/resize handlers only.
-	let ticking = false;
-	// Vertical distance the pin spans beyond its sticky slice — the denominator for progress.
-	// Cached, not re-read per frame: see measureSpan().
-	let span = 0;
-
-	function clamp(value: number, min: number, max: number) {
-		return Math.min(Math.max(value, min), max);
-	}
+	let travel = $state(0); // px the track must move; written on mount and on resize only
 
 	// Distance from the first card to the last one. Translating the track by exactly this much
 	// lands the last card where the first one started — i.e. centred, since the track's
@@ -68,103 +66,41 @@
 		travel = Math.max(0, last.offsetLeft - first.offsetLeft);
 	}
 
-	// Measured from real heights rather than reused from `travel`, so sub-pixel layout rounding
-	// can't desync the two — but cached rather than re-read every frame. offsetHeight forces a
-	// synchronous layout, and doing that inside the scroll handler (which then writes a style
-	// back out) is a read/write thrash that stalls the frame. Only ever changes on resize.
-	function measureSpan() {
-		span = pinEl && stickyEl ? pinEl.offsetHeight - stickyEl.offsetHeight : 0;
-	}
-
-	function update() {
-		if (!pinEl || span <= 0) {
-			progress = 0;
-			return;
-		}
-		// The scroll listener is attached for as long as the component is pinned, which means
-		// it fires for every scroll frame of the whole page — including the metres of page
-		// nowhere near this section. Without this guard each of those frames still recomputes
-		// progress and writes a fresh inline transform, for a section that is offscreen.
-		if (!near) return;
-		progress = clamp(-pinEl.getBoundingClientRect().top / span, 0, 1);
-	}
-
-	function onScrollOrResize() {
-		if (ticking) return;
-		ticking = true;
-		requestAnimationFrame(() => {
-			update();
-			ticking = false;
-		});
-	}
-
-	function onResize() {
-		measure();
-		// One frame later: the pin's height is derived from --travel, which Svelte has not
-		// written to the DOM yet, so measuring the span now would read the old layout.
-		requestAnimationFrame(() => {
-			measureSpan();
-			update();
-		});
-	}
-
-	function addListeners() {
-		window.addEventListener('scroll', onScrollOrResize, { passive: true });
-		window.addEventListener('resize', onResize);
-	}
-
-	function removeListeners() {
-		window.removeEventListener('scroll', onScrollOrResize);
-		window.removeEventListener('resize', onResize);
-	}
-
 	onMount(() => {
 		const mobileMq = window.matchMedia('(max-width: 1023.98px)');
 		const motionMq = window.matchMedia('(prefers-reduced-motion: reduce)');
 
-		// One viewport of margin either side, so both the promotion and the per-frame work
-		// begin before the section can be seen rather than on the frame it appears.
-		const proximity = new IntersectionObserver(
-			(entries) => {
-				for (const e of entries) near = e.isIntersecting;
-				if (near) promoted = true;
-				update();
-			},
-			{ rootMargin: '100% 0px 100% 0px' }
-		);
-		if (pinEl) proximity.observe(pinEl);
+		// Mirrors the @supports guard on the pinned styles. Without scroll-driven animations the
+		// pin would have nothing driving it, so those browsers keep the native snap slider —
+		// deliberately, rather than falling back to a scroll handler, which would just reinstate
+		// the stutter for whoever landed on the fallback.
+		const hasScrollTimeline =
+			typeof CSS !== 'undefined' && CSS.supports?.('animation-timeline', 'view()');
 
 		function evaluate() {
-			const shouldPin = mobileMq.matches && !motionMq.matches;
+			const shouldPin = mobileMq.matches && !motionMq.matches && hasScrollTimeline;
 			if (shouldPin && mode !== 'pinned') {
 				measure();
 				mode = 'pinned';
-				addListeners();
-				// Deferred one frame: `mode = 'pinned'` hasn't been committed to the DOM yet
-				// (Svelte batches the class/style update), so pinEl/stickyEl would still report
-				// their pre-pin heights if read synchronously here.
-				requestAnimationFrame(() => {
-					measureSpan();
-					update();
-				});
 			} else if (!shouldPin && mode !== 'native') {
-				removeListeners();
 				mode = 'native';
-				progress = 0;
 				travel = 0;
-				span = 0;
 			}
+		}
+
+		function onResize() {
+			if (mode === 'pinned') measure();
 		}
 
 		evaluate();
 		mobileMq.addEventListener('change', evaluate);
 		motionMq.addEventListener('change', evaluate);
+		window.addEventListener('resize', onResize);
 
 		return () => {
-			proximity.disconnect();
 			mobileMq.removeEventListener('change', evaluate);
 			motionMq.removeEventListener('change', evaluate);
-			removeListeners();
+			window.removeEventListener('resize', onResize);
 		};
 	});
 </script>
@@ -173,27 +109,17 @@
 	class="werkwijze"
 	id="werkwijze"
 	class:werkwijze--pinned={mode === 'pinned'}
-	class:werkwijze--promoted={mode === 'pinned' && promoted}
 	data-scroll-mode={mode}
 	style:--travel="{travel}px"
 >
-	<div class="werkwijze__pin" bind:this={pinEl}>
-		<div class="werkwijze__sticky" bind:this={stickyEl}>
+	<div class="werkwijze__pin">
+		<div class="werkwijze__sticky">
 			<header class="werkwijze__header">
 				<p class="werkwijze__eyebrow">Werkwijze</p>
 				<h2 class="werkwijze__heading">Rustig, persoonlijk en op jouw tempo.</h2>
 			</header>
 
-			<!-- The per-frame value is written straight onto this element as `transform`, not as a
-			     custom property on the section. A custom property is inherited, so changing one on
-			     an ancestor invalidates the inherited-property cascade for every descendant — and
-			     the descendants here are three inlined SVG traces totalling ~490 <path> elements.
-			     That is a style recalc over ~490 nodes on every scroll frame, to move one box. -->
-			<ul
-				class="werkwijze__cards"
-				bind:this={cardsEl}
-				style:transform={mode === 'pinned' ? `translate3d(${-(progress * travel)}px, 0, 0)` : null}
-			>
+			<ul class="werkwijze__cards" bind:this={cardsEl}>
 				<li>
 					<WerkwijzeCard
 						variant="filled"
@@ -294,58 +220,60 @@
 		display: none;
 	}
 
-	/* Mobile pin: JS-toggled only (matchMedia mobile + !prefers-reduced-motion), after mount.
-	   .werkwijze__pin is made taller than the viewport by --travel (the horizontal distance
-	   the track needs to move); .werkwijze__sticky then holds still at the top of the
-	   viewport for the whole tall pin, which is what turns vertical scroll distance into
-	   "dwell time" for the horizontal pan below. */
-	.werkwijze--pinned .werkwijze__pin {
-		/* svh, not vh: 100vh includes the mobile browser's collapsible toolbar in its
-		   calculation and changes value as that toolbar shows/hides mid-scroll, which would
-		   visibly re-jump the pin height (and therefore --progress) while the user is
-		   scrolling through it. 100svh is the small viewport height — stable regardless of
-		   toolbar state. */
-		height: calc(100svh + var(--travel, 0px));
-	}
+	/* Mobile pin. The pinned styles are gated twice over: the JS gate (mobile +
+	   !prefers-reduced-motion + scroll-timeline support) supplies .werkwijze--pinned, and this
+	   @supports block makes sure the pin can never exist without the thing that drives it. A
+	   pinned section whose track never moves would be a tall dead scroll with one card in it. */
+	@supports (animation-timeline: view()) {
+		/* .werkwijze__pin is made taller than the viewport by --travel (the horizontal distance
+		   the track has to move), and .werkwijze__sticky then holds still for the whole of that
+		   extra height — which is what turns vertical scroll distance into dwell time for the pan.
+		   The pin is also the view-timeline subject: its own progress across the scrollport IS the
+		   pan's progress, so the two cannot drift apart. */
+		.werkwijze--pinned .werkwijze__pin {
+			/* svh, not vh: 100vh factors in the mobile browser's collapsible toolbar and changes
+			   value as that toolbar shows and hides mid-scroll, which would re-jump the pin height
+			   underneath the reader. 100svh is the small viewport height — stable either way. */
+			height: calc(100svh + var(--travel, 0px));
+			view-timeline-name: --werkwijze-pin;
+			view-timeline-axis: block;
+		}
 
-	.werkwijze--pinned .werkwijze__sticky {
-		position: sticky;
-		top: 0;
-		height: 100svh;
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-	}
+		.werkwijze--pinned .werkwijze__sticky {
+			position: sticky;
+			top: 0;
+			height: 100svh;
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+		}
 
-	/* Scroll is never blocked: JS reads scroll position against the pin's tall height and writes
-	   the resulting translate directly onto this element as an inline style (see the template).
-	   No transform here, and no transition on purpose — the transform must track the scroll
-	   position exactly, 1:1, every frame; a transition would make it visibly lag the finger. */
-	.werkwijze--pinned .werkwijze__cards {
-		/* overflow: visible is load-bearing. The clip MUST NOT live on the element being
-		   transformed: an element's overflow clip is part of the element, so translating it
-		   drags the clip along and the whole window slides off as a rigid unit — card 1 exits
-		   and cards 2/3 stay clipped forever. Clipping happens one level up instead, on
-		   .werkwijze (overflow-x: clip), which never moves. */
-		overflow: visible;
-		scroll-snap-type: none;
-	}
+		.werkwijze--pinned .werkwijze__cards {
+			/* overflow: visible is load-bearing. The clip MUST NOT live on the element being
+			   transformed: an element's overflow clip is part of the element, so translating it
+			   drags the clip along and the whole window slides off as a rigid unit — card 1 exits
+			   and cards 2/3 stay clipped forever. Clipping happens one level up instead, on
+			   .werkwijze (overflow-x: clip), which never moves. */
+			overflow: visible;
+			scroll-snap-type: none;
 
-	/* Applied a viewport before the section is reachable, and then never removed — the latch is
-	   one-way on purpose.
+			/* No duration: with a scroll timeline the duration is `auto`, meaning "fill the range".
+			   The range is `contain`, which for a subject taller than the scrollport spans exactly
+			   the period where it covers the viewport — from the pin's top edge reaching the top of
+			   the screen to its bottom edge leaving it. That is precisely when .werkwijze__sticky is
+			   stuck, so the pan starts and ends on the same frames the pin engages and releases,
+			   with no measurement shared between them and nothing to keep in sync. */
+			animation: werkwijze-pan linear forwards;
+			animation-timeline: --werkwijze-pin;
+			animation-range: contain 0% contain 100%;
+			will-change: transform;
+		}
 
-	   will-change: transform asks for this subtree to live on its own compositing layer, and
-	   creating that layer means rasterising all of it in one go (three cards, ~1100x460 CSS px,
-	   which at a phone's 3x DPR is a ~4.5 megapixel texture). Destroying it means painting the
-	   content back into the parent. Both are real work, and a gate that toggles puts one of
-	   each on the frames either side of the section — precisely where a stutter is most
-	   visible, and in both scroll directions.
-
-	   So: pay it once, early, off to the side of the section, and never again. Holding the
-	   layer afterwards costs memory, not frames. Do not "tidy" this into a symmetric
-	   add/remove gate — that trade is the wrong way round. */
-	.werkwijze--promoted .werkwijze__cards {
-		will-change: transform;
+		@keyframes werkwijze-pan {
+			to {
+				transform: translate3d(calc(-1 * var(--travel, 0px)), 0, 0);
+			}
+		}
 	}
 
 	/* Desktop: static row, all cards visible — matches Figma exactly, no accordion/JS needed */
