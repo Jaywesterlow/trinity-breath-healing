@@ -1,9 +1,28 @@
 # Known Issues — deferred, not fixed yet
 
-Last updated: **2026-07-25**
+Last updated: **2026-07-26**
 
 Read the date above before answering "what issues are still open?" — anything here
 was true as of that date and may have been fixed since.
+
+---
+
+## Waiting on real-world data (owner to check after launch)
+
+### Hero entrance may be costing LCP
+
+The hero holds its text for **2.86s** while the illustration draws itself. The heading is the
+Largest Contentful Paint element, and an element at `opacity: 0` does not count as painted, so
+that wait lands on LCP. The project budget is LCP < 2.5s.
+
+Unresolved because it cannot be measured in the dev container — first paint there is ~13s,
+which swamps the animation entirely.
+
+**Owner:** after launch, check Search Console → Core Web Vitals → LCP. If it is flagged,
+shorten the hero draw (regenerate the trace with a shorter stagger) rather than removing the
+wait — the wait is a deliberate design choice. Pairs naturally with the SVG regrouping task.
+
+Full reasoning in `HANDOFF-polish-branch.md`.
 
 ---
 

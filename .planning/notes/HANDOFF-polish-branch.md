@@ -11,6 +11,32 @@ Companion documents, all in `.planning/notes/`:
 
 ---
 
+## ⚠️ Owner action item — check this after the site goes live
+
+**Not a code task. Nobody can do this from here. It needs a real visitor on a real phone.**
+
+The hero waits **2.86 seconds** — for the illustration to finish drawing — before any text
+appears. Google measures how quickly a page's main text shows up (Largest Contentful Paint),
+and the hero heading is the element it measures here. This wait very likely pushes that over
+the target.
+
+**What to do:** once the site is live and has had a few weeks of traffic, open Google Search
+Console → Core Web Vitals → LCP.
+
+- **If LCP is fine:** nothing to do. Leave the hero alone.
+- **If LCP is flagged as slow:** the fix is to **shorten the hero drawing animation**, not to
+  remove the wait. The wait is a deliberate design decision by the owner and should stay. The
+  trace's timing is generated, so regenerating `hero-illustration.svg` with a shorter total
+  stagger brings the number down without changing how the hero behaves. This overlaps with
+  outstanding item 2 (regrouping the SVG traces) — do them together.
+
+Why it was not settled during the session: it could not be measured in the dev container,
+where first paint alone is ~13 seconds. That swamps a 2.86s animation completely, and an A/B
+against a zero-delay build came back as noise. **That noise is not evidence the wait is
+harmless.** Details under "Open risk: LCP" further down.
+
+---
+
 ## Branches
 
 | branch | state |
