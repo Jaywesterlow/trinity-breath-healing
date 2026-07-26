@@ -46,6 +46,16 @@
 	.faq {
 		background: var(--color-bg-sand);
 		padding-block: var(--space-12);
+
+		/* Local to this section rather than the global motion tokens: --motion-base (250ms) with
+		   --ease-out (a steep expo curve, ~80% travelled in its first quarter) put nearly all of
+		   the movement into the first ~100ms, which reads as a snap however long the transition
+		   nominally lasts. A disclosure wants the opposite — motion spread across the middle, so
+		   the panel is visibly on its way. Opening is given longer than closing: opening is the
+		   part worth watching, closing just needs to not vanish. */
+		--faq-open: 480ms;
+		--faq-close: 380ms;
+		--faq-ease: cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
 	.faq__container {
@@ -94,31 +104,44 @@
 	.faq__item {
 		border-bottom: 1px solid var(--color-border);
 		display: grid;
-		grid-template-rows: auto 0fr;
-		transition: grid-template-rows var(--motion-base) var(--ease-out);
+		/* min-content, NOT auto, for the summary row. An `auto` track absorbs free space, and
+		   mid-transition there is a moment where the content row is still too small to hold the
+		   answer — so the summary row swallowed the difference and the question text visibly
+		   dropped ~65px and sprang back on every open. Measured: `auto` peaks the summary row at
+		   129px against its natural 64px; `min-content` holds it at 64px for the whole
+		   transition. The question must not move — only the panel beneath it. */
+		grid-template-rows: min-content 0fr;
+		transition: grid-template-rows var(--faq-close) var(--faq-ease);
 	}
 
 	.faq__item[open] {
-		grid-template-rows: auto 1fr;
+		grid-template-rows: min-content 1fr;
+		transition-duration: var(--faq-open);
 	}
 
 	/* The UA sets content-visibility: hidden on this box while the panel is closed, which would
 	   otherwise cut the transition off at the first frame — there is nothing to animate if the
 	   content is not being rendered. `allow-discrete` holds it visible for the whole duration
 	   instead, so the open and the close both play out. */
+	/* Closing state. The content-visibility duration has to match the collapse, not the fade:
+	   the UA sets content-visibility: hidden the instant the panel closes, and without holding
+	   it visible for the full collapse the panel would blink out and leave an empty box sliding
+	   shut. The answer fades out well before that, so the space closes on nothing. */
 	.faq__item::details-content {
 		overflow: hidden;
 		opacity: 0;
 		transition:
-			opacity var(--motion-fast) var(--ease-out),
-			content-visibility var(--motion-base) allow-discrete;
+			opacity 140ms ease,
+			content-visibility var(--faq-close) allow-discrete;
 	}
 
+	/* Opening state. The fade waits out the first third of the slide, so the answer arrives into
+	   space already made for it rather than appearing against a closed edge. */
 	.faq__item[open]::details-content {
 		opacity: 1;
-		/* The fade trails the opening slightly, so the text arrives into space that has already
-		   started to make room for it rather than appearing against a closed edge. */
-		transition-delay: 90ms, 0s;
+		transition:
+			opacity 320ms ease 160ms,
+			content-visibility var(--faq-open) allow-discrete;
 	}
 
 	.faq__question {
@@ -145,9 +168,15 @@
 		flex: 1;
 	}
 
+	/* Matched to the panel it describes — at 150ms the chevron finished long before the answer
+	   had, which made the whole thing feel disjointed. */
 	.faq__chevron {
 		flex-shrink: 0;
-		transition: transform var(--motion-fast) var(--ease-out);
+		transition: transform var(--faq-close) var(--faq-ease);
+	}
+
+	.faq__item[open] .faq__chevron {
+		transition-duration: var(--faq-open);
 	}
 
 	.faq__item[open] .faq__chevron {
