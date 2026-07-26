@@ -66,6 +66,8 @@ the flex item's width constant so only height moves, as before.
 
 - `src/lib/assets/images/` holds five dead 1×1 70-byte stubs (`hero.png`, `card-*.png`,
   `about-illustration-*.png`). Nothing imports them. Three asset dirs (`src/lib/images/`,
-  `src/lib/assets/images/`, `static/images/`) overlap by name — worth collapsing.
-- Prettier flags `Hero.svelte` (and 91 other files) — pre-existing, repo-wide, not touched.
+  `src/lib/assets/images/`, `static/images/`) overlap by name — worth collapsing. Moved to
+  `.planning/notes/KNOWN-ISSUES.md` so it does not stay buried here.
+- ~~Prettier flags `Hero.svelte` (and 91 other files) — pre-existing, repo-wide, not
+  touched.~~ **Done** — `6aef78e` formatted the repo and Prettier is now a CI gate.
 - Same draw-on treatment could apply to the card/about illustrations.

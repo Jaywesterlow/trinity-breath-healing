@@ -1,5 +1,10 @@
 # E2E failure triage
 
+> **Note added 2026-07-26:** the counts below (33 → 20) predate tests added on
+> 2026-07-25/26 — `werkwijze-scrolljack.spec.ts`, `faq-disclosure.spec.ts`, and a new
+> `reveal.spec.ts`. The suite has not been re-run since. The three buckets below are still the
+> right shape; re-measure the numbers before acting on any of its recommendations.
+
 _2026-07-13, recorded during Slice 2. Started at **33 failing**; **20 remain**. No test's expectations were weakened — the 13 that went green were fixed in the app, because the tests were right._
 
 ## Status

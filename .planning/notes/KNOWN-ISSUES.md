@@ -22,7 +22,7 @@ which swamps the animation entirely.
 shorten the hero draw (regenerate the trace with a shorter stagger) rather than removing the
 wait — the wait is a deliberate design choice. Pairs naturally with the SVG regrouping task.
 
-Full reasoning in `HANDOFF-polish-branch.md`.
+Full reasoning in the root `HANDOFF.md`.
 
 ---
 
@@ -44,6 +44,17 @@ Full reasoning in `HANDOFF-polish-branch.md`.
 - Separately: `Behandelingen.svelte` still ships `[carousel-debug]` `console.log` calls, one
   of which fires on every seek. Noticed 2026-07-25 while profiling; not touched because this
   section is off limits for now. Should go when the transitions are fixed.
+- Engineering notes from an earlier debugging pass on this carousel (Embla-based), salvaged
+  before the session's handoff files were archived:
+  - `engine.animation.stop()` is never restarted once Embla's own `render()` judges the
+    carousel settled and idle — this is the root cause of the fresh-page-load freeze (the
+    carousel does not move at all until the user manually flicks it).
+  - Embla only emits `select` from `ScrollTo.scrollTo()`, so pagination and the active-card
+    state never update from pure ticker motion; a custom `emitSelectIfIndexChanged()` was
+    added to keep them in sync during autoscroll.
+  - Hover was changed from a full stop to a 30% slowdown (`HOVER_FACTOR`) so it stops fighting
+    drag.
+  - The freeze bug was root-caused but not fixed, and never verified in a real browser.
 
 ---
 
@@ -79,3 +90,30 @@ per-path draw animation can be restored.
   section-level fade looks wrong.
 - Must degrade to fully visible with no JS (prerendered HTML must stay readable to crawlers)
   and must respect `prefers-reduced-motion`.
+
+---
+
+## Other open follow-ups
+
+### Three overlapping asset directories
+
+`src/lib/images/`, `src/lib/assets/images/`, and `static/images/` all exist and overlap by
+name. `src/lib/assets/images/` holds five dead 1×1 70-byte stubs (`hero.png`, `card-*.png`,
+`about-illustration-*.png`) that nothing imports. Worth collapsing into one location.
+
+### FAQ route is a stub, but the footer links to it
+
+`src/routes/faq/+page.svelte` is still a `StubLayout` stub while `Footer.svelte` links to
+`/faq` — a linked stub page is an SEO liability. Either render the FAQ content there or drop
+the footer link.
+
+### `image.test.ts` flakes on timeout
+
+Tests 5-7 in `tests/unit/image.test.ts` each spawn `node tsc` with `--ignoreconfig`; measured
+cold-start times (4789ms / 4233ms / 6131ms) sit right against the 5000ms vitest timeout, so a
+different one fails on each run. Fix is an explicit per-test timeout.
+
+### Contact copy assertions still commented out
+
+`scripts/check-copy.sh` has the Contact section's copy assertions commented out — deferred
+since the Contact section itself is still placeholders (see above).
