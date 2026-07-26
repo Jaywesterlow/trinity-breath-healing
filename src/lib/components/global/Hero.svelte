@@ -97,7 +97,9 @@
 					lichaamsgerichte therapie, ademwerk en energetische behandelingen help ik jou terug naar
 					rust, herstel en jezelf.
 				</p>
-				<ButtonLink href="/contact" label="Maak een afspraak" />
+				<div class="hero__cta">
+					<ButtonLink href="/contact" label="Maak een afspraak" />
+				</div>
 			</div>
 
 			<ul class="hero__cards" aria-label="Behandelingen">
@@ -145,6 +147,69 @@
 </section>
 
 <style>
+	/* ─── Entrance cascade ──────────────────────────────────────────────────────────
+	   The hero arrives a piece at a time, top to bottom, rather than all at once.
+
+	   Pure CSS, and deliberately not the scroll-reveal pattern used further down the page.
+	   That one arms the hidden state from JavaScript so the server-rendered HTML always shows
+	   finished content — safe for a section nobody has scrolled to yet, but wrong here: the
+	   hero is painted long before hydration on a phone, so arming it after the fact would show
+	   the hero, blank it, and fade it back in. A CSS animation is in force from the very first
+	   frame, needs no JavaScript at all, and cannot flash.
+
+	   `backwards` is what does that: it applies the keyframe's starting state during the delay,
+	   so an element with a 410ms delay is hidden from frame zero rather than visible until its
+	   turn comes.
+
+	   Ordered by where things sit on screen, not by DOM order — the two columns swap sides at
+	   1024px. The illustration is left out on purpose: its draw-on stroke animation is already
+	   its entrance, and fading it in on top of that would be two entrances for one element.
+
+	   The heading starts at 0ms, and that is not a stylistic choice. It is the likely LCP
+	   element, and an element at opacity 0 does not count as painted — so any delay given to
+	   the heading is added directly onto Largest Contentful Paint. Starting the cascade with
+	   the thing being measured costs nothing; making it wait costs exactly what it waits. */
+	@media (prefers-reduced-motion: no-preference) {
+		.hero__heading,
+		.hero__body,
+		.hero__cta,
+		.hero__social,
+		.hero__cards > li {
+			animation: hero-rise 620ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+		}
+
+		.hero__heading {
+			animation-delay: 0ms;
+		}
+		.hero__body {
+			animation-delay: 90ms;
+		}
+		.hero__cta {
+			animation-delay: 180ms;
+		}
+		/* Sits under the illustration on mobile and bottom-right on desktop — early enough not
+		   to lag behind the image it belongs to, late enough not to precede the heading. */
+		.hero__social {
+			animation-delay: 220ms;
+		}
+		.hero__cards > li:nth-child(1) {
+			animation-delay: 270ms;
+		}
+		.hero__cards > li:nth-child(2) {
+			animation-delay: 340ms;
+		}
+		.hero__cards > li:nth-child(3) {
+			animation-delay: 410ms;
+		}
+	}
+
+	@keyframes hero-rise {
+		from {
+			opacity: 0;
+			transform: translate3d(0, 16px, 0);
+		}
+	}
+
 	/* ─── Section ─── */
 	.hero {
 		background: var(--color-bg-sand);
