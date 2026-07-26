@@ -179,7 +179,19 @@
 		/* Longest --t + --d baked into hero-illustration.svg, i.e. the frame the last stroke
 		   finishes. Regenerating the trace changes this — the generator's stagger and duration
 		   are what set it, so re-measure rather than assuming it held. */
-		--hero-draw-ends: 2.86s;
+		--hero-draw-total: 2.86s;
+
+		/* The text starts arriving at the drawing's halfway point, not its end. Waiting for the
+		   full draw put the heading's first visible frame at 2.86s, and since the heading is the
+		   LCP element and an element at opacity 0 does not count as painted, that landed whole on
+		   Largest Contentful Paint — against a 2.5s budget.
+
+		   Halving it halves the cost almost exactly, because LCP is marked when opacity leaves 0
+		   (the end of this delay), not when the fade completes. The sequencing survives: the
+		   drawing is still visibly going when the text begins, so the two still read in order
+		   rather than together. Expressed as a fraction of the total so that regenerating the
+		   trace moves both in step. */
+		--hero-in-start: calc(var(--hero-draw-total) / 2);
 	}
 
 	@media (prefers-reduced-motion: no-preference) {
@@ -205,27 +217,27 @@
 		}
 
 		.hero__heading {
-			animation-delay: var(--hero-draw-ends);
+			animation-delay: var(--hero-in-start);
 		}
 		.hero__body {
-			animation-delay: calc(var(--hero-draw-ends) + 140ms);
+			animation-delay: calc(var(--hero-in-start) + 140ms);
 		}
 		.hero__cta {
-			animation-delay: calc(var(--hero-draw-ends) + 280ms);
+			animation-delay: calc(var(--hero-in-start) + 280ms);
 		}
 		/* Sits under the illustration on mobile and bottom-right on desktop — early enough not
 		   to lag behind the image it belongs to, late enough not to precede the heading. */
 		.hero__social {
-			animation-delay: calc(var(--hero-draw-ends) + 530ms);
+			animation-delay: calc(var(--hero-in-start) + 340ms);
 		}
 		.hero__cards > li:nth-child(1) {
-			animation-delay: calc(var(--hero-draw-ends) + 420ms);
+			animation-delay: calc(var(--hero-in-start) + 420ms);
 		}
 		.hero__cards > li:nth-child(2) {
-			animation-delay: calc(var(--hero-draw-ends) + 530ms);
+			animation-delay: calc(var(--hero-in-start) + 530ms);
 		}
 		.hero__cards > li:nth-child(3) {
-			animation-delay: calc(var(--hero-draw-ends) + 640ms);
+			animation-delay: calc(var(--hero-in-start) + 640ms);
 		}
 	}
 

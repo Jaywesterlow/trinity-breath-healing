@@ -75,9 +75,14 @@ Chrome does not count an element as painted while its opacity is 0. So a fade-in
 element adds its delay straight onto Largest Contentful Paint.
 
 Practical rule: **start the cascade with the element being measured.** A 0ms delay on the heading
-costs nothing; a 300ms delay costs 300ms. When a deliberate wait is required anyway (e.g. holding
-text until an illustration finishes drawing), that is a real trade — state the cost in the code
-and put a check in the handoff, don't bury it.
+costs nothing; a 300ms delay costs 300ms.
+
+When a deliberate wait is wanted anyway (e.g. holding text until an illustration has drawn),
+**overlap the two rather than sequencing them.** Starting at the halfway point of the first
+animation halved the LCP cost and the sequencing still read correctly — the drawing was visibly
+still going when the text began. Waiting for a preceding animation to *finish* is almost always
+more delay than the effect needs. State the residual cost in the code and put a field check in
+the handoff; don't bury it.
 
 ### Fade and movement want opposite curves
 

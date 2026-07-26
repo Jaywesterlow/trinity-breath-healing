@@ -11,9 +11,15 @@ was true as of that date and may have been fixed since.
 
 ### Hero entrance may be costing LCP
 
-The hero holds its text for **2.86s** while the illustration draws itself. The heading is the
-Largest Contentful Paint element, and an element at `opacity: 0` does not count as painted, so
-that wait lands on LCP. The project budget is LCP < 2.5s.
+The hero holds its text until the illustration is **halfway** through drawing — 1.43s, half of
+the 2.86s draw. The heading is the Largest Contentful Paint element, and an element at
+`opacity: 0` does not count as painted, so that wait lands on LCP. The project budget is
+LCP < 2.5s.
+
+Originally the text waited for the *whole* draw (2.86s), which was over budget on its own.
+Halving it halves the cost almost exactly, because LCP is marked when opacity leaves 0 — the end
+of the delay — not when the fade completes. 1.43s leaves real headroom, but only if the page
+itself paints quickly, so this still needs confirming with field data.
 
 Unresolved because it cannot be measured in the dev container — first paint there is ~13s,
 which swamps the animation entirely.

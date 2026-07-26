@@ -17,7 +17,7 @@ Companion documents, all in `.planning/notes/`:
 
 **Not a code task. Nobody can do this from here. It needs a real visitor on a real phone.**
 
-The hero waits **2.86 seconds** — for the illustration to finish drawing — before any text
+The hero waits **1.43 seconds** — half of the illustration's 2.86s draw — before any text
 appears. Google measures how quickly a page's main text shows up (Largest Contentful Paint),
 and the hero heading is the element it measures here. This wait very likely pushes that over
 the target.
@@ -33,7 +33,7 @@ Console → Core Web Vitals → LCP.
   outstanding item 2 (regrouping the SVG traces) — do them together.
 
 Why it was not settled during the session: it could not be measured in the dev container,
-where first paint alone is ~13 seconds. That swamps a 2.86s animation completely, and an A/B
+where first paint alone is ~13 seconds. That swamps an animation of this length completely, and an A/B
 against a zero-delay build came back as noise. **That noise is not evidence the wait is
 harmless.** Details under "Open risk: LCP" further down.
 
@@ -66,7 +66,7 @@ first third and read as an abrupt stop. Now ease-out-cubic over 1800ms.
 `tests/integration/faq-disclosure.spec.ts`.
 
 **Hero entrance** — staggered top-to-bottom cascade, pure CSS, waits for the illustration to
-finish drawing (2.86s) before starting.
+be halfway through drawing (1.43s) before starting.
 
 ---
 
@@ -175,7 +175,8 @@ stalling.
 
 ## The hero cascade, as built
 
-Order and delays, all offset by `--hero-draw-ends` (2.86s):
+Order and delays, all offset by `--hero-in-start`, which is half of `--hero-draw-total`
+(2.86s) — so 1.43s:
 
 `heading 0 → body 140 → cta 280 → social 340 → cards 420 / 530 / 640`
 
@@ -190,8 +191,13 @@ the cascade is heading → body → CTA.
 ### Open risk: LCP
 
 **The heading is the LCP element** — confirmed with a PerformanceObserver, not assumed. An
-element at `opacity: 0` does not count as painted, so the 2.86s wait for the drawing lands
-directly on Largest Contentful Paint. The project budget is LCP < 2.5s.
+element at `opacity: 0` does not count as painted, so the 1.43s wait lands directly on Largest
+Contentful Paint. The project budget is LCP < 2.5s.
+
+It was 2.86s — the full draw — until the owner asked for the text to start at the halfway
+point instead. That halves the cost almost exactly, since LCP is marked when opacity leaves 0
+(the end of the delay), not when the fade finishes. The sequencing still reads: the drawing is
+visibly still going when the text begins.
 
 This could not be measured in the container — first contentful paint there is ~13s, which
 swamps the animation and made an A/B against a zero-delay build come back as noise. **Do not
