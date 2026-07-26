@@ -183,43 +183,61 @@
 	}
 
 	@media (prefers-reduced-motion: no-preference) {
+		/* Two animations, not one, because the fade and the movement want opposite curves.
+		   Running both off a single 620ms expo keyframe made this read as a fly-in: an expo
+		   ease-out is ~80% done in its first quarter, so the element arrived almost at once and
+		   the movement — not the fade — was the thing you noticed.
+
+		   The fade is now the long, dominant half: 1300ms on a gentle curve, so it is visibly
+		   still fading most of the way through. The movement is the short, subordinate half:
+		   10px rather than 16, on a hard expo ease-out that settles early and gets out of the
+		   way. What is left is a slow fade with a hint of rise under it.
+
+		   A single animation-delay value applies to both entries in the list. */
 		.hero__heading,
 		.hero__body,
 		.hero__cta,
 		.hero__social,
 		.hero__cards > li {
-			animation: hero-rise 620ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+			animation:
+				hero-fade 1300ms cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards,
+				hero-rise 1100ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
 		}
 
 		.hero__heading {
 			animation-delay: var(--hero-draw-ends);
 		}
 		.hero__body {
-			animation-delay: calc(var(--hero-draw-ends) + 90ms);
+			animation-delay: calc(var(--hero-draw-ends) + 140ms);
 		}
 		.hero__cta {
-			animation-delay: calc(var(--hero-draw-ends) + 180ms);
+			animation-delay: calc(var(--hero-draw-ends) + 280ms);
 		}
 		/* Sits under the illustration on mobile and bottom-right on desktop — early enough not
 		   to lag behind the image it belongs to, late enough not to precede the heading. */
 		.hero__social {
-			animation-delay: calc(var(--hero-draw-ends) + 220ms);
+			animation-delay: calc(var(--hero-draw-ends) + 530ms);
 		}
 		.hero__cards > li:nth-child(1) {
-			animation-delay: calc(var(--hero-draw-ends) + 270ms);
+			animation-delay: calc(var(--hero-draw-ends) + 420ms);
 		}
 		.hero__cards > li:nth-child(2) {
-			animation-delay: calc(var(--hero-draw-ends) + 340ms);
+			animation-delay: calc(var(--hero-draw-ends) + 530ms);
 		}
 		.hero__cards > li:nth-child(3) {
-			animation-delay: calc(var(--hero-draw-ends) + 410ms);
+			animation-delay: calc(var(--hero-draw-ends) + 640ms);
+		}
+	}
+
+	@keyframes hero-fade {
+		from {
+			opacity: 0;
 		}
 	}
 
 	@keyframes hero-rise {
 		from {
-			opacity: 0;
-			transform: translate3d(0, 16px, 0);
+			transform: translate3d(0, 10px, 0);
 		}
 	}
 
