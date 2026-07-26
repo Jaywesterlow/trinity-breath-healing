@@ -7,10 +7,81 @@
 	 * Single source of truth: Google requires FAQPage markup to correspond to
 	 * content visible on the same page, so these must never diverge.
 	 *
-	 * Native <details>/<summary> on purpose — no JS, fully present in the initial
-	 * HTML for AI crawlers, and keyboard-accessible without an ARIA implementation.
+	 * Native <details>/<summary> on purpose — fully present in the initial HTML for
+	 * AI crawlers, and keyboard-accessible without an ARIA implementation.
+	 *
+	 * Opening animates in pure CSS. Closing cannot: the moment `open` is removed the
+	 * UA stops rendering the panel, so there is nothing left on screen to collapse.
+	 * `transition-behavior: allow-discrete` on `content-visibility` is supposed to
+	 * hold it visible for the duration, and does in Chromium — but not everywhere,
+	 * and where it doesn't the panel simply vanishes with no closing animation at all.
+	 * So the close is driven here instead: intercept the click, collapse the panel
+	 * while `open` is still set, and only then remove it.
+	 *
+	 * This is a progressive enhancement in the strict sense. It runs on interaction
+	 * only. It renders nothing, gates nothing, and touches no markup — every question
+	 * and answer is in the initial HTML either way, which is the reason this section
+	 * is built on <details> in the first place. Without JS the panel still opens with
+	 * its animation and closes instantly, exactly as a native <details> would.
 	 */
 	import { faqItems } from '$lib/content/faq/index';
+
+	/** Longest the close is allowed to take before we stop waiting for transitionend. */
+	const CLOSE_TIMEOUT = 800;
+
+	function onListClick(event: MouseEvent) {
+		const target = event.target;
+		if (!(target instanceof Element)) return;
+
+		const summary = target.closest('summary');
+		if (!summary) return;
+		const found = summary.closest('details.faq__item');
+		if (!(found instanceof HTMLDetailsElement)) return;
+		const item = found;
+
+		// Clicked again mid-close: cancel the collapse and leave the panel open, rather
+		// than queueing a second one against the first.
+		if (item.hasAttribute('data-closing')) {
+			event.preventDefault();
+			item.removeAttribute('data-closing');
+			return;
+		}
+
+		// Opening is the browser's job — the CSS handles it and native behaviour is better
+		// than anything reimplemented here. Same when motion is not wanted.
+		if (!item.open) return;
+		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+		// Closing: keep `open` set so the panel stays rendered, and let the CSS collapse it.
+		event.preventDefault();
+		item.setAttribute('data-closing', '');
+
+		let settled = false;
+		let timer: ReturnType<typeof setTimeout>;
+
+		function finish() {
+			if (settled) return;
+			settled = true;
+			clearTimeout(timer);
+			item.removeEventListener('transitionend', onEnd);
+			// Absent if a second click cancelled the close while it was running.
+			if (item.hasAttribute('data-closing')) {
+				item.removeAttribute('data-closing');
+				item.open = false;
+			}
+		}
+
+		function onEnd(e: TransitionEvent) {
+			// Only this element's own row transition — not opacity, and not anything
+			// bubbling up from the answer inside.
+			if (e.target === item && e.propertyName === 'grid-template-rows') finish();
+		}
+
+		item.addEventListener('transitionend', onEnd);
+		// transitionend does not fire if the transition is interrupted or never starts
+		// (a display change, a background tab). Without this the panel would be stuck open.
+		timer = setTimeout(finish, CLOSE_TIMEOUT);
+	}
 </script>
 
 <section class="faq" id="faq">
@@ -20,7 +91,13 @@
 			<h2 class="faq__heading">Veelgestelde vragen</h2>
 		</header>
 
-		<div class="faq__list">
+		<!-- Delegated: the click always originates on a native <summary>, which is already a
+		     keyboard-operable control, so Enter and Space reach this handler as clicks too. This
+		     div introduces no interactive surface of its own and must not claim a role — giving
+		     it one would announce a control to screen readers that does not exist. -->
+		<!-- svelte-ignore a11y_no_static_element_interactions -->
+		<!-- svelte-ignore a11y_click_events_have_key_events -->
+		<div class="faq__list" onclick={onListClick}>
 			{#each faqItems as item (item.question)}
 				<details class="faq__item">
 					<summary class="faq__question">
@@ -119,6 +196,15 @@
 		transition-duration: var(--faq-open);
 	}
 
+	/* The closing state, held by the script while `open` is still set — which is the point:
+	   the panel is still being rendered, so there is something on screen to collapse. Once the
+	   row transition finishes the script drops `open`, by which time the panel is already at
+	   zero height and removing it changes nothing visible. */
+	.faq__item[open]:global([data-closing]) {
+		grid-template-rows: min-content 0fr;
+		transition-duration: var(--faq-close);
+	}
+
 	/* The UA sets content-visibility: hidden on this box while the panel is closed, which would
 	   otherwise cut the transition off at the first frame — there is nothing to animate if the
 	   content is not being rendered. `allow-discrete` holds it visible for the whole duration
@@ -142,6 +228,14 @@
 		transition:
 			opacity 320ms ease 160ms,
 			content-visibility var(--faq-open) allow-discrete;
+	}
+
+	/* Fades out ahead of the collapse, so the space closes on nothing rather than squeezing
+	   legible text. No content-visibility here — `open` is still set, so the panel is rendering
+	   normally and there is nothing to hold visible. */
+	.faq__item[open]:global([data-closing])::details-content {
+		opacity: 0;
+		transition: opacity 140ms ease;
 	}
 
 	.faq__question {
@@ -177,6 +271,13 @@
 
 	.faq__item[open] .faq__chevron {
 		transition-duration: var(--faq-open);
+	}
+
+	/* `open` is still set during the close, so without this the chevron would stay rotated
+	   until the very end and then snap back. */
+	.faq__item[open]:global([data-closing]) .faq__chevron {
+		transform: rotate(0deg);
+		transition-duration: var(--faq-close);
 	}
 
 	.faq__item[open] .faq__chevron {
