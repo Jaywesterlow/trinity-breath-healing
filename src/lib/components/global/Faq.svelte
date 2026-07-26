@@ -25,6 +25,7 @@
 	 * its animation and closes instantly, exactly as a native <details> would.
 	 */
 	import { faqItems } from '$lib/content/faq/index';
+	import { reveal } from '$lib/actions/reveal';
 
 	/** Longest the close is allowed to take before we stop waiting for transitionend. */
 	const CLOSE_TIMEOUT = 800;
@@ -87,8 +88,8 @@
 <section class="faq" id="faq">
 	<div class="faq__container">
 		<header class="faq__header">
-			<p class="faq__eyebrow">FAQ</p>
-			<h2 class="faq__heading">Veelgestelde vragen</h2>
+			<p class="faq__eyebrow" use:reveal={{ delay: 0 }}>FAQ</p>
+			<h2 class="faq__heading" use:reveal={{ delay: 120 }}>Veelgestelde vragen</h2>
 		</header>
 
 		<!-- Delegated: the click always originates on a native <summary>, which is already a
@@ -98,8 +99,21 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div class="faq__list" onclick={onListClick}>
-			{#each faqItems as item (item.question)}
-				<details class="faq__item">
+			{#each faqItems as item, i (item.question)}
+				<details
+					class="faq__item"
+					use:reveal={{
+						delay: Math.min(240 + i * 90, 240 + 6 * 90),
+						/* No rise here: this element owns its own grid-template-rows disclosure
+						   transition (open/close, see the style block below). Animating its
+						   transform — even via Web Animations, even to a no-op offset — promotes
+						   it onto its own compositing layer for the animation's duration, and
+						   that promotion left it unable to run its close transition afterwards,
+						   confirmed empirically in isolation (see reveal.ts's doc comment). Fade
+						   only; opacity is unaffected by this. */
+						distance: 0
+					}}
+				>
 					<summary class="faq__question">
 						<span>{item.question}</span>
 						<svg class="faq__chevron" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
