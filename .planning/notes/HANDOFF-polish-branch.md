@@ -239,17 +239,44 @@ Both bit this session. Neither is caught by build, type check, lint or snapshot.
 
 ---
 
-## How the owner works
+## How to work on this project
 
-- Wants **short replies.** They have asked more than once. Lead with the answer.
-- `/caveman` skill is active — terse, no filler. Drop it for anything genuinely complex.
-- They set up a main-agent/subagent split: this session as Opus planning and dividing work,
-  Sonnet subagents doing the execution. One was used (the Werkwijze rewrite) with a fully
-  specified contract; the rest was done inline because the tasks were small or delicate. Ask
-  before spawning.
-- They will say "it's still wrong" rather than accept a fix that does not work. **Verify in a
-  real browser and quote the numbers.** Several times a change looked right in the code and
-  was wrong on the device — and once, a measurement that appeared to confirm success was
-  simply measuring the wrong thing.
-- When something cannot be verified in this environment, say so plainly rather than implying
-  it was checked.
+### You are the orchestrator
+
+The owner set this up deliberately: **the main agent plans and divides the work, Sonnet
+subagents execute it.** Follow that.
+
+- **Do the thinking yourself.** Read the code, find the cause, decide the approach, write the
+  spec. That part does not get delegated.
+- **Delegate the execution.** Spawn a Sonnet subagent per logical chunk, with a specification
+  tight enough that it cannot fail: exact files, exact contract (class names, attributes, prop
+  names), what to keep untouched, what to run to verify, and an instruction not to commit or
+  push. You commit.
+- **Check what comes back.** A subagent reported the Werkwijze rewrite as blocked on Playwright
+  and it turned out to be an environment version mismatch, not a code problem — the tests ran
+  fine once pointed at the browser that exists. Their results are input, not verdicts.
+- **Judgement call on size.** A one-word copy change or a two-line CSS fix is not worth a
+  subagent — the spin-up costs more than the work. Delicate debugging where you already hold
+  the context is usually faster inline too. Everything larger: delegate.
+
+### How to write to the owner
+
+- **Short.** They have asked more than once, and asked again for this note.
+- **Bullets, not paragraphs.** Small bits. Bold the thing that matters.
+- Lead with the answer, then the reasoning, then the caveats. Never the reverse.
+- Quote numbers instead of adjectives — "0 differing pixels", "23 steps", "0.8ms/frame".
+- `/caveman` is active: terse, no filler, no preamble. Drop it only for genuinely complex
+  explanations, and say you are dropping it.
+
+### Standards they hold
+
+- They will say **"it's still wrong"** rather than accept a fix that does not work. Verify in a
+  real browser before claiming success. Several times a change looked right in the code and was
+  wrong on the device — and once, a measurement that appeared to confirm success was simply
+  measuring the wrong thing.
+- **Push after every change.** They review on Vercel previews from a phone and cannot run a dev
+  server.
+- **One concern per change.** They have said explicitly: do not fix several things at once,
+  because then a regression cannot be traced.
+- When something cannot be verified in this environment, **say so plainly** rather than
+  implying it was checked.
