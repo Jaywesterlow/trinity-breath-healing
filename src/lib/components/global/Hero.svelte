@@ -165,10 +165,23 @@
 	   1024px. The illustration is left out on purpose: its draw-on stroke animation is already
 	   its entrance, and fading it in on top of that would be two entrances for one element.
 
-	   The heading starts at 0ms, and that is not a stylistic choice. It is the likely LCP
-	   element, and an element at opacity 0 does not count as painted — so any delay given to
-	   the heading is added directly onto Largest Contentful Paint. Starting the cascade with
-	   the thing being measured costs nothing; making it wait costs exactly what it waits. */
+	   The whole cascade waits for the illustration to finish drawing itself, so the two
+	   entrances read as one sequence rather than talking over each other.
+
+	   KNOWN COST, accepted deliberately: the heading is the LCP element, and an element at
+	   opacity 0 does not count as painted, so this delay lands directly on Largest Contentful
+	   Paint. It was 1ms before this wait was added. The project's budget is LCP < 2.5s, and
+	   the wait alone is 2.86s — so LCP is over budget by roughly the length of the draw. The
+	   fix, if that budget starts to bite, is to shorten the draw rather than to unpick the
+	   sequencing: the trace's stagger is generated, and regenerating it with a shorter total
+	   pulls this number down with it. */
+	.hero {
+		/* Longest --t + --d baked into hero-illustration.svg, i.e. the frame the last stroke
+		   finishes. Regenerating the trace changes this — the generator's stagger and duration
+		   are what set it, so re-measure rather than assuming it held. */
+		--hero-draw-ends: 2.86s;
+	}
+
 	@media (prefers-reduced-motion: no-preference) {
 		.hero__heading,
 		.hero__body,
@@ -179,27 +192,27 @@
 		}
 
 		.hero__heading {
-			animation-delay: 0ms;
+			animation-delay: var(--hero-draw-ends);
 		}
 		.hero__body {
-			animation-delay: 90ms;
+			animation-delay: calc(var(--hero-draw-ends) + 90ms);
 		}
 		.hero__cta {
-			animation-delay: 180ms;
+			animation-delay: calc(var(--hero-draw-ends) + 180ms);
 		}
 		/* Sits under the illustration on mobile and bottom-right on desktop — early enough not
 		   to lag behind the image it belongs to, late enough not to precede the heading. */
 		.hero__social {
-			animation-delay: 220ms;
+			animation-delay: calc(var(--hero-draw-ends) + 220ms);
 		}
 		.hero__cards > li:nth-child(1) {
-			animation-delay: 270ms;
+			animation-delay: calc(var(--hero-draw-ends) + 270ms);
 		}
 		.hero__cards > li:nth-child(2) {
-			animation-delay: 340ms;
+			animation-delay: calc(var(--hero-draw-ends) + 340ms);
 		}
 		.hero__cards > li:nth-child(3) {
-			animation-delay: 410ms;
+			animation-delay: calc(var(--hero-draw-ends) + 410ms);
 		}
 	}
 
