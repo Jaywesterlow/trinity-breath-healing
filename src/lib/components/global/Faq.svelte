@@ -27,6 +27,15 @@
 	import { faqItems } from '$lib/content/faq/index';
 	import { reveal } from '$lib/actions/reveal';
 
+	/**
+	 * showHeading — defaults true so the landing page (which has no <h1> of its own above
+	 * this section) is unaffected. `/faq` renders its own <h1> via <PageTitle> and passes
+	 * `false` here to avoid a redundant "Veelgestelde vragen" heading directly beneath it —
+	 * two headings with identical text back to back is not a heading-level skip, but it is
+	 * noise neither a reader nor a crawler needs.
+	 */
+	let { showHeading = true }: { showHeading?: boolean } = $props();
+
 	/** Longest the close is allowed to take before we stop waiting for transitionend. */
 	const CLOSE_TIMEOUT = 800;
 
@@ -87,10 +96,12 @@
 
 <section class="faq" id="faq">
 	<div class="faq__container">
-		<header class="faq__header">
-			<p class="faq__eyebrow" use:reveal={{ delay: 0 }}>FAQ</p>
-			<h2 class="faq__heading" use:reveal={{ delay: 120 }}>Veelgestelde vragen</h2>
-		</header>
+		{#if showHeading}
+			<header class="faq__header">
+				<p class="faq__eyebrow" use:reveal={{ delay: 0 }}>FAQ</p>
+				<h2 class="faq__heading" use:reveal={{ delay: 120 }}>Veelgestelde vragen</h2>
+			</header>
+		{/if}
 
 		<!-- Delegated: the click always originates on a native <summary>, which is already a
 		     keyboard-operable control, so Enter and Space reach this handler as clicks too. This

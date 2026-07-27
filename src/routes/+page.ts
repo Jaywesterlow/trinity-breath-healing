@@ -2,8 +2,6 @@ import type { PageLoad } from './$types';
 import { defaults } from '$lib/seo/defaults';
 import { buildGraph } from '$lib/schema/buildGraph';
 import { buildWebPage } from '$lib/schema/webpage';
-import { faqItems } from '$lib/content/faq/index';
-import { buildFaqPage } from '$lib/schema/faq';
 
 /**
  * Landing page load — SEO-09 / BLOCKER-3.
@@ -17,6 +15,12 @@ import { buildFaqPage } from '$lib/schema/faq';
  *
  * Both UI and structured data agree — no drift possible. Phase 1 may add per-section
  * dateModified from MDX/Sanity frontmatter; this landing date persists as the site-level signal.
+ *
+ * No FAQPage node here: the `<Faq>` section is still rendered on this page (it's a genuine
+ * conversion aid), but the FAQPage JSON-LD entity now lives solely on `/faq` — see that route's
+ * +page.ts for the reasoning. Emitting the identical FAQPage on two different URLs would be a
+ * duplication risk with no upside; `/faq` is the dedicated, citeable resource for the same
+ * questions and the one that should own the structured-data claim.
  */
 export const load: PageLoad = async () => ({
 	meta: { ...defaults, dateModified: __BUILD_DATE__ },
@@ -27,8 +31,7 @@ export const load: PageLoad = async () => ({
 				description: defaults.description,
 				path: '/',
 				dateModified: __BUILD_DATE__
-			}),
-			buildFaqPage(faqItems)
+			})
 		],
 		path: '/'
 	})
