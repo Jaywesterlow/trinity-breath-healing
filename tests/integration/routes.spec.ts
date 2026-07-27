@@ -1,7 +1,7 @@
 /**
  * routes.spec.ts — Playwright integration test for Plan 05 Task 2.
  *
- * Verifies that all 14 stub routes:
+ * Verifies that all 13 remaining stub routes:
  *   1. Return HTTP 200
  *   2. Each has exactly one <h1> matching the route's title text fragment
  *   3. <title> is 50-60 chars and matches STUB_META[path].title
@@ -12,10 +12,14 @@
  *   8. No two stubs render identical body content
  *   9. Stubs do NOT render <time datetime> (SEO-09 is landing-only in Phase 0)
  *
+ * `/faq` graduated to real content and is no longer in STUB_PATHS — it has its own
+ * coverage requirements (FAQPage JSON-LD, `<time>`-free but otherwise not stub-shaped)
+ * that don't fit this generic stub-route contract. See src/routes/faq/+page.ts.
+ *
  * Playwright config: tests/integration/ dir, webServer: pnpm preview on port 4173.
  * Run AFTER: PUBLIC_SITE_URL=https://trinity-breath-healing.vercel.app pnpm build
  *
- * Requirements: FND-08 (14 reserved stubs), Phase 0 success criterion #3
+ * Requirements: FND-08 (14 reserved stubs, 13 remaining), Phase 0 success criterion #3
  */
 import { test, expect } from '@playwright/test';
 import { parse } from 'node-html-parser';
@@ -35,14 +39,13 @@ const STUB_PATHS = [
 	'/diensten/spinal-touch',
 	'/blog',
 	'/artikelen',
-	'/faq',
 	'/privacyverklaring',
 	'/algemene-voorwaarden'
 ] as const;
 
 const SERVICE_SLUGS = ['mahatma-healing', 'goldhealing', 'raster-energie', 'spinal-touch'] as const;
 
-test.describe.parallel('14 stub routes — SEO scaffolding', () => {
+test.describe.parallel('13 stub routes — SEO scaffolding', () => {
 	for (const path of STUB_PATHS) {
 		test(`GET ${path} returns 200 with correct SEO scaffolding`, async ({ page }) => {
 			const response = await page.goto(path);

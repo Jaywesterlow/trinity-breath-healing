@@ -15,7 +15,7 @@ export const ALL_ROUTES = [
 	{ path: '/diensten/spinal-touch', title: 'Spinal Touch', kind: 'service-stub' },
 	{ path: '/blog', title: 'Blog', kind: 'stub' },
 	{ path: '/artikelen', title: 'Artikelen', kind: 'stub' },
-	{ path: '/faq', title: 'Veelgestelde vragen', kind: 'stub' },
+	{ path: '/faq', title: 'Veelgestelde vragen', kind: 'page' },
 	{ path: '/privacyverklaring', title: 'Privacyverklaring', kind: 'stub' },
 	{ path: '/algemene-voorwaarden', title: 'Algemene voorwaarden', kind: 'stub' }
 ] as const;
