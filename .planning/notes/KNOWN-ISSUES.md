@@ -129,11 +129,33 @@ results both show the icon.
 `/faq` — a linked stub page is an SEO liability. Either render the FAQ content there or drop
 the footer link.
 
-### `image.test.ts` flakes on timeout
+### PRF-03 is marked done in REQUIREMENTS.md and is not implemented
 
-Tests 5-7 in `tests/unit/image.test.ts` each spawn `node tsc` with `--ignoreconfig`; measured
-cold-start times (4789ms / 4233ms / 6131ms) sit right against the 5000ms vitest timeout, so a
-different one fails on each run. Fix is an explicit per-test timeout.
+`REQUIREMENTS.md` line 83 states **"PRF-03: All non-hero images lazy-loaded"** with the box
+ticked. Of the twelve `<img>` elements on the landing page, **none carries a `loading`
+attribute at all** — every one is eager.
+
+It went unnoticed because the test guarding it counted occurrences of `loading="eager"`, a
+proxy that reads zero whether the requirement is perfectly met or completely unimplemented.
+That test is skipped and has been rewritten to assert the real contract, still skipped, with
+the unskip conditions written into it (`tests/integration/html-audit.spec.ts`).
+
+**This needs a decision, not a sweep.** Blanket-lazying is wrong: the nav logo is above the
+fold, the hero service cards are at it, and the Werkwijze card art pans horizontally while
+pinned — those sit vertically inside the viewport but horizontally outside it, and lazy
+loading keys off viewport intersection, so they would very likely pop in mid-pan.
+Behandelingen's carousel icons have the same problem.
+
+So the requirement needs rewording to "every image outside a named, justified allowlist is
+lazy". Write the allowlist, apply `loading="lazy"` to the rest, set the constant in the test,
+unskip it — then check the pan and the carousel on a real device, because pop-in is the
+failure mode and no static audit will show it.
+
+### `image.test.ts` flakes on timeout — FIXED 2026-07-27
+
+Tests 5-7 now carry an explicit 20000ms timeout. They spawn a cold `tsc` measured at
+4233-6131ms against vitest's 5000ms default, so whichever landed on the slow end failed and a
+different one failed each run. Ran three times consecutively to confirm.
 
 ### Contact copy assertions still commented out
 
