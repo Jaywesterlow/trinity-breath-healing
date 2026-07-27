@@ -106,11 +106,22 @@ per-path draw animation can be restored.
 
 ## Other open follow-ups
 
-### Three overlapping asset directories
+### Three overlapping asset directories — RESOLVED 2026-07-27
 
-`src/lib/images/`, `src/lib/assets/images/`, and `static/images/` all exist and overlap by
-name. `src/lib/assets/images/` holds five dead 1×1 70-byte stubs (`hero.png`, `card-*.png`,
-`about-illustration-*.png`) that nothing imports. Worth collapsing into one location.
+The five dead 1×1 stubs in `src/lib/assets/images/` are gone and the directory with them.
+
+The remaining two directories are justified, not duplication, so they stay: `src/lib/images/`
+holds artwork imported through Vite (hashed and bundled), `static/images/` holds files
+referenced by a literal `/images/...` URL. They are not interchangeable — moving a
+literal-URL file into `src/lib/` would change its served path to a hashed one and break the
+reference. Verified by pixel diff at two viewports, zero differing pixels.
+
+### No favicon is wired up at all
+
+`src/app.html` has no `<link rel="icon">`, and `src/lib/assets/favicon.svg` is referenced by
+nothing. Every page load 404s on `/favicon.ico` — visible in the preview server log on every
+run. Small, but it is a request failing on literally every visit, and browsers and search
+results both show the icon.
 
 ### FAQ route is a stub, but the footer links to it
 
