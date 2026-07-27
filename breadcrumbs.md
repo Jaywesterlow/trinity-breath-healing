@@ -8,7 +8,7 @@ project? If it is specific to Trinity, it does not belong here.
 
 Each entry: what was decided, why, and how to spot the same situation again.
 
-Last updated **2026-07-26**.
+Last updated **2026-07-27**.
 
 ---
 
@@ -83,6 +83,23 @@ animation halved the LCP cost and the sequencing still read correctly — the dr
 still going when the text began. Waiting for a preceding animation to *finish* is almost always
 more delay than the effect needs. State the residual cost in the code and put a field check in
 the handoff; don't bury it.
+
+### Draw-on line art: the fault is usually overlap, not order
+
+A traced "self-drawing" illustration looked like it appeared all at once rather than being
+drawn. The notes blamed stroke order. The order was fine — strokes were already sorted
+top-to-bottom. The fault was the **ratio**: 367 strokes staggered across 1.21s while each took
+~1s to draw, so hundreds were in flight at any instant and the whole image resolved together.
+
+The number that matters is **how many strokes are mid-draw at once** —
+`strokes x stroke_duration / total_duration`. Around 10% reads as a pen moving through the
+drawing. Most of them at once reads as a fade.
+
+Related: **spatial clustering does not recover objects in line art.** Union-find over dilated
+stroke bounding boxes was tried and abandoned — a long curved stroke's bounding box covers much
+of the canvas, so boxes overlap across unrelated objects. Results swung from 18 clusters to 1
+across a 0.5% change in the dilation constant. There is no stable object scale to find that way.
+Fix the pacing instead; it is one number and it generalises.
 
 ### Fade and movement want opposite curves
 

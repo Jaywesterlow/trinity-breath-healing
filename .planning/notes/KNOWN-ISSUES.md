@@ -1,6 +1,6 @@
 # Known Issues — deferred, not fixed yet
 
-Last updated: **2026-07-26**
+Last updated: **2026-07-27**
 
 Read the date above before answering "what issues are still open?" — anything here
 was true as of that date and may have been fixed since.
@@ -66,14 +66,19 @@ Full reasoning in the root `HANDOFF.md`.
 
 ## In scope for the polish pass (branch `polish/site-polish`)
 
-### 1. Draw-on order is random on non-hero art
+### 1. Draw-on pacing — FIXED 2026-07-27
 
-- `Hero.svelte` / `hero-illustration.svg` is correct: 4 semantic groups, so ridges → tree →
-  river → waterfall draw in a readable order.
-- `card-kennismaking.svg` (teacups) and `card-verdieping-bg.svg` (tree + path) have all paths
-  in **one** group with uniform micro-delays baked in path-index order. Result: everything
-  appears to draw at once, in no meaningful order.
-- Fix: group paths semantically and re-stagger, matching the hero's approach.
+Was recorded here as "paths draw in no meaningful order". That was wrong: `drawtrace.py`
+already sorts strokes top-to-bottom. The real cause was **overlap** — 367 strokes staggered
+across 1.21s while each took ~1s, so hundreds were mid-draw at any instant and the image
+appeared to resolve all at once rather than be drawn.
+
+Fixed by re-pacing all seven mask-based traces with
+`.planning/quick/20260713-hero-draw-on/trace/regroup.py`: stagger spread across the full
+2.6s, each stroke 0.26s, so ~10% are in flight at any moment. Geometry untouched.
+
+`hero-illustration.svg` is a different technique entirely — 4 hand-named groups, no mask —
+and was deliberately left alone.
 
 ### 1b. Card art is parked as `<img>`, not inline
 
