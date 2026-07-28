@@ -50,9 +50,10 @@ ap.add_argument('--stroke', type=float, default=0.26, help='per-stroke duration,
 ap.add_argument(
     '--order',
     default='y',
-    choices=['y', 'len', 'keep'],
-    help='y: top to bottom (default). len: longest first, structure before detail. '
-    'keep: leave the existing order alone.',
+    choices=['y', 'y-up', 'len', 'keep'],
+    help='y: top to bottom (default). y-up: bottom to top — right when the subject reads as '
+    'building upward, e.g. cups before the steam above them. len: longest first, structure '
+    'before detail. keep: leave the existing order alone.',
 )
 ap.add_argument('--dry-run', action='store_true', help='report, write nothing')
 a = ap.parse_args()
@@ -86,6 +87,8 @@ strokes = [{'match': m, 'i': i, 'cy': measure(m.group(1))[0], 'len': measure(m.g
 
 if a.order == 'y':
     strokes.sort(key=lambda s: s['cy'])
+elif a.order == 'y-up':
+    strokes.sort(key=lambda s: -s['cy'])
 elif a.order == 'len':
     strokes.sort(key=lambda s: -s['len'])
 
