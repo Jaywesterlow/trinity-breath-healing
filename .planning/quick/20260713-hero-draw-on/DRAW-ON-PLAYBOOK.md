@@ -222,3 +222,59 @@ broken.
 
 **Do not commit.** Report back — commits need the user's explicit sign-off, with the message
 proposed up front in Conventional Commits format.
+
+---
+
+## The source PNGs are NOT lost — recover them from git history
+
+Added 2026-07-28. Two separate sessions concluded the source artwork was gone and that the
+traces therefore could not be regenerated. That is wrong, and it blocked real work twice.
+
+`a74eb55 feat(images): vectorise the line art` deleted the source PNGs from `static/images/`
+when the SVGs replaced them. Deleted from the working tree is not deleted from history. Every
+one is still reachable, byte for byte:
+
+```sh
+mkdir -p /tmp/orig
+git cat-file -p 7b4b6156a7ce11391240a22b43f1e870bb4b50c5 > /tmp/orig/card-kennismaking.png   # 1000x1084
+git cat-file -p 99befda60e0213c3873e5dec1d343d19187c73f8 > /tmp/orig/card-sessie.png          # 1000x1084
+git cat-file -p 0dc4e326174ec50a3f04c28b56e792688183d54e > /tmp/orig/card-verdieping-bg.png   # 1641x895
+git cat-file -p 709ea9d81177066c24b1259d77a8ec0fc9f447d8 > /tmp/orig/about-portrait-1.png     # 1060x1580
+git cat-file -p 9bb6bbad8782c689d8767569c9d9831695db8e86 > /tmp/orig/about-portrait-2.png     # 265x395
+git cat-file -p 56e046aa65d84e95738b78ce1cf455448eebbc30 > /tmp/orig/about-icon-heart.jpg
+git cat-file -p d058ffe9a5e3530f7d9ed05f4fc8a25bd9822f76 > /tmp/orig/about-icon-sprout.jpg
+```
+
+Confirmed genuine: each PNG's pixel dimensions match its SVG's `viewBox` exactly.
+
+To find any other deleted binary later, don't trust the working tree:
+
+```sh
+git rev-list --all --objects | grep -Ei '\.(png|jpg|webp)$' | while read sha path; do
+  echo "$(git cat-file -s "$sha") $sha $path"
+done | sort -rn | head -30
+```
+
+They are deliberately not re-committed — the repo does not need 1.5 MB of raster source in the
+tree when one command recovers it. This section is the substitute for that, so record any new
+SHA here rather than relying on someone thinking to look.
+
+## Known quality gap in the current traces
+
+Compared against the recovered originals on 2026-07-28, the traces are visibly cruder:
+
+- stroke weight is heavier and varies along a line, where the original is an even hairline
+- every intersection carries a small diamond-shaped blob
+- lines that pass behind other objects come out fragmented rather than continuous
+- one steam wisp in the teacups is broken outright
+- the Verdieping canopy has a spurious closed contour, and detached leaf fragments sit
+  unconnected at the far left
+
+The visible artwork is the compound **fill** path, not the mask strokes — so this is fill-trace
+quality, and re-running `drawtrace.py` with tuned thresholds is what would move it.
+
+Worth considering before retracing: the draw-on only needs the *mask* strokes to be
+approximate. The fill could instead be the original raster, masked by the traced strokes,
+which would be pixel-exact to the artwork and keep the animation. The Verdieping PNG is 890 KB
+raw but renders at roughly 400 px wide, so a resized WebP would likely be smaller than the
+87 KB SVG it replaces.
