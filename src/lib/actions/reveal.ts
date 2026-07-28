@@ -75,6 +75,17 @@ const RISE_EASING = 'cubic-bezier(0.16, 1, 0.3, 1)';
 const RISE_DURATION = 1100;
 
 export function reveal(node: HTMLElement, options: RevealOptions = {}) {
+	// matchMedia is guarded, not assumed. Svelte actions do not run during SSR, but they DO run
+	// under component unit tests, and a bare jsdom environment has no matchMedia — an unguarded
+	// call throws there and fails a test that has nothing to do with animation (it surfaced on
+	// Footer's landmark test the moment this action was added to the footer).
+	//
+	// If the preference cannot be read, skip the animation rather than guess. The element is
+	// left exactly as rendered, which is the same failure mode as every other bail here:
+	// no animation, never no content.
+	if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+		return;
+	}
 	if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
 		return;
 	}

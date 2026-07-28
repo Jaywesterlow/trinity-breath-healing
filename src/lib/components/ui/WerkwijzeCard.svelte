@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ButtonLink from '$lib/components/ui/interactions/ButtonLink.svelte';
 	import DrawOn from '$lib/components/ui/DrawOn.svelte';
+	import { reveal } from '$lib/actions/reveal';
 
 	let {
 		variant,
@@ -39,11 +40,9 @@
 >
 	{#if variant === 'outline'}
 		{#if artSvg}
-			<!-- animate={false}: the card art draws all its paths at once in raw trace order,
-			     which reads as noise rather than as an illustration being drawn. Parked fully
-			     drawn until the traces are regrouped semantically — see
-			     .planning/notes/KNOWN-ISSUES.md. -->
-			<DrawOn svg={artSvg} class="wcard__art-draw" animate={false} />
+			<!-- Draws itself. The art is deliberately NOT faded in: a fade would cross-dissolve
+			     the very strokes that are meant to appear one at a time. -->
+			<DrawOn svg={artSvg} class="wcard__art-draw" />
 		{:else if imgSrc}
 			<img
 				src={imgSrc}
@@ -57,13 +56,16 @@
 		{/if}
 	{/if}
 
-	<h3 class="wcard__title">{title}</h3>
-	<p class="wcard__body">{body}</p>
+	<!-- Text fades; the art draws. Cards 2 and 3 sit horizontally outside the viewport until
+	     the pan brings them in, and the observer only fires on intersection — so each card's
+	     text arrives as that card does, rather than all three firing when the section opens. -->
+	<h3 class="wcard__title" use:reveal={{ delay: 0 }}>{title}</h3>
+	<p class="wcard__body" use:reveal={{ delay: 110 }}>{body}</p>
 
 	{#if variant === 'filled'}
 		{#if artSvg}
-			<!-- animate={false} — same reason as the outline variant above. -->
-			<DrawOn svg={artSvg} class="wcard__img-draw" animate={false} />
+			<!-- Draws itself; see the outline variant above. -->
+			<DrawOn svg={artSvg} class="wcard__img-draw" />
 		{:else if imgSrc}
 			<img
 				src={imgSrc}
@@ -78,7 +80,7 @@
 	{/if}
 
 	{#if ctaHref && ctaLabel}
-		<div class="wcard__cta">
+		<div class="wcard__cta" use:reveal={{ delay: 220 }}>
 			<ButtonLink href={ctaHref} label={ctaLabel} withArrow />
 		</div>
 	{/if}

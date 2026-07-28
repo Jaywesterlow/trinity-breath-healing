@@ -1,20 +1,23 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import WerkwijzeCard from '$lib/components/ui/WerkwijzeCard.svelte';
+	import { reveal } from '$lib/actions/reveal';
 
 	// Centerline traces of the card art. Regenerate with .planning/quick/20260713-hero-draw-on/trace/.
 	//
-	// Referenced by URL, not inlined (?url, not ?raw), while the draw-on animation is parked —
-	// see .planning/notes/KNOWN-ISSUES.md. Each of these files is one compound fill path gated
-	// by a <mask> built from up to 367 stroked paths. Inlined, that mask is live DOM the browser
-	// must rasterise into an alpha surface every time this card's layer needs re-rastering — and
-	// this is the one part of the page that moves during scroll, so it is the one place that
-	// cost is paid per frame. As an <img> the browser rasterises the whole thing once and the
-	// pan becomes a plain texture move. Inlining only buys anything when the paths need to be
-	// individually animated, which right now they do not.
-	import verdiepingArt from '$lib/images/card-verdieping-bg.svg?url';
-	import kennismakingArt from '$lib/images/card-kennismaking.svg?url';
-	import sessieArt from '$lib/images/card-sessie.svg?url';
+	// Inlined (?raw) rather than referenced by URL, because these draw themselves stroke by
+	// stroke and an <img> cannot animate its own contents. That was the trade when they were
+	// parked as <img>: each file is one compound fill path gated by a <mask> of up to 367
+	// stroked paths, and inlined that mask is live DOM the browser re-rasterises whenever this
+	// card's layer is re-rastered — on the one part of the page that moves during scroll. It
+	// also puts ~129 KB back into the prerendered HTML.
+	//
+	// Re-inlined deliberately: the drawing is the point of the section, and the pan itself is
+	// now compositor-driven (see the view-timeline below), so the raster cost lands on entry
+	// rather than on every frame of the pan.
+	import verdiepingArt from '$lib/images/card-verdieping-bg.svg?raw';
+	import kennismakingArt from '$lib/images/card-kennismaking.svg?raw';
+	import sessieArt from '$lib/images/card-sessie.svg?raw';
 
 	// Sticky-pin + tall-spacer horizontal scroll — see
 	// .planning/notes/RESEARCH-werkwijze-scroll.md (the pin) and
@@ -122,8 +125,10 @@
 	<div class="werkwijze__pin">
 		<div class="werkwijze__sticky">
 			<header class="werkwijze__header">
-				<p class="werkwijze__eyebrow">Werkwijze</p>
-				<h2 class="werkwijze__heading">Rustig, persoonlijk en op jouw tempo.</h2>
+				<p class="werkwijze__eyebrow" use:reveal={{ delay: 0 }}>Werkwijze</p>
+				<h2 class="werkwijze__heading" use:reveal={{ delay: 120 }}>
+					Rustig, persoonlijk en op jouw tempo.
+				</h2>
 			</header>
 
 			<ul class="werkwijze__cards" bind:this={cardsEl}>
@@ -132,9 +137,7 @@
 						variant="filled"
 						title="Kennismaking"
 						body="Wat loskomt, laten we landen. Stap voor stap groeit er meer rust en ruimte, in je hoofd én je lijf."
-						imgSrc={kennismakingArt}
-						imgWidth={1000}
-						imgHeight={1084}
+						artSvg={kennismakingArt}
 					/>
 				</li>
 				<li>
@@ -142,9 +145,7 @@
 						variant="filled"
 						title="De sessie"
 						body="Met adem en lichaamswerk kom je in contact met wat er onder de oppervlakte leeft."
-						imgSrc={sessieArt}
-						imgWidth={1000}
-						imgHeight={1084}
+						artSvg={sessieArt}
 					/>
 				</li>
 				<li>
@@ -152,9 +153,7 @@
 						variant="outline"
 						title="Verdieping"
 						body="We beginnen rustig. In een eerste gesprek kijken we samen wat er speelt en wat je nodig hebt."
-						imgSrc={verdiepingArt}
-						imgWidth={1641}
-						imgHeight={895}
+						artSvg={verdiepingArt}
 						ctaHref="/contact"
 						ctaLabel="Maak een afspraak"
 					/>
