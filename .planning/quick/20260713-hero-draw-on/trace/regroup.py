@@ -72,12 +72,22 @@ ap.add_argument(
 )
 ap.add_argument(
     '--pace',
-    default='speed',
-    choices=['speed', 'even'],
-    help="speed (default): constant pen speed — every stroke's duration and start time are "
-    'proportional to its length, so the timeline is spent on ink rather than on stroke count. '
-    'even: every stroke gets --stroke seconds and an equal slice of the timeline (the old '
-    'behaviour).',
+    default='wave',
+    choices=['wave', 'speed', 'even'],
+    help='wave (default): the hero\'s character — long per-stroke durations packed into a tight '
+    'stagger, so a broad band of strokes is in flight at once and the image resolves quickly. '
+    "speed: constant pen speed — every stroke's duration and start time are proportional to its "
+    'length. Truer to a real pen, but only ~10 strokes are ever moving, so it reads slow and '
+    'the viewer waits. even: every stroke gets --stroke seconds and an equal slice of the '
+    'timeline (drawtrace.py\'s original).',
+)
+ap.add_argument(
+    '--spread',
+    type=float,
+    default=0.73,
+    help='wave pacing only: fraction of the timeline over which stroke start times are spread. '
+    'The remainder is what the last stroke has left to draw in, so it also sets the nominal '
+    'per-stroke duration. Lower = denser wavefront, faster read, messier. 0.73 is the hero.',
 )
 ap.add_argument(
     '--stroke', type=float, default=0.26, help='per-stroke duration, seconds — even pacing only'
@@ -165,7 +175,36 @@ elif a.order == 'nn':
 # ── Pacing ──────────────────────────────────────────────────────────────────────────────────
 total_ink = sum(s['len'] for s in strokes) or 1.0
 
-if a.pace == 'speed':
+if a.pace == 'wave':
+    # What makes the hero read as fast is not a shorter timeline — it is 2.86s for 372 strokes,
+    # about the same as everything else here. It is that ~84 strokes are drawing at any instant
+    # instead of ~10. Progress is visible everywhere at once, so the image resolves before the
+    # viewer starts waiting for it. Slightly messy, and that is the trade being made on purpose.
+    #
+    # Two levers produce that: start times packed into a fraction of the timeline, and per-stroke
+    # durations long enough to overlap heavily. Concurrency works out to roughly
+    # n * (mean duration) / total.
+    n = max(len(strokes) - 1, 1)
+    # The nominal duration is whatever the LAST stroke has left once the stagger has run — so
+    # `spread` sets the stagger and the duration together, and they cannot drift out of step.
+    base = a.total * (1 - a.spread)
+    # Duration still tracks length, or long lines whoosh past while specks crawl. But it tracks
+    # it through a sqrt and a clamp rather than proportionally: real lengths here span 447x
+    # (2px to 894px), and honouring that ratio at this concurrency would give the longest stroke
+    # ~10s. The hero's own durations span only about 3x, which is the range being matched.
+    p90 = sorted(x['len'] for x in strokes)[int(len(strokes) * 0.9)] or 1.0
+    times = []
+    for k, s in enumerate(strokes):
+        scale = min(max(0.45 + 0.9 * math.sqrt(s['len'] / p90), 0.4), 1.6)
+        times.append([(k / n) * a.total * a.spread, max(base * scale, a.min_d)])
+    end = max(t + d for t, d in times)
+    if end > 0:
+        f = a.total / end
+        times = [[t * f, d * f] for t, d in times]
+    new_times = {id(s['match']): tuple(t) for s, t in zip(strokes, times)}
+    concurrent = sum(d for _, d in times) / a.total
+    floored = sum(1 for _, d in times if d <= a.min_d * 1.001)
+elif a.pace == 'speed':
     times, cum = [], 0.0
     for s in strokes:
         # Serial baseline: the pen covers `total_ink` units in `--total` seconds, so a stroke
@@ -202,7 +241,7 @@ print(
     f'{a.src.name}: {len(strokes)} strokes, order={a.order}, pace={a.pace}, '
     f'{a.total:.2f}s total -> ~{concurrent:.1f} drawing at once'
 )
-if a.pace == 'speed':
+if a.pace != 'even':
     print(f'  {floored}/{len(strokes)} strokes short enough to hit the {a.min_d}s floor')
 if a.dry_run:
     sys.exit(0)
