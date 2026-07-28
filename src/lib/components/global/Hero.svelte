@@ -329,7 +329,12 @@
 	   --d (duration) are baked into the SVG, staggered ridges → tree → river → waterfall.
 	   Composited on the GPU; no JS, no layout, no scroll coupling. */
 	.hero__image-col :global(.hero__draw path) {
-		stroke-dasharray: 1;
+		/* Gap 1.1, not 1 — see DrawOn.svelte for the full reasoning. `stroke-dasharray: 1`
+		   parks the gap exactly over the path with no margin, and WebKit's rounding when it
+		   scales the pattern back from pathLength="1" leaves a sub-pixel dash that a round
+		   linecap paints as a full-width dot. The wider gap keeps the path clear until the
+		   offset animates; at offset 0 the dash covers it exactly, as before. */
+		stroke-dasharray: 1 1.1;
 		stroke-dashoffset: 1;
 		animation: hero-draw var(--d, 0.6s) ease-out var(--t, 0s) forwards;
 	}

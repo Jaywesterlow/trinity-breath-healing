@@ -64,13 +64,6 @@
 
 		armed = true;
 
-		// TEMPORARY 2026-07-28 — frozen in the armed-but-undrawn state so the pre-draw frame can
-		// be screenshotted at leisure. The strokes are hidden and the reveal is never released,
-		// so whatever stays visible is artwork the mask is NOT covering. Set this back to false
-		// (and delete this block) to restore the animation. Nothing else was changed.
-		const FREEZE_UNDRAWN = true;
-		if (FREEZE_UNDRAWN) return;
-
 		// Observe the <svg>, not this wrapper: the wrapper is display:contents, so it generates
 		// no box at all and an IntersectionObserver on it never reports an intersection.
 		const target = el.querySelector('svg') ?? el;
@@ -102,17 +95,39 @@
 		display: contents; /* the SVG inherits the slot the <img> used to occupy */
 	}
 
-	/* {@html} content carries no scoping class, so :global() under the scoped parent. */
+	/* {@html} content carries no scoping class, so :global() under the scoped parent.
+
+	   The gap is 1.1, not 1. `stroke-dasharray: 1` (one value = dash 1, gap 1) with offset 1
+	   parks the gap *exactly* over the path — zero margin for error. Browsers scale the dash
+	   pattern from pathLength="1" back to the path's real length in user units, and WebKit's
+	   rounding there leaves a sub-pixel sliver of dash on the path. A sliver would be invisible
+	   on its own, but these strokes carry stroke-linecap="round" at widths up to 22px, and a
+	   round cap paints a full-width dot at each end of *any* dash however short. That is the
+	   scatter of specks visible on iOS before the draw starts (Chromium's rounding happens to
+	   land the other way, so it never reproduced there). Widening the gap to 1.1 puts a 10%
+	   margin on both sides of the path — orders of magnitude more than the rounding error —
+	   so nothing is on the path until the offset animates. At offset 0 the dash [0,1] covers
+	   the path exactly, unchanged from before. */
 	.drawon--armed :global(.lt-draw path) {
-		stroke-dasharray: 1; /* pathLength="1" — one dash spans any path, whatever its length */
+		stroke-dasharray: 1 1.1; /* pathLength="1" — one dash spans any path, whatever its length */
 		stroke-dashoffset: 1;
+		/* Belt and braces for the pre-draw frame specifically: even if some engine's dash maths
+		   still leaks, an armed-but-not-yet-drawn stroke paints nothing. Released below the
+		   moment the element is drawn, so it can't suppress the animation itself. */
+		stroke-opacity: 0;
 	}
 
 	/* NB: the keyframes are declared `-global-drawon`, but the animation property references
 	   them WITHOUT the prefix — Svelte strips it when emitting the global @keyframes rule.
 	   Writing `animation: -global-drawon` names a keyframe that does not exist, so the strokes
-	   stay hidden at dashoffset 1 and nothing ever draws. */
+	   stay hidden at dashoffset 1 and nothing ever draws.
+
+	   `stroke-opacity` is restored here rather than in the keyframes: both classes are on the
+	   element at once once it draws, and this rule comes second at equal specificity, so it
+	   wins. Every stroke becomes paintable the instant the element is released; what staggers
+	   them is the dash offset, which is what should be doing the staggering. */
 	.drawon--drawn :global(.lt-draw path) {
+		stroke-opacity: 1;
 		animation: drawon var(--d, 0.6s) ease-out var(--t, 0s) forwards;
 	}
 
@@ -127,6 +142,7 @@
 		.drawon :global(.lt-draw path) {
 			stroke-dasharray: none;
 			stroke-dashoffset: 0;
+			stroke-opacity: 1;
 			animation: none;
 		}
 	}
