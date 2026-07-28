@@ -327,3 +327,32 @@ Playwright is available and screenshots work, but `/opt/pw-browsers` has chromiu
 WebKit, no Firefox, and `playwright install` is off-limits here. So a WebKit-specific rendering
 bug **cannot** be reproduced locally at all. When a visual bug doesn't reproduce, rule this out
 before doubting the report: the user's phone is the only WebKit available.
+
+### A draw-on animation has two independent knobs: order and pacing
+
+Both were wrong on the traced card art, and each produces a different complaint.
+
+**Order** decides whether it reads as drawing or as printing. A top-to-bottom sort is a
+scanline — a horizontal band of progress sweeping down, filling in whatever it passes — and on
+a tree it draws every leaf *before* the branch it hangs from. The fix is a greedy
+nearest-neighbour walk from an anchor: the pen finishes what it is next to before moving on.
+
+That also quietly solves the object-grouping problem that bbox clustering failed at. **The
+strokes of one object are each other's nearest neighbours**, so leaves, cups and limbs complete
+as units without the script ever deciding where an object ends. Pick the anchor as the point the
+subject grows from — trunk base, foot of the near cup — and the order becomes narrative for
+free: the tree grows and the path then unwinds away from its base.
+
+**Pacing** decides whether it reads as a pen. Equal duration per stroke is wrong whenever stroke
+lengths vary: on the tree, 51% of strokes are under 30px but carry 13% of the ink, so half the
+animation was spent on stipple while an 894px line was rushed through in the same 0.26s. Make
+duration and start time proportional to length — constant pen speed — with a floor, because a
+2px stroke with a 22px round cap is still a visible mark and needs a beat to arrive.
+
+### Render a filmstrip before shipping an animation
+
+Eight frames of the same SVG side by side, each with `getAnimations()` paused at a different
+`currentTime`, is a few lines of Playwright and shows the whole timeline at a glance. It caught
+the leaves-before-branches ordering instantly — something no still frame and no amount of
+reading `--t` values would have surfaced. Cheaper than a deploy cycle, and reviewable by the
+user without waiting for one.
