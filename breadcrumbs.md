@@ -356,3 +356,28 @@ Eight frames of the same SVG side by side, each with `getAnimations()` paused at
 the leaves-before-branches ordering instantly — something no still frame and no amount of
 reading `--t` values would have surfaced. Cheaper than a deploy cycle, and reviewable by the
 user without waiting for one.
+
+### What makes an animation feel fast is concurrency, not duration
+
+Measured the hero against the card art after "it takes too long to draw":
+
+| | strokes | total | drawing at once |
+|---|---|---|---|
+| hero | 372 | 2.86s | **84** |
+| tree (constant pen speed) | 367 | 3.40s | **10** |
+
+Nearly the same wall-clock, opposite feel. With ~10 strokes moving you watch a point crawl around
+the drawing and you are *waiting*; with ~84 the image resolves everywhere at once and is legible
+long before it finishes. Slightly messy mid-draw is the price, and it was the right price here.
+
+Concurrency ≈ `n × mean duration ÷ total`. So the lever is **per-stroke duration**, not the
+timeline. Lengthening each stroke and packing the start times *shortens the perceived wait*,
+which is the opposite of the intuition.
+
+Corollary worth keeping: **the physically accurate option lost.** Constant pen speed is how a
+real hand works and it produced the worse animation. Fidelity to the mechanism is not the goal;
+the goal is what the mechanism looks like to somebody who is not waiting for it.
+
+One trap when tying duration to stroke length at high concurrency: real lengths in these traces
+span 447x (2px to 894px). Proportional duration hands the longest stroke ~10s. The hero's own
+durations span only ~3x — so map length through a sqrt and a clamp, not proportionally.
