@@ -18,7 +18,10 @@
 	let {
 		svg,
 		class: klass = '',
-		animate = true
+		// TEMPORARY 2026-07-28 — default flipped to false so every traced image renders
+		// static and fully drawn, for screenshotting the artwork without animation in the way.
+		// Revert to `animate = true` when done. Nothing else was changed.
+		animate = false
 	}: {
 		svg: string;
 		class?: string;
