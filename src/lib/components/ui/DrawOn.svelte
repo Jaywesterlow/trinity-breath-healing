@@ -18,10 +18,7 @@
 	let {
 		svg,
 		class: klass = '',
-		// TEMPORARY 2026-07-28 — default flipped to false so every traced image renders
-		// static and fully drawn, for screenshotting the artwork without animation in the way.
-		// Revert to `animate = true` when done. Nothing else was changed.
-		animate = false
+		animate = true
 	}: {
 		svg: string;
 		class?: string;
@@ -66,6 +63,13 @@
 		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
 		armed = true;
+
+		// TEMPORARY 2026-07-28 — frozen in the armed-but-undrawn state so the pre-draw frame can
+		// be screenshotted at leisure. The strokes are hidden and the reveal is never released,
+		// so whatever stays visible is artwork the mask is NOT covering. Set this back to false
+		// (and delete this block) to restore the animation. Nothing else was changed.
+		const FREEZE_UNDRAWN = true;
+		if (FREEZE_UNDRAWN) return;
 
 		// Observe the <svg>, not this wrapper: the wrapper is display:contents, so it generates
 		// no box at all and an IntersectionObserver on it never reports an intersection.
