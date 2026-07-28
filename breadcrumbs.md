@@ -291,3 +291,39 @@ instruction not to commit.
 Several times a change was verifiably correct in this container and wrong on the user's device:
 `content-visibility: allow-discrete` honoured here and not there; GPU raster costs invisible to a
 headless browser. Environment parity is an assumption, and it is usually the wrong one.
+
+### A dash-hidden SVG stroke needs margin, not exactness
+
+The standard draw-on trick is `pathLength="1"` + `stroke-dasharray: 1` + `stroke-dashoffset: 1`,
+animated to offset 0. One dasharray value means *dash 1, gap 1*, so offset 1 parks the gap
+exactly over the path — the hidden state is correct to the last unit and has **no tolerance**.
+
+Engines scale that pattern from `pathLength` back to the path's real length in user units, and
+that division rounds. WebKit's rounding leaves a sub-pixel sliver of dash on the path; Chromium's
+happens to land the other way. A sliver is invisible on its own — except these strokes are
+`stroke-linecap="round"`, and a round cap paints a **full-width dot at each end of any dash,
+however short**. At mask stroke widths up to 22px that is a visible speck per stroke: a scatter
+across one card, an entire tree canopy on another.
+
+Fix is `stroke-dasharray: 1 1.1` — an explicit gap 10% longer than the path. The path sits clear
+of the pattern by a margin orders of magnitude larger than the rounding error, and at offset 0 the
+dash still covers it exactly, so the finished drawing is byte-identical.
+
+Generalises: **any hidden state defined by exact geometric cancellation is one rounding mode away
+from leaking.** Give it slack. Cheap insurance here was also arming with `stroke-opacity: 0` and
+restoring it on draw, so the pre-draw frame is blank independent of dash maths entirely.
+
+### To debug a transient state, freeze it — don't try to catch it
+
+The bug lived in the frame *before* an animation starts, which is unscreenshottable by hand: by
+the time you scroll to it and capture, it has drawn. A three-line temporary in the component
+(`const FREEZE_UNDRAWN = true; if (FREEZE_UNDRAWN) return;`) held the armed state open
+indefinitely, pushed to the preview, and made the frame available to inspect at leisure on a real
+device. Commit it as its own `temp:` commit so reverting is one command.
+
+### Only Chromium is installed in this container
+
+Playwright is available and screenshots work, but `/opt/pw-browsers` has chromium only — no
+WebKit, no Firefox, and `playwright install` is off-limits here. So a WebKit-specific rendering
+bug **cannot** be reproduced locally at all. When a visual bug doesn't reproduce, rule this out
+before doubting the report: the user's phone is the only WebKit available.
