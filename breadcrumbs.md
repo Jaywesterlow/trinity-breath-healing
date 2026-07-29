@@ -381,3 +381,46 @@ the goal is what the mechanism looks like to somebody who is not waiting for it.
 One trap when tying duration to stroke length at high concurrency: real lengths in these traces
 span 447x (2px to 894px). Proportional duration hands the longest stroke ~10s. The hero's own
 durations span only ~3x — so map length through a sqrt and a clamp, not proportionally.
+
+### An animated SVG <mask> re-rasterises the whole element every frame
+
+The single most expensive thing in the draw-on work, and it was invisible until traced. Chrome
+trace, RasterTask summed over a 2.4s draw at 397x217 CSS px on a DPR-3 viewport:
+
+| | raster |
+|---|---|
+| animated `<mask>` | 770 ms |
+| `<clipPath>` instead | 320 ms |
+| no mask at all | 170 ms |
+
+A mask is an alpha-compositing pass, and its contents change on every frame, so the entire
+masked element is re-rasterised at 60Hz. Nothing about the *contents* mattered: a 195-subpath
+compound fill, a flat rect and a raster `<image>` under the mask were all within noise. Neither
+did concurrency (713 ms at 5 strokes in flight, 888 ms at 40 — a 16x range for 25%),
+`shape-rendering: optimizeSpeed`, `contain: paint`, or `isolation`. `mask-type: alpha` and layer
+promotion bought under 15% each. **Halving the element's CSS size halved the cost** — that is the
+tell: raster-area bound, not geometry bound.
+
+The escape, when the artwork is one flat colour: `artwork ∩ strokes` is the same set of pixels as
+`strokes ∩ artwork`. So paint the strokes in the artwork's own colour and clip them to its
+outline. A clipPath is a static geometric intersection — rasterised once. Does not work for
+artwork that is a photo or a gradient; strokes cannot take the colour of a photograph.
+
+Caveat found by pixel-diffing: **Chrome antialiases a clip edge less generously than a mask
+edge.** On artwork with sub-pixel-thin detail at display size, the finest lines come out lighter.
+One trace was pixel-identical, the other lost 1.8% of pixels along contours.
+
+### Measure the thing, not a proxy for the thing
+
+Three rounds were wasted counting dropped frames from `requestAnimationFrame` deltas. The
+numbers were bimodal run to run (1, 4, 8, 31 for one variant) and led to a confident wrong
+conclusion — that concurrency drove the cost — which produced a whole commit's worth of tuning
+that measured, afterwards, as a 25% effect on a 16x input change.
+
+- rAF deltas measure **scheduler luck**, not work. A double-rAF "wait for paint" is worse: it
+  pins every result at exactly one vsync and reports 33ms for everything including an empty page.
+- CDP `Tracing` with `disabled-by-default-devtools.timeline`, summing `RasterTask`, is
+  deterministic, repeatable, and names the actual phase.
+- A 100x improvement is almost always a bug in the harness. The first clipPath measurement came
+  back at 7ms against 811ms; the throwaway converter had hidden the strokes. The real number was
+  320ms. **Verify a suspiciously good result renders what you think it renders.**
