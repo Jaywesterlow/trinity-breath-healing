@@ -55,9 +55,10 @@ ap.add_argument('--out', type=Path, default=None, help='defaults to overwriting 
 ap.add_argument('--total', type=float, default=2.6, help='total draw time, seconds')
 ap.add_argument(
     '--order',
-    default='nn',
-    choices=['nn', 'y', 'y-up', 'len', 'keep'],
-    help='nn (default): nearest-neighbour walk from --anchor — the pen finishes what it is near '
+    default='chain',
+    choices=['chain', 'nn', 'y', 'y-up', 'len', 'keep'],
+    help='chain (default): greedy-edge tour — commits the shortest joins between stroke ends '
+    'first, so a line that continues into another is drawn back to back. nn: nearest-neighbour walk from --anchor — the pen finishes what it is near '
     'before moving on, so objects complete instead of the canvas filling in bands. y: top to '
     "bottom (drawtrace.py's original, kept for comparison). y-up: bottom to top. len: longest "
     'first, structure before detail. keep: leave the existing order alone.',
@@ -139,7 +140,7 @@ ap.add_argument(
 ap.add_argument(
     '--last-order',
     default='y-up',
-    choices=['y-up', 'y', 'nn', 'keep'],
+    choices=['y-up', 'y', 'nn', 'chain', 'keep'],
     help='how to order the strokes --last defers. y-up (default) draws them bottom to top, which '
     'is what anything rising wants.',
 )
@@ -181,8 +182,93 @@ for i, m in enumerate(matches):
     strokes.append(s)
 
 
+def chain_order(items, anchor):
+    """Order strokes so that lines which continue each other are drawn back to back.
+
+    Greedy nearest-neighbour gets this wrong in a way that is very visible. It is myopic: at a
+    junction where several strokes meet, it takes one and walks away, and the others sit
+    unvisited until the walk happens back past them. On card-kennismaking that left 70 of 238
+    end-to-end continuations split by more than 0.3s — half a curl of steam drawn at 0.1s and
+    its other half at 1.2s, which is what "they just start halfway and later the other half
+    starts" describes.
+
+    This builds the tour by greedy *edge* instead. Every possible join between two stroke
+    endpoints is sorted by length, and the shortest are committed first, subject to each
+    endpoint being used once and no premature cycle — Kruskal's rule, applied to a path. The
+    consequence that matters: two strokes that continue each other are separated by a gap of
+    almost zero, so their join is near the very front of the sorted list and gets committed
+    before anything else can claim either end. Continuations are consecutive by construction
+    rather than by luck.
+
+    Costs one sort of about 4 * n^2 / 2 candidate joins — 268k for the largest trace here,
+    which is a fraction of a second and runs offline anyway.
+    """
+    n = len(items)
+    if n < 2:
+        return list(items)
+    ends = [(s['start'], s['end']) for s in items]
+
+    cand = []
+    for i in range(n):
+        for j in range(i + 1, n):
+            for ei in (0, 1):
+                for ej in (0, 1):
+                    cand.append((math.dist(ends[i][ei], ends[j][ej]), i, ei, j, ej))
+    cand.sort()
+
+    par = list(range(n))
+
+    def find(x):
+        while par[x] != x:
+            par[x] = par[par[x]]
+            x = par[x]
+        return x
+
+    taken = [[False, False] for _ in range(n)]  # endpoint already carries a join
+    adj = [[] for _ in range(n)]
+    joins = 0
+    for _, i, ei, j, ej in cand:
+        if joins == n - 1:
+            break
+        if taken[i][ei] or taken[j][ej] or len(adj[i]) >= 2 or len(adj[j]) >= 2:
+            continue
+        if find(i) == find(j):
+            continue
+        taken[i][ei] = taken[j][ej] = True
+        adj[i].append(j)
+        adj[j].append(i)
+        par[find(i)] = find(j)
+        joins += 1
+
+    # A path has exactly two ends; start from whichever free endpoint is nearest the anchor so
+    # the drawing still begins where the subject grows from.
+    terminals = [i for i in range(n) if len(adj[i]) < 2]
+    if anchor is None:
+        anchor = (min(e[0][0] for e in ends), max(e[0][1] for e in ends))
+
+    def free_dist(i):
+        free = [ends[i][k] for k in (0, 1) if not taken[i][k]] or [ends[i][0]]
+        return min(math.dist(anchor, p) for p in free)
+
+    start = min(terminals, key=free_dist) if terminals else 0
+    walked, seen, prev, cur = [], set(), None, start
+    while cur is not None and cur not in seen:
+        walked.append(items[cur])
+        seen.add(cur)
+        nxt = next((k for k in adj[cur] if k != prev and k not in seen), None)
+        prev, cur = cur, nxt
+    # Any stroke the path could not absorb (only possible if joins ran out) is appended in
+    # nearest-neighbour order rather than dropped.
+    leftover = [s for k, s in enumerate(items) if k not in seen]
+    if leftover:
+        walked += order_by(leftover, 'nn', walked[-1]['end'] if walked else anchor)
+    return walked
+
+
 def order_by(items, how, anchor=None):
-    """Sort a stroke list. `nn` walks nearest-neighbour from `anchor`; the rest are plain sorts."""
+    """Sort a stroke list. `chain`/`nn` walk from `anchor`; the rest are plain sorts."""
+    if how == 'chain':
+        return chain_order(items, anchor)
     if how == 'y':
         return sorted(items, key=lambda s: s['cy'])
     if how == 'y-up':
@@ -223,23 +309,33 @@ for r in a.last:
     regions.append((min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1)))
 
 
-def deferred(s):
+def inside(s, box):
+    x0, y0, x1, y1 = box
     bx0, by0, bx1, by1 = s['bbox']
-    return any(x0 <= bx0 and by0 >= y0 and bx1 <= x1 and by1 <= y1 for x0, y0, x1, y1 in regions)
+    return x0 <= bx0 and y0 <= by0 and bx1 <= x1 and by1 <= y1
 
 
-held = [s for s in strokes if deferred(s)]
-strokes = [s for s in strokes if not deferred(s)]
-if regions and not held:
-    sys.exit(f'{a.src.name}: --last matched no strokes — check the region against the viewBox')
+# Each region is its own group, kept separate and drawn in the order the flags were given.
+# Pooling them was the bug behind "half of the smoke is generated and later the other half":
+# with both steam curls in one bucket sorted bottom-to-top, their strokes interleave by height,
+# so the right curl drew its base, waited while the left curl caught up, drew its middle, waited
+# again, and finished 0.14s before the end — three visibly disconnected instalments. One curl at
+# a time is the whole fix.
+groups = []
+for box in regions:
+    g = [s for s in strokes if inside(s, box)]
+    if not g:
+        sys.exit(f'{a.src.name}: --last region {box} matched no strokes — check it against the viewBox')
+    groups.append(g)
+    strokes = [s for s in strokes if not inside(s, box)]
 
 # ── Order ───────────────────────────────────────────────────────────────────────────────────
 anchor = tuple(float(v) for v in a.anchor.split(',')) if a.anchor else None
 strokes = order_by(strokes, a.order, anchor)
-# The held-back strokes are walked among themselves, then appended. The pen finishing the main
-# pass is where they start from, so they still join on rather than teleporting.
-if held:
-    strokes += order_by(held, a.last_order, strokes[-1]['end'] if strokes else anchor)
+# Each deferred group is walked among itself and appended. The pen finishing the previous group
+# is where the next starts from, so groups still join on rather than teleporting.
+for g in groups:
+    strokes += order_by(g, a.last_order, strokes[-1]['end'] if strokes else anchor)
 
 # ── Pacing ──────────────────────────────────────────────────────────────────────────────────
 total_ink = sum(s['len'] for s in strokes) or 1.0
