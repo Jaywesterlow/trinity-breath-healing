@@ -448,3 +448,40 @@ Extracting the shared `order_by` touched the code path for three files. Regenera
 that were not meant to change, with their existing arguments, and diffing byte-for-byte took one
 command and settled it. Same trick as the geometry hash that guards every re-pace: the output is
 the assertion.
+
+### Greedy nearest-neighbour splits lines; greedy *edge* does not
+
+NN ordering fixed the scanline but introduced a subtler artefact: one visual line drawn in two
+instalments, half early and half much later. Cause is that NN is myopic — at a junction where
+several strokes meet it takes one and walks away, and the rest wait until the walk happens back
+past them. Classic greedy-TSP return trips.
+
+Greedy *edge* construction fixes it structurally. Sort every possible join between two stroke
+endpoints by length; commit the shortest first, subject to each endpoint being used once and no
+premature cycle (Kruskal's rule applied to a path). **Two strokes that continue each other have a
+join of nearly zero length, so it sits at the very front of that list and is committed before
+anything else can claim either end.** Continuations end up consecutive by construction rather
+than by luck. Cost is one sort of ~4n²/2 candidates — 268k for 367 strokes, trivial offline.
+
+### Build the metric before the fix
+
+Three separate ordering complaints were diagnosed by eye and two of the three fixes missed. The
+turn came from writing one number: pairs of strokes whose endpoints are within 15px — lines that
+continue each other — separated by more than 0.3s in the timeline. That immediately showed
+greedy NN splitting 70 of 238 continuations on one image.
+
+Two lessons about the metric itself:
+
+- **The first version was wrong.** Counting *all* touching pairs said 76 of 80 were "bad" — in
+  dense line art every stroke touches several others and they cannot all be consecutive. The
+  useful version counts strokes with **no** neighbour drawn nearby in time (orphans), not all
+  pairs that are far apart.
+- **The metric is a guide, not the goal.** One image's orphan count went 2 → 4 while its
+  filmstrip clearly improved. Ship on the filmstrip; use the number to find what to look at.
+
+### Dumping the order as text found what the filmstrip could not
+
+The steam bug was invisible in an 8-frame strip — both curls were partly drawn in every frame,
+which looked plausible. Printing the deferred strokes as `t=1.26s RIGHT / t=1.27s LEFT /
+t=1.31s RIGHT` made the interleave obvious in one glance. **When an animation looks wrong but
+sampled frames look fine, print the schedule.**
