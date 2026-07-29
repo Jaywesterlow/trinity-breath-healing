@@ -558,3 +558,61 @@ eye: pacing, and the crossing-fragment repair above.
 Worth pairing with a hard check. `--section` errors if any stroke is unassigned rather than
 letting it draw at an arbitrary time — that check is what would have caught the smoke root
 sitting in the main pass, several rounds earlier.
+
+### The brush is wider than the line: why a single mask can never be clean
+
+The root cause of an entire debugging thread, found only after four ordering fixes had each
+solved a symptom. In a draw-on built as `<mask>` of stroked paths over artwork:
+
+- mask strokes on card-kennismaking are **5.8–24 units wide**
+- the artwork lines they uncover are **3–5 units wide**
+
+Every stroke is three to four times wider than its own line, so drawing the cup rim also uncovers
+the steam that crosses it. **No draw order can fix that** — it is one bitmap being revealed by
+overlapping brushes. Every "the smoke appears too early" report was this, and every ordering fix
+was treating a symptom.
+
+Narrowing the strokes is not the escape: at 0.7x width, 0.8% of the artwork's ink stops being
+revealed at all, permanently, because traced centrelines drift from the real lines. **The excess
+width is what compensates for the drift.**
+
+The fix is to give each mask its own bitmap. Cut the artwork into layers — one per object — and
+mask each separately. A cup stroke then has nothing but cup ink underneath it.
+
+Keeping it pixel-exact needs two things:
+- **Threshold the layer stencil, never feather it.** A pixel is wholly in a layer or absent. Two
+  half-alpha copies of the same pixel composite darker than one full-alpha copy, which shows up
+  as a seam at every layer boundary.
+- **Let layers overlap.** A pixel under two objects' strokes belongs to both, at full opacity, in
+  the same colour — so drawing one over the other reproduces it. Assert that every ink pixel
+  lands in at least one layer; a pixel in none is ink lost forever.
+
+### Separate elements, not one element with several masks
+
+A mask change invalidates the whole element the mask lives in. Three masks inside one `<svg>`
+therefore re-rasterise all three layers on every frame. As three sibling `<svg>` roots stacked
+with `position: absolute`, only the layer currently animating is dirty. Raster over a 2.4s draw,
+DPR 3, 4x-throttled:
+
+| | raster |
+|---|---|
+| single mask (the buggy version) | 506 ms |
+| three masks, one `<svg>` | 1222 ms |
+| three stacked `<svg>` | **327 ms** |
+
+The correct fix was also the fastest, but only in the right container — the intuitive packaging
+was 2.4x worse than the bug it replaced.
+
+### Chromium's canvas WebP encoder is lossy at every quality
+
+`canvas.toDataURL('image/webp', 1)` still altered 14,630 pixels of a 700x759 line drawing. PNG
+round-trips at zero difference. When canvas output must be exact, export PNG and re-encode
+outside the browser (`sharp().webp({ lossless: true })`).
+
+### Make a destructive generator refuse to run twice
+
+layerize.mjs rewrites the SVG it reads, reordering strokes into layer order. Running it a second
+time with the same `--layer` indices silently produced a completely different, wrong split —
+noticed only because the reported ink counts moved. It now refuses if the file is already
+layered. **Any script that rewrites its own input in a way that changes the meaning of its
+arguments needs that guard**; the failure is silent and the output looks plausible.
