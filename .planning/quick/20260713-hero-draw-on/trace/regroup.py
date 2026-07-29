@@ -163,6 +163,17 @@ ap.add_argument(
     help='fraction of a section that the next one starts early, so sections bleed into each '
     'other instead of stopping dead. 0 draws them strictly one after another.',
 )
+ap.add_argument(
+    '--no-snap',
+    action='store_true',
+    help='do not snap sections to whole lines. Only for inspecting what the raw per-stroke '
+    'assignment does; leaving it on is what stops a line being split across two sections.',
+)
+ap.add_argument(
+    '--dump-sections',
+    action='store_true',
+    help='print final section membership after snapping, for rendering a check image',
+)
 ap.add_argument('--dry-run', action='store_true', help='report, write nothing')
 a = ap.parse_args()
 
@@ -184,9 +195,19 @@ def measure(d):
     pts = list(zip(n[0::2], n[1::2]))
     xs, ys = [p[0] for p in pts], [p[1] for p in pts]
     length = sum(math.dist(pts[i], pts[i + 1]) for i in range(len(pts) - 1))
+    # Outgoing direction at each end — the way the line is heading as it leaves the stroke.
+    # Used to tell a continuation from a crossing: two fragments of the same line leave their
+    # shared junction in opposite directions, a line crossing another does not.
+    def away(a_, b_):
+        dx, dy = a_[0] - b_[0], a_[1] - b_[1]
+        m = math.hypot(dx, dy) or 1.0
+        return (dx / m, dy / m)
+
     return {
         'start': pts[0],
         'end': pts[-1],
+        'dir0': away(pts[0], pts[1] if len(pts) > 1 else pts[0]),
+        'dir1': away(pts[-1], pts[-2] if len(pts) > 1 else pts[-1]),
         'cy': sum(ys) / len(ys),
         'len': length,
         'bbox': (min(xs), min(ys), max(xs), max(ys)),
@@ -348,6 +369,42 @@ for box in regions:
     groups.append(g)
     strokes = [s for s in strokes if not inside(s, box)]
 
+# ── Crossings ───────────────────────────────────────────────────────────────────────────────
+def pair_ends(items, join=15.0, max_turn=55.0):
+    """For each stroke end, the stroke that carries the same line onwards.
+
+    The tracer cuts every line where another crosses it, so a cup rim arrives as several
+    fragments with the crossing line's fragments mixed in among them. At a junction the two
+    fragments continuing the same line leave in opposite directions; a line merely passing
+    through leaves at an angle. Pairing ends by how straight the continuation is, straightest
+    first and one link per end, recovers which fragment continues which line.
+
+    Returns {(stroke index, end) -> (stroke index, end)}.
+    """
+    pos = [[s['start'] for s in items], [s['end'] for s in items]]
+    dirs = [[s['dir0'] for s in items], [s['dir1'] for s in items]]
+    cand = []
+    for i in range(len(items)):
+        for j in range(i + 1, len(items)):
+            for ei in (0, 1):
+                for ej in (0, 1):
+                    if math.dist(pos[ei][i], pos[ej][j]) > join:
+                        continue
+                    di, dj = dirs[ei][i], dirs[ej][j]
+                    dot = max(-1.0, min(1.0, di[0] * dj[0] + di[1] * dj[1]))
+                    turn = 180.0 - math.degrees(math.acos(dot))
+                    if turn <= max_turn:
+                        cand.append((turn, i, ei, j, ej))
+    cand.sort()
+    link = {}
+    for _, i, ei, j, ej in cand:
+        if (i, ei) in link or (j, ej) in link:
+            continue
+        link[(i, ei)] = (j, ej)
+        link[(j, ej)] = (i, ei)
+    return link
+
+
 # ── Sections ────────────────────────────────────────────────────────────────────────────────
 # --section is the explicit alternative to inferring structure from geometry. --order and --last
 # work from proximity, and proximity does not know that two overlapping ellipses are two cups, or
@@ -381,6 +438,45 @@ if a.section:
             claimed[k] = name
             group.append(by_index[k])
         sections.append((name, group))
+    # A stroke is a fragment, not a line: the tracer cut every line where another crosses it.
+    # Assigning fragments to sections by hand therefore leaves *bridge* fragments — the short
+    # pieces of a line that sit inside a crossing — in whichever section the crossing line went
+    # to. The line they belong to then draws with a hole in it, filled in later by an unrelated
+    # section. That is the broken-lines problem.
+    #
+    # The rule is deliberately narrow: if BOTH of a fragment's collinear continuations are in the
+    # same section, the fragment belongs there too. Nothing else moves. Merging whole connected
+    # lines instead was tried and is far too coarse — a cup's rim really does continue into its
+    # body, so it swallows the entire cup into one section and the sections stop meaning
+    # anything. A rim-to-body corner has rim on one side and body on the other, so this rule
+    # leaves it exactly where it was put.
+    if not a.no_snap:
+        link = pair_ends(strokes)
+        moved = 0
+        for _ in range(4):  # a bridge can sit next to a bridge; settle before giving up
+            changed = 0
+            for st in strokes:
+                k = st['i']
+                nb = [link.get((k, e)) for e in (0, 1)]
+                if any(x is None for x in nb):
+                    continue
+                secs_ = {claimed.get(strokes[j]['i']) for j, _ in nb}
+                if len(secs_) == 1:
+                    only = secs_.pop()
+                    if only is not None and claimed.get(k) != only:
+                        claimed[k] = only
+                        changed += 1
+            moved += changed
+            if not changed:
+                break
+        if moved:
+            print(f'  moved {moved} bridge fragment(s) into the line they continue')
+        sections = [(nm, [by_index[k] for k in sorted(by_index) if claimed.get(k) == nm])
+                    for nm, _ in sections]
+        if a.dump_sections:
+            for nm, g in sections:
+                print(f'  SECTION {nm}: {",".join(str(x["i"]) for x in g)}')
+
     missed = sorted(set(by_index) - set(claimed))
     if missed:
         sys.exit(
