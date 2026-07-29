@@ -87,7 +87,22 @@ ap.add_argument(
     default=0.73,
     help='wave pacing only: fraction of the timeline over which stroke start times are spread. '
     'The remainder is what the last stroke has left to draw in, so it also sets the nominal '
-    'per-stroke duration. Lower = denser wavefront, faster read, messier. 0.73 is the hero.',
+    'per-stroke duration. Lower = denser wavefront, messier. 0.73 is the hero. Ignored when '
+    '--concurrency is given.',
+)
+ap.add_argument(
+    '--concurrency',
+    type=float,
+    default=None,
+    help='wave pacing only, and the knob that actually matters: how many strokes are mid-draw '
+    'at any instant. Solves for the --spread that hits it. This does NOT change how fast the '
+    'image resolves — new ink still arrives at n/total either way — it changes whether strokes '
+    'are drawn slowly and overlapping (high) or quickly and crisply (low). It IS the frame '
+    'cost, though: every stroke mid-draw is geometry the browser must re-rasterise each frame, '
+    "and when the strokes live in a <mask> that means re-rasterising the mask. The hero runs 84 "
+    'because it has no mask and re-rasterises nothing. Masked art cannot afford that — measured '
+    'on a 4x-throttled phone-class profile, 367 masked strokes drop 8 frames at 84 and 2 at 20. '
+    'Keep masked traces at ~20.',
 )
 ap.add_argument(
     '--stroke', type=float, default=0.26, help='per-stroke duration, seconds — even pacing only'
@@ -184,25 +199,50 @@ if a.pace == 'wave':
     # Two levers produce that: start times packed into a fraction of the timeline, and per-stroke
     # durations long enough to overlap heavily. Concurrency works out to roughly
     # n * (mean duration) / total.
+    #
+    # But concurrency is ALSO the frame cost, and that caps how much of the hero's character
+    # masked art can borrow. Every stroke mid-draw is geometry to re-rasterise each frame, and
+    # for strokes inside a <mask> that means re-rasterising the whole mask. Measured on a
+    # 4x-throttled phone-class profile, card-verdieping-bg's 367 masked strokes drop a median of
+    # 8 frames per run at concurrency 84 and 2 at 20; the same strokes with the mask removed drop
+    # 1 at either. The hero gets away with 84 precisely because nothing masks it.
+    #
+    # What concurrency does NOT change is how fast the image resolves: new ink arrives at
+    # n/total either way. It only decides whether strokes are drawn slowly and overlapping or
+    # quickly and crisply. So the frame-cost ceiling costs some texture, never speed.
     n = max(len(strokes) - 1, 1)
-    # The nominal duration is whatever the LAST stroke has left once the stagger has run — so
-    # `spread` sets the stagger and the duration together, and they cannot drift out of step.
-    base = a.total * (1 - a.spread)
     # Duration still tracks length, or long lines whoosh past while specks crawl. But it tracks
     # it through a sqrt and a clamp rather than proportionally: real lengths here span 447x
     # (2px to 894px), and honouring that ratio at this concurrency would give the longest stroke
     # ~10s. The hero's own durations span only about 3x, which is the range being matched.
     p90 = sorted(x['len'] for x in strokes)[int(len(strokes) * 0.9)] or 1.0
-    times = []
-    for k, s in enumerate(strokes):
-        scale = min(max(0.45 + 0.9 * math.sqrt(s['len'] / p90), 0.4), 1.6)
-        times.append([(k / n) * a.total * a.spread, max(base * scale, a.min_d)])
-    end = max(t + d for t, d in times)
-    if end > 0:
-        f = a.total / end
-        times = [[t * f, d * f] for t, d in times]
+    scales = [min(max(0.45 + 0.9 * math.sqrt(s['len'] / p90), 0.4), 1.6) for s in strokes]
+
+    def pace(spread):
+        # The nominal duration is whatever the LAST stroke has left once the stagger has run —
+        # so `spread` sets the stagger and the duration together and they cannot drift apart.
+        base = a.total * (1 - spread)
+        t = [[(k / n) * a.total * spread, max(base * sc, a.min_d)] for k, sc in enumerate(scales)]
+        end = max(x + d for x, d in t)
+        if end > 0:
+            f = a.total / end
+            t = [[x * f, d * f] for x, d in t]
+        return t, sum(d for _, d in t) / a.total
+
+    if a.concurrency is None:
+        times, concurrent = pace(a.spread)
+    else:
+        # Concurrency falls monotonically as spread rises, so bisect. Closed form would have to
+        # invert the duration floor and the rescale, and this converges in 40 steps regardless.
+        lo, hi = 0.0, 0.999
+        for _ in range(40):
+            mid = (lo + hi) / 2
+            if pace(mid)[1] > a.concurrency:
+                lo = mid
+            else:
+                hi = mid
+        times, concurrent = pace(hi)
     new_times = {id(s['match']): tuple(t) for s, t in zip(strokes, times)}
-    concurrent = sum(d for _, d in times) / a.total
     floored = sum(1 for _, d in times if d <= a.min_d * 1.001)
 elif a.pace == 'speed':
     times, cum = [], 0.0
