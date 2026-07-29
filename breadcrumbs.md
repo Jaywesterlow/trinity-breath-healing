@@ -485,3 +485,34 @@ The steam bug was invisible in an 8-frame strip — both curls were partly drawn
 which looked plausible. Printing the deferred strokes as `t=1.26s RIGHT / t=1.27s LEFT /
 t=1.31s RIGHT` made the interleave obvious in one glance. **When an animation looks wrong but
 sampled frames look fine, print the schedule.**
+
+### A region-based rule is only as good as the region
+
+The steam kept breaking at the cup rim after two rounds of fixing the *ordering*, because the
+ordering was never the problem the third time. The smoke does not stop at the rim — it carries on
+below it, into the cup's mouth — and the trace cuts it into separate strokes exactly where it
+crosses. The deferred region's bottom edge sat on the rim, so half the curl was deferred and half
+stayed in the main pass, 1.17s apart, splitting at precisely the crossing point.
+
+Two things worth carrying:
+
+- **When a boundary artefact lands exactly on a feature, suspect the boundary, not the
+  algorithm.** "It stops right at the rim" was the whole diagnosis, stated by the user before any
+  code was read.
+- **Render the selection, not just the result.** Recolouring every stroke a region captures and
+  looking at the picture took one throwaway script and showed instantly that the box ended
+  mid-curl. Reading coordinates off a list had already missed it twice.
+
+### The user's description of a visual bug is data
+
+Across this whole draw-on sequence, the fastest diagnoses came from taking the report literally
+rather than translating it into a theory:
+
+- "it looks like a printer" → a scanline, i.e. a top-to-bottom sort. Exactly that.
+- "the path just has a normal animation" → per-stroke duration ignoring stroke length. Exactly
+  that.
+- "half of the smoke, then later the other half" → two halves of one line drawn 1.17s apart.
+- "it stops at the intersection with the rim" → a region boundary sitting on the rim.
+
+Every wrong turn in this sequence came from *substituting* a plausible mechanism for what was
+described. Two of them cost a commit each.
