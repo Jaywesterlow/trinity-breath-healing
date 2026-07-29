@@ -144,6 +144,25 @@ ap.add_argument(
     help='how to order the strokes --last defers. y-up (default) draws them bottom to top, which '
     'is what anything rising wants.',
 )
+ap.add_argument(
+    '--section',
+    action='append',
+    default=[],
+    metavar='NAME:INDICES',
+    help='draw the named strokes as one section, sections in the order given: '
+    '--section "front rim:23,26,28-29,32-36". Indices are stroke positions in document order; '
+    'render an index map to read them off. Every stroke must land in exactly one section — '
+    'anything missed is an error, not a silent leftover. This replaces guessing: --order and '
+    '--last infer structure from geometry, and geometry does not know that two overlapping '
+    'ellipses are two cups. Sections say so directly. Ranges (a-b) and repeats are allowed.',
+)
+ap.add_argument(
+    '--section-overlap',
+    type=float,
+    default=0.15,
+    help='fraction of a section that the next one starts early, so sections bleed into each '
+    'other instead of stopping dead. 0 draws them strictly one after another.',
+)
 ap.add_argument('--dry-run', action='store_true', help='report, write nothing')
 a = ap.parse_args()
 
@@ -329,69 +348,140 @@ for box in regions:
     groups.append(g)
     strokes = [s for s in strokes if not inside(s, box)]
 
+# ── Sections ────────────────────────────────────────────────────────────────────────────────
+# --section is the explicit alternative to inferring structure from geometry. --order and --last
+# work from proximity, and proximity does not know that two overlapping ellipses are two cups, or
+# that a curl crossing a rim is still one curl. Naming the strokes says so outright.
+sections = []
+if a.section:
+    if a.last:
+        sys.exit('--section and --last do the same job by different means; use one or the other')
+    by_index = {s['i']: s for s in strokes}
+    claimed = {}
+    for spec in a.section:
+        name, _, body = spec.partition(':')
+        if not body:
+            sys.exit(f'--section expects NAME:INDICES — got {spec!r}')
+        idx = []
+        for part in body.split(','):
+            part = part.strip()
+            if not part:
+                continue
+            if '-' in part.lstrip('-'):
+                lo, hi = part.split('-')
+                idx.extend(range(int(lo), int(hi) + 1))
+            else:
+                idx.append(int(part))
+        group = []
+        for k in idx:
+            if k not in by_index:
+                sys.exit(f'--section {name!r}: stroke {k} does not exist (0..{len(strokes) - 1})')
+            if k in claimed:
+                sys.exit(f'--section {name!r}: stroke {k} already claimed by {claimed[k]!r}')
+            claimed[k] = name
+            group.append(by_index[k])
+        sections.append((name, group))
+    missed = sorted(set(by_index) - set(claimed))
+    if missed:
+        sys.exit(
+            f'{a.src.name}: {len(missed)} strokes are in no section: {missed}\n'
+            'Every stroke must be placed — a silent leftover would draw at an arbitrary time.'
+        )
+
 # ── Order ───────────────────────────────────────────────────────────────────────────────────
 anchor = tuple(float(v) for v in a.anchor.split(',')) if a.anchor else None
-strokes = order_by(strokes, a.order, anchor)
+if sections:
+    # Ordered within a section only. Across sections the order is the one given on the command
+    # line, which is the whole point of naming them.
+    pen = anchor
+    sections = [(nm, order_by(g, a.order, pen)) for nm, g in sections]
+    for _, g in sections:
+        pen = g[-1]['end']
+    strokes = [s for _, g in sections for s in g]
+else:
+    strokes = order_by(strokes, a.order, anchor)
 # Each deferred group is walked among itself and appended. The pen finishing the previous group
 # is where the next starts from, so groups still join on rather than teleporting.
 for g in groups:
     strokes += order_by(g, a.last_order, strokes[-1]['end'] if strokes else anchor)
 
 # ── Pacing ──────────────────────────────────────────────────────────────────────────────────
+def pace_wave(items, total, concurrency, spread, min_d):
+    """Hero-style pacing: long per-stroke durations packed into a tight stagger.
+
+    What makes the hero read as fast is not a shorter timeline — it is 2.86s for 372 strokes,
+    about the same as everything else here. It is that ~84 strokes are drawing at any instant
+    instead of ~10. Progress is visible everywhere at once, so the image resolves before the
+    viewer starts waiting for it.
+
+    Concurrency is also the frame cost, which caps how much of that character masked art can
+    borrow. Every stroke mid-draw is geometry to re-rasterise each frame, and for strokes inside
+    a <mask> that means re-rasterising the whole mask. What concurrency does NOT change is how
+    fast the image resolves: new ink arrives at n/total either way. So the ceiling costs some
+    texture, never speed.
+    """
+    n = max(len(items) - 1, 1)
+    # Duration tracks length, or long lines whoosh past while specks crawl — but through a sqrt
+    # and a clamp, not proportionally: real lengths span 447x here, and honouring that ratio at
+    # this concurrency would give the longest stroke ~10s. The hero's own durations span ~3x.
+    p90 = sorted(x['len'] for x in items)[int(len(items) * 0.9)] or 1.0
+    scales = [min(max(0.45 + 0.9 * math.sqrt(s['len'] / p90), 0.4), 1.6) for s in items]
+
+    def at(sp):
+        # The nominal duration is whatever the LAST stroke has left once the stagger has run, so
+        # the stagger and the duration cannot drift apart.
+        base = total * (1 - sp)
+        t = [[(k / n) * total * sp, max(base * sc, min_d)] for k, sc in enumerate(scales)]
+        end = max(x + d for x, d in t) or 1.0
+        f = total / end
+        t = [[x * f, d * f] for x, d in t]
+        return t, sum(d for _, d in t) / total
+
+    if concurrency is None:
+        return at(spread)
+    # Concurrency falls monotonically as spread rises, so bisect. A closed form would have to
+    # invert both the duration floor and the rescale; this converges in 40 steps regardless.
+    lo, hi = 0.0, 0.999
+    for _ in range(40):
+        mid = (lo + hi) / 2
+        if at(mid)[1] > concurrency:
+            lo = mid
+        else:
+            hi = mid
+    return at(hi)
+
+
 total_ink = sum(s['len'] for s in strokes) or 1.0
 
-if a.pace == 'wave':
-    # What makes the hero read as fast is not a shorter timeline — it is 2.86s for 372 strokes,
-    # about the same as everything else here. It is that ~84 strokes are drawing at any instant
-    # instead of ~10. Progress is visible everywhere at once, so the image resolves before the
-    # viewer starts waiting for it. Slightly messy, and that is the trade being made on purpose.
+if sections:
+    # Each section is paced on its own little timeline, then slid into place.
     #
-    # Two levers produce that: start times packed into a fraction of the timeline, and per-stroke
-    # durations long enough to overlap heavily. Concurrency works out to roughly
-    # n * (mean duration) / total.
-    #
-    # But concurrency is ALSO the frame cost, and that caps how much of the hero's character
-    # masked art can borrow. Every stroke mid-draw is geometry to re-rasterise each frame, and
-    # for strokes inside a <mask> that means re-rasterising the whole mask. Measured on a
-    # 4x-throttled phone-class profile, card-verdieping-bg's 367 masked strokes drop a median of
-    # 8 frames per run at concurrency 84 and 2 at 20; the same strokes with the mask removed drop
-    # 1 at either. The hero gets away with 84 precisely because nothing masks it.
-    #
-    # What concurrency does NOT change is how fast the image resolves: new ink arrives at
-    # n/total either way. It only decides whether strokes are drawn slowly and overlapping or
-    # quickly and crisply. So the frame-cost ceiling costs some texture, never speed.
-    n = max(len(strokes) - 1, 1)
-    # Duration still tracks length, or long lines whoosh past while specks crawl. But it tracks
-    # it through a sqrt and a clamp rather than proportionally: real lengths here span 447x
-    # (2px to 894px), and honouring that ratio at this concurrency would give the longest stroke
-    # ~10s. The hero's own durations span only about 3x, which is the range being matched.
-    p90 = sorted(x['len'] for x in strokes)[int(len(strokes) * 0.9)] or 1.0
-    scales = [min(max(0.45 + 0.9 * math.sqrt(s['len'] / p90), 0.4), 1.6) for s in strokes]
-
-    def pace(spread):
-        # The nominal duration is whatever the LAST stroke has left once the stagger has run —
-        # so `spread` sets the stagger and the duration together and they cannot drift apart.
-        base = a.total * (1 - spread)
-        t = [[(k / n) * a.total * spread, max(base * sc, a.min_d)] for k, sc in enumerate(scales)]
-        end = max(x + d for x, d in t)
-        if end > 0:
-            f = a.total / end
-            t = [[x * f, d * f] for x, d in t]
-        return t, sum(d for _, d in t) / a.total
-
-    if a.concurrency is None:
-        times, concurrent = pace(a.spread)
-    else:
-        # Concurrency falls monotonically as spread rises, so bisect. Closed form would have to
-        # invert the duration floor and the rescale, and this converges in 40 steps regardless.
-        lo, hi = 0.0, 0.999
-        for _ in range(40):
-            mid = (lo + hi) / 2
-            if pace(mid)[1] > a.concurrency:
-                lo = mid
-            else:
-                hi = mid
-        times, concurrent = pace(hi)
+    # Section length follows the SQUARE ROOT of its ink, not its ink. Straight proportionality
+    # is what a pen would do and it starves thin detail: on the teacups the two steam curls are
+    # 22 of 80 strokes but a twentieth of the ink, so they got 0.27s of a 2s draw between them —
+    # 4 strokes in 0.06s for the far one, a flash rather than a section. The sqrt keeps the big
+    # sections longer without letting the small ones vanish. Equal shares would be the other
+    # extreme: the cup body carries most of the drawing and should visibly take most of the time.
+    weights = [math.sqrt(sum(x['len'] for x in g)) or 1.0 for _, g in sections]
+    lengths = [w / sum(weights) for w in weights]
+    starts, cursor = [], 0.0
+    for L in lengths:
+        starts.append(cursor)
+        cursor += L * (1 - a.section_overlap)
+    span = cursor + lengths[-1] * a.section_overlap
+    scale = a.total / span
+    ordered, times = [], []
+    for (name, g), st, L in zip(sections, starts, lengths):
+        t, _ = pace_wave(g, L * scale, a.concurrency, a.spread, a.min_d)
+        for s_, (d0, dur) in zip(g, t):
+            ordered.append(s_)
+            times.append([st * scale + d0, dur])
+    strokes = ordered
+    new_times = {id(s['match']): tuple(t) for s, t in zip(strokes, times)}
+    concurrent = sum(d for _, d in times) / a.total
+    floored = sum(1 for _, d in times if d <= a.min_d * 1.001)
+elif a.pace == 'wave':
+    times, concurrent = pace_wave(strokes, a.total, a.concurrency, a.spread, a.min_d)
     new_times = {id(s['match']): tuple(t) for s, t in zip(strokes, times)}
     floored = sum(1 for _, d in times if d <= a.min_d * 1.001)
 elif a.pace == 'speed':
