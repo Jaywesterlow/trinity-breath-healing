@@ -424,3 +424,27 @@ that measured, afterwards, as a 25% effect on a 16x input change.
 - A 100x improvement is almost always a bug in the harness. The first clipPath measurement came
   back at 7ms against 811ms; the throwaway converter had hidden the strokes. The real number was
   320ms. **Verify a suspiciously good result renders what you think it renders.**
+
+### Adjacency is not always the story
+
+Nearest-neighbour draw order works because the strokes of one object are each other's nearest
+neighbours — but it only knows proximity, not meaning. On the teacups the steam curls physically
+touch the cup rims, so the pen drew them on the way past and the tea steamed before the cup
+existed.
+
+The fix is an explicit escape hatch, not a smarter metric: name a region, pull those strokes out
+before ordering, append them after. Two regions, twelve strokes.
+
+Resisting the heuristic was the right call and it is worth recording why. Endpoint-proximity
+clustering put all 80 strokes in one component — correctly, they do touch. A "tall and thin
+bounding box" test would separate them, but only with a threshold tuned against this one image,
+which is exactly what killed bbox clustering earlier in the project. **With eight hand-drawn
+assets, naming the exception is cheaper and more honest than a rule that has to be re-tuned per
+asset.** Automation earns its keep at a scale this project does not have.
+
+### Prove a refactor is behaviour-preserving with the artefacts, not by reading it
+
+Extracting the shared `order_by` touched the code path for three files. Regenerating the two
+that were not meant to change, with their existing arguments, and diffing byte-for-byte took one
+command and settled it. Same trick as the geometry hash that guards every re-pace: the output is
+the assertion.
