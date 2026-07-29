@@ -123,6 +123,26 @@ ap.add_argument(
     'round-capped at up to 22px wide, so even the shortest is a visible mark and needs a beat '
     'to arrive.',
 )
+ap.add_argument(
+    '--last',
+    action='append',
+    default=[],
+    metavar='X0,Y0,X1,Y1',
+    help='defer every stroke whose bounding box falls inside this region to the very end of the '
+    'draw, after everything else, however near the pen passed it. Repeatable. Nearest-neighbour '
+    'order is adjacency, and adjacency is not always the story: the steam on card-kennismaking '
+    'touches the cup rims, so the pen draws it on the way past and the tea steams before the cup '
+    'it rises from exists. Naming the region is more honest than inventing a heuristic — these '
+    'are eight hand-drawn illustrations, not a pipeline, and a rule tuned until it happens to '
+    'split one of them is not a rule.',
+)
+ap.add_argument(
+    '--last-order',
+    default='y-up',
+    choices=['y-up', 'y', 'nn', 'keep'],
+    help='how to order the strokes --last defers. y-up (default) draws them bottom to top, which '
+    'is what anything rising wants.',
+)
 ap.add_argument('--dry-run', action='store_true', help='report, write nothing')
 a = ap.parse_args()
 
@@ -139,12 +159,18 @@ NUM = re.compile(r'-?\d+(?:\.\d+)?')
 
 
 def measure(d):
-    """Endpoints, centroid and length. Traces emit M/L polylines only, so this is exact."""
+    """Endpoints, centroid, bbox and length. Traces emit M/L polylines only, so this is exact."""
     n = [float(x) for x in NUM.findall(d)]
     pts = list(zip(n[0::2], n[1::2]))
-    cy = sum(p[1] for p in pts) / len(pts)
+    xs, ys = [p[0] for p in pts], [p[1] for p in pts]
     length = sum(math.dist(pts[i], pts[i + 1]) for i in range(len(pts) - 1))
-    return {'start': pts[0], 'end': pts[-1], 'cy': cy, 'len': length}
+    return {
+        'start': pts[0],
+        'end': pts[-1],
+        'cy': sum(ys) / len(ys),
+        'len': length,
+        'bbox': (min(xs), min(ys), max(xs), max(ys)),
+    }
 
 
 strokes = []
@@ -154,28 +180,26 @@ for i, m in enumerate(matches):
     s['i'] = i
     strokes.append(s)
 
-# ── Order ───────────────────────────────────────────────────────────────────────────────────
-if a.order == 'y':
-    strokes.sort(key=lambda s: s['cy'])
-elif a.order == 'y-up':
-    strokes.sort(key=lambda s: -s['cy'])
-elif a.order == 'len':
-    strokes.sort(key=lambda s: -s['len'])
-elif a.order == 'nn':
-    if a.anchor:
-        ax, ay = (float(v) for v in a.anchor.split(','))
-    else:
-        xs = [p for s in strokes for p in (s['start'][0], s['end'][0])]
-        ys = [p for s in strokes for p in (s['start'][1], s['end'][1])]
-        ax, ay = min(xs), max(ys)  # bottom-left of the ink
 
+def order_by(items, how, anchor=None):
+    """Sort a stroke list. `nn` walks nearest-neighbour from `anchor`; the rest are plain sorts."""
+    if how == 'y':
+        return sorted(items, key=lambda s: s['cy'])
+    if how == 'y-up':
+        return sorted(items, key=lambda s: -s['cy'])
+    if how == 'len':
+        return sorted(items, key=lambda s: -s['len'])
+    if how != 'nn':
+        return list(items)
+    if anchor is None:
+        xs = [p for s in items for p in (s['start'][0], s['end'][0])]
+        ys = [p for s in items for p in (s['start'][1], s['end'][1])]
+        anchor = (min(xs), max(ys))  # bottom-left of the ink
     # Greedy nearest-neighbour over stroke endpoints. Geometry is never rewritten, so a stroke
-    # always draws start -> end; but adjacency is what the eye reads, so the cost is the
-    # distance to the *nearer* endpoint and the pen is left at the other one. O(n^2) — the
-    # largest trace here is 367 strokes, ~67k distance checks, instant.
-    remaining = list(strokes)
-    pen = (ax, ay)
-    walked = []
+    # always draws start -> end; but adjacency is what the eye reads, so the cost is the distance
+    # to the *nearer* endpoint and the pen is left at the other one. O(n^2) — the largest trace
+    # here is 367 strokes, ~67k distance checks, instant.
+    remaining, pen, walked = list(items), anchor, []
     while remaining:
         best_i, best_cost, best_pen = 0, math.inf, pen
         for idx, s in enumerate(remaining):
@@ -185,7 +209,37 @@ elif a.order == 'nn':
                 best_i, best_cost, best_pen = idx, cost, far
         walked.append(remaining.pop(best_i))
         pen = best_pen
-    strokes = walked
+    return walked
+
+
+# Strokes named by --last are pulled out before ordering and appended after it, so nothing in the
+# main pass can wander into them and nothing in them can be drawn early.
+regions = []
+for r in a.last:
+    try:
+        x0, y0, x1, y1 = (float(v) for v in r.split(','))
+    except ValueError:
+        sys.exit(f'--last expects X0,Y0,X1,Y1 — got {r!r}')
+    regions.append((min(x0, x1), min(y0, y1), max(x0, x1), max(y0, y1)))
+
+
+def deferred(s):
+    bx0, by0, bx1, by1 = s['bbox']
+    return any(x0 <= bx0 and by0 >= y0 and bx1 <= x1 and by1 <= y1 for x0, y0, x1, y1 in regions)
+
+
+held = [s for s in strokes if deferred(s)]
+strokes = [s for s in strokes if not deferred(s)]
+if regions and not held:
+    sys.exit(f'{a.src.name}: --last matched no strokes — check the region against the viewBox')
+
+# ── Order ───────────────────────────────────────────────────────────────────────────────────
+anchor = tuple(float(v) for v in a.anchor.split(',')) if a.anchor else None
+strokes = order_by(strokes, a.order, anchor)
+# The held-back strokes are walked among themselves, then appended. The pen finishing the main
+# pass is where they start from, so they still join on rather than teleporting.
+if held:
+    strokes += order_by(held, a.last_order, strokes[-1]['end'] if strokes else anchor)
 
 # ── Pacing ──────────────────────────────────────────────────────────────────────────────────
 total_ink = sum(s['len'] for s in strokes) or 1.0
