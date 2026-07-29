@@ -156,8 +156,12 @@
 	   markup, a different component, so selecting on it here would be an always-unused selector
 	   as far as svelte-check's static analysis of this file can tell. Same precedent as the
 	   outline variant's .wcard--outline :global(svg.lt) below. */
+	/* `.drawon--layers` is the wrapper DrawOn uses when the art ships as stacked layers: it takes
+	   the slot the single <svg> would have, and the layers position against it. Same geometry
+	   either way. */
 	.wcard__img,
-	.wcard--filled :global(svg.lt) {
+	.wcard--filled :global(svg.lt),
+	.wcard--filled :global(.drawon--layers) {
 		display: block;
 		width: 100%;
 		flex: 1 1 0%; /* fills whatever vertical space the title+body don't use — never overflows the fixed card height */

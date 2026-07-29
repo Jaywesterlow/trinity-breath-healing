@@ -54,6 +54,19 @@
 
 	let uniqueSvg = $derived(uniquifyIds(svg, uid));
 
+	// Some art ships as several stacked <svg> layers rather than one (see layerize.mjs). A mask
+	// stroke reveals whatever artwork lies under it, and these strokes are three to four times
+	// wider than the lines they uncover, so on art where lines cross — the steam over the cup rim
+	// — one mask over one bitmap always uncovered the neighbour too. Splitting the bitmap so each
+	// mask has only its own ink underneath is the only thing that fixes it; no draw order can.
+	//
+	// Kept as sibling roots in one file, not one <svg> with several masks: a mask change
+	// invalidates the whole element it lives in, so three masks in one <svg> re-rasterise all
+	// three layers every frame (1222ms of raster over a 2.4s draw, against 506ms for the single
+	// mask it replaced). As separate elements only the layer currently animating is dirty — 327ms,
+	// cheaper than the version that had the bug.
+	let layered = $derived((uniqueSvg.match(/<svg[\s>]/g) ?? []).length > 1);
+
 	let el: HTMLElement | null = $state(null);
 	let armed = $state(false);
 	let drawn = $state(false);
@@ -85,7 +98,13 @@
 	});
 </script>
 
-<div bind:this={el} class="drawon {klass}" class:drawon--armed={armed} class:drawon--drawn={drawn}>
+<div
+	bind:this={el}
+	class="drawon {klass}"
+	class:drawon--armed={armed}
+	class:drawon--drawn={drawn}
+	class:drawon--layers={layered}
+>
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -- build-time asset, not user input -->
 	{@html uniqueSvg}
 </div>
@@ -93,6 +112,23 @@
 <style>
 	.drawon {
 		display: contents; /* the SVG inherits the slot the <img> used to occupy */
+	}
+
+	/* Layered art cannot use display:contents — the layers have to overlay each other, so the
+	   wrapper has to be a real box for them to be positioned against. It therefore takes the slot
+	   the single <svg> used to hold, and the call site styles it the same way (see
+	   WerkwijzeCard). The layers keep their own preserveAspectRatio="slice", so each fills the
+	   wrapper identically and they cannot drift out of register. */
+	.drawon--layers {
+		display: block;
+		position: relative;
+	}
+
+	.drawon--layers :global(> svg) {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
 	}
 
 	/* {@html} content carries no scoping class, so :global() under the scoped parent.
