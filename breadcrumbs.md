@@ -516,3 +516,45 @@ rather than translating it into a theory:
 
 Every wrong turn in this sequence came from *substituting* a plausible mechanism for what was
 described. Two of them cost a commit each.
+
+### A traced stroke is a fragment, not a line — and that breaks every grouping scheme
+
+The single root cause behind four rounds of draw-on complaints. **The tracer cuts every line
+where another line crosses it.** A cup rim does not arrive as one stroke; it arrives as several
+fragments with the crossing line's fragments interleaved among them.
+
+Consequence: any scheme that groups *strokes* — by bounding box, by proximity, by hand-written
+index lists — will put the short pieces of a line that sit inside a crossing into the crossing
+line's group. That line then draws **with holes in it**, filled in later by something unrelated.
+Every symptom reported traced back to this: "half the smoke then later the other half", "it stops
+exactly at the rim", "broken lines".
+
+The fix is to recover which fragment continues which line, then never split those:
+
+- At a junction, the two fragments continuing the same line leave in **opposite directions**; a
+  line merely passing through leaves at an angle. Pair stroke ends by how straight the
+  continuation is — straightest first, one link per end.
+- Then apply a **narrow** rule: if both of a fragment's collinear continuations are in the same
+  group, the fragment belongs there too. Nothing else moves.
+
+**Merging whole connected lines is too coarse and was tried first.** A cup's rim genuinely
+continues into its body, so whole-line merging swallowed the entire cup into one group and the
+groups stopped meaning anything — it moved 23 fragments and destroyed the section structure. The
+both-ends rule moves 4 and leaves rim-to-body corners alone, because those have rim on one side
+and body on the other.
+
+Generalises past this project: **when working with traced or auto-segmented geometry, establish
+what one "line" is before grouping anything.** Segment boundaries produced by a tracer carry no
+semantic meaning, and treating them as if they do is what produced every bug here.
+
+### Explicit beats inferred once the asset count is small
+
+The sequence went: sort by y → nearest neighbour → greedy-edge chain → named regions → named
+sections. Each step replaced an inference with a statement, and each one fixed real bugs the
+previous could not. With eight hand-drawn assets, the endpoint was always going to be "say which
+strokes are the rim". The value the code still adds is the parts a person cannot reasonably do by
+eye: pacing, and the crossing-fragment repair above.
+
+Worth pairing with a hard check. `--section` errors if any stroke is unassigned rather than
+letting it draw at an arbitrary time — that check is what would have caught the smoke root
+sitting in the main pass, several rounds earlier.
