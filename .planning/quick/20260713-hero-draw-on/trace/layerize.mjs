@@ -141,7 +141,11 @@ const out = await page.evaluate(
 				if (artData.data[i + 3] > 8) kept++;
 			}
 			lx.putImageData(outData, 0, 0);
-			results.push({ name, dataUrl: lc.toDataURL('image/webp', 0.92), inkPx: kept });
+			// PNG out of the canvas, re-encoded to lossless WebP outside the browser. Chromium's
+			// canvas WebP encoder is lossy at every quality — at 0.92 it altered 43,517 pixels of
+			// this 700x759 drawing and at quality 1 still 14,630. Re-encoding that losslessly only
+			// preserves the damage. PNG round-trips at zero difference.
+			results.push({ name, dataUrl: lc.toDataURL('image/png'), inkPx: kept });
 		}
 
 		// Every artwork pixel must land in at least one layer, or the composite loses ink.
