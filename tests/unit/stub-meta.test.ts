@@ -1,8 +1,12 @@
 /**
  * stub-meta.test.ts — TDD gate for Plan 05 Task 1
- * Tests: STUB_META map — 14 entries, title/description length, crumb structure, uniqueness
- * Requirements: FND-08 (14 reserved stubs), SEO-01 (50-60 char titles), SEO-01 (150-160 char descriptions)
+ * Tests: STUB_META map — 13 entries, title/description length, crumb structure, uniqueness
+ * Requirements: FND-08 (14 reserved stubs, 13 remaining), SEO-01 (50-60 char titles),
+ * SEO-01 (150-160 char descriptions)
  * Pitfall #7: no duplicate meta content across stub routes
+ *
+ * `/faq` graduated to real content (src/routes/faq/) and dropped out of STUB_META —
+ * see src/routes/faq/+page.ts for its own title/description/crumbs.
  */
 import { describe, it, expect } from 'vitest';
 import { STUB_META } from '$lib/seo/stub-meta';
@@ -19,17 +23,16 @@ const EXPECTED_PATHS = [
 	'/diensten/spinal-touch',
 	'/blog',
 	'/artikelen',
-	'/faq',
 	'/privacyverklaring',
 	'/algemene-voorwaarden'
 ];
 
-describe('STUB_META — 14 stub route entries', () => {
-	it('Test 1: STUB_META has exactly 14 keys', () => {
-		expect(Object.keys(STUB_META).length).toBe(14);
+describe('STUB_META — 13 stub route entries', () => {
+	it('Test 1: STUB_META has exactly 13 keys', () => {
+		expect(Object.keys(STUB_META).length).toBe(13);
 	});
 
-	it('Test 2: STUB_META keys match the 14 expected stub paths exactly', () => {
+	it('Test 2: STUB_META keys match the 13 expected stub paths exactly', () => {
 		const keys = Object.keys(STUB_META).sort();
 		const expected = [...EXPECTED_PATHS].sort();
 		expect(keys).toEqual(expected);

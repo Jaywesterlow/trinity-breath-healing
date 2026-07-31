@@ -7,8 +7,9 @@
  *
  * No browser needed — pure Node.js subprocess testing via Playwright runner.
  *
- * WARNING-2 control test: FAQPage with mainEntity=[] must NOT cause
- * validate-json-ld.ts to exit 1 (Phase 0 contract — empty FAQ is valid).
+ * WARNING-2 control test: FAQPage with mainEntity=[] MUST cause validate-json-ld.ts to
+ * exit 1. Phase 1 (LND-07) raised this gate when the real FAQ landed — an empty FAQPage
+ * was only valid under the superseded Phase 0 contract.
  */
 import { test, expect } from '@playwright/test';
 import { spawnSync } from 'child_process';
@@ -379,7 +380,7 @@ test('non-ISO WebPage.dateModified causes validate-json-ld.ts to exit 1 (SEO-09)
 	}
 });
 
-// WARNING-2 positive control: FAQPage with mainEntity=[] must be VALID in Phase 0
+// WARNING-2 control: FAQPage with mainEntity=[] must be REJECTED (gate raised in Phase 1)
 test('FAQPage with mainEntity=[] is rejected by validate-json-ld.ts (WARNING-2 Phase 1 contract)', () => {
 	const tmp = makeTmpDir();
 	try {

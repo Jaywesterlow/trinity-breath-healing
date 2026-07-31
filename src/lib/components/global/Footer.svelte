@@ -3,6 +3,7 @@
 	import SocialIcon from '$lib/components/ui/SocialIcon.svelte';
 	import FooterNavColumn from '$lib/components/ui/FooterNavColumn.svelte';
 	import TextLink from '$lib/components/ui/interactions/TextLink.svelte';
+	import { reveal } from '$lib/actions/reveal';
 
 	const SOCIAL_COLOR = 'var(--color-bg-sand)';
 
@@ -42,7 +43,7 @@
 	<div class="footer__inner">
 		<div class="footer__main">
 			<!-- Brand: logo + contact -->
-			<ul class="footer__brand">
+			<ul class="footer__brand" use:reveal={{ delay: 0 }}>
 				<li><NavLogo inverted={true} footer={true} /></li>
 				<li>
 					<address class="footer__contact">
@@ -72,7 +73,7 @@
 			</ul>
 
 			<!-- Social icons — row on mobile, vertical column on desktop (order: 3) -->
-			<nav class="footer__social" aria-label="Sociale media links">
+			<nav class="footer__social" aria-label="Sociale media links" use:reveal={{ delay: 110 }}>
 				<ul class="footer__social-list">
 					<li>
 						<SocialIcon
@@ -102,7 +103,7 @@
 			</nav>
 
 			<!-- Nav columns — order: 2 on desktop, after social on mobile -->
-			<nav class="footer__nav" aria-label="Footer navigatie">
+			<nav class="footer__nav" aria-label="Footer navigatie" use:reveal={{ delay: 220 }}>
 				{#each NAV_COLUMNS as col (col.heading)}
 					<FooterNavColumn heading={col.heading} links={[...col.links]} />
 				{/each}
@@ -111,7 +112,7 @@
 
 		<hr class="footer__divider" />
 
-		<div class="footer__bottom">
+		<div class="footer__bottom" use:reveal={{ delay: 330 }}>
 			<nav class="footer__legal" aria-label="Juridische links">
 				<a href="/privacyverklaring">Privacyverklaring</a>
 				<a href="/algemene-voorwaarden">Algemene voorwaarden</a>

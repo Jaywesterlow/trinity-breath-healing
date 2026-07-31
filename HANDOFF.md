@@ -1,179 +1,283 @@
-# HANDOFF — Trinity rework (plain CSS → Tailwind v4 + shadcn-svelte)
+# Handoff — current state of `main`
 
-_Rewritten 2026-07-14. Supersedes the 2026-07-13 version, which was stale on every load-bearing point (it claimed the working tree was clean and that Slice 2 hadn't started — both wrong now)._
+The only live handoff. Superseded ones are in `.planning/archive/`.
 
----
+Started **2026-07-26** as a handoff for `polish/site-polish`; that branch was merged into
+`main` and deleted on **2026-07-31**, and this was rewritten to describe the merged result.
+Written for someone starting with no context.
 
-## 🔴 READ THIS FIRST — the one job waiting for you
+**Read these first — they are maintained, this one is background:**
 
-**The user is hand-converting the site's images to SVG right now. They said: "hold on and I'll tell you when I finish."**
+| document | what it holds |
+|---|---|
+| `.planning/notes/KNOWN-ISSUES.md` | **everything still open**, indexed at the top. Check its date before quoting it. |
+| `Insights/owner-profile.md` | how the owner works: communication, review loop, what has and has not gone well. |
+| `breadcrumbs.md` | technical lessons worth carrying to other projects, with the evidence. |
 
-Do not touch the working tree until they say they're done.
+Also in `.planning/notes/`:
 
-When they say they're finished, do exactly this:
-
-1. **Re-read the diff from scratch.** `git status --short` + `git diff --stat HEAD`. The file list in this doc is a snapshot from 2026-07-14 and is **certainly out of date** — they are actively changing it. Do not trust it. Do not reuse the commit plan below without re-checking what's actually there.
-2. **Propose commits and wait for a yes.** Per the user's git rule, no commit lands without explicit approval, and the message must be Conventional Commits format. A proposed plan is drafted below — treat it as a starting point, not the answer.
-3. **Then merge:** `git merge slice-2-readiness` while on `slice-1-foundation`.
-
-That merge target is **already decided** — the user chose it. Don't re-litigate it. See "Why into slice-1" below.
-
----
-
-## Git topology (verified 2026-07-14, read-only commands)
-
-```
-master  ──9755ba7  "docs: Slice 1 implementation plan"
-                   ^ NOTHING is merged here. Master is an empty baseline.
-
-slice-1-foundation  ← YOU ARE HERE (checked out, tree DIRTY)
-  a0e5e5e  chore: gitignore subagent scratch + baseline dir
-  2a8c2de  feat(slice1): Tailwind v4 via Vite; global.css → src/app.css
-  22fb162  feat(slice1): brand color/font/radius tokens → @theme
-  0d88e29  feat(slice1): init shadcn-svelte, map semantic tokens (no components)
-  1d57da2  chore(slice1): retire plain-CSS CI guards; D-09 superseded
-  6719a20  fix(slice1): rename brand tokens out of shadcn's --color-* namespace
-  81bbe8f  feat(hero): draw hero illustration on load (traced SVG)  ←── slice-2 forks HERE
-  c098714  fix(hero): match traced stroke weight to original artwork
-  a74eb55  feat(images): vectorise line art; draw-on portraits + Verdieping  ← tip
-
-slice-2-readiness   (worktree: ../trinity-slice2-readiness)
-  2bb4e5c  test(visual): committed screenshot baselines for / and /contact
-  12200f0  fix(visual): tighten threshold to catch small-text regressions
-  1597d1f  fix(seo): per-page title + meta description  ← BIGGEST WIN, see below
-  fdfd04c  ci: run dead CSS variable guard on every push
-  ea7bbc8  feat(theme): complete shadcn semantic token surface
-  a5bd510  fix(ci): skip visual regression where no baselines committed
-  31cbe05  docs: triage the 33 pre-existing e2e failures
-```
-
-**Why into slice-1, not master:** slice-2 forked from `81bbe8f`, which is *mid*-slice-1. Slice-1 has since gained `c098714` + `a74eb55`. Merging slice-2 straight to master would carry the foundation and the hero, but **strand the stroke-weight fix and the vectorised line art** — master would ship a hero with the wrong stroke weight. So: slice-2 → slice-1 first. Land the whole migration to master later, as one.
-
-**No remote exists.** This is a detached fork with fresh history. `git remote -v` is empty, on purpose — this copy *cannot* deploy to production.
+- `RESEARCH-werkwijze-scroll.md` — why the Werkwijze pin is built the way it is.
+- `RESEARCH-werkwijze-stutter.md` — why the pan is driven from CSS, plus a section audit.
+- `AUDIT-2026-07-27.md` — the full audit those open items came from.
 
 ---
 
-## Draft commit plan (STALE — re-derive it)
+## ⚠️ Owner action item — check this after the site goes live
 
-Snapshot of the dirty tree as of 2026-07-14, before the user's current SVG session. Shown so you know the *shape* of what was in flight, not so you can replay it.
+**Not a code task. Nobody can do this from here. It needs a real visitor on a real phone.**
 
-```
-[1] feat(brand): replace 2.3MB raster logo with vector trinity-logo.svg
-    static/trinity-logo.svg   (new, 22KB)   static/trinity-logo.png (deleted, 2.3MB)
-    static/logo.svg (deleted, unused)       src/lib/components/global/NavLogo.svelte
+The hero waits **1.43 seconds** — half of the illustration's 2.86s draw — before any text
+appears. Google measures how quickly a page's main text shows up (Largest Contentful Paint),
+and the hero heading is the element it measures here. This wait very likely pushes that over
+the target.
 
-[2] feat(images): retrace line art as filled vectors at 2x viewBox
-    static/images/card-*.svg, heart.svg, sprout.svg   → fill-based
-    src/lib/images/about-portrait-{1,2}.svg,
-    src/lib/images/card-verdieping-bg.svg             → still stroke-based
+**What to do:** once the site is live and has had a few weeks of traffic, open Google Search
+Console → Core Web Vitals → LCP.
 
-[3] docs: add Trinity rework handoff + refresh draw-on screenshots
-    HANDOFF.md, .planning/quick/20260713-hero-draw-on/*.png
-```
+- **If LCP is fine:** nothing to do. Leave the hero alone.
+- **If LCP is flagged as slow:** the fix is to **shorten the hero drawing animation**, not to
+  remove the wait. The wait is a deliberate design decision by the owner and should stay. The
+  trace's timing is generated, so regenerating `hero-illustration.svg` with a shorter total
+  stagger brings the number down without changing how the hero behaves. This overlaps with
+  outstanding item 2 (regrouping the SVG traces) — do them together.
 
-The 2.3 MB → 22 KB logo swap is a genuine perf win — that asset is in the nav of every page.
-
-### ⚠️ The stroke-vs-fill rule (matters for every image you touch)
-
-The draw-on animation works by animating `stroke-dashoffset`. **A filled path cannot be drawn on.** So:
-
-- `src/lib/images/about-portrait-*.svg` and `card-verdieping-bg.svg` **must stay stroke-based** — `DrawOn.svelte` animates them.
-- `static/images/card-*.svg`, `heart.svg`, `sprout.svg` are safe to be fill-based — `Behandelingen.svelte` loads them as plain `<img src>`, it does not animate them. (The `stroke-dasharray` in that file is on `.treatments__dot-ring`, an inline SVG, not on the cards.)
-
-If the user's new SVGs convert the portraits or Verdieping card to fills, **the draw-on silently stops working** — no error, no failing test. Check this before committing.
+Why it was not settled during the session: it could not be measured in the dev container,
+where first paint alone is ~13 seconds. That swamps an animation of this length completely, and an A/B
+against a zero-delay build came back as noise. **That noise is not evidence the wait is
+harmless.** Details under "Open risk: LCP" further down.
 
 ---
 
-## Known-red things (not yours to fix silently — surface them)
+## Branches
 
-- **PRF-03 is failing** because of the user's own hero commit `81bbe8f`. The contract asserts `loading="eager"` appears exactly once; the hero is now an inline SVG with no `<img>` at all. It passed before. **The user's call:** retire the contract or rewrite it. Their in-flight image work may settle it either way — re-run before asking.
-- **E2E: 20 failing** (down from 33). Of those, 17 assert features that were never built (contact form, modal, font preload), 2 are hero contracts the SVG rewrite made obsolete, 1 is a real JSON-LD validator gap. Triage in `docs/E2E-TRIAGE.md`. **Recommendation on the table:** `test.fixme()` the 17 so red means red again. Not yet approved.
-- **Slice-1 never got a whole-branch review.** The 2026-07-12 session hit its limit. Individual tasks were reviewed; the branch as a whole was not.
-- **Nobody has visually checked the fork.** Pixel-diff vs the original was 0.000% on `/` and `/contact` at the time of the Slice-1 bug fix, but no human has looked at it running.
+| branch | state |
+|---|---|
+| `main` | **current.** The polish work is merged in. |
+| `feat/contact-section` | landing Contact section, panels still placeholders. Not merged. |
+| `preview/mobile-view` | stale, predates the polish merge. Unused. |
 
----
-
-## 🚨 Landmine before any shadcn component gets added
-
-**The shadcn `ui` alias points at a directory that already holds Trinity's own components.**
-
-`components.json` says `"aliases": { "ui": "$lib/components/ui" }` — and `src/lib/components/ui/` already contains hand-written Trinity files (`AboutStat.svelte`, `HeroServiceCard.svelte`, `WerkwijzeCard.svelte`, `Breadcrumbs.svelte`, …, plus `index.ts`).
-
-So `npx shadcn-svelte add button` writes **into that same folder**, next to Trinity's files, and touches `index.ts`.
-
-**Before the first `add`:** run `--dry-run` and diff. Either repoint `ui` to a fresh dir (e.g. `$lib/components/shadcn`) or accept co-habitation deliberately. Do not run a bare `add` and find out afterwards.
+The owner reviews on Vercel preview deploys from a phone, so **push after every change** —
+they cannot run a dev server. Small, verifiable increments, one concern at a time. They have
+said explicitly: do not fix several things at once, because then a regression can't be traced.
 
 ---
 
-## Why Slice 2 converted zero components (don't undo this)
+## What the polish pass delivered
 
-Slice 2 was **re-scoped**, on evidence. A dry-run of `shadcn add button` showed **every** visual property differs from Trinity's: `h-8` vs 40px, `rounded-lg` vs pill, sans 14px vs Cormorant serif, forest vs tan — and shadcn ships no tan variant. Converting means rewriting the variant map until it looks identical again: **zero visual gain, real risk.** Nav and footer: shadcn ships neither. Trinity's cards are bespoke; shadcn's Card is a padded div.
+**About stats** — count-up was ease-out-quint over 700ms, which put ~95% of the count in the
+first third and read as an abrupt stop. Now ease-out-cubic over 1800ms.
 
-Dialog/select/tabs *would* add value — but **nothing consumes them yet**, so adding them now is dead code.
+**Werkwijze** — rebuilt. See "The Werkwijze story" below; it is the bulk of the session.
 
-**Rule going forward: adopt a shadcn component when a real need lands** (contact form → P3, FAQ accordion → P2). Not before.
+**FAQ disclosure** — open and close now animate. Covered by
+`tests/integration/faq-disclosure.spec.ts`.
 
----
+**Hero entrance** — staggered top-to-bottom cascade, pure CSS, waits for the illustration to
+be halfway through drawing (1.43s) before starting.
 
-## The bug that defines this project's safety rules
+**Scroll reveal** — `use:reveal` below the fold, per element, never per section.
 
-Slice 1 was marked DONE on green unit tests + `npm run check` + a clean build. **All three were green while the site was visibly broken.**
+**Draw-on animation** — card art draws stroke by stroke in a deliberate order. Parked by the
+owner before it was perfect; see KNOWN-ISSUES item 9 for exactly where it stands and
+`breadcrumbs.md` for why a single mask over a single bitmap can never be clean.
 
-`@theme inline` (shadcn's own pattern) re-declared `--color-border` / `--color-muted` as aliases of `--border` / `--muted` but emitted no real `:root` var. Trinity's same-named tokens got replaced → circular → resolved to `""`. **A dead `var()` does not error. It falls back to initial.** Nav CTA, hero CTA, the "Spinal Touch" chip, and the Verdieping card border all rendered **invisible**, and no test noticed.
+**`/faq`** — real page instead of a stub.
 
-Fixed in `6719a20` (raw tokens renamed `--brand-*`). Guarded by `tests/integration/no-dead-css-vars.spec.ts`, which fails if any non-fallback `var(--x)` resolves to `""`. Runs in CI on every push (`fdfd04c`).
-
-**Lesson, and it applies to the image work too: green tests ≠ correct render. Look at the page.**
-
----
-
-## The SEO bug that was hiding in plain sight
-
-`1597d1f`. **All 15 pages shipped the same `<title>` and the same `<meta description>`.** `+layout.svelte` was reading its *own* load data, so the per-page Dutch meta authored months ago in `stub-meta.ts` never reached `<head>`. Canonicals were fine, so nothing flagged it. Silently dropped on every build since it was written.
-
-Biggest single win of the rework so far. Mentioned here because it's the kind of thing that only turns up when someone actually reads the rendered output.
+**Favicon and robots.txt** — favicon generated from the logo by `scripts/make-favicon.mjs`;
+robots.txt is now a prerendered route so its Sitemap line follows `PUBLIC_SITE_URL` instead of
+a hardcoded stale alias. **Do not add `static/robots.txt` back** — `static/` is served ahead of
+routes, so it would silently shadow the route. There is a test asserting it does not exist.
 
 ---
 
-## Repo facts
+## Outstanding
 
-- **This repo:** `Desktop\AI\Coding projects\Claude Coding\trinity-breath-healing-rework` — a safe fork made 2026-07-12.
-- **Original, untouched:** `...\Claude Coding\trinity-breath-healing` (branch `fix/hero-fit-cards`). Do not touch it.
-- **Slice-2 worktree:** `...\Claude Coding\trinity-slice2-readiness` (holds `slice-2-readiness` checked out).
-- Excluded at fork time: `node_modules`, `.svelte-kit`, `.vercel`, `.git`. `.env` untracked.
-- **Tokens:** `src/app.css` — brand tokens in `@theme`, shadcn semantic tokens in `:root` below. Trinity's `--radius-*` scale is authoritative; shadcn's `calc()`-derived scale must not overwrite it.
-- **Routes:** flat Dutch pages — `/`, `/over-mij`, `/behandelingen`, `/diensten`, `/werkwijze`, `/contact`, `/faq`, `/blog`, `/artikelen`, `/privacyverklaring`, `/algemene-voorwaarden`, `sitemap.xml`.
-- Pre-existing `npm run check` warning: `AboutStat.svelte:24` (`state_referenced_locally`). Not from the migration. Leave it.
+Moved to `.planning/notes/KNOWN-ISSUES.md`, which has a numbered index at the top and is kept
+current. Do not maintain a second list here.
 
-```bash
-npm run dev            # visual check
-npm run test           # unit
-npm run test:visual    # screenshot baselines (win32 only)
-npm run check          # svelte-check
-```
+The owner's own priority for the three that block launch: **pick the real domain → fill in the
+practitioner name and phone → fix the contrast failures.**
 
 ---
 
-## The user's rules (non-negotiable)
+## The Werkwijze story — read this before changing that section
 
-- **Commits require explicit permission**, every time, with the message proposed up front in Conventional Commits format.
-- **Feature branches** may be created freely — just say so and why.
-- **Never touch the remote.** No `push` / `pull` / `fetch` / remote `rebase` / remote `merge`. Print the command and stop. (Moot here — there is no remote — but the rule stands.)
-- **Merges are the user's to run** unless they explicitly hand one over. They handed over *this* one (slice-2 → slice-1). That permission does not extend to slice-1 → master.
-- Opus coordinates, **Sonnet subagents implement.** Slices 1 and 2 were both built this way.
+It took many failed attempts. The failures are more instructive than the fix.
+
+**What it does:** on mobile, scrolling into the section pins it and converts vertical scroll
+into a horizontal pan across three cards, then releases.
+
+**The original implementation** froze scroll with `preventDefault` on wheel/touch/keydown plus
+`body { overflow: hidden }`, and hand-drove `scrollLeft`. That cannot work against a touch
+fling: on iOS `preventDefault` only suppresses scrolling while the finger is down, and once
+`touchend` fires the momentum belongs to the OS compositor with no event left to cancel.
+
+**The replacement** is a sticky pin: the section is made taller than the viewport by the pan
+distance, the inner wrapper is `position: sticky`, and scroll progress through the tall
+section drives a horizontal transform. Native scroll is never blocked.
+
+**Then it stuttered, and three "fixes" did not fix it.** Cached the forced layout read,
+dropped a per-frame custom property, scoped the compositing layer. Each removed real waste.
+None helped, because all three treated it as a *throughput* problem. Phase profiling showed
+the pan doing 0.8ms of paint per frame against 3.5ms for ordinary scrolling elsewhere — it
+was the cheapest thing on the page and still stuttered.
+
+**The actual cause was timing, not work.** A JS `scroll` listener is janky by construction:
+scrolling runs on the compositor and the event reaches the main thread a frame later, so the
+track was positioned from a stale offset while the sticky frame around it was exactly right.
+A constant lag is invisible; a *changing* lag is what the eye reads as stutter — hence bad on
+entry, on fling, and on the run-out, smooth in the middle at steady speed.
+
+**The fix** is a CSS `view-timeline`. The pin is the timeline subject and the track's
+transform is bound to it over `contain 0% contain 100%` — which, for a subject taller than the
+scrollport, is exactly the period the sticky is stuck. Compositor-driven, cannot drift.
+
+### Traps in that file, all of which have bitten once
+
+- **`overflow: hidden` on the section kills `position: sticky`** on every descendant, because
+  it makes the element a scroll container. It must be `overflow-x: clip`. There is a comment
+  saying so. Do not "simplify" it.
+- **The clip must not live on the element being transformed.** An element's overflow clip is
+  part of the element, so translating it drags the clip along: card 1 exits and cards 2 and 3
+  stay clipped forever. The track is `overflow: visible`; the static section clips. Every
+  geometry assertion passed while this was broken, because `getBoundingClientRect` knows
+  nothing about ancestor clipping — there is now a structural test for it.
+- **`scrollWidth - clientWidth` is the wrong measurement.** It only reports a real value while
+  the track is a scroll container, which it is not once pinned. It reads 0 on any re-measure,
+  collapsing the travel to nothing on resize. Measure the first-to-last card offset delta.
+- **The pin gate must check height, not just width.** A landscape phone passes
+  `max-width: 1023.98px` and then puts ~577px of content into a 390px sticky box. There is now
+  a `min-height: 640px` condition and a test.
 
 ---
 
-## Order of play after the merge
+## Above the fold vs below it — the rule that matters
 
-1. Merge `slice-2-readiness` → `slice-1-foundation`. ← **the pending job**
-2. Re-run the suite. Expect 20 e2e failures, not 33. Confirm PRF-03's status after the new images.
-3. Decide PRF-03: retire or rewrite. **Ask.**
-4. Decide the 17 unbuilt-feature e2e tests: `test.fixme()` them? **Ask.**
-5. Whole-branch review of slice-1 + a real visual check of the running site. Both still owed.
-6. Only then: merge slice-1 → master. **User runs it.**
-7. Slice 3 = adopt shadcn components where a real need lands. Resolve the `ui/` alias landmine first.
+The site is prerendered and judged on AI-crawler readability. Entrance animations must never
+leave content hidden when the script fails.
 
-## Loose end outside this repo
+**Below the fold:** arm the hidden state *from JavaScript*, as `DrawOn.svelte` does. The
+prerendered HTML then always shows finished content, and the failure mode is "no animation"
+rather than "no content". Safe because the element is offscreen when armed.
 
-`[[Plain CSS Preference]]` in the AI Brain wiki still says "always plain CSS." This project reverses that. Needs a nuance edit: **plain CSS by default, shadcn/Tailwind for component-heavy projects.** Still not done.
+**Above the fold: do the opposite.** That reasoning collapses for the hero, which is painted
+long before hydration on a phone — arming it after the fact would show the hero, blank it, and
+fade it back in. The hero is therefore **pure CSS**, in force from the first frame, with
+`animation-fill-mode: backwards` so delayed elements start hidden rather than sitting visible
+until their turn. It cascades with JavaScript disabled, which was verified.
+
+### The `use:reveal` action, for below the fold
+
+Shipped, at `src/lib/actions/reveal.ts`. Its contract, all of it load-bearing:
+
+- Options: `delay`, `duration`, `distance`, `trigger: 'load' | 'view'`.
+- Bail immediately under `prefers-reduced-motion`, before touching any style.
+- Set the hidden state synchronously inside the action, so it lands before first paint.
+- `trigger: 'view'` uses one IntersectionObserver, fires once, disconnects. Never fades out.
+- **Remove every inline style once the fade ends.** A leftover `transform` makes the element
+  the containing block for any fixed or sticky descendant, which would silently break sticky
+  positioning elsewhere. Back the `transitionend` cleanup with a timeout — it does not fire
+  for an element that is never painted.
+
+- Bail without arming if the element is already in the viewport when the action runs — arming
+  something the reader can already see would flash it.
+- Drive it with the Web Animations API, **not** `node.style.transition`. `transition` is a
+  single property, so setting it replaces whatever the element's own stylesheet declared —
+  which silently broke the FAQ disclosure's close animation once.
+- `distance: 0` skips the rise entirely rather than animating a 0px offset. Animating
+  `transform` promotes the element to its own compositing layer for the duration, and on the
+  FAQ's grid-rows disclosure that left it unable to run its close transition afterwards.
+
+Per element — a heading, a paragraph, one card. Never a whole section; that reads as the page
+stalling.
+
+---
+
+## The hero cascade, as built
+
+Order and delays, all offset by `--hero-in-start`, which is half of `--hero-draw-total`
+(2.86s) — so 1.43s:
+
+`heading 0 → body 140 → cta 280 → social 340 → cards 420 / 530 / 640`
+
+Two separate animations, deliberately, because the fade and the movement want opposite curves.
+Driving both off one expo curve made it read as a fly-in: an expo ease-out is ~80% done in its
+first quarter, so the movement was what you noticed. Now the fade is long and dominant
+(1300ms, gentle) and the rise is short and subordinate (10px, hard expo, settled by ~700ms).
+
+`.hero__cards` and `.hero__social` are `display: none` on mobile — desktop only. On a phone
+the cascade is heading → body → CTA.
+
+### Open risk: LCP
+
+**The heading is the LCP element** — confirmed with a PerformanceObserver, not assumed. An
+element at `opacity: 0` does not count as painted, so the 1.43s wait lands directly on Largest
+Contentful Paint. The project budget is LCP < 2.5s.
+
+It was 2.86s — the full draw — until the owner asked for the text to start at the halfway
+point instead. That halves the cost almost exactly, since LCP is marked when opacity leaves 0
+(the end of the delay), not when the fade finishes. The sequencing still reads: the drawing is
+visibly still going when the text begins.
+
+This could not be measured in the container — first contentful paint there is ~13s, which
+swamps the animation and made an A/B against a zero-delay build come back as noise. **Do not
+treat that as evidence it is fine.** Search Console is the source of truth, per the project's
+own notes.
+
+If it bites, the fix is to **shorten the draw, not to unpick the sequencing** — the owner
+asked for the sequencing explicitly. The trace's stagger is generated, so regenerating with a
+shorter total pulls the number down without changing how the hero behaves. That overlaps with
+outstanding item 2 anyway.
+
+---
+
+## Environment gotchas
+
+- **Playwright cannot run with the repo's own config.** `package-lock.json` pins
+  `@playwright/test` 1.61.1, which wants Chromium revision 1228; the container ships 1194 at
+  `/opt/pw-browsers`, with a different internal layout, so a symlink does not fix it. Run with
+  an override config that sets
+  `use: { launchOptions: { executablePath: '/opt/pw-browsers/chromium' } }`, `testDir` pointing
+  at the repo's `tests/integration`, and `webServer.cwd` set to the repo root. Do **not** run
+  `playwright install`.
+- `npm run build` needs `PUBLIC_SITE_URL` set — it fails loudly without it, by design (FND-07).
+  Use a gitignored `.env`, never a tracked file.
+- The shell's working directory drifts between calls. Use absolute paths in scripts.
+- `vite preview` dies frequently; check it is up before each browser run.
+- Full-page screenshots and pixel diffs are the reliable way to prove a change is visually
+  inert. Two were decisive this session: the card art `<img>` switch and the hero CTA wrapper,
+  both **zero differing pixels**.
+
+---
+
+## Two failure modes that pass every check
+
+Both bit this session. Neither is caught by build, type check, lint or snapshot.
+
+1. **Svelte prunes CSS it cannot statically match.** The FAQ's `[data-closing]` rules were
+   silently dropped from the build because the attribute is set imperatively — the close
+   reverted to instant with nothing in the source to explain why. They are `:global()` now.
+   If a rule depends on an imperatively-set attribute or class, **grep the built CSS** to
+   confirm it survived.
+2. **Generated SVG traces were malformed XML.** Seven of eight were missing `</mask>`. The
+   HTML parser silently repairs that when the SVG is inlined, so it was invisible for months —
+   but anything parsing strictly (an `<img src>`, a CSS `url()`) renders nothing at all, with
+   no error beyond a zero intrinsic size. Fixed in the files and in
+   `.planning/quick/20260713-hero-draw-on/trace/drawtrace.py`. Validate generated SVGs as XML.
+
+---
+
+## How to work on this project
+
+Moved to `Insights/owner-profile.md` — communication style, the review loop, the orchestrator
+model, what has satisfied and frustrated the owner, and the decisions they have made with the
+reasoning. That file is maintained; this section was duplicating it.
+
+The two things worth repeating here because they change what you do first:
+
+- **Push after every change.** They review on Vercel previews from a phone. An unpushed change
+  is invisible, and asking them to look at something that has not changed costs them a deploy
+  cycle.
+- **Take their description of a visual bug literally.** It was correct every time, and every
+  wrong turn came from substituting a plausible mechanism for what was described. There is a
+  table of examples in the profile.

@@ -283,7 +283,11 @@ if a.animate and mask_paths:
         dur = BASE * min(max((p['len'] / med) ** 0.5, 0.65), 1.6)
         out.append(f'\t\t\t<path pathLength="1" stroke-width="{p["w"]}" '
                    f'style="--t:{t:.2f}s;--d:{dur:.2f}s" d="{p["d"]}"/>')
-    out.append('\t\t</g>\n\t</defs>')
+    # </mask> is not optional. The HTML parser silently repairs a missing one when the SVG is
+    # inlined into a page, so an unclosed <mask> looks fine and stays invisible -- but the file
+    # is then malformed XML, and anything that parses it strictly (an <img src>, a CSS url(),
+    # any SVG tooling) fails to render it at all, with no error beyond a zero intrinsic size.
+    out.append('\t\t</g></mask>\n\t</defs>')
     # One filled path per opacity band, faintest first (drawn first = underneath). Every
     # band shares the SAME mask id -- one pen, one timeline. A dedicated mask per band would
     # let faint background art "finish" on its own schedule, decoupled from the foreground

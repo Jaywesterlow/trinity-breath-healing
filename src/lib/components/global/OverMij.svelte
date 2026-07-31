@@ -5,6 +5,7 @@
 	import TextLink from '$lib/components/ui/interactions/TextLink.svelte';
 	import ButtonLink from '$lib/components/ui/interactions/ButtonLink.svelte';
 	import DrawOn from '$lib/components/ui/DrawOn.svelte';
+	import { reveal } from '$lib/actions/reveal';
 
 	// Centerline traces of the portrait line art, inlined so their strokes can draw
 	// themselves when the section scrolls into view. Regenerate with the tracer in
@@ -29,8 +30,10 @@
 <section class="about" id="over-mij">
 	<div class="about__inner">
 		<header class="about__header">
-			<p class="about__eyebrow">Over mij</p>
-			<h2 class="about__heading">Vanuit eigen ervaring weet ik wat jij doormaakt.</h2>
+			<p class="about__eyebrow" use:reveal={{ delay: 0 }}>Over mij</p>
+			<h2 class="about__heading" use:reveal={{ delay: 120 }}>
+				Vanuit eigen ervaring weet ik wat jij doormaakt.
+			</h2>
 		</header>
 
 		<div class="about__media">
@@ -58,16 +61,16 @@
 		</div>
 
 		<div class="about__content">
-			<p class="about__body">{bodyText}</p>
+			<p class="about__body" use:reveal={{ delay: 240 }}>{bodyText}</p>
 			<ul class="about__features">
-				<li>
+				<li use:reveal={{ delay: 360 }}>
 					<AboutFeature
 						artSvg={heartSvg}
 						title="Vanuit eigen ervaring"
 						body="Geen aangeleerde theorie, maar een aanpak die ik zelf heb doorleefd."
 					/>
 				</li>
-				<li>
+				<li use:reveal={{ delay: 480 }}>
 					<AboutFeature
 						artSvg={sproutSvg}
 						iconScale={1.2}
@@ -80,9 +83,15 @@
 		</div>
 
 		<ul class="about__stats">
-			<li><AboutStat value={BRAND.stats.yearsExperience} label="Jaren ervaring" /></li>
-			<li><AboutStat value={BRAND.stats.clientsHelped} label="Klachten verholpen" /></li>
-			<li><AboutStat iconSrc="/images/infinity.png" label="Mogelijkheden voor herstel" /></li>
+			<li use:reveal={{ delay: 0 }}>
+				<AboutStat value={BRAND.stats.yearsExperience} label="Jaren ervaring" />
+			</li>
+			<li use:reveal={{ delay: 120 }}>
+				<AboutStat value={BRAND.stats.clientsHelped} label="Klachten verholpen" />
+			</li>
+			<li use:reveal={{ delay: 240 }}>
+				<AboutStat iconSrc="/images/infinity.png" label="Mogelijkheden voor herstel" />
+			</li>
 		</ul>
 	</div>
 </section>

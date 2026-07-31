@@ -84,6 +84,8 @@ keyed `{#each}`.
 
 ## Follow-ups worth taking
 
+Moved to `.planning/notes/KNOWN-ISSUES.md` so they do not stay buried in a completed summary:
+
 1. `src/routes/faq/+page.svelte` is still a `StubLayout` stub while
    `Footer.svelte` links to `/faq`. Either render the FAQ content there or drop
    the footer link — a linked stub page is an SEO liability.
