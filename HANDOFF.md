@@ -1,15 +1,24 @@
-# Handoff — `polish/site-polish`
+# Handoff — current state of `main`
 
-This is the only live handoff. Superseded ones are in `.planning/archive/`.
+The only live handoff. Superseded ones are in `.planning/archive/`.
 
-Written **2026-07-26**, at the end of a long session. Read this before touching the polish
-branch. It is written for someone starting with no context.
+Started **2026-07-26** as a handoff for `polish/site-polish`; that branch was merged into
+`main` and deleted on **2026-07-31**, and this was rewritten to describe the merged result.
+Written for someone starting with no context.
 
-Companion documents, all in `.planning/notes/`:
+**Read these first — they are maintained, this one is background:**
 
-- `KNOWN-ISSUES.md` — the deferred list, with dates. Check the date before quoting it.
+| document | what it holds |
+|---|---|
+| `.planning/notes/KNOWN-ISSUES.md` | **everything still open**, indexed at the top. Check its date before quoting it. |
+| `Insights/owner-profile.md` | how the owner works: communication, review loop, what has and has not gone well. |
+| `breadcrumbs.md` | technical lessons worth carrying to other projects, with the evidence. |
+
+Also in `.planning/notes/`:
+
 - `RESEARCH-werkwijze-scroll.md` — why the Werkwijze pin is built the way it is.
 - `RESEARCH-werkwijze-stutter.md` — why the pan is driven from CSS, plus a section audit.
+- `AUDIT-2026-07-27.md` — the full audit those open items came from.
 
 ---
 
@@ -43,11 +52,9 @@ harmless.** Details under "Open risk: LCP" further down.
 
 | branch | state |
 |---|---|
-| `main` | baseline. The polish work is **not** merged into it. |
-| `polish/site-polish` | **the working branch.** 18 commits ahead of main, all pushed. |
-| `feat/contact-section` | landing Contact section, panels still placeholders. Untouched this session. |
-| `preview/mobile-view` | identical to main. Unused. |
-| `claude/trinity-breath-contact-changes-k1gax8` | dead, local only. Safe to delete. |
+| `main` | **current.** The polish work is merged in. |
+| `feat/contact-section` | landing Contact section, panels still placeholders. Not merged. |
+| `preview/mobile-view` | stale, predates the polish merge. Unused. |
 
 The owner reviews on Vercel preview deploys from a phone, so **push after every change** —
 they cannot run a dev server. Small, verifiable increments, one concern at a time. They have
@@ -55,7 +62,7 @@ said explicitly: do not fix several things at once, because then a regression ca
 
 ---
 
-## Done on this branch
+## What the polish pass delivered
 
 **About stats** — count-up was ease-out-quint over 700ms, which put ~95% of the count in the
 first third and read as an abrupt stop. Now ease-out-cubic over 1800ms.
@@ -68,24 +75,28 @@ first third and read as an abrupt stop. Now ease-out-cubic over 1800ms.
 **Hero entrance** — staggered top-to-bottom cascade, pure CSS, waits for the illustration to
 be halfway through drawing (1.43s) before starting.
 
+**Scroll reveal** — `use:reveal` below the fold, per element, never per section.
+
+**Draw-on animation** — card art draws stroke by stroke in a deliberate order. Parked by the
+owner before it was perfect; see KNOWN-ISSUES item 9 for exactly where it stands and
+`breadcrumbs.md` for why a single mask over a single bitmap can never be clean.
+
+**`/faq`** — real page instead of a stub.
+
+**Favicon and robots.txt** — favicon generated from the logo by `scripts/make-favicon.mjs`;
+robots.txt is now a prerendered route so its Sitemap line follows `PUBLIC_SITE_URL` instead of
+a hardcoded stale alias. **Do not add `static/robots.txt` back** — `static/` is served ahead of
+routes, so it would silently shadow the route. There is a test asserting it does not exist.
+
 ---
 
-## Outstanding, in the owner's priority order
+## Outstanding
 
-1. **Roll the scroll-triggered fade out to the sections below the fold.** The hero is done;
-   everything below it is not. Note the hero deliberately does **not** use the reusable
-   action — see "Above the fold vs below it" below. A `use:reveal` action was written this
-   session and then removed, because shipping it unused was worse than rewriting it when it
-   is actually needed. Its design is recorded below.
-2. **Regroup the SVG traces.** The real draw-order fix. Seven files have all their paths in
-   one flat group in raw trace order, so they appear to draw at random. Only
-   `hero-illustration.svg` has semantic groups (4), which is why only the hero looks right.
-   This also un-parks the Werkwijze card art, currently rendered as static `<img>`.
-3. **Contact section** — panels are placeholders (`ContactForm.svelte`, `DatePlanner.svelte`
-   render a flat box with the literal text "contact form"/"date planner"). No fields, no
-   validation, no Resend endpoint, no Cal.com embed. `/contact` route is still a stub.
-4. **Behandelingen** — card transitions are janky, and it still ships `[carousel-debug]`
-   `console.log` calls, one firing on every seek. Owner has deferred both.
+Moved to `.planning/notes/KNOWN-ISSUES.md`, which has a numbered index at the top and is kept
+current. Do not maintain a second list here.
+
+The owner's own priority for the three that block launch: **pick the real domain → fill in the
+practitioner name and phone → fix the contrast failures.**
 
 ---
 
@@ -155,9 +166,9 @@ fade it back in. The hero is therefore **pure CSS**, in force from the first fra
 `animation-fill-mode: backwards` so delayed elements start hidden rather than sitting visible
 until their turn. It cascades with JavaScript disabled, which was verified.
 
-### The `use:reveal` action, for the below-the-fold rollout
+### The `use:reveal` action, for below the fold
 
-Written and validated this session, then removed rather than shipped unused. Rebuild it as:
+Shipped, at `src/lib/actions/reveal.ts`. Its contract, all of it load-bearing:
 
 - Options: `delay`, `duration`, `distance`, `trigger: 'load' | 'view'`.
 - Bail immediately under `prefers-reduced-motion`, before touching any style.
@@ -167,6 +178,15 @@ Written and validated this session, then removed rather than shipped unused. Reb
   the containing block for any fixed or sticky descendant, which would silently break sticky
   positioning elsewhere. Back the `transitionend` cleanup with a timeout — it does not fire
   for an element that is never painted.
+
+- Bail without arming if the element is already in the viewport when the action runs — arming
+  something the reader can already see would flash it.
+- Drive it with the Web Animations API, **not** `node.style.transition`. `transition` is a
+  single property, so setting it replaces whatever the element's own stylesheet declared —
+  which silently broke the FAQ disclosure's close animation once.
+- `distance: 0` skips the rise entirely rather than animating a 0px offset. Animating
+  `transform` promotes the element to its own compositing layer for the duration, and on the
+  FAQ's grid-rows disclosure that left it unable to run its close transition afterwards.
 
 Per element — a heading, a paragraph, one card. Never a whole section; that reads as the page
 stalling.
@@ -249,42 +269,15 @@ Both bit this session. Neither is caught by build, type check, lint or snapshot.
 
 ## How to work on this project
 
-### You are the orchestrator
+Moved to `Insights/owner-profile.md` — communication style, the review loop, the orchestrator
+model, what has satisfied and frustrated the owner, and the decisions they have made with the
+reasoning. That file is maintained; this section was duplicating it.
 
-The owner set this up deliberately: **the main agent plans and divides the work, Sonnet
-subagents execute it.** Follow that.
+The two things worth repeating here because they change what you do first:
 
-- **Do the thinking yourself.** Read the code, find the cause, decide the approach, write the
-  spec. That part does not get delegated.
-- **Delegate the execution.** Spawn a Sonnet subagent per logical chunk, with a specification
-  tight enough that it cannot fail: exact files, exact contract (class names, attributes, prop
-  names), what to keep untouched, what to run to verify, and an instruction not to commit or
-  push. You commit.
-- **Check what comes back.** A subagent reported the Werkwijze rewrite as blocked on Playwright
-  and it turned out to be an environment version mismatch, not a code problem — the tests ran
-  fine once pointed at the browser that exists. Their results are input, not verdicts.
-- **Judgement call on size.** A one-word copy change or a two-line CSS fix is not worth a
-  subagent — the spin-up costs more than the work. Delicate debugging where you already hold
-  the context is usually faster inline too. Everything larger: delegate.
-
-### How to write to the owner
-
-- **Short.** They have asked more than once, and asked again for this note.
-- **Bullets, not paragraphs.** Small bits. Bold the thing that matters.
-- Lead with the answer, then the reasoning, then the caveats. Never the reverse.
-- Quote numbers instead of adjectives — "0 differing pixels", "23 steps", "0.8ms/frame".
-- `/caveman` is active: terse, no filler, no preamble. Drop it only for genuinely complex
-  explanations, and say you are dropping it.
-
-### Standards they hold
-
-- They will say **"it's still wrong"** rather than accept a fix that does not work. Verify in a
-  real browser before claiming success. Several times a change looked right in the code and was
-  wrong on the device — and once, a measurement that appeared to confirm success was simply
-  measuring the wrong thing.
-- **Push after every change.** They review on Vercel previews from a phone and cannot run a dev
-  server.
-- **One concern per change.** They have said explicitly: do not fix several things at once,
-  because then a regression cannot be traced.
-- When something cannot be verified in this environment, **say so plainly** rather than
-  implying it was checked.
+- **Push after every change.** They review on Vercel previews from a phone. An unpushed change
+  is invisible, and asking them to look at something that has not changed costs them a deploy
+  cycle.
+- **Take their description of a visual bug literally.** It was correct every time, and every
+  wrong turn came from substituting a plausible mechanism for what was described. There is a
+  table of examples in the profile.
