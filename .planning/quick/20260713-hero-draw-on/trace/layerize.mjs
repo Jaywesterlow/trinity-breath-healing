@@ -89,7 +89,7 @@ const out = await page.evaluate(
 		const W = art.naturalWidth,
 			H = art.naturalHeight;
 
-		const draw = (el) => {
+		const draw = () => {
 			const c = document.createElement('canvas');
 			c.width = W;
 			c.height = H;
@@ -107,12 +107,12 @@ const out = await page.evaluate(
 			const img = new Image();
 			img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(s)));
 			await img.decode();
-			const [c, x] = draw();
+			const [, x] = draw();
 			x.drawImage(img, 0, 0, W, H);
 			return x.getImageData(0, 0, W, H);
 		}
 
-		const [ac, ax] = draw();
+		const [, ax] = draw();
 		ax.drawImage(art, 0, 0, W, H);
 		const artData = ax.getImageData(0, 0, W, H);
 

@@ -34,7 +34,10 @@ writeFileSync(
 );
 
 const png = (size, bg) =>
-	sharp(Buffer.from(square(bg))).resize(size, size).png({ compressionLevel: 9 }).toBuffer();
+	sharp(Buffer.from(square(bg)))
+		.resize(size, size)
+		.png({ compressionLevel: 9 })
+		.toBuffer();
 
 // Raster fallbacks. apple-touch-icon gets the sand background on purpose: iOS composites a
 // transparent icon onto black, which would leave the gold mark on a black tile.
