@@ -156,11 +156,11 @@ nothing. Every page load 404s on `/favicon.ico` — visible in the preview serve
 run. Small, but it is a request failing on literally every visit, and browsers and search
 results both show the icon.
 
-### FAQ route is a stub, but the footer links to it
+### FAQ route was a stub — RESOLVED 2026-07-27
 
-`src/routes/faq/+page.svelte` is still a `StubLayout` stub while `Footer.svelte` links to
-`/faq` — a linked stub page is an SEO liability. Either render the FAQ content there or drop
-the footer link.
+`/faq` renders real content, reusing the `<Faq>` section with `showHeading={false}` so the
+page's own `<h1>` introduces it. `FAQPage` JSON-LD stayed on the landing page as well — that
+was deliberate and the reasoning is in the route's `+page.ts`.
 
 ### PRF-03 is marked done in REQUIREMENTS.md and is not implemented
 
