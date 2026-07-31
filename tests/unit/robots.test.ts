@@ -1,10 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync } from 'node:fs';
 import { execSync } from 'node:child_process';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+import { buildRobotsTxt } from '../../src/lib/seo/robots';
 
-const ROBOTS_PATH = 'static/robots.txt';
+// robots.txt is generated (src/routes/robots.txt/+server.ts), not a static file — a static file
+// could not interpolate PUBLIC_SITE_URL and its Sitemap line went stale. Asserting against the
+// builder rather than a built artefact keeps these as unit tests: no build, no environment.
+const SITE_URL = 'https://trinitybreathhealing.nl';
 
 const NAMED_BOTS = [
 	'OAI-SearchBot',
@@ -27,13 +31,22 @@ const bashAvailable = (() => {
 	}
 })();
 
-describe('static/robots.txt', () => {
-	it('file exists', () => {
-		expect(() => readFileSync(ROBOTS_PATH, 'utf8')).not.toThrow();
+describe('robots.txt (generated)', () => {
+	it('there is no static/robots.txt shadowing the route', async () => {
+		// SvelteKit serves static/ ahead of routes, so a stray file here would silently win and
+		// re-introduce the hardcoded domain this route exists to remove.
+		const { existsSync } = await import('node:fs');
+		expect(existsSync('static/robots.txt')).toBe(false);
+	});
+
+	it('the Sitemap line follows the site URL it is given', () => {
+		expect(buildRobotsTxt('https://example.test')).toContain(
+			'Sitemap: https://example.test/sitemap.xml'
+		);
 	});
 
 	describe('content structure', () => {
-		const content = readFileSync(ROBOTS_PATH, 'utf8');
+		const content = buildRobotsTxt(SITE_URL);
 		const lines = content.split(/\r?\n/);
 
 		for (const bot of NAMED_BOTS) {
@@ -80,8 +93,12 @@ describe('static/robots.txt', () => {
 describe('scripts/check-robots.sh', () => {
 	const scriptPath = 'scripts/check-robots.sh';
 
-	it.skipIf(!bashAvailable)('exits 0 on the committed robots.txt', () => {
-		expect(() => execSync(`bash "${scriptPath}"`, { stdio: 'pipe' })).not.toThrow();
+	it.skipIf(!bashAvailable)('exits 0 on the generated robots.txt', () => {
+		const tmpDir = join(tmpdir(), 'gsd-robots-test');
+		mkdirSync(tmpDir, { recursive: true });
+		const tmpFile = join(tmpDir, 'robots-generated.txt');
+		writeFileSync(tmpFile, buildRobotsTxt(SITE_URL));
+		expect(() => execSync(`bash "${scriptPath}" "${tmpFile}"`, { stdio: 'pipe' })).not.toThrow();
 	});
 
 	it.skipIf(!bashAvailable)('exits 1 on a synthetic violation (wildcard before named bots)', () => {
