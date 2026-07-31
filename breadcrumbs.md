@@ -616,3 +616,31 @@ time with the same `--layer` indices silently produced a completely different, w
 noticed only because the reported ink counts moved. It now refuses if the file is already
 layered. **Any script that rewrites its own input in a way that changes the meaning of its
 arguments needs that guard**; the failure is silent and the output looks plausible.
+
+### "All checks pass" is only true for the checks you ran
+
+A merge was blocked by CI on a Prettier formatting complaint and three unused bindings, in two
+files written that same session. Everything else had been run locally and was green: build, 137
+unit tests, `svelte-check`, the HTML audit, the JSON-LD audit, the robots order check.
+
+`npm run lint` was the one command not in the loop, so it was the one thing that failed.
+
+Two things worth taking from it:
+
+- **Enumerate the CI job's steps and run all of them**, rather than running the checks that feel
+  relevant. Reading `.github/workflows/ci.yml` before pushing costs seconds; a failed CI round
+  costs a push, a wait, and a correction message.
+- **Formatters fail on files nobody edited by hand.** Both offenders were generated or
+  scripting utilities written in one pass and never reformatted. Anything written straight to
+  disk — a script, a generator's output, a scratch tool that later gets committed — has never
+  been through the formatter.
+
+### Protected branches change what "merge" means
+
+`git push origin main` was rejected with *"2 of 2 required status checks are expected"*, and the
+CI workflow only triggers on `pull_request`. So the required checks can never run on a direct
+push — the rule makes a PR the only possible route, not merely the preferred one.
+
+Worth checking the ruleset **before** doing the local merge, not after. The recovery is cheap
+(`git reset --hard origin/main` and nothing was ever pushed), but the merge commit has to be
+redone through the PR anyway, so the local one was wasted work.
