@@ -1,6 +1,6 @@
 # Known Issues — deferred, not fixed yet
 
-Last updated: **2026-07-27**
+Last updated: **2026-07-31**
 
 Read the date above before answering "what issues are still open?" — anything here
 was true as of that date and may have been fixed since.
@@ -80,27 +80,60 @@ Fixed by re-pacing all seven mask-based traces with
 `hero-illustration.svg` is a different technique entirely — 4 hand-named groups, no mask —
 and was deliberately left alone.
 
-### 1b. Card art is parked as `<img>`, not inline
+### 1b. Card art parked as `<img>` — RESOLVED 2026-07-28
 
-While the draw order is being reworked, the three Werkwijze card traces are referenced by
-URL (`?url`) and rendered as plain `<img>`, with `DrawOn animate={false}` left in
-`WerkwijzeCard` for whenever inline comes back. Reasons, in order of weight:
+All three Werkwijze traces are inlined again (`?raw` + `artSvg`) and animate per stroke. The
+frame-cost worry that caused the parking was real but has a different answer than avoiding
+inlining: Verdieping and De sessie were converted from `<mask>` to `clipPath`, and the teacups
+to stacked layers. See item 3 below for where that landed and what it cost.
 
-- Each trace is one compound fill path gated by a `<mask>` of up to 367 stroked paths.
-  Inlined, that mask is live DOM the browser re-rasterises whenever the card's layer is
-  re-rastered — and Werkwijze is the only part of the page that moves during scroll.
-- It removed ~129 KB from the prerendered landing page HTML.
+### 2. Scroll fade-in — DONE 2026-07-27
 
-Re-inlining is a one-line switch back to `?raw` + `artSvg`, and is required before the
-per-path draw animation can be restored.
+`src/lib/actions/reveal.ts` (`use:reveal`) handles below-the-fold elements; the hero has its own
+pure-CSS cascade in `Hero.svelte` because an action cannot arm an element that has already
+painted. Both bail on `prefers-reduced-motion`, and neither touches the prerendered HTML, so
+crawlers see full content. Applied per element, never per section. The reasoning for the
+two-mechanism split is in the root `HANDOFF.md` under "Above the fold vs below it".
 
-### 2. No scroll fade-in
+---
 
-- Content pops in with no entrance. Needs a per-element fade/rise on scroll.
-- Must be applied per element (heading, paragraph, each card), **not** to whole sections —
-  section-level fade looks wrong.
-- Must degrade to fully visible with no JS (prerendered HTML must stay readable to crawlers)
-  and must respect `prefers-reduced-motion`.
+### 3. Werkwijze card draw-on — PARKED 2026-07-31, by the owner
+
+Stop here unless the owner reopens it. This ran for many rounds, each fix was real, and the
+owner called it: *"Nevermind, leave as is and move on."* It is optional polish on a site whose
+success metric is SEO/AEO. **Do not pick this up unprompted.**
+
+**Where it ended.** All three cards draw in a sensible order at a sensible speed. Teacups are
+split into three stacked artwork layers (front cup / back cup / smoke), each with its own mask,
+so a stroke can only ever reveal its own layer's ink. Verdieping and De sessie use `clipPath`
+instead of a mask and have no bleed to begin with. Frame cost is *better* than before any of
+this: 327ms of raster over a 2.4s draw against 506ms for the version that had the bug.
+
+**What is still not right**, and why it was parked rather than finished:
+
+- The layered composite differs from a single-mask render on ~0.22% of pixels (2,412 of
+  1,084,000), all on antialiased stroke edges. An SVG mask multiplies by a continuous alpha:
+  where two strokes overlapped under one mask the alpha saturated to 1, but split across two
+  layers each reveals that pixel at its own partial alpha and they composite slightly
+  differently. Shows as one-pixel dotting along contours and a few specks at crossings. Not
+  visible at the size the card renders. The owner asked for pixel-perfect, and this is not that.
+- Only the teacups are layered. Verdieping and De sessie were never split, because they do not
+  need it — but that means the technique is proven on one asset, not three.
+
+**If it is reopened**, the thing to understand first is in `breadcrumbs.md` under *"The brush is
+wider than the line"*: mask strokes are 5.8–24 units wide over lines of 3–5, so a single mask
+over a single bitmap can never be clean, and no draw order fixes it. Four rounds were spent on
+draw order before that was measured. The tooling is
+`.planning/quick/20260713-hero-draw-on/trace/` — `regroup.py` for order and pacing,
+`layerize.mjs` for splitting artwork into layers. Both are heavily commented with what was tried
+and rejected.
+
+**The honest alternative if pixel-exactness is the priority:** drop the mask entirely and do what
+the hero does — render the strokes *as* the artwork, at the artwork's line weight and colour. No
+mask, no bleed, no layers, ~4.5x cheaper again, and none of the fragment bookkeeping. It is a
+redraw rather than the original bitmap, so it is not pixel-identical either, but it is
+*structurally* clean instead of nearly-clean. Compared side by side at stroke-width 5 it is very
+close to the original. This was offered and not chosen; it remains the simplest way out.
 
 ---
 
@@ -161,3 +194,19 @@ different one failed each run. Ran three times consecutively to confirm.
 
 `scripts/check-copy.sh` has the Contact section's copy assertions commented out — deferred
 since the Contact section itself is still placeholders (see above).
+
+### 2 GB of stale agent worktrees on disk
+
+`.claude/worktrees/agent-a3177405f1d39c7fa/` is a full copy of the repository left behind by a
+subagent run. Untracked, so it will never reach the remote, but it is 2 GB of a session
+container's fixed disk allowance and it makes repository-wide `find`/`grep` return every file
+twice. Safe to delete: `rm -rf .claude/worktrees`. Worth checking for after any session that
+used worktree-isolated agents.
+
+### The `--section` draw order for the teacups lives only in a commit message
+
+`regroup.py --section` takes stroke indices, and the six-section assignment for
+card-kennismaking was passed on the command line, not stored. It is recoverable from the commit
+that introduced it, but regenerating that trace means digging it out of git history. If any
+trace is ever re-paced with sections again, the invocation should go into a script or a makefile
+target next to the tracer rather than into a commit body.
