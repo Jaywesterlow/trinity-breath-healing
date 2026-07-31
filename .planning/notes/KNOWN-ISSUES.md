@@ -7,6 +7,33 @@ was true as of that date and may have been fixed since.
 
 ---
 
+## Open, at a glance
+
+Everything still outstanding. Detail for each is further down.
+
+**Before launch**
+1. Pick the real domain — three conflicting ones; set `PUBLIC_SITE_URL` in Vercel. Owner decision.
+2. Fill in `TODO_PRACTITIONER_NAME`, `TODO_PHONE`, `TODO_INSTAGRAM_HANDLE` — they render into
+   the structured data on every page.
+3. Fix 128 contrast failures — 8 palette defects repeated across 15 routes.
+
+**Deferred by the owner**
+4. Contact section is placeholders — no form, no send, no Cal.com.
+5. Behandelingen transitions are janky; `[carousel-debug]` logs still shipping.
+
+**Small but real**
+6. PRF-03 lazy loading unimplemented — needs an exclusion list first (the pinned pan would pop in).
+7. Hero waits 1.43s before text — check Search Console LCP after launch.
+8. Favicon soft at a true 16px — needs a simplified small-size mark from the designer.
+9. Draw-on parked — ~0.2% edge-pixel difference remains.
+
+**Housekeeping**
+10. 2 GB stale worktrees in `.claude/worktrees/` — safe to delete.
+11. Contact copy assertions commented out in `check-copy.sh`.
+12. The teacup `--section` invocation lives only in a commit message.
+
+---
+
 ## Waiting on real-world data (owner to check after launch)
 
 ### Hero entrance may be costing LCP
