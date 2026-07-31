@@ -149,18 +149,37 @@ referenced by a literal `/images/...` URL. They are not interchangeable — movi
 literal-URL file into `src/lib/` would change its served path to a hashed one and break the
 reference. Verified by pixel diff at two viewports, zero differing pixels.
 
-### No favicon is wired up at all
+### No favicon — RESOLVED 2026-07-31
 
-`src/app.html` has no `<link rel="icon">`, and `src/lib/assets/favicon.svg` is referenced by
-nothing. Every page load 404s on `/favicon.ico` — visible in the preview server log on every
-run. Small, but it is a request failing on literally every visit, and browsers and search
-results both show the icon.
+Generated from `static/trinity-logo.svg` by `scripts/make-favicon.mjs`: `favicon.svg` (primary),
+`favicon-96x96.png`, `favicon.ico`, `apple-touch-icon.png`. Declared in `app.html`. The Svelte
+template's orange logo at `src/lib/assets/favicon.svg` was deleted. No failed requests on load.
+
+One residual, design not code: the mark is fine line art and goes soft at a true 16px. Hi-DPI
+screens request 32 for a 16 slot and that reads cleanly, so it only affects low-DPI displays.
+A crisp 16px would need a simplified small-size mark from the designer.
 
 ### FAQ route was a stub — RESOLVED 2026-07-27
 
 `/faq` renders real content, reusing the `<Faq>` section with `showHeading={false}` so the
 page's own `<h1>` introduces it. `FAQPage` JSON-LD stayed on the landing page as well — that
 was deliberate and the reasoning is in the route's `+page.ts`.
+
+### robots.txt hardcoded the wrong domain — RESOLVED 2026-07-31
+
+Now a prerendered route (`src/routes/robots.txt/+server.ts`) whose Sitemap line follows
+`PUBLIC_SITE_URL`, matching what `sitemap.xml` already did. A static file could not interpolate,
+which is why it went stale — that was an FND-07 violation, not just untidiness.
+
+**Do not add `static/robots.txt` back.** `static/` is served ahead of routes, so a file there
+silently shadows the route and reinstates a hardcoded domain. There is a unit test asserting it
+does not exist.
+
+Note the wider issue is not closed: three conflicting domains still appear across the repo
+(`vercel.json` sets `PUBLIC_SITE_URL` to `trinity-breath-healing.vercel.app`, the `.env` used
+locally says `trinitybreathhealing.nl`). robots.txt now follows whichever is configured rather
+than contradicting it, but the configuration itself still needs settling. See
+`AUDIT-2026-07-27.md` item 3.
 
 ### PRF-03 is marked done in REQUIREMENTS.md and is not implemented
 
