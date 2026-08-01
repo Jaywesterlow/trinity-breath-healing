@@ -4,8 +4,10 @@
 	import FooterNavColumn from '$lib/components/ui/FooterNavColumn.svelte';
 	import TextLink from '$lib/components/ui/interactions/TextLink.svelte';
 	import { reveal } from '$lib/actions/reveal';
+	import { BRAND } from '$lib/constants/brand';
 
 	const SOCIAL_COLOR = 'var(--color-bg-sand)';
+	const instagramUrl = `https://www.instagram.com/${BRAND.socials.instagram.replace('@', '')}/`;
 
 	const NAV_COLUMNS = [
 		{
@@ -94,7 +96,7 @@
 					<li>
 						<SocialIcon
 							icon="instagram"
-							href="https://instagram.com/trinitybnh"
+							href={instagramUrl}
 							label="Volg ons op Instagram"
 							color={SOCIAL_COLOR}
 						/>
