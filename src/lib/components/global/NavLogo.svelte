@@ -81,7 +81,7 @@
 		font-weight: 300;
 		font-size: 0.625rem;
 		letter-spacing: 1.5px;
-		color: #7a6f4f;
+		color: #73684a; /* darkened for WCAG AA: was #7a6f4f at 4.43:1, now 4.90:1 on --color-bg-sand */
 		line-height: 1;
 		width: 100%;
 		transition: color var(--motion-base);
@@ -93,7 +93,7 @@
 	}
 
 	.logo--inverted .logo__sub {
-		color: #afa483;
+		color: #c3bba2; /* lightened for WCAG AA: was #afa483 at 3.8:1, now 4.91:1 on --color-fg-forest */
 	}
 
 	/* Footer variant: larger sizes */

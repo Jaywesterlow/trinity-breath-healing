@@ -3,6 +3,9 @@
 	import ButtonLink from '$lib/components/ui/interactions/ButtonLink.svelte';
 	import SocialIcon from '$lib/components/ui/SocialIcon.svelte';
 	import HeroServiceCard from '$lib/components/ui/HeroServiceCard.svelte';
+	import { BRAND } from '$lib/constants/brand';
+
+	const instagramUrl = `https://www.instagram.com/${BRAND.socials.instagram.replace('@', '')}/`;
 
 	// The hero illustration is a centerline trace of the original line art, inlined as SVG so
 	// its strokes can draw themselves on load (stroke-dashoffset, see .hero__draw below).
@@ -74,7 +77,7 @@
 					<li>
 						<SocialIcon
 							icon="instagram"
-							href="https://instagram.com/trinitybnh"
+							href={instagramUrl}
 							label="Volg ons op Instagram"
 							color="var(--brand-border)"
 							background="var(--color-bg-sand)"

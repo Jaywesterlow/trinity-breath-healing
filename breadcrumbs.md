@@ -8,7 +8,7 @@ project? If it is specific to Trinity, it does not belong here.
 
 Each entry: what was decided, why, and how to spot the same situation again.
 
-Last updated **2026-07-27**.
+Last updated **2026-08-01**.
 
 ---
 
@@ -230,6 +230,41 @@ in `:global(...)`.
 stylesheet to confirm it survived. This passes type check, lint and build.
 
 ---
+
+## Accessibility
+
+### When one design token fails a contrast check, every component reading it fails too — fix the token once
+
+A pa11y-ci run reported 128 contrast errors across 15 routes. It looked like 128 separate
+problems. It was two: two CSS custom properties (`--brand-muted`, `--brand-border`) sitting
+under the 4.5:1 AA threshold, referenced by nav links, a CTA button, section labels, and body
+copy — every consumer of the token inherited the failure.
+
+**Grep for every usage of the failing token before touching a component.** Patching the loudest
+instance (the CTA button) and calling it fixed would have left the other consumers broken and
+looked done. Fixing the token fixes every consumer atomically, and the fix generalizes forward:
+the next component that reads the same token can't reintroduce the bug.
+
+Two directions matter when computing the replacement value: darken *text-on-light-background*
+usages, but check whether the *same token* is also used as a light color on a *dark* background
+somewhere (an inverted/footer variant) — that direction needs lightening, not darkening, against
+its own background. Two different hardcoded hex values in this project turned out to be the
+inverted-variant case; a single across-the-board darken would have made those worse.
+
+### A commit message describing a technique is not the same as the technique's literal invocation
+
+A known-issues note claimed a lost CLI invocation was "recoverable from the commit that
+introduced it." It was not — the commit body described *what* the change did and *why*, in
+prose, and never once contained the actual flag values used. Searching `git log --all -p` for
+the literal strings (not just the commit that touched the relevant file) confirmed there was
+nothing to recover.
+
+**"It's in the commit" and "the commit describes it" are different claims — verify which one is
+true before repeating it forward**, especially in a durable doc that a future session will trust
+without re-checking. The fix once this is confirmed lost is process, not archaeology: give the
+invocation a permanent home (a script, a Makefile target) so the next occurrence doesn't recreate
+the gap — and have that script refuse to guess when the real values are genuinely gone, rather
+than filling them with something plausible-looking.
 
 ## Method
 

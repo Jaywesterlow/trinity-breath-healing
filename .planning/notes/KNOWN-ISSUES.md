@@ -1,6 +1,6 @@
 # Known Issues — deferred, not fixed yet
 
-Last updated: **2026-07-31**
+Last updated: **2026-08-01**
 
 Read the date above before answering "what issues are still open?" — anything here
 was true as of that date and may have been fixed since.
@@ -13,9 +13,13 @@ Everything still outstanding. Detail for each is further down.
 
 **Before launch**
 1. Pick the real domain — three conflicting ones; set `PUBLIC_SITE_URL` in Vercel. Owner decision.
-2. Fill in `TODO_PRACTITIONER_NAME`, `TODO_PHONE`, `TODO_INSTAGRAM_HANDLE` — they render into
-   the structured data on every page.
-3. Fix 128 contrast failures — 8 palette defects repeated across 15 routes.
+2. ~~Fill in `TODO_PRACTITIONER_NAME`, `TODO_PHONE`, `TODO_INSTAGRAM_HANDLE`~~ — **name and
+   Instagram done 2026-08-01** (Brigitte Grohe, @trinitybreath.and.healing — commit `4cd9b08`).
+   `TODO_PHONE` still open, still needed from the owner.
+3. ~~Fix 128 contrast failures~~ — **done 2026-08-01** (commit `4cd9b08`): darkened
+   `--brand-muted` and `--brand-border` tokens plus two hardcoded `NavLogo.svelte` colors, all
+   now ≥4.9:1 against their background. See "Site-wide WCAG 2.2 AA color-contrast failures"
+   below, updated with the fix.
 
 **Deferred by the owner**
 4. Contact section is placeholders — no form, no send, no Cal.com.
@@ -28,9 +32,12 @@ Everything still outstanding. Detail for each is further down.
 9. Draw-on parked — ~0.2% edge-pixel difference remains.
 
 **Housekeeping**
-10. 2 GB stale worktrees in `.claude/worktrees/` — safe to delete.
+10. ~~2 GB stale worktrees in `.claude/worktrees/`~~ — checked 2026-08-01, does not exist in this
+    checkout. Nothing to delete.
 11. Contact copy assertions commented out in `check-copy.sh`.
-12. The teacup `--section` invocation lives only in a commit message.
+12. ~~The teacup `--section` invocation lives only in a commit message.~~ Clarified 2026-08-01:
+    it was never recorded anywhere, not just in a commit — see detail below. A guarded script
+    now exists so future invocations get saved.
 
 ---
 
@@ -241,18 +248,28 @@ different one failed each run. Ran three times consecutively to confirm.
 `scripts/check-copy.sh` has the Contact section's copy assertions commented out — deferred
 since the Contact section itself is still placeholders (see above).
 
-### 2 GB of stale agent worktrees on disk
+### 2 GB of stale agent worktrees on disk — RESOLVED 2026-08-01
 
-`.claude/worktrees/agent-a3177405f1d39c7fa/` is a full copy of the repository left behind by a
-subagent run. Untracked, so it will never reach the remote, but it is 2 GB of a session
-container's fixed disk allowance and it makes repository-wide `find`/`grep` return every file
-twice. Safe to delete: `rm -rf .claude/worktrees`. Worth checking for after any session that
-used worktree-isolated agents.
+`.claude/worktrees/agent-a3177405f1d39c7fa/` was a full copy of the repository left behind by a
+subagent run in an earlier container. Checked in this session's checkout: `.claude/` doesn't
+exist at all, so there was nothing to delete. That earlier container is gone; this note stays
+in case a future session hits the same thing. Worth checking for after any session that used
+worktree-isolated agents: `rm -rf .claude/worktrees` if it reappears.
 
-### The `--section` draw order for the teacups lives only in a commit message
+### The `--section` draw order for the teacups — CLARIFIED 2026-08-01, harness added
 
-`regroup.py --section` takes stroke indices, and the six-section assignment for
-card-kennismaking was passed on the command line, not stored. It is recoverable from the commit
-that introduced it, but regenerating that trace means digging it out of git history. If any
-trace is ever re-paced with sections again, the invocation should go into a script or a makefile
-target next to the tracer rather than into a commit body.
+Checked: it is **not** recoverable from git history. Searched every commit touching
+`.planning/quick/20260713-hero-draw-on/trace/` (`git log --all -p`) for the literal `--section`
+and `--anchor` values used for card-kennismaking and the other traces — none exist as text
+anywhere, in a commit body or otherwise. Only prose describing the technique was ever
+committed; the actual argv was typed once in a terminal and lost when the session ended. This
+entry's original framing ("recoverable... but means digging it out of git history") was wrong —
+there is nothing to dig out.
+
+Added `.planning/quick/20260713-hero-draw-on/trace/regen.sh`: one guarded case per traced asset.
+`verdieping` and `sessie` document the known mode flags (`--order nn --pace wave --total 2.2`)
+with the anchor coordinate left as an explicit gap. `kennismaking` documents the four-step
+from-scratch re-derivation (recover the source PNG, re-trace, re-derive the six section index
+lists by eye and verify with `--dump-sections`, then paste the finished command in) and refuses
+to run until that's done, rather than fabricating indices. If any trace is ever re-paced again,
+the invocation goes in this file, not a commit body or a terminal.

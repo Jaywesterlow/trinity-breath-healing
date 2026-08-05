@@ -7,6 +7,9 @@ Written 2026-07-31 from observed behaviour across the `polish/site-polish` sessi
 contained on purpose — drop it into an Obsidian vault as-is. Update it when something here
 stops being true rather than adding a second copy.
 
+Updated 2026-08-01 with observations from the first session after the `polish/site-polish`
+merge — brand-info fill-in, WCAG contrast fixes, and setting up this documentation habit itself.
+
 **Everything below is an observation with evidence, not a rule.** If a session contradicts it,
 the session wins.
 
@@ -36,6 +39,9 @@ the session wins.
   fine; padding is not.
 - Wants to be told **what to do next**, not given a survey of options. When options genuinely
   matter, a short list with a recommendation works; an exhaustive comparison does not.
+- Tasks arrive as a numbered list of short, unrelated items in one message (e.g. "11. thanks,
+  12. turn into script" alongside three other asks). Answer each on its own — don't merge them
+  into one narrative.
 
 ## How work should be delivered
 
@@ -56,6 +62,16 @@ the session wins.
 - Wants durable documentation. Asked for `breadcrumbs.md` explicitly, to feed a *"second AI
   brain"*, with the standard: *"as much information as possible, but it does have to be the
   right information, not worthless information."*
+- **Checks understanding before a large or ambiguous task starts**, not just after. Asked "let
+  me know if you understand what I mean" before a documentation-recording task, rather than
+  waiting to see what got produced. Confirming interpretation up front (which file, what
+  convention) was the right response — cheaper than redoing a write across several files.
+- **Wants to know the mechanism behind a fix, not just that it's fixed.** After a color/contrast
+  fix, asked specifically whether the underlying tokens changed, or an overlay, or something
+  else — wants the *how*, not a confidence claim. Fits the existing "measure, then state, not
+  reason, then assert" pattern.
+- **Explicitly asks for a change-impact summary** so they can anticipate side effects before
+  reviewing — not only after something breaks. Give this even when not asked a second time.
 
 ## Reading their feedback
 
