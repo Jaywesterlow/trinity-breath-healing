@@ -244,7 +244,7 @@
 		width: var(--card-width);
 		aspect-ratio: 282 / 459;
 		border-radius: var(--radius-lg);
-		background: red; /* TEMP diagnostic — confirming the preview deploy actually updates. Revert after. */
+		background: var(--color-fg-forest);
 		padding: var(--space-4);
 		display: flex;
 		align-items: center;
