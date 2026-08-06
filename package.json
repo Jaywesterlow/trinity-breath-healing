@@ -62,7 +62,6 @@
 	},
 	"dependencies": {
 		"clsx": "^2.1.1",
-		"embla-carousel": "8.6.0",
 		"tailwind-merge": "^3.6.0",
 		"zod": "^3.25.76"
 	}
