@@ -171,15 +171,23 @@
 		position: relative;
 		width: 100%;
 		max-width: 26rem;
-		height: 12rem;
+		height: 12.5rem;
 	}
 
+	/* Anchored by BOTTOM, not top. Every card's bottom-center starts at the
+	   exact same point (--pivot-baseline above the fan's own bottom edge)
+	   before any transform runs. transform-origin sits further below that —
+	   a shared point acting as the fan's hinge — so rotating swings each
+	   card's bottom edge along one real arc. If this anchored from the top
+	   instead, the tallest (center, unscaled) card's bottom would hang lower
+	   than every smaller, more-rotated side card — which is exactly the bug
+	   this replaced. */
 	.treatments__pivot {
 		position: absolute;
 		left: 50%;
-		top: 0;
-		--pivot-distance: 900px; /* tune by eye: smaller = tighter/more dramatic arc */
-		transform-origin: 50% var(--pivot-distance);
+		bottom: var(--pivot-baseline, 1.5rem);
+		--pivot-distance: 650px; /* tune by eye: smaller = tighter/more dramatic arc */
+		transform-origin: 50% calc(100% + var(--pivot-distance));
 		transform: translateX(-50%) rotate(var(--rot));
 		transition: transform 600ms var(--ease-in-out);
 	}
@@ -192,15 +200,20 @@
 	}
 
 	.treatments__card {
-		--card-size: 9rem;
-		width: var(--card-size);
-		height: var(--card-size);
+		/* Rectangular, not square — same proportions as the Werkwijze card
+		   (17.625rem × 28.688rem, WerkwijzeCard.svelte), scaled down for a
+		   5-up fan. aspect-ratio (not two literals) keeps them locked without
+		   duplicating Werkwijze's numbers or importing its component. */
+		--card-width: 6.5rem;
+		width: var(--card-width);
+		aspect-ratio: 282 / 459;
 		border-radius: var(--radius-lg);
 		background: var(--color-fg-forest);
 		padding: var(--space-4);
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		transform-origin: center bottom; /* shrinks upward, keeps its bottom edge on the arc */
 		transform: scale(var(--scale));
 		z-index: var(--z);
 		transition: transform 600ms var(--ease-in-out);
@@ -301,8 +314,8 @@
 		}
 
 		.treatments__fan {
-			max-width: 40rem;
-			height: 16rem;
+			max-width: 44rem;
+			height: 20rem;
 		}
 
 		.treatments__pivot--hidden {
@@ -310,11 +323,12 @@
 		}
 
 		.treatments__pivot {
-			--pivot-distance: 1400px;
+			--pivot-distance: 950px;
+			--pivot-baseline: 5rem;
 		}
 
 		.treatments__card {
-			--card-size: 13rem;
+			--card-width: 9rem;
 		}
 	}
 </style>
