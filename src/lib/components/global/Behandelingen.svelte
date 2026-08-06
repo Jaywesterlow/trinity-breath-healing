@@ -32,6 +32,11 @@
 
 	let selectedIndex = $state(0);
 
+	// The one item mid-wrap on the current click — its rotation transition is
+	// suppressed for a frame so it repositions instantly instead of sweeping
+	// across the fan. See the comment on armNoTransition below.
+	let noTransitionKey: string | null = $state(null);
+
 	// Shortest-path offset, wraps both directions — e.g. with 5 items, index 4
 	// relative to selected index 0 is offset -1 (one step back), not +4.
 	function offsetOf(i: number): number {
@@ -41,13 +46,36 @@
 		return d;
 	}
 
+	// For 4 of 5 items, moving to the next/prev index is a normal one-slot hop
+	// and the CSS transition looks right. The 5th — whichever item currently
+	// sits at the edge being vacated — has no "one slot further" to go to; its
+	// shortest-path offset jumps straight across, from -18deg to +18deg (or the
+	// reverse), and the transition animates that as one continuous sweep
+	// through dead center, in front of/behind every other card. Freezing its
+	// transition for exactly the frame the jump happens makes it reposition
+	// instantly instead — indistinguishable from "it was already there."
+	// Re-armed on the item's OWN key so a rapid second click (new item mid-jump)
+	// can't have its freeze cleared early by the first click's timer.
+	function armNoTransition(key: string): void {
+		noTransitionKey = key;
+		requestAnimationFrame(() => {
+			requestAnimationFrame(() => {
+				if (noTransitionKey === key) noTransitionKey = null;
+			});
+		});
+	}
+
 	// Deliberately plain functions, not tied to how they're called — autoscroll
 	// (deferred, see KNOWN-ISSUES) drops in later as a paused-on-hover
 	// setInterval(next, …) here without touching anything else.
 	function next(): void {
+		const wrapping = items.find((_, i) => offsetOf(i) === -2);
+		if (wrapping) armNoTransition(wrapping.key);
 		selectedIndex = (selectedIndex + 1) % count;
 	}
 	function prev(): void {
+		const wrapping = items.find((_, i) => offsetOf(i) === 2);
+		if (wrapping) armNoTransition(wrapping.key);
 		selectedIndex = (selectedIndex - 1 + count) % count;
 	}
 	function goTo(i: number): void {
@@ -71,6 +99,7 @@
 				<div
 					class="treatments__pivot"
 					class:treatments__pivot--hidden={Math.abs(offset) > 1}
+					class:treatments__pivot--jump={item.key === noTransitionKey}
 					style="--rot: {slot.rot}deg"
 				>
 					{#if item.href}
@@ -197,6 +226,13 @@
 	   this only hides the outer two visually. */
 	.treatments__pivot--hidden {
 		display: none;
+	}
+
+	/* Armed for exactly one frame on whichever card is wrapping from one edge
+	   to the other (see armNoTransition in the script) — repositions instantly
+	   instead of sweeping its rotation across the whole fan. */
+	.treatments__pivot--jump {
+		transition: none;
 	}
 
 	.treatments__card {
