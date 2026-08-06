@@ -98,9 +98,8 @@
 				{@const slot = SLOTS[offset]!}
 				<div
 					class="treatments__pivot"
-					class:treatments__pivot--hidden={Math.abs(offset) > 1}
 					class:treatments__pivot--jump={item.key === noTransitionKey}
-					style="--rot: {slot.rot}deg"
+					style="--offset: {offset}; --rot: {slot.rot}deg"
 				>
 					{#if item.href}
 						<a
@@ -189,48 +188,41 @@
 		gap: var(--space-8);
 	}
 
-	/* --- Fan: 5 fixed slots, cards rotate between them on index change. ---
-	   Two nested elements per card on purpose: .treatments__pivot rotates
-	   around ONE shared point far below the whole row (a real fan hub, not
-	   each card tilting around its own base); .treatments__card scales around
-	   its own center for the depth cue. Combining both in one transform would
-	   make scale drag the card sideways too, since it'd share the same distant
-	   origin. */
+	/* --- Mobile/tablet (default): plain horizontal slide, not the arc. ---
+	   Every card stays in the DOM and keeps its own transition the whole
+	   time — nothing is ever display:none. Cards past the visible 3 (offset
+	   ±2) sit off-canvas via translateX and are clipped by .treatments__fan's
+	   overflow, so they can still transition smoothly into view instead of
+	   popping. Each pivot's transform depends only on --offset (a plain
+	   number, not degrees) — CSS owns the actual px math via --card-step, so
+	   the same --offset value drives a completely different desktop
+	   treatment below without the script knowing which one is active. */
 	.treatments__fan {
 		position: relative;
 		width: 100%;
 		max-width: 26rem;
 		height: 12.5rem;
+		overflow: hidden;
+		/* Set here, not on .treatments__card: custom properties only inherit
+		   DOWN the tree, and .treatments__pivot (the card's own parent) needs
+		   to read this too for its slide math below. A child can't hand a
+		   variable up to its parent. */
+		--card-width: 6.5rem;
 	}
 
-	/* Anchored by BOTTOM, not top. Every card's bottom-center starts at the
-	   exact same point (--pivot-baseline above the fan's own bottom edge)
-	   before any transform runs. transform-origin sits further below that —
-	   a shared point acting as the fan's hinge — so rotating swings each
-	   card's bottom edge along one real arc. If this anchored from the top
-	   instead, the tallest (center, unscaled) card's bottom would hang lower
-	   than every smaller, more-rotated side card — which is exactly the bug
-	   this replaced. */
 	.treatments__pivot {
 		position: absolute;
 		left: 50%;
-		bottom: var(--pivot-baseline, 1.5rem);
-		--pivot-distance: 650px; /* tune by eye: smaller = tighter/more dramatic arc */
-		transform-origin: 50% calc(100% + var(--pivot-distance));
-		transform: translateX(-50%) rotate(var(--rot));
+		top: 50%;
+		--card-gap: 2rem;
+		transform: translate(-50%, -50%)
+			translateX(calc(var(--offset) * (var(--card-width) + var(--card-gap))));
 		transition: transform 600ms var(--ease-in-out);
-	}
-
-	/* Mobile: only the center + immediate neighbors render — 5 fanned cards
-	   don't fit a narrow viewport. Logic still tracks all 5 (dots, offsets);
-	   this only hides the outer two visually. */
-	.treatments__pivot--hidden {
-		display: none;
 	}
 
 	/* Armed for exactly one frame on whichever card is wrapping from one edge
 	   to the other (see armNoTransition in the script) — repositions instantly
-	   instead of sweeping its rotation across the whole fan. */
+	   instead of sliding all the way across the visible row. */
 	.treatments__pivot--jump {
 		transition: none;
 	}
@@ -239,8 +231,9 @@
 		/* Rectangular, not square — same proportions as the Werkwijze card
 		   (17.625rem × 28.688rem, WerkwijzeCard.svelte), scaled down for a
 		   5-up fan. aspect-ratio (not two literals) keeps them locked without
-		   duplicating Werkwijze's numbers or importing its component. */
-		--card-width: 6.5rem;
+		   duplicating Werkwijze's numbers or importing its component.
+		   --card-width itself lives on .treatments__fan, see the comment
+		   there. */
 		width: var(--card-width);
 		aspect-ratio: 282 / 459;
 		border-radius: var(--radius-lg);
@@ -249,11 +242,11 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		transform-origin: center bottom; /* shrinks upward, keeps its bottom edge on the arc */
-		transform: scale(var(--scale));
 		z-index: var(--z);
-		transition: transform 600ms var(--ease-in-out);
 		color: var(--color-bg-sand); /* for the "meer diensten" arrow's currentColor */
+		/* No transform here on mobile — flat, one consistent size for every
+		   card at every index. Desktop adds scale back for the arc's depth
+		   cue, below. */
 	}
 
 	.treatments__icon {
@@ -349,22 +342,40 @@
 			max-width: 34rem;
 		}
 
+		/* --- Desktop: the arc, replacing the mobile slide entirely. ---
+		   Two nested elements per card on purpose: .treatments__pivot rotates
+		   around ONE shared point far below the whole row (a real fan hub,
+		   not each card tilting around its own base); .treatments__card
+		   scales around its own center for the depth cue. Combining both in
+		   one transform would make scale drag the card sideways too, since
+		   it'd share the same distant origin. */
 		.treatments__fan {
 			max-width: 44rem;
 			height: 20rem;
+			overflow: visible; /* the arc's edge cards intentionally sit outside this box */
+			--card-width: 9rem;
 		}
 
-		.treatments__pivot--hidden {
-			display: block;
-		}
-
+		/* Anchored by BOTTOM, not top. Every card's bottom-center starts at
+		   the exact same point (--pivot-baseline above the fan's own bottom
+		   edge) before any transform runs. transform-origin sits further
+		   below that — a shared point acting as the fan's hinge — so
+		   rotating swings each card's bottom edge along one real arc. If
+		   this anchored from the top instead, the tallest (center,
+		   unscaled) card's bottom would hang lower than every smaller,
+		   more-rotated side card. */
 		.treatments__pivot {
-			--pivot-distance: 950px;
-			--pivot-baseline: 5rem;
+			top: auto;
+			bottom: 5rem;
+			--pivot-distance: 950px; /* tune by eye: smaller = tighter/more dramatic arc */
+			transform-origin: 50% calc(100% + var(--pivot-distance));
+			transform: translateX(-50%) rotate(var(--rot));
 		}
 
 		.treatments__card {
-			--card-width: 9rem;
+			transform-origin: center bottom; /* shrinks upward, keeps its bottom edge on the arc */
+			transform: scale(var(--scale));
+			transition: transform 600ms var(--ease-in-out);
 		}
 	}
 </style>
