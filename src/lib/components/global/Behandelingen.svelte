@@ -209,12 +209,17 @@
 		width: 100vw;
 		margin-left: calc(50% - 50vw);
 		margin-right: calc(50% - 50vw);
-		height: 11rem;
+		/* Tall enough that no card clips top or bottom at any position from
+		   -2 to 2, verified empirically (rendered bounding boxes measured
+		   directly, not hand-computed — a rotated rectangle's bounding box
+		   doesn't move the way simple trig on one reference point predicts,
+		   see the commit message). */
+		height: 16.5rem;
 		overflow: hidden;
 		/* Set here, not on .treatments__card: custom properties only inherit
 		   DOWN the tree, and .treatments__pivot (the card's own parent) needs
 		   to read this too. A child can't hand a variable up to its parent. */
-		--card-width: 6rem;
+		--card-width: 5rem;
 	}
 
 	/* Rotates around ONE shared point far below the row (a real fan hub) —
@@ -230,9 +235,9 @@
 	.treatments__pivot {
 		position: absolute;
 		left: 50%;
-		bottom: var(--pivot-baseline, 1rem);
-		--pivot-distance: 900px; /* smaller = tighter curve but cards overlap; computed, not eyeballed — see commit message */
-		--tilt-step: 8deg;
+		bottom: var(--pivot-baseline, 6rem);
+		--pivot-distance: 460px; /* smaller = more overlap risk, bigger = flatter curve — verified empirically, not by trig alone */
+		--tilt-step: 14deg;
 		transform-origin: 50% calc(100% + var(--pivot-distance));
 		transform: translateX(-50%) rotate(calc(var(--pos) * var(--tilt-step)));
 		transition: transform 600ms var(--ease-in-out);
@@ -351,13 +356,19 @@
 			max-width: 40rem;
 			margin-left: auto;
 			margin-right: auto;
-			height: 22rem;
+			/* Same ratio as mobile's empirically-verified numbers, scaled to
+			   the bigger card (1.8x: 9rem vs 5rem) — not independently
+			   re-measured at this breakpoint since desktop wasn't the
+			   reported issue, but geometrically the same shape scaled.
+			   tilt-step isn't overridden here on purpose — it's an angle,
+			   not a length, so it doesn't scale with card size. */
+			height: 29.7rem;
 			--card-width: 9rem;
 		}
 
 		.treatments__pivot {
-			--pivot-baseline: 4rem;
-			--pivot-distance: 1350px;
+			--pivot-baseline: 10.8rem;
+			--pivot-distance: 828px;
 		}
 	}
 </style>
