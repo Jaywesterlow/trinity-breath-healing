@@ -2,6 +2,7 @@
 	import { reveal } from '$lib/actions/reveal';
 	import { BRAND } from '$lib/constants/brand';
 	import TreatmentCard from '$lib/components/ui/TreatmentCard.svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 
 	const ICONS: Record<string, string> = {
 		'mahatma-healing': '/images/card-mahatma-healing.svg',
@@ -48,16 +49,16 @@
 	// suppressed for a frame so they reposition instantly instead of
 	// visibly sliding across from one edge to the other. A Set, not a
 	// single value: a multi-step jump (goTo, below) can recycle more than
-	// one item in the same update.
-	let noTransitionKeys: Set<string> = $state(new Set());
+	// one item in the same update. SvelteSet (not a plain Set) so .add()/
+	// .delete() are tracked directly — no reassignment needed to trigger
+	// reactivity.
+	const noTransitionKeys = new SvelteSet<string>();
 
 	function armNoTransition(key: string): void {
 		noTransitionKeys.add(key);
-		noTransitionKeys = new Set(noTransitionKeys);
 		requestAnimationFrame(() => {
 			requestAnimationFrame(() => {
 				noTransitionKeys.delete(key);
-				noTransitionKeys = new Set(noTransitionKeys);
 			});
 		});
 	}
