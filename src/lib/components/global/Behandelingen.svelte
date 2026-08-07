@@ -45,13 +45,12 @@
 	// loops back.
 	let positions: number[] = $state([0, 1, 2, -2, -1]);
 
-	// Items currently mid-recycle (see shiftAll) — their transition is
-	// suppressed for a frame so they reposition instantly instead of
-	// visibly sliding across from one edge to the other. A Set, not a
-	// single value: a multi-step jump (goTo, below) can recycle more than
-	// one item in the same update. SvelteSet (not a plain Set) so .add()/
-	// .delete() are tracked directly — no reassignment needed to trigger
-	// reactivity.
+	// Items currently mid-recycle (see onPivotTransitionEnd) — their
+	// transition is suppressed for a frame so they reposition instantly
+	// instead of visibly sliding across from one edge to the other. A Set,
+	// not a single value: more than one item can be mid-recycle at once.
+	// SvelteSet (not a plain Set) so .add()/.delete() are tracked directly
+	// — no reassignment needed to trigger reactivity.
 	const noTransitionKeys = new SvelteSet<string>();
 
 	function armNoTransition(key: string): void {
@@ -63,17 +62,30 @@
 		});
 	}
 
-	// The one place position ever changes. Only 3 cards (position -1, 0, 1)
-	// are ever visible — .treatments__fan clips anything past that with
-	// plenty of margin (see the CSS), so position ±2 is already fully
-	// off-screen. An item only recycles once it takes ONE MORE step past
-	// that (reaching ±3) — so every item spends a full click sitting
-	// off-screen, invisible, before it jumps ∓5 (once around the 5-item
-	// loop) to reappear on the opposite side, ready to slide back in over
-	// the next couple of clicks. The jump itself is frozen (armNoTransition)
-	// as a second guarantee on top of already being off-screen — belt and
-	// suspenders, costs nothing.
-	function shiftAll(delta: number): void {
+	// The one place position ever changes, and deliberately restricted to
+	// a single ±1 step per call. Only 3 cards (position -1, 0, 1) are ever
+	// visible — .treatments__fan clips anything past that with plenty of
+	// margin (see the CSS), so position ±2 is already fully off-screen. An
+	// item only recycles once it takes ONE MORE step past that (reaching
+	// ±3), meaning every item spends a full step sitting off-screen,
+	// invisible, before it jumps ∓5 (once around the 5-item loop) to
+	// reappear on the opposite side. That invariant — recycling only ever
+	// touches an item that was already off-screen on both sides of the
+	// jump — is only guaranteed to hold for |delta| = 1; two other
+	// approaches for bigger jumps were tried and rejected: applying a
+	// bigger delta directly (an item's raw target can overshoot straight
+	// past a visible slot into recycle range, so folding it back
+	// teleported a visible card with no animation) and giving each item
+	// its own short "already folded" target for a bigger jump (fixed the
+	// teleport, but items no longer stayed the same distance apart from
+	// each other *during* the transition, since different-length sweeps
+	// reach their targets at different rates under the same easing curve
+	// — confirmed via bounding-box measurement as real, visible
+	// overlapping and gapping mid-swipe). commitSteps below gets a
+	// multi-step swipe's speed by calling this several times in a fast
+	// cascade instead, so every individual step stays exactly the
+	// shape that's already proven safe.
+	function shiftOne(delta: number): void {
 		positions = positions.map((p, i) => {
 			let next = p + delta;
 			while (next <= -3) {
@@ -88,17 +100,58 @@
 		});
 	}
 
+	// A multi-step commit (see endDrag/goTo below) as a rapid cascade of
+	// single, already-safe steps rather than one big jump. Firing each new
+	// step before the previous one's transition had actually finished —
+	// redirecting it mid-flight toward the new target — was the first
+	// approach here, on the assumption that's ordinary, smooth CSS
+	// behavior. It measurably isn't safe for this: retargeting a
+	// transition for 5 items simultaneously, with one of them also
+	// recycling (see shiftOne) partway through, doesn't keep their
+	// relative spacing intact for that redirect — confirmed via
+	// bounding-box measurement as real overlap, independent of how long
+	// the interval between steps was. Letting each step's transition
+	// genuinely finish before the next one starts fixes that outright, so
+	// a cascade runs with a shorter transition duration (see
+	// .treatments__pivot--fast) instead of the normal one — several quick,
+	// fully-settled hops reads as one fast sweep without ever redirecting
+	// a transition in progress. A single step (the overwhelming majority
+	// of interactions) never touches this — it keeps the normal duration.
+	const FAST_STEP_MS = 220; // headroom over .treatments__pivot--fast's 180ms transition-duration
+	let cascading = $state(false);
+
+	function commitSteps(steps: number): void {
+		if (steps === 0) return;
+		const direction = steps > 0 ? 1 : -1;
+		let remaining = Math.abs(steps);
+		if (remaining === 1) {
+			shiftOne(direction);
+			return;
+		}
+		cascading = true;
+		function tick(): void {
+			shiftOne(direction);
+			remaining--;
+			if (remaining > 0) {
+				setTimeout(tick, FAST_STEP_MS);
+			} else {
+				cascading = false;
+			}
+		}
+		tick();
+	}
+
 	// Deliberately plain functions, not tied to how they're called — autoscroll
 	// (deferred, see KNOWN-ISSUES) drops in later as a paused-on-hover
 	// setInterval(next, …) here without touching anything else.
 	function next(): void {
-		shiftAll(-1);
+		shiftOne(-1);
 	}
 	function prev(): void {
-		shiftAll(1);
+		shiftOne(1);
 	}
 	function goTo(i: number): void {
-		shiftAll(-positions[i]!);
+		commitSteps(-positions[i]!);
 	}
 
 	// Swipe (mobile/tablet — Prev/Next buttons are CSS-hidden below the
@@ -127,6 +180,8 @@
 	let dragStartX = 0;
 	let dragStartY = 0;
 	let moveHistory: { x: number; t: number }[] = [];
+	let pendingDx = 0;
+	let rafId: number | null = null;
 
 	function onPointerDown(e: PointerEvent): void {
 		if (e.pointerType === 'mouse' && e.button !== 0) return;
@@ -145,6 +200,15 @@
 	// regardless — unlike setPointerCapture, this doesn't touch how the
 	// browser dispatches the eventual click to whatever was actually under
 	// the finger, so a real tap on a card's corner-button link still works.
+	//
+	// Touch/pointer input can fire faster than the display repaints (touch
+	// sampling commonly outpaces 60Hz), and writing straight to $state here
+	// pushed a Svelte + DOM update on every single one of those — more
+	// writes than the screen could ever show, which read as choppy rather
+	// than smooth. rAF-throttling to one state write per animation frame
+	// (below) fixed it: the pointermove handler itself stays cheap (just
+	// records the latest dx), and only the most recent value actually
+	// reaches --pos each frame.
 	function onWindowPointerMove(e: PointerEvent): void {
 		if (!dragging) return;
 		const dx = e.clientX - dragStartX;
@@ -157,11 +221,21 @@
 		while (moveHistory.length > 2 && moveHistory[0]!.t < cutoff) {
 			moveHistory.shift();
 		}
-		dragOffset = dx / PX_PER_STEP;
+		pendingDx = dx;
+		if (rafId === null) {
+			rafId = requestAnimationFrame(() => {
+				rafId = null;
+				dragOffset = pendingDx / PX_PER_STEP;
+			});
+		}
 	}
 
 	function endDrag(): void {
 		dragging = false;
+		if (rafId !== null) {
+			cancelAnimationFrame(rafId);
+			rafId = null;
+		}
 		window.removeEventListener('pointermove', onWindowPointerMove);
 		window.removeEventListener('pointerup', onWindowPointerUp);
 		window.removeEventListener('pointercancel', onWindowPointerCancel);
@@ -180,7 +254,7 @@
 		);
 		const steps = baseSteps + Math.sign(velocity) * flingSteps;
 		dragOffset = 0;
-		if (steps !== 0) shiftAll(steps);
+		commitSteps(steps);
 	}
 
 	function onWindowPointerUp(): void {
@@ -213,6 +287,7 @@
 					class="treatments__pivot"
 					class:treatments__pivot--jump={noTransitionKeys.has(item.key)}
 					class:treatments__pivot--dragging={dragging}
+					class:treatments__pivot--fast={cascading}
 					style="--pos: {positions[i]! + dragOffset}"
 				>
 					<TreatmentCard
@@ -358,6 +433,20 @@
 	   the drag didn't cross a full step) animates normally. */
 	.treatments__pivot--dragging {
 		transition: none;
+	}
+
+	/* A multi-step cascade (see commitSteps in the script) runs each of its
+	   individual, already-safe ±1 steps back to back at this shorter
+	   duration instead of the normal 600ms — several quick, fully-settled
+	   hops read as one fast sweep. Kept comfortably under the script's
+	   FAST_STEP_MS (the gap between cascaded steps) by hand, since the two
+	   live in separate files with no shared source of truth: the
+	   transition must finish with room to spare before the next step
+	   fires, or steps start redirecting each other mid-flight again —
+	   confirmed via bounding-box measurement as the actual cause of real,
+	   visible overlap during a cascade. */
+	.treatments__pivot--fast {
+		transition-duration: 180ms;
 	}
 
 	/* Card size/padding/layout itself lives in TreatmentCard.svelte — the one
