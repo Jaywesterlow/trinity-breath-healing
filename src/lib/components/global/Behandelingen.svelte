@@ -410,14 +410,15 @@
 
 		/* Desktop: same curved mechanism as mobile above, just bigger — more
 		   screen room, so cards can be larger and spread wider. Nothing here
-		   changes the mechanism, only the numbers. Undoes the mobile
-		   full-bleed (width/margins above): plenty of room here to center a
-		   capped-width container instead of running edge to edge. */
+		   changes the mechanism, only the numbers. Full-bleed stays inherited
+		   from the base rule above (not undone here): a capped-width centered
+		   container was tried and rejected — it clips the ±1 cards mid-body
+		   at a diagonal (following their own rotation) instead of at a clean
+		   edge, since the tilted card sticks out well past a narrow fixed
+		   box. The viewport edge is always far enough away that a card is
+		   fully past it, off-screen, before it's clipped — same reasoning as
+		   the mobile full-bleed fix. */
 		.treatments__fan {
-			width: 100%;
-			max-width: 40rem;
-			margin-left: auto;
-			margin-right: auto;
 			/* Same ratio as mobile's empirically-verified numbers, scaled to
 			   the bigger card (1.8x: 10.35rem vs 5.75rem) — not independently
 			   re-measured at this breakpoint since desktop wasn't the
