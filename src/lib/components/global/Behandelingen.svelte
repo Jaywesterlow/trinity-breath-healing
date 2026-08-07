@@ -100,6 +100,40 @@
 	function goTo(i: number): void {
 		shiftAll(-positions[i]!);
 	}
+
+	// Swipe (mobile/tablet — Prev/Next buttons are CSS-hidden below the
+	// desktop breakpoint, see .treatments__nav). Threshold-based, not a live
+	// drag-follow: a swipe is just an alternate way to fire next()/prev(),
+	// same as a button click. Distance-gated so a tap on a card's own link
+	// (the corner button) isn't swallowed as a gesture.
+	const SWIPE_THRESHOLD = 40;
+	let dragging = false;
+	let dragStartX = 0;
+	let dragStartY = 0;
+
+	function onPointerDown(e: PointerEvent): void {
+		if (e.pointerType === 'mouse' && e.button !== 0) return;
+		dragging = true;
+		dragStartX = e.clientX;
+		dragStartY = e.clientY;
+	}
+
+	function onPointerUp(e: PointerEvent): void {
+		if (!dragging) return;
+		dragging = false;
+		const dx = e.clientX - dragStartX;
+		const dy = e.clientY - dragStartY;
+		if (Math.abs(dx) <= SWIPE_THRESHOLD || Math.abs(dx) <= Math.abs(dy)) return;
+		if (dx > 0) {
+			prev();
+		} else {
+			next();
+		}
+	}
+
+	function onPointerCancel(): void {
+		dragging = false;
+	}
 </script>
 
 <section class="treatments" aria-label="Behandelingen">
@@ -116,6 +150,9 @@
 			role="group"
 			aria-roledescription="carrousel"
 			aria-label="Behandelingen"
+			onpointerdown={onPointerDown}
+			onpointerup={onPointerUp}
+			onpointercancel={onPointerCancel}
 		>
 			{#each items as item, i (item.key)}
 				<div
@@ -216,6 +253,11 @@
 		   see the commit message). */
 		height: 16.5rem;
 		overflow: hidden;
+		/* Horizontal gestures drive next()/prev() (see onPointerDown/Up in the
+		   script) — pan-y keeps vertical page scroll working through a touch
+		   that starts on the carousel, since only left/right is ours to
+		   claim. */
+		touch-action: pan-y;
 		/* Set here, not on .treatments__card: custom properties only inherit
 		   DOWN the tree, and .treatments__pivot (the card's own parent) needs
 		   to read this too. A child can't hand a variable up to its parent. */
@@ -266,6 +308,9 @@
 	}
 
 	.treatments__nav {
+		/* Mobile/tablet navigate by swiping the carousel itself (see
+		   onPointerDown/Up) — Prev/Next are desktop-only, restored below. */
+		display: none;
 		border: none;
 		border-radius: var(--radius-full);
 		background: var(--color-fg-forest);
@@ -369,6 +414,10 @@
 		.treatments__pivot {
 			--pivot-baseline: 10.8rem;
 			--pivot-distance: 828px;
+		}
+
+		.treatments__nav {
+			display: inline-block;
 		}
 	}
 </style>
