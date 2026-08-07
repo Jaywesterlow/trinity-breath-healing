@@ -183,13 +183,16 @@
 	}
 
 	/* --- Even-spaced conveyor, ONE mechanism at every breakpoint. ---
-	   No rotation, no scale, no arc. All 5 cards sit on a single flat line,
-	   .treatments__pivot's translateX = --pos card-widths from center — a
-	   fixed, even --card-gap between every card, never overlapping. Only 3
-	   positions (-1, 0, 1) land inside .treatments__fan's visible, clipped
-	   window; ±2 is already fully off-screen by design (see the sizing
-	   math below), so a card's exit is a normal, visible slide out past
-	   the edge — never a pop, never display:none.
+	   All 5 cards sit on a single flat LINE — translateX = --pos card-widths
+	   from center, a fixed, even --card-gap between every card, never
+	   overlapping. Each also tilts in place (rotate, below) for the fanned
+	   look, but the tilt is just each card spinning around its own center;
+	   it never changes the horizontal spacing math, so it can't reintroduce
+	   overlap the way a shared-pivot arc did. Only 3 positions (-1, 0, 1)
+	   land inside .treatments__fan's visible, clipped window; ±2 is already
+	   fully off-screen by design (see the sizing math below), so a card's
+	   exit is a normal, visible slide out past the edge — never a pop,
+	   never display:none.
 
 	   The "continuous loop" comes from script.ts's shiftAll: position keeps
 	   counting past ±2 instead of wrapping back into view, so nothing ever
@@ -219,8 +222,10 @@
 		left: 50%;
 		top: 50%;
 		--card-gap: 1.25rem;
+		--tilt-step: 8deg; /* fan look — each card tilts around its own center, in place */
 		transform: translate(-50%, -50%)
-			translateX(calc(var(--pos) * (var(--card-width) + var(--card-gap))));
+			translateX(calc(var(--pos) * (var(--card-width) + var(--card-gap))))
+			rotate(calc(var(--pos) * var(--tilt-step)));
 		transition: transform 600ms var(--ease-in-out);
 	}
 
