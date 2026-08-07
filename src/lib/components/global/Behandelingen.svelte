@@ -251,7 +251,7 @@
 		   directly, not hand-computed — a rotated rectangle's bounding box
 		   doesn't move the way simple trig on one reference point predicts,
 		   see the commit message). */
-		height: 16.5rem;
+		height: 19rem;
 		overflow: hidden;
 		/* Horizontal gestures drive next()/prev() (see onPointerDown/Up in the
 		   script) — pan-y keeps vertical page scroll working through a touch
@@ -261,7 +261,7 @@
 		/* Set here, not on .treatments__card: custom properties only inherit
 		   DOWN the tree, and .treatments__pivot (the card's own parent) needs
 		   to read this too. A child can't hand a variable up to its parent. */
-		--card-width: 5rem;
+		--card-width: 5.75rem;
 	}
 
 	/* Rotates around ONE shared point far below the row (a real fan hub) —
@@ -277,8 +277,8 @@
 	.treatments__pivot {
 		position: absolute;
 		left: 50%;
-		bottom: var(--pivot-baseline, 6rem);
-		--pivot-distance: 460px; /* smaller = more overlap risk, bigger = flatter curve — verified empirically, not by trig alone */
+		bottom: var(--pivot-baseline, 6.9rem);
+		--pivot-distance: 529px; /* smaller = more overlap risk, bigger = flatter curve — verified empirically, not by trig alone */
 		--tilt-step: 14deg;
 		transform-origin: 50% calc(100% + var(--pivot-distance));
 		transform: translateX(-50%) rotate(calc(var(--pos) * var(--tilt-step)));
@@ -305,6 +305,22 @@
 		display: flex;
 		align-items: center;
 		gap: var(--space-4);
+		/* .treatments__fan keeps a big empty buffer below the resting card on
+		   purpose — that's the clipping safety margin a card's rotated corner
+		   needs mid-transition at the far positions (see .treatments__pivot).
+		   Shrinking that buffer directly re-clips cards during swipes; pulling
+		   the controls up over the (visually empty) buffer instead gets the
+		   same tight ~2rem look without touching the safety margin. Cancels
+		   almost exactly against --pivot-baseline, minus the space-8 flex gap
+		   this margin stacks on top of. */
+		margin-top: -5.2rem;
+		/* .treatments__fan is position:relative, which — regardless of DOM
+		   order — paints after (on top of) non-positioned siblings. Without
+		   this, the overlap from the negative margin above makes the fan's
+		   own (invisible but still hit-testable) box swallow clicks meant for
+		   Prev/Next/the dots. */
+		position: relative;
+		z-index: 1;
 	}
 
 	.treatments__nav {
@@ -402,18 +418,22 @@
 			margin-left: auto;
 			margin-right: auto;
 			/* Same ratio as mobile's empirically-verified numbers, scaled to
-			   the bigger card (1.8x: 9rem vs 5rem) — not independently
+			   the bigger card (1.8x: 10.35rem vs 5.75rem) — not independently
 			   re-measured at this breakpoint since desktop wasn't the
 			   reported issue, but geometrically the same shape scaled.
 			   tilt-step isn't overridden here on purpose — it's an angle,
 			   not a length, so it doesn't scale with card size. */
-			height: 29.7rem;
-			--card-width: 9rem;
+			height: 34.2rem;
+			--card-width: 10.35rem;
 		}
 
 		.treatments__pivot {
-			--pivot-baseline: 10.8rem;
-			--pivot-distance: 828px;
+			--pivot-baseline: 12.42rem;
+			--pivot-distance: 952px;
+		}
+
+		.treatments__controls {
+			margin-top: -9.5rem;
 		}
 
 		.treatments__nav {

@@ -67,7 +67,6 @@
 		width: 1.5rem;
 		height: 1.5rem;
 		border-radius: var(--radius-full);
-		border: 1px solid var(--color-bg-sand);
 		color: inherit;
 		transition: background-color var(--motion-fast);
 	}
