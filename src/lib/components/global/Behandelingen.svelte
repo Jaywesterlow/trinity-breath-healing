@@ -102,37 +102,93 @@
 	}
 
 	// Swipe (mobile/tablet — Prev/Next buttons are CSS-hidden below the
-	// desktop breakpoint, see .treatments__nav). Threshold-based, not a live
-	// drag-follow: a swipe is just an alternate way to fire next()/prev(),
-	// same as a button click. Distance-gated so a tap on a card's own link
-	// (the corner button) isn't swallowed as a gesture.
-	const SWIPE_THRESHOLD = 40;
-	let dragging = false;
+	// desktop breakpoint, see .treatments__nav). Live drag-follow, not a
+	// once-per-swipe step: every pointermove adds the current drag distance,
+	// in fractional "steps," directly onto --pos (see dragOffset below and
+	// its use in the template), so the fan visibly tracks the finger in
+	// real time instead of only moving once release fires a fixed 600ms
+	// animation. On release, distance alone decides the base step count
+	// (rounded to the nearest card) and a genuinely fast exit flick — judged
+	// against a smoothed trailing-window velocity, not one noisy last
+	// sample — adds extra steps on top (see endDrag). That split matters:
+	// summing raw distance and raw velocity double-counts, since any real
+	// drag covering more distance also reads a higher velocity, which made
+	// ordinary drags overshoot by 2-3 cards during testing. Neither path is
+	// capped at one card per swipe. shiftAll already accepts any integer
+	// delta (see its while-loops above), so committing a multi-step flick
+	// reuses it unchanged.
+	const PX_PER_STEP = 90; // ~one mobile card-width of drag == one step
+	const FLING_VELOCITY_PER_STEP = 0.35; // px/ms exit speed per extra fling step
+	const MAX_FLING_STEPS = 3;
+	const VELOCITY_WINDOW_MS = 80; // trailing window the exit velocity is averaged over
+
+	let dragging = $state(false);
+	let dragOffset = $state(0); // fractional steps, live only while dragging
 	let dragStartX = 0;
 	let dragStartY = 0;
+	let moveHistory: { x: number; t: number }[] = [];
 
 	function onPointerDown(e: PointerEvent): void {
 		if (e.pointerType === 'mouse' && e.button !== 0) return;
 		dragging = true;
 		dragStartX = e.clientX;
 		dragStartY = e.clientY;
+		moveHistory = [{ x: e.clientX, t: e.timeStamp }];
+		window.addEventListener('pointermove', onWindowPointerMove);
+		window.addEventListener('pointerup', onWindowPointerUp);
+		window.addEventListener('pointercancel', onWindowPointerCancel);
 	}
 
-	function onPointerUp(e: PointerEvent): void {
+	// Tracked on window, not the fan element: a fast drag easily carries the
+	// pointer outside the fan's own bounds mid-gesture, and window-level
+	// listeners (added on pointerdown, removed on release) keep following it
+	// regardless — unlike setPointerCapture, this doesn't touch how the
+	// browser dispatches the eventual click to whatever was actually under
+	// the finger, so a real tap on a card's corner-button link still works.
+	function onWindowPointerMove(e: PointerEvent): void {
 		if (!dragging) return;
-		dragging = false;
 		const dx = e.clientX - dragStartX;
 		const dy = e.clientY - dragStartY;
-		if (Math.abs(dx) <= SWIPE_THRESHOLD || Math.abs(dx) <= Math.abs(dy)) return;
-		if (dx > 0) {
-			prev();
-		} else {
-			next();
+		// Undecided-intent moves (still mostly vertical) don't drive the fan
+		// yet, so an in-progress vertical scroll doesn't creep sideways.
+		if (Math.abs(dx) <= Math.abs(dy)) return;
+		moveHistory.push({ x: e.clientX, t: e.timeStamp });
+		const cutoff = e.timeStamp - VELOCITY_WINDOW_MS;
+		while (moveHistory.length > 2 && moveHistory[0]!.t < cutoff) {
+			moveHistory.shift();
 		}
+		dragOffset = dx / PX_PER_STEP;
 	}
 
-	function onPointerCancel(): void {
+	function endDrag(): void {
 		dragging = false;
+		window.removeEventListener('pointermove', onWindowPointerMove);
+		window.removeEventListener('pointerup', onWindowPointerUp);
+		window.removeEventListener('pointercancel', onWindowPointerCancel);
+
+		let velocity = 0;
+		if (moveHistory.length >= 2) {
+			const first = moveHistory[0]!;
+			const last = moveHistory[moveHistory.length - 1]!;
+			const dt = last.t - first.t;
+			if (dt > 0) velocity = (last.x - first.x) / dt;
+		}
+		const baseSteps = Math.round(dragOffset);
+		const flingSteps = Math.min(
+			MAX_FLING_STEPS,
+			Math.floor(Math.abs(velocity) / FLING_VELOCITY_PER_STEP)
+		);
+		const steps = baseSteps + Math.sign(velocity) * flingSteps;
+		dragOffset = 0;
+		if (steps !== 0) shiftAll(steps);
+	}
+
+	function onWindowPointerUp(): void {
+		endDrag();
+	}
+
+	function onWindowPointerCancel(): void {
+		endDrag();
 	}
 </script>
 
@@ -151,14 +207,13 @@
 			aria-roledescription="carrousel"
 			aria-label="Behandelingen"
 			onpointerdown={onPointerDown}
-			onpointerup={onPointerUp}
-			onpointercancel={onPointerCancel}
 		>
 			{#each items as item, i (item.key)}
 				<div
 					class="treatments__pivot"
 					class:treatments__pivot--jump={noTransitionKeys.has(item.key)}
-					style="--pos: {positions[i]}"
+					class:treatments__pivot--dragging={dragging}
+					style="--pos: {positions[i]! + dragOffset}"
 				>
 					<TreatmentCard
 						label={item.label}
@@ -292,6 +347,16 @@
 	   guarantees it stays that way even if the sizing math above is ever
 	   retuned and the margins get tighter. */
 	.treatments__pivot--jump {
+		transition: none;
+	}
+
+	/* While a drag is active, --pos is being driven directly by the pointer
+	   (see dragOffset in the script) on every pointermove — a transition here
+	   would fight that with its own easing and make the fan visibly lag
+	   behind the finger. Released the instant the drag ends (see endDrag),
+	   so the final snap to the committed integer position (or back to 0, if
+	   the drag didn't cross a full step) animates normally. */
+	.treatments__pivot--dragging {
 		transition: none;
 	}
 
