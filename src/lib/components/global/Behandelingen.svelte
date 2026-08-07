@@ -182,23 +182,23 @@
 		gap: var(--space-8);
 	}
 
-	/* --- Even-spaced conveyor, ONE mechanism at every breakpoint. ---
-	   All 5 cards sit on a single flat LINE — translateX = --pos card-widths
-	   from center, a fixed, even --card-gap between every card, never
-	   overlapping. Each also tilts in place (rotate, below) for the fanned
-	   look, but the tilt is just each card spinning around its own center;
-	   it never changes the horizontal spacing math, so it can't reintroduce
-	   overlap the way a shared-pivot arc did. Only 3 positions (-1, 0, 1)
-	   land inside .treatments__fan's visible, clipped window; ±2 is already
-	   fully off-screen by design (see the sizing math below), so a card's
-	   exit is a normal, visible slide out past the edge — never a pop,
-	   never display:none.
+	/* --- Curved fan, ONE mechanism at every breakpoint. ---
+	   Cards rotate around a single shared point far below the row (see
+	   .treatments__pivot) — that's what curves the path they travel, not
+	   just each card's own tilt. Only 3 positions (-1, 0, 1) land inside
+	   .treatments__fan's visible, clipped window; ±2 is already fully
+	   off-screen by design (see the sizing math on .treatments__pivot), so
+	   a card's exit is a normal, visible slide out past the edge — never a
+	   pop, never display:none.
 
-	   The "continuous loop" comes from script.ts's shiftAll: position keeps
+	   The "continuous loop" comes from script.ts's shiftAll: --pos keeps
 	   counting past ±2 instead of wrapping back into view, so nothing ever
 	   needs to jump across the screen to reach its next spot — it only
 	   recycles (∓5, one lap of 5 items) once it's a further step past that,
-	   fully invisible, frozen for that one frame as a second guarantee. */
+	   fully invisible, frozen for that one frame as a second guarantee. This
+	   part didn't change when the transform went from independent
+	   translate+rotate back to a shared pivot — it's what actually fixed
+	   the overlap/pop bugs, independent of how --pos gets drawn. */
 	.treatments__fan {
 		position: relative;
 		/* Full-bleed to the true viewport edge, not just this element's own
@@ -217,15 +217,24 @@
 		--card-width: 6rem;
 	}
 
+	/* Rotates around ONE shared point far below the row (a real fan hub) —
+	   this is what makes the PATH curve, not just the card's own tilt.
+	   translateX alone (independent per card) gave the right angle but a
+	   flat line. --pos still drives it, still the same persistent,
+	   non-wrapping value from shiftAll — only how it becomes a transform
+	   changed here, not the position/recycle logic that actually fixed the
+	   overlap and pop bugs. Bottom-anchored, not top: see the same
+	   reasoning as the very first arc version (further up in this file's
+	   history) — anchoring from the top made an unrotated, full-size card
+	   hang lower than its smaller, more-rotated neighbors. */
 	.treatments__pivot {
 		position: absolute;
 		left: 50%;
-		top: 50%;
-		--card-gap: 1.25rem;
-		--tilt-step: 8deg; /* fan look — each card tilts around its own center, in place */
-		transform: translate(-50%, -50%)
-			translateX(calc(var(--pos) * (var(--card-width) + var(--card-gap))))
-			rotate(calc(var(--pos) * var(--tilt-step)));
+		bottom: var(--pivot-baseline, 1rem);
+		--pivot-distance: 900px; /* smaller = tighter curve but cards overlap; computed, not eyeballed — see commit message */
+		--tilt-step: 8deg;
+		transform-origin: 50% calc(100% + var(--pivot-distance));
+		transform: translateX(-50%) rotate(calc(var(--pos) * var(--tilt-step)));
 		transition: transform 600ms var(--ease-in-out);
 	}
 
@@ -332,22 +341,23 @@
 			max-width: 34rem;
 		}
 
-		/* Desktop: same conveyor as mobile above, just bigger — more screen
-		   room, so cards can be larger with a wider gap between them.
-		   Nothing here changes the mechanism, only the numbers. Undoes the
-		   mobile full-bleed (width/margins above): plenty of room here to
-		   center a capped-width container instead of running edge to edge. */
+		/* Desktop: same curved mechanism as mobile above, just bigger — more
+		   screen room, so cards can be larger and spread wider. Nothing here
+		   changes the mechanism, only the numbers. Undoes the mobile
+		   full-bleed (width/margins above): plenty of room here to center a
+		   capped-width container instead of running edge to edge. */
 		.treatments__fan {
 			width: 100%;
-			max-width: 32rem;
+			max-width: 40rem;
 			margin-left: auto;
 			margin-right: auto;
-			height: 17rem;
+			height: 22rem;
 			--card-width: 9rem;
 		}
 
 		.treatments__pivot {
-			--card-gap: 2rem;
+			--pivot-baseline: 4rem;
+			--pivot-distance: 1350px;
 		}
 	}
 </style>
