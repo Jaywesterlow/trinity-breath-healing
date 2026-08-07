@@ -33,51 +33,57 @@
 
 	const count = items.length;
 
-	// Fixed visual slots, keyed by offset from the selected card. Rotation is
-	// shared around one pivot far below the row (see .treatments__pivot) — this
-	// table only carries what varies per card: angle and stacking. No size
-	// variation — cards never grow/shrink, by design, at any offset.
-	// Assumes exactly 5 items (offsetOf only ever returns -2..2 for count=5).
-	const SLOTS: Record<number, { rot: number; z: number }> = {
-		[-2]: { rot: -18, z: 1 },
-		[-1]: { rot: -9, z: 2 },
-		[0]: { rot: 0, z: 3 },
-		[1]: { rot: 9, z: 2 },
-		[2]: { rot: 18, z: 1 }
-	};
+	// Each item's own position on an evenly-spaced horizontal line, in units
+	// of "card-widths from center." NOT derived from an index every render —
+	// a real, persistent number per item that only ever moves by ±1 per
+	// click. That's the whole fix: the old version recomputed every item's
+	// position from scratch via a shortest-path wrap, so the one item at the
+	// edge being vacated had nowhere to go but straight across the screen.
+	// Here it just keeps counting past the edge, off-screen, same as
+	// everything else — see next()/prev() below for where it eventually
+	// loops back.
+	let positions: number[] = $state([0, 1, 2, -2, -1]);
 
-	let selectedIndex = $state(0);
+	// Items currently mid-recycle (see shiftAll) — their transition is
+	// suppressed for a frame so they reposition instantly instead of
+	// visibly sliding across from one edge to the other. A Set, not a
+	// single value: a multi-step jump (goTo, below) can recycle more than
+	// one item in the same update.
+	let noTransitionKeys: Set<string> = $state(new Set());
 
-	// The one item mid-wrap on the current click — its rotation transition is
-	// suppressed for a frame so it repositions instantly instead of sweeping
-	// across the fan. See the comment on armNoTransition below.
-	let noTransitionKey: string | null = $state(null);
-
-	// Shortest-path offset, wraps both directions — e.g. with 5 items, index 4
-	// relative to selected index 0 is offset -1 (one step back), not +4.
-	function offsetOf(i: number): number {
-		let d = i - selectedIndex;
-		if (d > count / 2) d -= count;
-		if (d < -count / 2) d += count;
-		return d;
-	}
-
-	// For 4 of 5 items, moving to the next/prev index is a normal one-slot hop
-	// and the CSS transition looks right. The 5th — whichever item currently
-	// sits at the edge being vacated — has no "one slot further" to go to; its
-	// shortest-path offset jumps straight across, from -18deg to +18deg (or the
-	// reverse), and the transition animates that as one continuous sweep
-	// through dead center, in front of/behind every other card. Freezing its
-	// transition for exactly the frame the jump happens makes it reposition
-	// instantly instead — indistinguishable from "it was already there."
-	// Re-armed on the item's OWN key so a rapid second click (new item mid-jump)
-	// can't have its freeze cleared early by the first click's timer.
 	function armNoTransition(key: string): void {
-		noTransitionKey = key;
+		noTransitionKeys.add(key);
+		noTransitionKeys = new Set(noTransitionKeys);
 		requestAnimationFrame(() => {
 			requestAnimationFrame(() => {
-				if (noTransitionKey === key) noTransitionKey = null;
+				noTransitionKeys.delete(key);
+				noTransitionKeys = new Set(noTransitionKeys);
 			});
+		});
+	}
+
+	// The one place position ever changes. Only 3 cards (position -1, 0, 1)
+	// are ever visible — .treatments__fan clips anything past that with
+	// plenty of margin (see the CSS), so position ±2 is already fully
+	// off-screen. An item only recycles once it takes ONE MORE step past
+	// that (reaching ±3) — so every item spends a full click sitting
+	// off-screen, invisible, before it jumps ∓5 (once around the 5-item
+	// loop) to reappear on the opposite side, ready to slide back in over
+	// the next couple of clicks. The jump itself is frozen (armNoTransition)
+	// as a second guarantee on top of already being off-screen — belt and
+	// suspenders, costs nothing.
+	function shiftAll(delta: number): void {
+		positions = positions.map((p, i) => {
+			let next = p + delta;
+			while (next <= -3) {
+				armNoTransition(items[i]!.key);
+				next += count;
+			}
+			while (next >= 3) {
+				armNoTransition(items[i]!.key);
+				next -= count;
+			}
+			return next;
 		});
 	}
 
@@ -85,17 +91,13 @@
 	// (deferred, see KNOWN-ISSUES) drops in later as a paused-on-hover
 	// setInterval(next, …) here without touching anything else.
 	function next(): void {
-		const wrapping = items.find((_, i) => offsetOf(i) === -2);
-		if (wrapping) armNoTransition(wrapping.key);
-		selectedIndex = (selectedIndex + 1) % count;
+		shiftAll(-1);
 	}
 	function prev(): void {
-		const wrapping = items.find((_, i) => offsetOf(i) === 2);
-		if (wrapping) armNoTransition(wrapping.key);
-		selectedIndex = (selectedIndex - 1 + count) % count;
+		shiftAll(1);
 	}
 	function goTo(i: number): void {
-		selectedIndex = i;
+		shiftAll(-positions[i]!);
 	}
 </script>
 
@@ -115,12 +117,10 @@
 			aria-label="Behandelingen"
 		>
 			{#each items as item, i (item.key)}
-				{@const offset = offsetOf(i)}
-				{@const slot = SLOTS[offset]!}
 				<div
 					class="treatments__pivot"
-					class:treatments__pivot--jump={item.key === noTransitionKey}
-					style="--rot: {slot.rot}deg; --z: {slot.z}"
+					class:treatments__pivot--jump={noTransitionKeys.has(item.key)}
+					style="--pos: {positions[i]}"
 				>
 					<TreatmentCard
 						label={item.label}
@@ -141,7 +141,7 @@
 						<button
 							type="button"
 							class="treatments__dot-visual"
-							class:treatments__dot-visual--active={i === selectedIndex}
+							class:treatments__dot-visual--active={positions[i] === 0}
 							aria-label={`Ga naar ${item.label}`}
 							onclick={() => goTo(i)}
 						></button>
@@ -181,24 +181,20 @@
 		gap: var(--space-8);
 	}
 
-	/* --- The arc: ONE mechanism at every breakpoint, mobile-first. ---
-	   Cards rotate around a single shared pivot far below the row (a real
-	   fan hub, not each card tilting around its own base) — the desktop
-	   media query below only retunes the numbers (pivot distance, card
-	   size, fan footprint) for a bigger screen. It never swaps to a
-	   different transform model.
+	/* --- Even-spaced conveyor, ONE mechanism at every breakpoint. ---
+	   No rotation, no scale, no arc. All 5 cards sit on a single flat line,
+	   .treatments__pivot's translateX = --pos card-widths from center — a
+	   fixed, even --card-gap between every card, never overlapping. Only 3
+	   positions (-1, 0, 1) land inside .treatments__fan's visible, clipped
+	   window; ±2 is already fully off-screen by design (see the sizing
+	   math below), so a card's exit is a normal, visible slide out past
+	   the edge — never a pop, never display:none.
 
-	   Anchored by BOTTOM, not top: every card's bottom-center starts at the
-	   same point (--pivot-baseline above the fan's own bottom edge) before
-	   any transform runs, and transform-origin sits further below that —
-	   so rotating swings each card's bottom edge along one real arc. Cards
-	   never scale (see TreatmentCard.svelte) so there's no size difference
-	   to fight the arc math the way there was when the center card was
-	   both unrotated and full-size.
-
-	   .treatments__fan clips anything that rotates past its edges — cheap
-	   "peek at the edge, not fully visible" cropping with no JS and no
-	   display:none (which cannot transition, see armNoTransition below). */
+	   The "continuous loop" comes from script.ts's shiftAll: position keeps
+	   counting past ±2 instead of wrapping back into view, so nothing ever
+	   needs to jump across the screen to reach its next spot — it only
+	   recycles (∓5, one lap of 5 items) once it's a further step past that,
+	   fully invisible, frozen for that one frame as a second guarantee. */
 	.treatments__fan {
 		position: relative;
 		width: 100%;
@@ -208,27 +204,25 @@
 		/* Set here, not on .treatments__card: custom properties only inherit
 		   DOWN the tree, and .treatments__pivot (the card's own parent) needs
 		   to read this too. A child can't hand a variable up to its parent. */
-		--card-width: 5.5rem;
+		--card-width: 6rem;
 	}
 
 	.treatments__pivot {
 		position: absolute;
 		left: 50%;
-		bottom: var(--pivot-baseline, 1rem);
-		--pivot-distance: 380px; /* tune by eye: smaller = tighter/more dramatic arc */
-		transform-origin: 50% calc(100% + var(--pivot-distance));
-		transform: translateX(-50%) rotate(var(--rot));
+		top: 50%;
+		--card-gap: 1.25rem;
+		transform: translate(-50%, -50%)
+			translateX(calc(var(--pos) * (var(--card-width) + var(--card-gap))));
 		transition: transform 600ms var(--ease-in-out);
 	}
 
-	/* For 4 of 5 items, moving to the next/prev index is a normal one-slot
-	   hop and the transition looks right. The 5th — whichever item is at
-	   the edge being vacated — has no "one slot further" to rotate to; its
-	   shortest-path angle jumps straight across (-18deg to +18deg or the
-	   reverse), and animating that sweeps it through dead center, in front
-	   of/behind every other card, while the other four take a normal short
-	   hop. Freezing its transition for exactly the frame the jump happens
-	   makes it reposition instantly instead. Armed in armNoTransition. */
+	/* Frozen for exactly the frame a recycle happens (see shiftAll in the
+	   script) — repositions instantly instead of visibly crossing from one
+	   edge to the other. Belt-and-suspenders: the recycle only ever fires
+	   on an item that's already fully clipped and invisible, this just
+	   guarantees it stays that way even if the sizing math above is ever
+	   retuned and the margins get tighter. */
 	.treatments__pivot--jump {
 		transition: none;
 	}
@@ -326,19 +320,17 @@
 			max-width: 34rem;
 		}
 
-		/* Desktop: same arc mechanism as mobile above, just bigger — more
-		   screen room, so cards can be larger and spread wider. Nothing here
-		   changes the transform model, only the numbers. */
+		/* Desktop: same conveyor as mobile above, just bigger — more screen
+		   room, so cards can be larger with a wider gap between them.
+		   Nothing here changes the mechanism, only the numbers. */
 		.treatments__fan {
-			max-width: 44rem;
-			height: 20rem;
-			overflow: visible; /* enough room here that the edge cards don't need clipping */
+			max-width: 32rem;
+			height: 17rem;
 			--card-width: 9rem;
 		}
 
 		.treatments__pivot {
-			--pivot-baseline: 5rem;
-			--pivot-distance: 950px;
+			--card-gap: 2rem;
 		}
 	}
 </style>

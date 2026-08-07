@@ -7,10 +7,9 @@
 	 * previously could.
 	 *
 	 * Purely presentational: knows nothing about carousel position. The
-	 * carousel (Behandelingen.svelte) still owns where this card sits — --z
-	 * is an inherited CSS custom property set on this component's parent
-	 * wrapper, not a prop. No --scale: these cards never resize, at any
-	 * offset or breakpoint, on purpose.
+	 * carousel (Behandelingen.svelte) owns where this card sits — cards
+	 * never resize or overlap, at any position or breakpoint, on purpose,
+	 * so there's nothing here to inherit for that.
 	 */
 	interface Props {
 		/** Service name — shown as the visible bottom title. */
@@ -58,7 +57,6 @@
 		border-radius: var(--radius-lg);
 		background: var(--color-fg-forest);
 		color: var(--color-bg-sand);
-		z-index: var(--z, 1);
 	}
 
 	.tcard__button {
