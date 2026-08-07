@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { reveal } from '$lib/actions/reveal';
 	import { BRAND } from '$lib/constants/brand';
+	import TreatmentCard from '$lib/components/ui/TreatmentCard.svelte';
 
 	const ICONS: Record<string, string> = {
 		'mahatma-healing': '/images/card-mahatma-healing.svg',
@@ -9,11 +10,25 @@
 		'spinal-touch': '/images/card-spinal-touch.svg'
 	};
 
+	// buttonLabel is placeholder copy, not final — see TreatmentCard.svelte.
 	// 5th card by design (see ROADMAP.md LND-05) — never implemented on the old
-	// auto-scroll version. No icon file for it; reuses TextLink's arrow glyph.
+	// auto-scroll version. No icon file for it; TreatmentCard renders it with
+	// no image, same as every other card would if it had none.
 	const items = [
-		...BRAND.services.map((s) => ({ key: s.slug, label: s.name, icon: ICONS[s.slug] as string | null, href: null as string | null })),
-		{ key: 'meer-diensten', label: 'Meer diensten', icon: null, href: '/diensten' }
+		...BRAND.services.map((s) => ({
+			key: s.slug,
+			label: s.name,
+			icon: ICONS[s.slug] as string | null,
+			buttonLabel: 'Meer info',
+			buttonHref: `/diensten/${s.slug}`
+		})),
+		{
+			key: 'meer-diensten',
+			label: 'Meer diensten',
+			icon: null,
+			buttonLabel: 'Bekijk alles',
+			buttonHref: '/diensten'
+		}
 	];
 
 	const count = items.length;
@@ -92,50 +107,26 @@
 	</header>
 
 	<div class="treatments__carousel-wrap">
-		<div class="treatments__fan" role="group" aria-roledescription="carrousel" aria-label="Behandelingen">
+		<div
+			class="treatments__fan"
+			role="group"
+			aria-roledescription="carrousel"
+			aria-label="Behandelingen"
+		>
 			{#each items as item, i (item.key)}
 				{@const offset = offsetOf(i)}
 				{@const slot = SLOTS[offset]!}
 				<div
 					class="treatments__pivot"
 					class:treatments__pivot--jump={item.key === noTransitionKey}
-					style="--offset: {offset}; --rot: {slot.rot}deg"
+					style="--offset: {offset}; --rot: {slot.rot}deg; --scale: {slot.scale}; --z: {slot.z}"
 				>
-					{#if item.href}
-						<a
-							href={item.href}
-							class="treatments__card"
-							aria-label={item.label}
-							style="--scale: {slot.scale}; --z: {slot.z}"
-						>
-							<svg
-								class="treatments__more-icon"
-								width="32"
-								height="32"
-								viewBox="0 0 22 22"
-								fill="none"
-								aria-hidden="true"
-							>
-								<path
-									d="M5 17L17 5M17 5H9M17 5V13"
-									stroke="currentColor"
-									stroke-width="1.5"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-								/>
-							</svg>
-						</a>
-					{:else}
-						<div
-							class="treatments__card"
-							aria-label={item.label}
-							style="--scale: {slot.scale}; --z: {slot.z}"
-						>
-							{#if item.icon}
-								<img src={item.icon} alt="" aria-hidden="true" class="treatments__icon" />
-							{/if}
-						</div>
-					{/if}
+					<TreatmentCard
+						label={item.label}
+						icon={item.icon}
+						buttonLabel={item.buttonLabel}
+						buttonHref={item.buttonHref}
+					/>
 				</div>
 			{/each}
 		</div>
@@ -157,7 +148,8 @@
 				{/each}
 			</ul>
 
-			<button type="button" class="treatments__nav" onclick={next} aria-label="Volgende">Next</button
+			<button type="button" class="treatments__nav" onclick={next} aria-label="Volgende"
+				>Next</button
 			>
 		</div>
 	</div>
@@ -194,9 +186,10 @@
 	   ±2) sit off-canvas via translateX and are clipped by .treatments__fan's
 	   overflow, so they can still transition smoothly into view instead of
 	   popping. Each pivot's transform depends only on --offset (a plain
-	   number, not degrees) — CSS owns the actual px math via --card-step, so
-	   the same --offset value drives a completely different desktop
-	   treatment below without the script knowing which one is active. */
+	   number, not degrees) — CSS owns the actual px math (--card-width +
+	   --card-gap), so the same --offset value drives a completely different
+	   desktop treatment below without the script knowing which one is
+	   active. */
 	.treatments__fan {
 		position: relative;
 		width: 100%;
@@ -227,33 +220,11 @@
 		transition: none;
 	}
 
-	.treatments__card {
-		/* Rectangular, not square — same proportions as the Werkwijze card
-		   (17.625rem × 28.688rem, WerkwijzeCard.svelte), scaled down for a
-		   5-up fan. aspect-ratio (not two literals) keeps them locked without
-		   duplicating Werkwijze's numbers or importing its component.
-		   --card-width itself lives on .treatments__fan, see the comment
-		   there. */
-		width: var(--card-width);
-		aspect-ratio: 282 / 459;
-		border-radius: var(--radius-lg);
-		background: var(--color-fg-forest);
-		padding: var(--space-4);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		z-index: var(--z);
-		color: var(--color-bg-sand); /* for the "meer diensten" arrow's currentColor */
-		/* No transform here on mobile — flat, one consistent size for every
-		   card at every index. Desktop adds scale back for the arc's depth
-		   cue, below. */
-	}
-
-	.treatments__icon {
-		width: 100%;
-		height: 100%;
-		object-fit: contain;
-	}
+	/* Card size/padding/layout itself lives in TreatmentCard.svelte — the one
+	   place it's defined, used identically for all 5 cards. --card-width is
+	   still declared on .treatments__fan above because .treatments__pivot's
+	   own slide math (mobile) needs it too, and a custom property can't be
+	   read by its own parent if it were declared only on the card. */
 
 	.treatments__controls {
 		display: flex;
@@ -370,12 +341,6 @@
 			--pivot-distance: 950px; /* tune by eye: smaller = tighter/more dramatic arc */
 			transform-origin: 50% calc(100% + var(--pivot-distance));
 			transform: translateX(-50%) rotate(var(--rot));
-		}
-
-		.treatments__card {
-			transform-origin: center bottom; /* shrinks upward, keeps its bottom edge on the arc */
-			transform: scale(var(--scale));
-			transition: transform 600ms var(--ease-in-out);
 		}
 	}
 </style>
