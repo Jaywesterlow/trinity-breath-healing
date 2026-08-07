@@ -198,8 +198,14 @@
 	   fully invisible, frozen for that one frame as a second guarantee. */
 	.treatments__fan {
 		position: relative;
-		width: 100%;
-		max-width: 22rem;
+		/* Full-bleed to the true viewport edge, not just this element's own
+		   parent — .treatments has no horizontal padding, but this makes it
+		   correct regardless: the clip boundary (overflow below) has to be
+		   the screen edge itself, or cards visibly stop short of it with a
+		   gap on either side. Standard break-out-of-container trick. */
+		width: 100vw;
+		margin-left: calc(50% - 50vw);
+		margin-right: calc(50% - 50vw);
 		height: 11rem;
 		overflow: hidden;
 		/* Set here, not on .treatments__card: custom properties only inherit
@@ -323,9 +329,14 @@
 
 		/* Desktop: same conveyor as mobile above, just bigger — more screen
 		   room, so cards can be larger with a wider gap between them.
-		   Nothing here changes the mechanism, only the numbers. */
+		   Nothing here changes the mechanism, only the numbers. Undoes the
+		   mobile full-bleed (width/margins above): plenty of room here to
+		   center a capped-width container instead of running edge to edge. */
 		.treatments__fan {
+			width: 100%;
 			max-width: 32rem;
+			margin-left: auto;
+			margin-right: auto;
 			height: 17rem;
 			--card-width: 9rem;
 		}
