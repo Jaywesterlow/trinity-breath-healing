@@ -7,15 +7,17 @@
 	 * previously could.
 	 *
 	 * Purely presentational: knows nothing about carousel position. The
-	 * carousel (Behandelingen.svelte) still owns where this card sits —
-	 * --scale/--z/--offset/--rot are inherited CSS custom properties set on
-	 * this component's parent wrapper, not props.
+	 * carousel (Behandelingen.svelte) still owns where this card sits — --z
+	 * is an inherited CSS custom property set on this component's parent
+	 * wrapper, not a prop. No --scale: these cards never resize, at any
+	 * offset or breakpoint, on purpose.
 	 */
 	interface Props {
 		/** Service name — shown as the visible bottom title. */
 		label: string;
 		icon?: string | null;
-		/** Not final copy — placeholder until real content is decided. */
+		/** Where the corner button goes. Accessible name only for now — the
+		 * arrow itself carries no visible text (not final copy either way). */
 		buttonLabel: string;
 		buttonHref: string;
 	}
@@ -25,7 +27,15 @@
 
 <div class="tcard">
 	<a href={buttonHref} class="tcard__button" aria-label={`${buttonLabel} over ${label}`}>
-		{buttonLabel}
+		<svg width="14" height="14" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+			<path
+				d="M5 17L17 5M17 5H9M17 5V13"
+				stroke="currentColor"
+				stroke-width="2"
+				stroke-linecap="round"
+				stroke-linejoin="round"
+			/>
+		</svg>
 	</a>
 
 	<div class="tcard__icon-wrap">
@@ -49,23 +59,17 @@
 		background: var(--color-fg-forest);
 		color: var(--color-bg-sand);
 		z-index: var(--z, 1);
-		/* No scale transform here — mobile is flat, one consistent size for
-		   every card at every index, on purpose (that was the whole fix).
-		   Desktop's arc adds --scale back below; --scale is inherited from
-		   the carousel's pivot wrapper regardless of breakpoint, so applying
-		   it unconditionally here would silently re-scale mobile cards too. */
 	}
 
 	.tcard__button {
 		justify-self: end;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.5rem;
+		height: 1.5rem;
 		border-radius: var(--radius-full);
 		border: 1px solid var(--color-bg-sand);
-		padding: 0.2rem var(--space-2);
-		font-size: 0.5625rem;
-		font-weight: var(--font-weight-medium);
-		line-height: 1.4;
-		white-space: nowrap;
-		text-decoration: none;
 		color: inherit;
 		transition: background-color var(--motion-fast);
 	}
@@ -83,8 +87,11 @@
 	}
 
 	.tcard__icon {
-		width: 65%;
-		height: 65%;
+		/* ~75% bigger than the icon's original 65% — the source art has a lot
+		   of built-in padding, so this is close to the practical ceiling
+		   before it starts crowding the button/title above and below it. */
+		width: 100%;
+		height: 100%;
 		object-fit: contain;
 	}
 
@@ -98,17 +105,9 @@
 	}
 
 	@media (min-width: 1024px) {
-		.tcard {
-			/* The arc's depth cue — center card full size, edges smaller.
-			   --scale is inherited from the carousel's pivot wrapper. */
-			transform-origin: center bottom;
-			transform: scale(var(--scale, 1));
-			transition: transform 600ms var(--ease-in-out);
-		}
-
 		.tcard__button {
-			padding: 0.3rem var(--space-3);
-			font-size: var(--font-size-xs);
+			width: 1.75rem;
+			height: 1.75rem;
 		}
 
 		.tcard__title {

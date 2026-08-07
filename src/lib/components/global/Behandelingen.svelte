@@ -35,14 +35,15 @@
 
 	// Fixed visual slots, keyed by offset from the selected card. Rotation is
 	// shared around one pivot far below the row (see .treatments__pivot) — this
-	// table only carries what varies per card: angle, depth scale, stacking.
+	// table only carries what varies per card: angle and stacking. No size
+	// variation — cards never grow/shrink, by design, at any offset.
 	// Assumes exactly 5 items (offsetOf only ever returns -2..2 for count=5).
-	const SLOTS: Record<number, { rot: number; scale: number; z: number }> = {
-		[-2]: { rot: -18, scale: 0.78, z: 1 },
-		[-1]: { rot: -9, scale: 0.9, z: 2 },
-		[0]: { rot: 0, scale: 1, z: 3 },
-		[1]: { rot: 9, scale: 0.9, z: 2 },
-		[2]: { rot: 18, scale: 0.78, z: 1 }
+	const SLOTS: Record<number, { rot: number; z: number }> = {
+		[-2]: { rot: -18, z: 1 },
+		[-1]: { rot: -9, z: 2 },
+		[0]: { rot: 0, z: 3 },
+		[1]: { rot: 9, z: 2 },
+		[2]: { rot: 18, z: 1 }
 	};
 
 	let selectedIndex = $state(0);
@@ -119,7 +120,7 @@
 				<div
 					class="treatments__pivot"
 					class:treatments__pivot--jump={item.key === noTransitionKey}
-					style="--offset: {offset}; --rot: {slot.rot}deg; --scale: {slot.scale}; --z: {slot.z}"
+					style="--rot: {slot.rot}deg; --z: {slot.z}"
 				>
 					<TreatmentCard
 						label={item.label}
@@ -180,51 +181,63 @@
 		gap: var(--space-8);
 	}
 
-	/* --- Mobile/tablet (default): plain horizontal slide, not the arc. ---
-	   Every card stays in the DOM and keeps its own transition the whole
-	   time — nothing is ever display:none. Cards past the visible 3 (offset
-	   ±2) sit off-canvas via translateX and are clipped by .treatments__fan's
-	   overflow, so they can still transition smoothly into view instead of
-	   popping. Each pivot's transform depends only on --offset (a plain
-	   number, not degrees) — CSS owns the actual px math (--card-width +
-	   --card-gap), so the same --offset value drives a completely different
-	   desktop treatment below without the script knowing which one is
-	   active. */
+	/* --- The arc: ONE mechanism at every breakpoint, mobile-first. ---
+	   Cards rotate around a single shared pivot far below the row (a real
+	   fan hub, not each card tilting around its own base) — the desktop
+	   media query below only retunes the numbers (pivot distance, card
+	   size, fan footprint) for a bigger screen. It never swaps to a
+	   different transform model.
+
+	   Anchored by BOTTOM, not top: every card's bottom-center starts at the
+	   same point (--pivot-baseline above the fan's own bottom edge) before
+	   any transform runs, and transform-origin sits further below that —
+	   so rotating swings each card's bottom edge along one real arc. Cards
+	   never scale (see TreatmentCard.svelte) so there's no size difference
+	   to fight the arc math the way there was when the center card was
+	   both unrotated and full-size.
+
+	   .treatments__fan clips anything that rotates past its edges — cheap
+	   "peek at the edge, not fully visible" cropping with no JS and no
+	   display:none (which cannot transition, see armNoTransition below). */
 	.treatments__fan {
 		position: relative;
 		width: 100%;
-		max-width: 26rem;
-		height: 12.5rem;
+		max-width: 22rem;
+		height: 11rem;
 		overflow: hidden;
 		/* Set here, not on .treatments__card: custom properties only inherit
 		   DOWN the tree, and .treatments__pivot (the card's own parent) needs
-		   to read this too for its slide math below. A child can't hand a
-		   variable up to its parent. */
-		--card-width: 6.5rem;
+		   to read this too. A child can't hand a variable up to its parent. */
+		--card-width: 5.5rem;
 	}
 
 	.treatments__pivot {
 		position: absolute;
 		left: 50%;
-		top: 50%;
-		--card-gap: 2rem;
-		transform: translate(-50%, -50%)
-			translateX(calc(var(--offset) * (var(--card-width) + var(--card-gap))));
+		bottom: var(--pivot-baseline, 1rem);
+		--pivot-distance: 380px; /* tune by eye: smaller = tighter/more dramatic arc */
+		transform-origin: 50% calc(100% + var(--pivot-distance));
+		transform: translateX(-50%) rotate(var(--rot));
 		transition: transform 600ms var(--ease-in-out);
 	}
 
-	/* Armed for exactly one frame on whichever card is wrapping from one edge
-	   to the other (see armNoTransition in the script) — repositions instantly
-	   instead of sliding all the way across the visible row. */
+	/* For 4 of 5 items, moving to the next/prev index is a normal one-slot
+	   hop and the transition looks right. The 5th — whichever item is at
+	   the edge being vacated — has no "one slot further" to rotate to; its
+	   shortest-path angle jumps straight across (-18deg to +18deg or the
+	   reverse), and animating that sweeps it through dead center, in front
+	   of/behind every other card, while the other four take a normal short
+	   hop. Freezing its transition for exactly the frame the jump happens
+	   makes it reposition instantly instead. Armed in armNoTransition. */
 	.treatments__pivot--jump {
 		transition: none;
 	}
 
 	/* Card size/padding/layout itself lives in TreatmentCard.svelte — the one
 	   place it's defined, used identically for all 5 cards. --card-width is
-	   still declared on .treatments__fan above because .treatments__pivot's
-	   own slide math (mobile) needs it too, and a custom property can't be
-	   read by its own parent if it were declared only on the card. */
+	   declared here instead, on .treatments__fan, so the carousel's own
+	   breakpoint (this file's) drives the responsive size — TreatmentCard
+	   doesn't need its own separate width media query to match. */
 
 	.treatments__controls {
 		display: flex;
@@ -313,34 +326,19 @@
 			max-width: 34rem;
 		}
 
-		/* --- Desktop: the arc, replacing the mobile slide entirely. ---
-		   Two nested elements per card on purpose: .treatments__pivot rotates
-		   around ONE shared point far below the whole row (a real fan hub,
-		   not each card tilting around its own base); .treatments__card
-		   scales around its own center for the depth cue. Combining both in
-		   one transform would make scale drag the card sideways too, since
-		   it'd share the same distant origin. */
+		/* Desktop: same arc mechanism as mobile above, just bigger — more
+		   screen room, so cards can be larger and spread wider. Nothing here
+		   changes the transform model, only the numbers. */
 		.treatments__fan {
 			max-width: 44rem;
 			height: 20rem;
-			overflow: visible; /* the arc's edge cards intentionally sit outside this box */
+			overflow: visible; /* enough room here that the edge cards don't need clipping */
 			--card-width: 9rem;
 		}
 
-		/* Anchored by BOTTOM, not top. Every card's bottom-center starts at
-		   the exact same point (--pivot-baseline above the fan's own bottom
-		   edge) before any transform runs. transform-origin sits further
-		   below that — a shared point acting as the fan's hinge — so
-		   rotating swings each card's bottom edge along one real arc. If
-		   this anchored from the top instead, the tallest (center,
-		   unscaled) card's bottom would hang lower than every smaller,
-		   more-rotated side card. */
 		.treatments__pivot {
-			top: auto;
-			bottom: 5rem;
-			--pivot-distance: 950px; /* tune by eye: smaller = tighter/more dramatic arc */
-			transform-origin: 50% calc(100% + var(--pivot-distance));
-			transform: translateX(-50%) rotate(var(--rot));
+			--pivot-baseline: 5rem;
+			--pivot-distance: 950px;
 		}
 	}
 </style>
