@@ -322,7 +322,24 @@
 	// is unchanged at that instant — no visible jump — but the travel is
 	// now committed. A while loop, not an if: a single fast frame during
 	// momentum can legitimately cross more than one card boundary.
-	function absorbWholeSteps(): void {
+	//
+	// Returns exactly (offset before - offset after): how much was folded
+	// out of offset, signed. Every caller except the drag path (see
+	// onWindowPointerMove) can ignore this — momentum/settle only ever
+	// write offset itself, so folding it in place is the whole story. The
+	// drag path is different: its offset is NOT accumulated frame to frame,
+	// it's recomputed from scratch every frame as `dragBaseOffset +
+	// pendingDx / PX_PER_STEP`. If a whole step gets folded into
+	// positions[] but dragBaseOffset is left untouched, the very next frame
+	// recomputes the same pre-fold offset from that formula and undoes the
+	// fold — positions[] keeps advancing but offset snaps back out of
+	// range, so nothing ever visibly recycles. Subtracting the returned
+	// amount from dragBaseOffset (see the caller) keeps that absolute
+	// formula consistent with the new integer positions, the same way a
+	// leap-second correction moves the reference point rather than the
+	// clock.
+	function absorbWholeSteps(): number {
+		const before = offset;
 		while (offset >= 1) {
 			shiftOne(1);
 			offset -= 1;
@@ -331,6 +348,7 @@
 			shiftOne(-1);
 			offset += 1;
 		}
+		return before - offset;
 	}
 
 	function endGesture(): void {
@@ -460,6 +478,15 @@
 			rafId = requestAnimationFrame(() => {
 				rafId = null;
 				offset = dragBaseOffset + pendingDx / PX_PER_STEP;
+				// Recycle DURING the drag, not only after release — a drag
+				// spanning more than `count` cards must keep producing cards
+				// the whole time it's held, not just once the pointer lifts.
+				// See absorbWholeSteps' own comment for why dragBaseOffset
+				// must move by the same amount: this formula is absolute
+				// (recomputed from dragBaseOffset every frame), so without
+				// this correction the very next frame would recompute the
+				// same unfolded offset and undo the fold outright.
+				dragBaseOffset -= absorbWholeSteps();
 			});
 		}
 	}
