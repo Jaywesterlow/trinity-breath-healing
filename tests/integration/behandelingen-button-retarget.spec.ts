@@ -120,7 +120,10 @@ test('a second Next press mid-flight extends the same motion instead of stalling
 	// press never drops to (near) zero — the second press has to catch the
 	// motion already moving and extend it, not wait for a full stop first.
 	const around = track.filter((s) => Math.abs(s.t - secondPressTime) < 150);
-	expect(around.length, 'need enough samples around the second press to analyse motion').toBeGreaterThan(3);
+	expect(
+		around.length,
+		'need enough samples around the second press to analyse motion'
+	).toBeGreaterThan(3);
 	const speeds: number[] = [];
 	for (let i = 1; i < around.length; i++) {
 		const dt = around[i]!.t - around[i - 1]!.t;
