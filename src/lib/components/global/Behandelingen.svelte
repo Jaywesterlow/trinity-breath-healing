@@ -604,8 +604,62 @@
 		driveMotion(baseTarget + delta);
 	}
 
+	// "drag to scroll needs to be on and between the cards only... Right now
+	// I can drag waaayy below the cards and the cards still respond, as if
+	// there is an actual full-on draggable invisible circle. Even way under
+	// the navigation buttons of the carousel." — a real bug: onPointerDown is
+	// bound to .treatments__fan, which is deliberately full-bleed and very
+	// tall (see its own CSS comment) purely as clipping headroom for the
+	// rotated cards, not because it was meant to be a full-height drag
+	// surface. .treatments__controls is then pulled up over that empty space
+	// with a large negative margin-top, so the whole tall, mostly-empty fan
+	// box — including the area behind and below the nav — was a live drag
+	// surface.
+	//
+	// Shrinking the fan is not the fix: that height is the clipping safety
+	// margin (see the fan's own comment), and shrinking it re-clips cards
+	// mid-motion, a real bug already fixed once. An overlay on top isn't
+	// either: it would block the cards' own corner links and the desktop
+	// click-to-jump overlay (.treatments__jump). Instead, reject the gesture
+	// right here — before any drag state is touched, so nothing else in the
+	// gesture path has to change — whenever the pointer lands vertically
+	// outside the actual card row.
+	//
+	// The band is derived from live geometry every time a pointer goes
+	// down, not a hardcoded pixel range: the bounding boxes of the three
+	// guaranteed-visible pivots (position -1/0/1 — see .treatments__fan's
+	// own comment for why only those three ever land inside the clip
+	// window, at every breakpoint, by construction). That means this
+	// survives the mobile/desktop breakpoint difference and any future
+	// retuning of card size/--pivot-distance/--pivot-baseline without a
+	// second constant to keep in sync with those.
+	const CARD_BAND_SAFE_MARGIN_PX = 24; // "a slight safe area under and above the cards" per the owner
+
+	function getCardBandY(fanEl: HTMLElement): { top: number; bottom: number } | null {
+		const pivotEls = fanEl.querySelectorAll<HTMLElement>('.treatments__pivot');
+		let top = Infinity;
+		let bottom = -Infinity;
+		let found = false;
+		pivotEls.forEach((el, i) => {
+			// DOM order follows the fixed `items` array order (the keyed each
+			// block never reorders its own nodes — same assumption several of
+			// this component's own tests already make), so index i lines up
+			// with positions[i] directly.
+			const p = Math.round(positions[i]! + offset);
+			if (p < -1 || p > 1) return;
+			const rect = el.getBoundingClientRect();
+			top = Math.min(top, rect.top);
+			bottom = Math.max(bottom, rect.bottom);
+			found = true;
+		});
+		if (!found) return null;
+		return { top: top - CARD_BAND_SAFE_MARGIN_PX, bottom: bottom + CARD_BAND_SAFE_MARGIN_PX };
+	}
+
 	function onPointerDown(e: PointerEvent): void {
 		if (e.pointerType === 'mouse' && e.button !== 0) return;
+		const band = getCardBandY(e.currentTarget as HTMLElement);
+		if (band && (e.clientY < band.top || e.clientY > band.bottom)) return;
 		// Take over from wherever a running momentum/settle loop currently is
 		// — see cancelMotion's own comment.
 		cancelMotion();
