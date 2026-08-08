@@ -1160,6 +1160,18 @@
 	@media (min-width: 1024px) {
 		.treatments {
 			min-height: 100vh;
+			/* Real breathing room below the carousel, an older owner request
+			   that was never actioned (see .treatments__controls' own comment:
+			   past rounds grew .treatments__fan's height instead, which only
+			   adds invisible internal buffer that this element's negative
+			   margin-top pulls straight back over — the visible gap below the
+			   nav never actually changed). The base rule's var(--space-8) (2rem)
+			   bottom padding is the ENTIRE visible gap between the nav and the
+			   next section on desktop; doubled here to match the top padding
+			   (var(--space-16)) for a section that reads as symmetrically
+			   spaced rather than bottom-heavy. Desktop only, per the owner's
+			   ask — mobile's tighter 70vh section keeps its existing padding. */
+			padding-bottom: var(--space-16);
 		}
 
 		.treatments__header {
