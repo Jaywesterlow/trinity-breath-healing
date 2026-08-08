@@ -73,6 +73,106 @@ test.describe('desktop', () => {
 		).toEqual(before);
 	});
 
+	test('a drag starting at the vertical position of the nav row does not move the fan', async ({
+		page
+	}) => {
+		// Regression test for the fb19441 fix NOT actually working: that
+		// attempt derived the band from the bounding boxes of all three
+		// visible pivots (-1, 0, 1). The ±1 pivots are rotated, so their
+		// axis-aligned bbox is far taller than the card itself — tall enough
+		// that the "safe" band's bottom edge landed BELOW
+		// .treatments__controls' top edge, putting the nav row's own vertical
+		// position inside the draggable band.
+		//
+		// The probe point is deliberately off to the side of the nav row, not
+		// directly on top of it: .treatments__controls itself sits at a
+		// higher stacking position than .treatments__fan (see its own CSS
+		// comment) and would swallow the pointerdown regardless of the band
+		// logic, making a probe centred on the controls box pass for the
+		// wrong reason. Off to the side, at the SAME height, still lands on
+		// the (full-bleed, 100vw) fan element and therefore actually
+		// exercises getCardBandY — confirmed this exact probe moves the fan
+		// against the pre-fix implementation.
+		const controlsBox = await page.locator('.treatments__controls').boundingBox();
+		const fanBox = await page.locator('.treatments__fan').boundingBox();
+		expect(controlsBox).not.toBeNull();
+		expect(fanBox).not.toBeNull();
+
+		const x = fanBox!.x + 20;
+		const y = controlsBox!.y + controlsBox!.height / 2;
+
+		const before = await positions(page);
+
+		await page.mouse.move(x, y);
+		await page.mouse.down();
+		await page.mouse.move(x - 200, y, { steps: 10 });
+		await page.mouse.up();
+		await page.waitForTimeout(200);
+
+		expect(
+			await positions(page),
+			'a gesture starting on the nav row itself must not move the fan'
+		).toEqual(before);
+	});
+
+	test('the computed drag band sits strictly above the controls row', async ({ page }) => {
+		// Directly checks the geometry invariant the fix depends on: a band
+		// built from the unrotated centre card alone (position 0) must end
+		// above .treatments__controls' top edge. Also computes what the OLD
+		// (broken) three-pivot bounding-box union would have produced, to
+		// document why that approach failed — it does not, and must not,
+		// clear the controls row.
+		const result = await page.evaluate(() => {
+			const fan = document.querySelector('.treatments__fan') as HTMLElement;
+			const controls = document.querySelector('.treatments__controls') as HTMLElement;
+			const pivots = Array.from(fan.querySelectorAll<HTMLElement>('.treatments__pivot'));
+			const MARGIN = 24;
+
+			// OLD (broken) approach: union of all three visible pivots (-1/0/1).
+			let oldTop = Infinity;
+			let oldBottom = -Infinity;
+			pivots.forEach((el) => {
+				const pos = Math.round(Number(getComputedStyle(el).getPropertyValue('--pos')));
+				if (pos < -1 || pos > 1) return;
+				const r = el.getBoundingClientRect();
+				oldTop = Math.min(oldTop, r.top);
+				oldBottom = Math.max(oldBottom, r.bottom);
+			});
+
+			// NEW (fixed) approach: centre pivot only (nearest to slot 0).
+			let centreEl: HTMLElement | null = null;
+			let centreDist = Infinity;
+			pivots.forEach((el) => {
+				const pos = Number(getComputedStyle(el).getPropertyValue('--pos'));
+				const dist = Math.abs(pos);
+				if (dist < centreDist) {
+					centreDist = dist;
+					centreEl = el;
+				}
+			});
+			const rect = (centreEl as unknown as HTMLElement).getBoundingClientRect();
+			const newBottom = rect.bottom + MARGIN;
+
+			const controlsTop = controls.getBoundingClientRect().top;
+
+			return {
+				oldBandBottom: oldBottom + MARGIN,
+				newBandBottom: newBottom,
+				controlsTop
+			};
+		});
+
+		expect(
+			result.oldBandBottom,
+			'sanity: the old three-pivot union band DID reach into the controls row (that was the bug)'
+		).toBeGreaterThan(result.controlsTop);
+
+		expect(
+			result.newBandBottom,
+			'the centre-card-only band must sit strictly above the controls row'
+		).toBeLessThan(result.controlsTop);
+	});
+
 	test('a drag starting on a card works exactly as before', async ({ page }) => {
 		// Start on the centre card itself (position 0), well inside the band.
 		const centre = await page.locator('.treatments__pivot').evaluateAll((els) => {

@@ -672,34 +672,67 @@
 	// outside the actual card row.
 	//
 	// The band is derived from live geometry every time a pointer goes
-	// down, not a hardcoded pixel range: the bounding boxes of the three
-	// guaranteed-visible pivots (position -1/0/1 — see .treatments__fan's
-	// own comment for why only those three ever land inside the clip
-	// window, at every breakpoint, by construction). That means this
-	// survives the mobile/desktop breakpoint difference and any future
-	// retuning of card size/--pivot-distance/--pivot-baseline without a
-	// second constant to keep in sync with those.
+	// down, not a hardcoded pixel range — but ONLY from the centre pivot
+	// (position 0), not all three visible ones. The ±1 pivots are rotated
+	// (see .treatments__pivot's transform), and a rotated rectangle's
+	// axis-aligned bounding box (what getBoundingClientRect returns) is
+	// taller than the card itself — including them pulled the band's
+	// bottom edge down into and past .treatments__controls, which is
+	// exactly the bug this was supposed to fix (measured: band bottom
+	// 649.3px against a controls top of 621.6px, the nav row fully inside
+	// the "safe" band). The centre card alone is unrotated (--pos ≈ 0, so
+	// rotate(0deg)), so its bounding box IS its true rectangle — no
+	// rotation slop to account for.
+	//
+	// --pos is fractional during motion, but this only ever runs from
+	// onPointerDown, which fires before any drag begins (see its own
+	// comment) — so at call time --pos is either settled on an integer or,
+	// if a gesture starts mid-coast, close to one. Either way this picks
+	// the pivot with the smallest |positions[i] + offset|, i.e. nearest to
+	// slot 0, rather than assuming DOM index 0 is the centre card (it
+	// isn't, once the loop has recycled — see positions' own comment) or
+	// requiring an exact rounds-to-0 match (a mid-coast start may not have
+	// one).
 	const CARD_BAND_SAFE_MARGIN_PX = 24; // "a slight safe area under and above the cards" per the owner
 
 	function getCardBandY(fanEl: HTMLElement): { top: number; bottom: number } | null {
 		const pivotEls = fanEl.querySelectorAll<HTMLElement>('.treatments__pivot');
-		let top = Infinity;
-		let bottom = -Infinity;
-		let found = false;
+		let centreEl: HTMLElement | null = null;
+		let centreDist = Infinity;
 		pivotEls.forEach((el, i) => {
 			// DOM order follows the fixed `items` array order (the keyed each
 			// block never reorders its own nodes — same assumption several of
 			// this component's own tests already make), so index i lines up
 			// with positions[i] directly.
-			const p = Math.round(positions[i]! + offset);
-			if (p < -1 || p > 1) return;
-			const rect = el.getBoundingClientRect();
-			top = Math.min(top, rect.top);
-			bottom = Math.max(bottom, rect.bottom);
-			found = true;
+			const p = positions[i]! + offset;
+			const dist = Math.abs(p);
+			if (dist < centreDist) {
+				centreDist = dist;
+				centreEl = el;
+			}
 		});
-		if (!found) return null;
-		return { top: top - CARD_BAND_SAFE_MARGIN_PX, bottom: bottom + CARD_BAND_SAFE_MARGIN_PX };
+		if (!centreEl) return null;
+		const rect = (centreEl as HTMLElement).getBoundingClientRect();
+		const top = rect.top - CARD_BAND_SAFE_MARGIN_PX;
+		let bottom = rect.bottom + CARD_BAND_SAFE_MARGIN_PX;
+
+		// Hard requirement: the band must never reach into
+		// .treatments__controls, regardless of margin or card geometry —
+		// clamp rather than trust the margin alone, since --pivot-distance/
+		// card size are retuned independently of this file (see their own
+		// comments) and could someday bring the two closer together again.
+		// Scoped to this fan's own carousel-wrap, not a bare document
+		// query, in case more than one instance of this component is ever
+		// mounted on a page.
+		const controlsEl = fanEl
+			.closest('.treatments__carousel-wrap')
+			?.querySelector<HTMLElement>('.treatments__controls');
+		if (controlsEl) {
+			const controlsTop = controlsEl.getBoundingClientRect().top;
+			if (bottom >= controlsTop) bottom = controlsTop - 1;
+		}
+
+		return { top, bottom };
 	}
 
 	function onPointerDown(e: PointerEvent): void {
