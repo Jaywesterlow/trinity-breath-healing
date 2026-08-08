@@ -24,7 +24,7 @@
  * keep producing distinct centred cards (the loop must visibly go
  * 1→count→1…) rather than running out partway through.
  */
-import { test, expect, type Page } from '@playwright/test';
+import { test, expect } from '@playwright/test';
 
 const DESKTOP = { width: 1440, height: 900 };
 
@@ -86,7 +86,9 @@ test('a long continuous drag spanning more than `count` cards keeps offset bound
 	// Let one final rAF flush before reading back.
 	await page.waitForTimeout(50);
 
-	const samples: number[] = await page.evaluate(() => (window as unknown as SamplingWindow).__dragSamples);
+	const samples: number[] = await page.evaluate(
+		() => (window as unknown as SamplingWindow).__dragSamples
+	);
 	expect(samples.length, 'need real samples captured during the drag').toBeGreaterThan(20);
 
 	// The core invariant: every sampled --pos, for every item, at every frame
