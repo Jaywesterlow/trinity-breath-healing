@@ -6,6 +6,18 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<meta name="text-scale" content="scale" />
 		<meta name="google-site-verification" content="XGqnFkile6PRVOVGBwOvLVqXNw2DbJEiXonVwim__j8" />
+
+		<!-- Favicons, generated from static/trinity-logo.svg by scripts/make-favicon.mjs.
+		     Without a declared icon, browsers request /favicon.ico on every page load and got a
+		     404 on every visit. SVG first: it is the one browsers prefer and it scales, so it
+		     covers the 32px slot hi-DPI screens actually request for a 16px tab. The .ico stays
+		     for clients that request it blindly regardless of these links. apple-touch-icon is
+		     the only one with a background — iOS composites a transparent icon onto black, which
+		     would put the gold mark on a black tile instead of the site's sand. -->
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<link rel="icon" href="/favicon-96x96.png" type="image/png" sizes="96x96" />
+		<link rel="icon" href="/favicon.ico" sizes="32x32" />
+		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
 		%sveltekit.head%
 	</head>
 	<body data-sveltekit-preload-data="hover">

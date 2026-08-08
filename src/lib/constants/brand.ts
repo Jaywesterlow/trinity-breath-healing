@@ -18,7 +18,7 @@ export const BRAND = {
 	shortName: 'TRINITY Breath & Healing',
 
 	/** Practitioner's full legal name — required for Person schema + E-E-A-T */
-	practitionerFullName: 'TODO_PRACTITIONER_NAME',
+	practitionerFullName: 'Brigitte Grohe',
 
 	/** Primary contact email — locked per REQUIREMENTS LND-08 + 00-CONTEXT.md footer block */
 	email: 'info@trinitybnh.nl',
@@ -29,7 +29,7 @@ export const BRAND = {
 	/** Social media profiles */
 	socials: {
 		/** Instagram handle including @ — primary channel for existing audience */
-		instagram: 'TODO_INSTAGRAM_HANDLE',
+		instagram: '@trinitybreath.and.healing',
 		/** Facebook page URL — null until practitioner confirms presence */
 		facebook: null as string | null,
 		/** X (Twitter) handle — null; practitioner not active on X */

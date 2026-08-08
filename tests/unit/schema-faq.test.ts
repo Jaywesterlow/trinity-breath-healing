@@ -3,9 +3,9 @@
  * Tests: buildFaqPage() builder + buildWebPage() helper + buildGraph() composer
  * Requirements: SCH-07, SCH-01, SEO-09
  *
- * WARNING-2: buildFaqPage([]) returns structurally-valid FAQPage with mainEntity=[].
- * Plan 08 validate-json-ld.ts MUST NOT assert mainEntity.length > 0 in Phase 0.
- * That gate flips on in Phase 1 LND-07 when real FAQ entries land.
+ * WARNING-2: buildFaqPage([]) still returns a structurally-valid FAQPage with
+ * mainEntity=[] — the builder does not police content. validate-json-ld.ts does, and
+ * since Phase 1 (LND-07) it rejects an empty mainEntity outright.
  *
  * SEO-09: buildWebPage omits dateModified key when absent (never emits undefined).
  *

@@ -2,7 +2,7 @@
 id: 260713-myi
 slug: hero-draw-on
 date: 2026-07-13
-status: in-progress
+status: complete
 ---
 
 # Quick Task: Hero draw-on animation

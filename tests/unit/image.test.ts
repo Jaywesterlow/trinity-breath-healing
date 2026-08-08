@@ -163,6 +163,10 @@ function runTscOnFixture(fixturePath: string): { exitCode: number; output: strin
 }
 
 describe('EnhancedImage – required-prop TypeScript discipline', () => {
+	// Each of these spawns a cold `tsc` process (execSync), which has been measured at
+	// 4233-6131ms in this environment — over vitest's 5000ms default test timeout, so
+	// whichever one lands on the slow end flakes on any given run. 20000ms gives it
+	// comfortable headroom without masking a genuine hang.
 	it('Test 5: missing alt causes TypeScript compile error', () => {
 		const fixturePath = path.join(FIXTURES_DIR, 'image-missing-alt.ts');
 		const { exitCode, output } = runTscOnFixture(fixturePath);
@@ -171,7 +175,7 @@ describe('EnhancedImage – required-prop TypeScript discipline', () => {
 		// TS2741: Property 'alt' is missing in type ... but required in type ...
 		expect(output).toMatch(/alt/i);
 		expect(output).toMatch(/missing|required/i);
-	});
+	}, 20000);
 
 	it('Test 6: missing width causes TypeScript compile error', () => {
 		const fixturePath = path.join(FIXTURES_DIR, 'image-missing-width.ts');
@@ -179,7 +183,7 @@ describe('EnhancedImage – required-prop TypeScript discipline', () => {
 		expect(exitCode).not.toBe(0);
 		expect(output).toMatch(/width/i);
 		expect(output).toMatch(/missing|required/i);
-	});
+	}, 20000);
 
 	it('Test 7: missing height causes TypeScript compile error', () => {
 		const fixturePath = path.join(FIXTURES_DIR, 'image-missing-height.ts');
@@ -187,5 +191,5 @@ describe('EnhancedImage – required-prop TypeScript discipline', () => {
 		expect(exitCode).not.toBe(0);
 		expect(output).toMatch(/height/i);
 		expect(output).toMatch(/missing|required/i);
-	});
+	}, 20000);
 });

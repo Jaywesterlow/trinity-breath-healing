@@ -2,7 +2,7 @@
 quick_id: 260724-fvq
 slug: restore-faq-section
 date: 2026-07-24
-status: in-progress
+status: complete
 ---
 
 # Restore the FAQ section to the landing page

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { reveal } from '$lib/actions/reveal';
 	import { onMount } from 'svelte';
 	import EmblaCarousel, { type EmblaCarouselType } from 'embla-carousel';
 	import { BRAND } from '$lib/constants/brand';
@@ -262,8 +263,8 @@
 
 <section class="treatments" aria-label="Behandelingen">
 	<header class="treatments__header">
-		<p class="treatments__eyebrow">Diensten</p>
-		<h2 class="treatments__heading">
+		<p class="treatments__eyebrow" use:reveal={{ delay: 0 }}>Diensten</p>
+		<h2 class="treatments__heading" use:reveal={{ delay: 120 }}>
 			Elke behandeling is uniek, met een centraal doel: jouw herstel.
 		</h2>
 	</header>
