@@ -34,6 +34,19 @@
 
 	const count = items.length;
 
+	// The distinct-slot range every item's position can occupy, sized to hold
+	// exactly `count` slots and centred on 0 (0 itself is always one of the
+	// slots). For an odd count this range is perfectly symmetric — e.g.
+	// count=5 gives [-2, 2]. For an even count perfect symmetry around a
+	// single slot (0) is impossible, so the one extra slot lands on the
+	// positive side — e.g. count=8 gives [-3, 4]. Which side gets the extra
+	// slot doesn't matter for correctness (see the recycle thresholds below,
+	// which are derived from HIGH_SLOT/LOW_SLOT directly rather than
+	// assuming symmetry) — it only has to be *some* fixed side, so the
+	// initial layout below is deterministic.
+	const HIGH_SLOT = Math.floor(count / 2);
+	const LOW_SLOT = HIGH_SLOT - count + 1;
+
 	// Each item's own position on an evenly-spaced horizontal line, in units
 	// of "card-widths from center." NOT derived from an index every render —
 	// a real, persistent number per item that only ever moves by ±1 per
@@ -43,7 +56,17 @@
 	// Here it just keeps counting past the edge, off-screen, same as
 	// everything else — see next()/prev() below for where it eventually
 	// loops back.
-	let positions: number[] = $state([0, 1, 2, -2, -1]);
+	//
+	// Laid out left-to-right in source order around the loop: items
+	// 0..HIGH_SLOT get slots 0..HIGH_SLOT (ascending), and the remaining
+	// items get the tail of the range wrapped to the negative side
+	// (LOW_SLOT..-1, also ascending) — e.g. count=5 gives [0, 1, 2, -2, -1],
+	// count=8 gives [0, 1, 2, 3, 4, -3, -2, -1]. Every item lands on a
+	// distinct slot by construction, since HIGH_SLOT/LOW_SLOT above were
+	// sized to hold exactly `count` of them.
+	let positions: number[] = $state(
+		Array.from({ length: count }, (_, i) => (i <= HIGH_SLOT ? i : i - count))
+	);
 
 	// Items currently mid-recycle (see onPivotTransitionEnd) — their
 	// transition is suppressed for a frame so they reposition instantly
@@ -65,34 +88,38 @@
 	// The one place position ever changes, and deliberately restricted to
 	// a single ±1 step per call. Only 3 cards (position -1, 0, 1) are ever
 	// visible — .treatments__fan clips anything past that with plenty of
-	// margin (see the CSS), so position ±2 is already fully off-screen. An
-	// item only recycles once it takes ONE MORE step past that (reaching
-	// ±3), meaning every item spends a full step sitting off-screen,
-	// invisible, before it jumps ∓5 (once around the 5-item loop) to
-	// reappear on the opposite side. That invariant — recycling only ever
-	// touches an item that was already off-screen on both sides of the
-	// jump — is only guaranteed to hold for |delta| = 1; two other
-	// approaches for bigger jumps were tried and rejected: applying a
-	// bigger delta directly (an item's raw target can overshoot straight
-	// past a visible slot into recycle range, so folding it back
-	// teleported a visible card with no animation) and giving each item
-	// its own short "already folded" target for a bigger jump (fixed the
-	// teleport, but items no longer stayed the same distance apart from
-	// each other *during* the transition, since different-length sweeps
-	// reach their targets at different rates under the same easing curve
-	// — confirmed via bounding-box measurement as real, visible
-	// overlapping and gapping mid-swipe). commitSteps below gets a
-	// multi-step swipe's speed by calling this several times in a fast
-	// cascade instead, so every individual step stays exactly the
+	// margin (see the CSS), so every slot from HIGH_SLOT down to 2 (and
+	// LOW_SLOT up to -2) is already fully off-screen. An item only recycles
+	// once it takes ONE MORE step past the *end* of that slot range — past
+	// HIGH_SLOT going positive, or past LOW_SLOT going negative — meaning
+	// every item spends a full step sitting off-screen, invisible, before it
+	// jumps ∓count (once around the loop) to reappear on the opposite side.
+	// That threshold isn't hardcoded: it falls straight out of HIGH_SLOT/
+	// LOW_SLOT above, so it's automatically correct for whatever `count` is
+	// (e.g. count=5: recycle past ±2, at ±3; count=8: recycle past 4/-3, at
+	// 5/-4). That invariant — recycling only ever touches an item that was
+	// already off-screen on both sides of the jump — is only guaranteed to
+	// hold for |delta| = 1; two other approaches for bigger jumps were tried
+	// and rejected: applying a bigger delta directly (an item's raw target
+	// can overshoot straight past a visible slot into recycle range, so
+	// folding it back teleported a visible card with no animation) and
+	// giving each item its own short "already folded" target for a bigger
+	// jump (fixed the teleport, but items no longer stayed the same
+	// distance apart from each other *during* the transition, since
+	// different-length sweeps reach their targets at different rates under
+	// the same easing curve — confirmed via bounding-box measurement as
+	// real, visible overlapping and gapping mid-swipe). commitSteps below
+	// gets a multi-step swipe's speed by calling this several times in a
+	// fast cascade instead, so every individual step stays exactly the
 	// shape that's already proven safe.
 	function shiftOne(delta: number): void {
 		positions = positions.map((p, i) => {
 			let next = p + delta;
-			while (next <= -3) {
+			while (next <= LOW_SLOT - 1) {
 				armNoTransition(items[i]!.key);
 				next += count;
 			}
-			while (next >= 3) {
+			while (next >= HIGH_SLOT + 1) {
 				armNoTransition(items[i]!.key);
 				next -= count;
 			}
@@ -410,8 +437,10 @@
 	   The "continuous loop" comes from script.ts's shiftAll: --pos keeps
 	   counting past ±2 instead of wrapping back into view, so nothing ever
 	   needs to jump across the screen to reach its next spot — it only
-	   recycles (∓5, one lap of 5 items) once it's a further step past that,
-	   fully invisible, frozen for that one frame as a second guarantee. This
+	   recycles (∓count, one lap of the loop; see HIGH_SLOT/LOW_SLOT in the
+	   script for exactly where "a further step past that" lands for a given
+	   item count) once it's a further step past that, fully invisible,
+	   frozen for that one frame as a second guarantee. This
 	   part didn't change when the transform went from independent
 	   translate+rotate back to a shared pivot — it's what actually fixed
 	   the overlap/pop bugs, independent of how --pos gets drawn. */
