@@ -219,30 +219,75 @@
 	// Swipe (mobile/tablet — Prev/Next buttons are CSS-hidden below the
 	// desktop breakpoint, see .treatments__nav). Live drag-follow, not a
 	// once-per-swipe step: every pointermove adds the current drag distance,
-	// in fractional "steps," directly onto --pos (see dragOffset below and
-	// its use in the template), so the fan visibly tracks the finger in
-	// real time instead of only moving once release fires a fixed 600ms
-	// animation. On release, distance alone decides the base step count
-	// (rounded to the nearest card) and a genuinely fast exit flick — judged
-	// against a smoothed trailing-window velocity, not one noisy last
-	// sample — adds extra steps on top (see endDrag). That split matters:
-	// summing raw distance and raw velocity double-counts, since any real
-	// drag covering more distance also reads a higher velocity, which made
-	// ordinary drags overshoot by 2-3 cards during testing. Neither path is
-	// capped at one card per swipe. shiftAll already accepts any integer
-	// delta (see its while-loops above), so committing a multi-step flick
-	// reuses it unchanged.
+	// in fractional "steps," directly onto --pos (see offset below and its
+	// use in the template), so the fan visibly tracks the finger in real
+	// time. Release used to hand off to a discrete step-count animation —
+	// commitSteps, cascaded FAST_STEP_MS apart — computed from rounded
+	// distance plus a fling bonus. That produced a measurable pause (the
+	// first step waiting to start) followed by rigid, constant-speed hops
+	// with nothing decaying, which is exactly what a fling shouldn't feel
+	// like. Release now stays on the same continuous offset the drag
+	// already drives: momentum keeps integrating it with a decaying
+	// velocity (see beginMomentum/momentumTick), then a short per-frame
+	// ease (see beginSettle/settleTick — never a CSS transition handoff,
+	// that handoff was the pause) brings it to rest on the nearest card.
+	// One continuous motion from finger-down to rest, no seam.
+	//
+	// offset itself is kept inside (-1, 1) at all times, during drag AND
+	// momentum AND settle (see absorbWholeSteps): the instant it would cross
+	// ±1, positions[i] is permanently advanced by shiftOne(±1) and offset is
+	// adjusted back by the same amount in the same tick, so --pos
+	// (positions[i] + offset) never jumps. That's the same |delta| = 1
+	// invariant shiftOne's own comment defends — this preserves it rather
+	// than replacing it, because shiftOne is still only ever called at the
+	// exact moment the fan has travelled one full card, so the item it
+	// recycles is still off-screen exactly as it is today.
 	const PX_PER_STEP = 90; // ~one mobile card-width of drag == one step
-	const FLING_VELOCITY_PER_STEP = 0.35; // px/ms exit speed per extra fling step
-	const MAX_FLING_STEPS = 3;
 	const VELOCITY_WINDOW_MS = 80; // trailing window the exit velocity is averaged over
+
+	// Release physics: exponential velocity decay, then a short settle onto
+	// the nearest card. Both tuned by feel against real flicks, not
+	// derived — MOMENTUM_TAU_MS is the time for velocity to fall to ~37%
+	// (1/e) of its starting value, so a hard flick keeps visibly drifting
+	// for roughly a second before it's slow enough to settle.
+	const MOMENTUM_TAU_MS = 180;
+	const MOMENTUM_STOP_THRESHOLD = 0.0004; // steps/ms — below this, motion is imperceptible; switch to settling
+	// Below this exit speed, treat the release as a deliberate drag stop, not
+	// a flick, and skip momentum entirely (settle straight from wherever
+	// offset already is). Reuses the old fling model's own 0.35 px/ms
+	// threshold, converted to steps/ms — a slow, unhurried release measured
+	// at ~0.12 px/ms in testing, which is real, non-zero exit velocity, but
+	// integrating even that small a velocity over the full decay tail
+	// (v0 * MOMENTUM_TAU_MS) still added enough distance to round an
+	// intentionally-uncommitted drag onto the next card. A flick and an
+	// unhurried release are physically different gestures; this is the line
+	// between them, not a discrete step-count threshold like the deleted
+	// FLING_VELOCITY_PER_STEP was.
+	const MOMENTUM_MIN_VELOCITY = 0.35 / PX_PER_STEP; // steps/ms
+	const SETTLE_DURATION_MS = 300; // ease onto the nearest card over this long, driven per-frame (see settleTick)
 
 	const DRAG_SLOP_PX = 4; // past this, the gesture is a drag and not a click
 
-	let dragging = $state(false);
-	let dragOffset = $state(0); // fractional steps, live only while dragging
+	let dragging = $state(false); // true only while the pointer is actually down and moving the fan
+	// True from pointerdown through drag, momentum, AND settle — the whole
+	// gesture, not just the drag itself. Drives .treatments__pivot--motion
+	// (transition: none) so none of that continuous, per-frame offset math
+	// ever fights a CSS transition. Only goes false once settle actually
+	// lands on a card (see endGesture).
+	let inGesture = $state(false);
+	// Continuous fractional offset added to every item's integer position
+	// (see positions above) to produce --pos. Live during drag, momentum,
+	// and settle alike — this is the one thing that never mode-switches.
+	let offset = $state(0);
 	let dragStartX = 0;
 	let dragStartY = 0;
+	// offset's value at the moment the current drag started. A drag can now
+	// begin mid-momentum or mid-settle (see cancelMotion, called from
+	// onPointerDown), so the drag has to add its own delta on top of
+	// wherever offset already was, not replace it outright — replacing it
+	// would snap the fan back toward 0 the instant a new gesture interrupts
+	// a flick.
+	let dragBaseOffset = 0;
 	// Whether the current gesture ever moved far enough to count as a drag.
 	// Read by jumpTo, not by the fan itself — plain, not $state: nothing
 	// renders from it.
@@ -251,12 +296,132 @@
 	let pendingDx = 0;
 	let rafId: number | null = null;
 
+	// Momentum and settle run in their own rAF loop, sharing one id: only
+	// one of the two is ever active at a time, and a new pointerdown cancels
+	// whichever is running (see cancelMotion).
+	let motionRafId: number | null = null;
+	let phase: 'idle' | 'momentum' | 'settle' = 'idle';
+	let velocity = 0; // steps per ms, decays toward 0 during momentum
+	let lastFrameTime = 0;
+	let settleFrom = 0;
+	let settleTarget = 0;
+	let settleStartTime = 0;
+
+	function prefersReducedMotion(): boolean {
+		// matchMedia is guarded, not assumed — same reasoning as
+		// src/lib/actions/reveal.ts: this runs under component unit tests
+		// too, and a bare jsdom environment has no matchMedia.
+		if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+		return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	}
+
+	// The invariant that makes continuous release motion safe: whenever
+	// offset would carry --pos a full card past its current slot, fold that
+	// whole step permanently into positions[i] via shiftOne (see its own
+	// comment for why |delta| = 1 is the only safe call shape) and remove
+	// the same amount from offset in the same tick. positions[i] + offset
+	// is unchanged at that instant — no visible jump — but the travel is
+	// now committed. A while loop, not an if: a single fast frame during
+	// momentum can legitimately cross more than one card boundary.
+	function absorbWholeSteps(): void {
+		while (offset >= 1) {
+			shiftOne(1);
+			offset -= 1;
+		}
+		while (offset <= -1) {
+			shiftOne(-1);
+			offset += 1;
+		}
+	}
+
+	function endGesture(): void {
+		phase = 'idle';
+		inGesture = false;
+		motionRafId = null;
+		velocity = 0;
+	}
+
+	// A new pointerdown while momentum or settle is still running must take
+	// over from wherever the fan currently is, not fight it or snap it back
+	// — cancel the loop, leave offset/positions exactly as they are, and let
+	// onPointerDown's dragBaseOffset pick up from there.
+	function cancelMotion(): void {
+		if (motionRafId !== null) {
+			cancelAnimationFrame(motionRafId);
+			motionRafId = null;
+		}
+		phase = 'idle';
+	}
+
+	function beginMomentum(): void {
+		phase = 'momentum';
+		lastFrameTime = performance.now();
+		motionRafId = requestAnimationFrame(momentumTick);
+	}
+
+	function momentumTick(now: number): void {
+		// Clamped so a stalled/backgrounded frame can't integrate one huge,
+		// visibly-teleporting jump — a normal frame is ~16ms.
+		const dt = Math.min(now - lastFrameTime, 50);
+		lastFrameTime = now;
+		velocity *= Math.exp(-dt / MOMENTUM_TAU_MS);
+		offset += velocity * dt;
+		absorbWholeSteps();
+		if (Math.abs(velocity) < MOMENTUM_STOP_THRESHOLD) {
+			beginSettle();
+			return;
+		}
+		motionRafId = requestAnimationFrame(momentumTick);
+	}
+
+	function beginSettle(): void {
+		phase = 'settle';
+		settleFrom = offset;
+		settleTarget = Math.round(offset);
+		if (settleFrom === settleTarget) {
+			offset = settleTarget;
+			absorbWholeSteps();
+			endGesture();
+			return;
+		}
+		settleStartTime = performance.now();
+		motionRafId = requestAnimationFrame(settleTick);
+	}
+
+	function settleTick(now: number): void {
+		const t = Math.min(1, (now - settleStartTime) / SETTLE_DURATION_MS);
+		const eased = 1 - Math.pow(1 - t, 3); // ease-out — same weight as the old CSS ease-in-out hop, no transition handoff
+		offset = settleFrom + (settleTarget - settleFrom) * eased;
+		if (t >= 1) {
+			// Land exactly on the integer, then fold it into positions[i] one
+			// last time so offset always ends a gesture at exactly 0.
+			offset = settleTarget;
+			absorbWholeSteps();
+			endGesture();
+			return;
+		}
+		motionRafId = requestAnimationFrame(settleTick);
+	}
+
+	// prefers-reduced-motion: no decaying drift, no eased settle — jump
+	// straight to the nearest card the instant the pointer lifts.
+	function settleInstant(): void {
+		offset = Math.round(offset);
+		absorbWholeSteps();
+		endGesture();
+	}
+
 	function onPointerDown(e: PointerEvent): void {
 		if (e.pointerType === 'mouse' && e.button !== 0) return;
+		// Take over from wherever a running momentum/settle loop currently is
+		// — see cancelMotion's own comment.
+		cancelMotion();
 		dragging = true;
+		inGesture = true;
 		dragMoved = false;
 		dragStartX = e.clientX;
 		dragStartY = e.clientY;
+		dragBaseOffset = offset;
 		moveHistory = [{ x: e.clientX, t: e.timeStamp }];
 		window.addEventListener('pointermove', onWindowPointerMove);
 		window.addEventListener('pointerup', onWindowPointerUp);
@@ -299,7 +464,7 @@
 		if (rafId === null) {
 			rafId = requestAnimationFrame(() => {
 				rafId = null;
-				dragOffset = pendingDx / PX_PER_STEP;
+				offset = dragBaseOffset + pendingDx / PX_PER_STEP;
 			});
 		}
 	}
@@ -314,21 +479,28 @@
 		window.removeEventListener('pointerup', onWindowPointerUp);
 		window.removeEventListener('pointercancel', onWindowPointerCancel);
 
-		let velocity = 0;
+		// Exit velocity from the same smoothed trailing window as before — a
+		// single last sample is noisy — converted from px/ms to steps/ms so
+		// it integrates directly against offset (see momentumTick).
+		let velocityPxPerMs = 0;
 		if (moveHistory.length >= 2) {
 			const first = moveHistory[0]!;
 			const last = moveHistory[moveHistory.length - 1]!;
 			const dt = last.t - first.t;
-			if (dt > 0) velocity = (last.x - first.x) / dt;
+			if (dt > 0) velocityPxPerMs = (last.x - first.x) / dt;
 		}
-		const baseSteps = Math.round(dragOffset);
-		const flingSteps = Math.min(
-			MAX_FLING_STEPS,
-			Math.floor(Math.abs(velocity) / FLING_VELOCITY_PER_STEP)
-		);
-		const steps = baseSteps + Math.sign(velocity) * flingSteps;
-		dragOffset = 0;
-		commitSteps(steps);
+		velocity = velocityPxPerMs / PX_PER_STEP;
+
+		if (prefersReducedMotion()) {
+			settleInstant();
+			return;
+		}
+		if (Math.abs(velocity) < MOMENTUM_MIN_VELOCITY) {
+			// Not a flick — settle straight from the current offset, no coast.
+			beginSettle();
+			return;
+		}
+		beginMomentum();
 	}
 
 	function onWindowPointerUp(): void {
@@ -360,9 +532,9 @@
 				<div
 					class="treatments__pivot"
 					class:treatments__pivot--jump={noTransitionKeys.has(item.key)}
-					class:treatments__pivot--dragging={dragging}
+					class:treatments__pivot--motion={inGesture}
 					class:treatments__pivot--fast={cascading}
-					style="--pos: {positions[i]! + dragOffset}"
+					style="--pos: {positions[i]! + offset}"
 				>
 					<TreatmentCard
 						label={item.label}
@@ -521,13 +693,17 @@
 		transition: none;
 	}
 
-	/* While a drag is active, --pos is being driven directly by the pointer
-	   (see dragOffset in the script) on every pointermove — a transition here
-	   would fight that with its own easing and make the fan visibly lag
-	   behind the finger. Released the instant the drag ends (see endDrag),
-	   so the final snap to the committed integer position (or back to 0, if
-	   the drag didn't cross a full step) animates normally. */
-	.treatments__pivot--dragging {
+	/* Covers the WHOLE gesture — drag, momentum, and settle — not just the
+	   drag itself (see inGesture in the script). --pos is being driven
+	   directly, per frame, by the pointer during drag and by the momentum/
+	   settle rAF loop after release; a CSS transition here would fight that
+	   with its own easing on top of the JS-driven easing settle already
+	   does, which is exactly the pause-then-rigid-hop behaviour this whole
+	   mechanism replaced. Released only once settle actually lands on a
+	   card (see endGesture) — the discrete goTo/commitSteps path (dots,
+	   Prev/Next, desktop click-to-jump) is untouched by this and still gets
+	   its normal CSS transition. */
+	.treatments__pivot--motion {
 		transition: none;
 	}
 
