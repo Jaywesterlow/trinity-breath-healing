@@ -1,6 +1,6 @@
 # Known Issues — deferred, not fixed yet
 
-Last updated: **2026-08-01**
+Last updated: **2026-08-07**
 
 Read the date above before answering "what issues are still open?" — anything here
 was true as of that date and may have been fixed since.
@@ -23,7 +23,13 @@ Everything still outstanding. Detail for each is further down.
 
 **Deferred by the owner**
 4. Contact section is placeholders — no form, no send, no Cal.com.
-5. Behandelingen transitions are janky; `[carousel-debug]` logs still shipping.
+5. ~~Behandelingen transitions are janky~~ — **rebuilt from scratch 2026-08-07** on
+   `claude/accessible-work-repos-kb67gy` (PR #10, **open, not merged**). Old Embla version and
+   its `[carousel-debug]` logs are gone entirely. See root `HANDOFF.md` → "The Behandelingen
+   carousel rebuild" for the mechanism and what's still open on it (desktop click-to-index
+   never implemented; swipe feel untested on a real device). Detail below has been updated to
+   match — do not trust anything under "Services / Behandelingen section" further down that
+   isn't marked superseded.
 
 **Small but real**
 6. PRF-03 lazy loading unimplemented — needs an exclusion list first (the pinned pan would pop in).
@@ -77,7 +83,12 @@ Full reasoning in the root `HANDOFF.md`.
 - No Cal.com embed for the "Online meeting" option.
 - `/contact` route is still the `StubLayout` stub — the section only exists on the landing page.
 
-### Services / Behandelingen section — transition bugs
+### Services / Behandelingen section — transition bugs — SUPERSEDED 2026-08-07
+
+Everything in this entry describes the **old Embla-based carousel**, which no longer exists.
+It was rebuilt from scratch on `claude/accessible-work-repos-kb67gy` (PR #10, open) — see root
+`HANDOFF.md` for the current mechanism. Kept below only as history in case the same class of
+bug (freeze-until-flicked, pagination not tracking motion) resurfaces in a different form.
 
 - Transitions between the service cards are janky / not right yet.
 - Owner said: leave alone, fix in a later pass.

@@ -6,6 +6,11 @@ Started **2026-07-26** as a handoff for `polish/site-polish`; that branch was me
 `main` and deleted on **2026-07-31**, and this was rewritten to describe the merged result.
 Written for someone starting with no context.
 
+Updated **2026-08-07** after a long session rebuilding the Behandelingen carousel on
+`claude/accessible-work-repos-kb67gy` (PR #10, open, not merged as of this update — 25 commits
+ahead of `main`). See "The Behandelingen carousel rebuild" below; it supersedes everything this
+file previously said about that section (which described the old, since-deleted Embla version).
+
 **Read these first — they are maintained, this one is background:**
 
 | document | what it holds |
@@ -52,7 +57,8 @@ harmless.** Details under "Open risk: LCP" further down.
 
 | branch | state |
 |---|---|
-| `main` | **current.** The polish work is merged in. |
+| `main` | The polish work is merged in. Does **not** yet have the carousel rebuild. |
+| `claude/accessible-work-repos-kb67gy` | **Behandelingen carousel rebuild, PR #10, open.** 25 commits ahead of `main`. See below. |
 | `feat/contact-section` | landing Contact section, panels still placeholders. Not merged. |
 | `preview/mobile-view` | stale, predates the polish merge. Unused. |
 
@@ -87,6 +93,87 @@ owner before it was perfect; see KNOWN-ISSUES item 9 for exactly where it stands
 robots.txt is now a prerendered route so its Sitemap line follows `PUBLIC_SITE_URL` instead of
 a hardcoded stale alias. **Do not add `static/robots.txt` back** — `static/` is served ahead of
 routes, so it would silently shadow the route. There is a test asserting it does not exist.
+
+---
+
+## The Behandelingen carousel rebuild — read this before touching that section
+
+Branch `claude/accessible-work-repos-kb67gy`, PR #10, **open, not merged into `main`**. This
+was a from-scratch rebuild across ~15 commits in one long session (2026-08-07), replacing the
+old Embla-based carousel entirely (`embla-carousel` is gone from `package.json`). If you are
+reading the KNOWN-ISSUES entry about "janky transitions" or "`[carousel-debug]` logs," it is
+describing the version this replaced — check the file before repeating that note forward.
+
+**What it is now:** a curved "fan" of cards that rotate around one shared pivot point far below
+the row (a real fan/circle, not each card tilting independently), full-bleed on both mobile and
+desktop, swipeable via a live drag-follow on touch, click-driven on desktop with Prev/Next
+buttons and clickable pagination dots. Component split: `Behandelingen.svelte` owns position
+state and the fan mechanics, `TreatmentCard.svelte` is the presentational card (icon, title,
+corner link button), identical for all 5 cards so nothing can drift out of sync between them.
+
+**The mechanism, in order of what actually mattered:**
+
+- **Position model:** each of the 5 items has a persistent integer `positions[i]`
+  (`$state`), not derived fresh from an index every render. Only `positions[i]` in
+  `[-2, -1, 0, 1, 2]` is ever meaningful; `.treatments__fan`'s `overflow: hidden` clips
+  anything outside roughly `[-1, 1]`. This persistent-position model — as opposed to
+  recomputing every item's position via shortest-path wrap on every index change — is what
+  fixed the original "cards sweep across the screen" and "cards pop/disappear" bugs, and nothing
+  since has needed to touch that part.
+- **Rotation, not translation:** `transform: translateX(-50%) rotate(calc(var(--pos) *
+  var(--tilt-step)))` with `transform-origin` set far below the row
+  (`--pivot-distance`, empirically tuned — see the CSS comments for exact numbers per
+  breakpoint). This is what curves the path instead of just tilting each card in place.
+- **Single-step is the only safe unit.** `shiftOne(delta)` — always `delta = ±1` — is the one
+  place position changes, and it is safe because recycling (wrapping an item ∓5, once around
+  the 5-item loop) only ever touches an item that was already off-screen on both sides of the
+  jump. **This invariant only holds for `|delta| = 1`.** Two different approaches to a bigger
+  jump (needed for multi-step swipes) were tried and rejected — both are documented in the code
+  comments right above `shiftOne` and in `breadcrumbs.md`, because both are exactly the kind of
+  mistake that's easy to reintroduce:
+  - Applying a bigger delta directly and folding the overshoot back: an item's raw target can
+    sail straight past a visible slot into recycle range, so the fold-back teleported a *visible*
+    card with no animation.
+  - Giving each item its own already-correct short target for a bigger jump: fixed the
+    teleport, but broke relative spacing *during* the transition, because a 2-step and a 3-step
+    sweep reach their targets at different rates under the same easing curve — confirmed via
+    bounding-box measurement as real, visible overlap, not a sampling artifact.
+  - **The fix that held:** `commitSteps(n)` fires `shiftOne` `n` times in a fast, fully
+    sequential cascade — each individual step is the already-proven-safe shape, and multi-step
+    *speed* comes from stacking several complete, correct steps close in time rather than one
+    bigger jump. Each cascaded step runs at a shorter transition duration
+    (`.treatments__pivot--fast`, 180ms) than a normal single click (600ms), timed with headroom
+    under the cascade interval (`FAST_STEP_MS`, 220ms) so one step's transition has genuinely
+    *finished* before the next fires — redirecting an in-flight transition was also tried and
+    also produced measurable overlap.
+- **Swipe is a live drag-follow, not a once-per-gesture step.** Every `pointermove` adds a
+  fractional offset directly onto `--pos` (rAF-throttled — see the comment on
+  `onWindowPointerMove` for why: raw pointer events can fire faster than the display repaints).
+  On release, drag distance sets a base step count and a genuinely fast exit flick (measured
+  over a smoothed trailing-window velocity, not one noisy last sample) adds extra steps —
+  capped at `MAX_FLING_STEPS`. Summing raw distance and raw velocity directly was tried first
+  and rejected: any real drag covering more ground also reads a higher velocity, so it
+  double-counted and every drag overshot.
+- **Desktop must be full-bleed too**, same as mobile — a centered, capped-width container was
+  tried and produced a real bug: it clips the ±1 side cards mid-body at a diagonal (following
+  their own rotation) instead of at a clean edge, which got visibly worse as the cards grew.
+  Removing the desktop override and letting it inherit the mobile full-bleed rule fixed it.
+- **All the geometry numbers (`--card-width`, `--pivot-distance`, `--tilt-step`,
+  `--pivot-baseline`, fan `height`, the `margin-top` that tucks the pagination row up close) were
+  tuned empirically against real rendered bounding boxes**, not computed by hand — a rotated
+  rectangle's bounding box does not move the way simple trig on one reference point predicts.
+  Re-tune the same way if these ever need to change again: build, serve, and measure with
+  Playwright (`boundingBox()` on `.treatments__pivot`), don't just do the trig.
+
+**What is not done / worth checking on a real device:**
+- Desktop's "click a non-center card to jump to it" was mentioned early in the session as a
+  requirement and never implemented — only the dots and Prev/Next drive navigation on desktop.
+- The exact feel of `PX_PER_STEP`, `FLING_VELOCITY_PER_STEP`, `MAX_FLING_STEPS`, `STEP_INTERVAL`-
+  adjacent constants was tuned against synthetic Playwright gestures, not a real thumb. Worth a
+  real-device pass before calling the swipe feel finished.
+- This branch has not been merged. Whoever picks this up next should check whether PR #10 is
+  still open, get it merged (or rebase past whatever landed on `main` since), before doing
+  anything else with this section.
 
 ---
 

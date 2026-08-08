@@ -10,6 +10,9 @@ stops being true rather than adding a second copy.
 Updated 2026-08-01 with observations from the first session after the `polish/site-polish`
 merge — brand-info fill-in, WCAG contrast fixes, and setting up this documentation habit itself.
 
+Updated 2026-08-07 with observations from a long, iterative session rebuilding the
+Behandelingen carousel (branch `claude/accessible-work-repos-kb67gy`, PR #10, not yet merged).
+
 **Everything below is an observation with evidence, not a rule.** If a session contradicts it,
 the session wins.
 
@@ -85,9 +88,13 @@ literally was consistently faster than translating them into a theory:
 | "half of the smoke, then later the other half" | one line drawn in two instalments 1.17s apart |
 | "it stops exactly at the rim" | a region boundary sitting on the rim |
 | "the lines are intersecting" | the mask brush was wider than the line it revealed |
+| "cards appear weirdly, although cards dont dissappear anymore" (carousel, 2026-08-07) | precisely correct on both counts — a real teleport bug had just been fixed, and a *different*, subtler mid-transition spacing bug remained. Taking "dont disappear anymore, but still weird" literally, rather than assuming the same bug was back, pointed straight at the right layer. |
+| "swiping past more than 1 card same persistent bug" | not a new bug — the same class as a prior single-step fix, now surfacing at |delta| > 1, which the fix had never actually covered |
 
 Every wrong turn in that thread came from substituting a plausible mechanism for what was
-described. **Two of those cost a commit each.**
+described. **Two of those cost a commit each.** Same pattern held again in the 2026-08-07
+carousel session, on a different feature — see the row above and "do you not look at the
+screenshots" below.
 
 They also **verify claims independently and push back when wrong**: *"See I knew that was
 wrong. That's why I wanted to test it myself."* They will reject a confident diagnosis on
@@ -113,10 +120,22 @@ evidence. Being corrected by them is normal and useful, not a failure state.
 - Long messages. Consistently.
 - Inference presented as certainty. The pattern that worked was: measure, then state; not
   reason, then assert.
+- **A verification claim that doesn't hold up.** During the 2026-08-07 carousel session, a
+  desktop layout was reported fixed after checking vertical clipping and card overlap — but not
+  the specific way cards were actually broken (diagonal mid-card clipping from a narrow
+  container). Their response: *"Desktop the cards are cut off, do you not look at the
+  screenshots you take?"* The screenshot had in fact been taken and was sitting right there;
+  the gap was in what was checked against it, not whether one was taken. Read as the same
+  "measure, then state" lesson one level deeper: **taking a screenshot is not the same as
+  looking at it for the specific thing that could be wrong.**
 
 **The lesson from the longest thread:** when a fix doesn't hold twice, stop fixing and go
 measure the mechanism. Four rounds of draw-order work were ruled out by one measurement that
-should have come first.
+should have come first. The carousel session repeated this almost exactly: a "fix" for cards
+popping into view held up under one gesture shape and broke under another (fast flicks vs.
+slow drags) three separate times before the actual root cause — see `breadcrumbs.md`,
+"Redirecting an in-flight CSS transition" and "A custom property's computed value is not what
+transitions" — was found by measuring bounding boxes instead of trusting a plausible story.
 
 ## Decisions they've made, and the reasoning
 
@@ -129,7 +148,9 @@ should have come first.
   cleaner-but-approximate alternative before proposing one.
 - **Parked the draw-on work** once it stopped converging: *"Nevermind, leave as is and move on."*
   Knows when to stop, and expects that call to be respected — not quietly reopened.
-- Deferred the Contact section and the Behandelingen carousel to later passes, on purpose.
+- Deferred the Contact section and the Behandelingen carousel to later passes, on purpose. The
+  Behandelingen carousel was that later pass: fully rebuilt 2026-08-07, see root `HANDOFF.md`.
+  Contact is still deferred as of that date.
 
 ## Standing constraints worth remembering
 
