@@ -237,19 +237,37 @@
 	// of its starting value. Retuned from an original 180ms — measured
 	// (see RESEARCH-carousel-physics-gsap.md) to decay roughly twice as
 	// fast as real touch platforms, whose own momentum time constant is
-	// closer to 325-500ms — up to a still-conservative 350ms, the low end
-	// of that range: a longer tau makes the SAME exit velocity coast a
-	// proportionally longer distance before crossing VELOCITY_EPSILON
-	// below, which is exactly the risk a deliberate slow drag-and-stop (a
-	// genuinely small but non-zero exit velocity) could cross the halfway
-	// point onto the next card purely from a longer tail. Picking the low
-	// end of the real-platform range, and separately removing the old
-	// MOMENTUM_MIN_VELOCITY gate (a slow release no longer skips coasting
-	// altogether, it just crosses VELOCITY_EPSILON almost immediately —
-	// see beginMotion below), was verified empirically (Playwright,
-	// synthetic slow release) to still land back on the same card rather
-	// than creeping onto the next one.
-	const MOMENTUM_TAU_MS = 300;
+	// closer to 325-500ms — up to 300ms, the low end of that range, kept
+	// deliberately conservative there for one release: removing the old
+	// MOMENTUM_MIN_VELOCITY gate at the same time (a slow release no
+	// longer skips coasting altogether, it just crosses VELOCITY_EPSILON
+	// almost immediately — see beginMotion below).
+	//
+	// Now moved to 500ms, the top of that same real-platform range, per a
+	// direct owner request for a longer post-drag coast. The risk that
+	// justified staying at the low end — a longer tau making a deliberate
+	// slow drag-and-stop (behandelingen-click-to-jump.spec.ts's "a drag
+	// does not also fire a jump on release") coast far enough to creep
+	// onto the next card — turned out NOT to bind here: that test's own
+	// exit velocity, measured directly (instrumented release, Playwright),
+	// is a stable ~0.0013-0.0014 steps/ms, comfortably under
+	// VELOCITY_EPSILON (0.0025) on its own, independent of tau. A slower
+	// tau only stretches out how long it takes velocity to decay BELOW
+	// that threshold — it can never lower a velocity that's already below
+	// it going in, so that gentle release still crosses VELOCITY_EPSILON
+	// on (or before) coast's very first frame exactly as before, and folds
+	// zero extra coast distance. Confirmed empirically across the real
+	// range: the deliberate-stop test still passes at tau all the way up
+	// to 2000ms (4x this value) with zero measured coast distance for that
+	// gesture — i.e. for THIS test, tau and VELOCITY_EPSILON don't
+	// actually trade off against each other; only VELOCITY_EPSILON does
+	// (see its own comment). 500ms was chosen as a deliberate, moderate
+	// "noticeably longer, not unbounded" increase grounded in the same
+	// cited real-platform range rather than the much larger tau this
+	// headroom would technically allow. A hard flick's own post-release
+	// coast (measured via Playwright, ~0.085 steps/ms exit velocity) went
+	// from ~1.4s/~25 steps of drift at 300ms to ~2.1s/~41 steps at 500ms.
+	const MOMENTUM_TAU_MS = 500;
 	// Below this speed, motion is imperceptible as "still coasting" — hand
 	// off to the latch spring (see beginLatch). NOT a gate on whether to
 	// coast at all (every release coasts now, see endDrag) and NOT a
@@ -258,6 +276,15 @@
 	// lifts crosses this threshold in the very first coast frame, which is
 	// what keeps a deliberate slow drag-and-stop behaving the same as
 	// before (see MOMENTUM_TAU_MS's own comment).
+	//
+	// Left unchanged at the previously-tuned 0.0025 when MOMENTUM_TAU_MS
+	// moved to 500ms above: this constant, not tau, is what actually
+	// protects the deliberate-stop test, and it already carries real
+	// margin — that test's own measured exit velocity is ~0.0013-0.0014
+	// steps/ms, ~45% below this threshold. Lowering it further would trade
+	// away exactly that margin for a change that barely matters to a hard
+	// flick's own coast distance (this only shaves a near-negligible
+	// EPSILON off the tail), so it wasn't worth touching.
 	const VELOCITY_EPSILON = 0.0025; // steps/ms
 	// Angular frequency (1/ms) of the critically-damped spring beginLatch
 	// hands off into. Not a fixed duration — settling time falls out of the
