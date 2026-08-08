@@ -681,28 +681,44 @@
 		   fully past it, off-screen, before it's clipped — same reasoning as
 		   the mobile full-bleed fix. */
 		.treatments__fan {
-			/* Same ratio as mobile's empirically-verified numbers, scaled to
-			   the bigger card (1.8x: 10.35rem vs 5.75rem) — not independently
-			   re-measured at this breakpoint since desktop wasn't the
-			   reported issue, but geometrically the same shape scaled.
+			/* Card grown ~26% (11.9rem -> 15rem, within the requested 20-30%)
+			   and height/baseline scaled by that same factor (39.33rem ->
+			   49.5rem, 14.28rem -> 18rem) to keep the same shape, just bigger
+			   — this breakpoint's own numbers, independently re-measured this
+			   round via Playwright bounding-box readouts (not carried over
+			   proportionally from mobile untouched, and not hand-computed:
+			   see the file-level comment on why trig on one reference point
+			   doesn't predict a rotated box's bbox). Confirmed at 1440x900 and
+			   1280x900 with the (temporary, 8-card) TESTKAART set: every card
+			   at slot -2..2 clears .treatments__fan's top and bottom edge with
+			   room to spare; slots 3, 4 and -3 do clip in their raw bounding
+			   box, but at both widths they sit fully past the viewport's left
+			   or right edge (a plain `x`/`x+width` check against the viewport),
+			   so that clip is never actually visible — same invariant the
+			   original 5-card version relied on for its own ±2 cutoff.
 			   tilt-step isn't overridden here on purpose — it's an angle,
 			   not a length, so it doesn't scale with card size. */
-			height: 39.33rem;
-			--card-width: 11.9rem;
+			height: 49.5rem;
+			--card-width: 15rem;
 		}
 
 		.treatments__pivot {
-			--pivot-baseline: 14.28rem;
-			--pivot-distance: 1010px;
+			--pivot-baseline: 18rem;
+			/* Scaled past the proportional 1273px (1010px x 1.26) on purpose —
+			   the owner asked for more breathing room between cards, not just
+			   the same gap at a bigger size. Verified via measured bbox edge
+			   gaps: the pos0/pos1 gap roughly doubled (56.77px -> 114.35px at
+			   1440px) versus the ~26% a proportional-only change would give. */
+			--pivot-distance: 1450px;
 		}
 
 		.treatments__controls {
-			/* -1x --pivot-baseline (14.28rem) would cancel the fan's clipping
+			/* -1x --pivot-baseline (18rem) would cancel the fan's clipping
 			   safety buffer out entirely (see the base .treatments__controls
 			   rule above for why that buffer itself must never shrink) — offset
 			   by +2rem off that cancel-point so the nav sits 2rem lower than
 			   the tightest-possible tuck, without touching the buffer. */
-			margin-top: -12.28rem;
+			margin-top: -16rem;
 		}
 
 		.treatments__nav {
