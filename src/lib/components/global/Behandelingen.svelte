@@ -679,7 +679,12 @@
 		}
 
 		.treatments__controls {
-			margin-top: -14.28rem;
+			/* -1x --pivot-baseline (14.28rem) would cancel the fan's clipping
+			   safety buffer out entirely (see the base .treatments__controls
+			   rule above for why that buffer itself must never shrink) — offset
+			   by +2rem off that cancel-point so the nav sits 2rem lower than
+			   the tightest-possible tuck, without touching the buffer. */
+			margin-top: -12.28rem;
 		}
 
 		.treatments__nav {
