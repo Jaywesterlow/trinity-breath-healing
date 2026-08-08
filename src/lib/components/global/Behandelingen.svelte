@@ -1074,15 +1074,25 @@
 			/* Widening this to 1450px (from the original, proportional 1010px)
 			   roughly doubled the pos0/pos1 edge gap (56.77px -> 114.35px at
 			   1440px) — more breathing room than the owner actually wanted once
-			   seen live. Pulled back to 1340px: measured bbox gap is 87.74px at
+			   seen live. Pulled back to 1340px: measured bbox gap was 87.74px at
 			   both 1440px and 1280px (identical at both — the gap is purely a
 			   function of rotation, not viewport width), roughly the midpoint
 			   between the original and the overshoot, with cards still clearly
 			   separated (no touch/overlap) and no vertical clipping introduced
 			   (--pivot-baseline/height untouched: the pos ±1 bbox height and y
-			   range barely move between 1340px and 1450px). Card size
+			   range barely move between 1340px and 1450px).
+
+			   Brought in a further ~10% per a direct owner request ("cards 10%
+			   closer together"): retuned the same way (Playwright bbox
+			   measurement, not trig — see the file-level comment) to 1304px,
+			   measured gap 79.03px at both 1440px and 1280px (target ~78.97px,
+			   90% of 87.74px). Re-checked at this value: pos ±1/±2 bbox
+			   top/bottom shift only a couple px from the 1340px baseline and
+			   stay comfortably inside .treatments__fan's clip box at both
+			   widths, so --pivot-baseline/height/.treatments__controls
+			   margin-top below did not need retuning. Card size
 			   (--card-width) is untouched — only the fan's spread changed. */
-			--pivot-distance: 1340px;
+			--pivot-distance: 1304px;
 		}
 
 		.treatments__controls {
