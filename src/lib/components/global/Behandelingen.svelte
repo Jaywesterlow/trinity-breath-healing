@@ -151,7 +151,25 @@
 		shiftOne(1);
 	}
 	function goTo(i: number): void {
+		// A second commit entering while a cascade is still running is the
+		// "redirect a transition in progress" case commitSteps documents above
+		// — the one that measurably breaks relative spacing mid-sweep. The
+		// dots could already trigger it on a fast double-click; the desktop
+		// card overlay (see jumpTo) makes bigger targets for the same thing.
+		if (cascading) return;
 		commitSteps(-positions[i]!);
+	}
+
+	// Desktop: clicking a visible side card centres it. Deliberately just
+	// goTo — no new position maths, the same already-proven cascade the dots
+	// use. The overlay button this fires from only exists at |position| === 1
+	// (see the template), so the centre card's own link is never covered and
+	// the off-screen ±2 cards never carry an invisible hit target.
+	function jumpTo(i: number): void {
+		// A mouse drag ends in a click on whatever sat under the pointer, so
+		// without this a desktop drag-follow would also fire a jump on release.
+		if (dragMoved) return;
+		goTo(i);
 	}
 
 	// Swipe (mobile/tablet — Prev/Next buttons are CSS-hidden below the
@@ -175,10 +193,16 @@
 	const MAX_FLING_STEPS = 3;
 	const VELOCITY_WINDOW_MS = 80; // trailing window the exit velocity is averaged over
 
+	const DRAG_SLOP_PX = 4; // past this, the gesture is a drag and not a click
+
 	let dragging = $state(false);
 	let dragOffset = $state(0); // fractional steps, live only while dragging
 	let dragStartX = 0;
 	let dragStartY = 0;
+	// Whether the current gesture ever moved far enough to count as a drag.
+	// Read by jumpTo, not by the fan itself — plain, not $state: nothing
+	// renders from it.
+	let dragMoved = false;
 	let moveHistory: { x: number; t: number }[] = [];
 	let pendingDx = 0;
 	let rafId: number | null = null;
@@ -186,6 +210,7 @@
 	function onPointerDown(e: PointerEvent): void {
 		if (e.pointerType === 'mouse' && e.button !== 0) return;
 		dragging = true;
+		dragMoved = false;
 		dragStartX = e.clientX;
 		dragStartY = e.clientY;
 		moveHistory = [{ x: e.clientX, t: e.timeStamp }];
@@ -213,6 +238,11 @@
 		if (!dragging) return;
 		const dx = e.clientX - dragStartX;
 		const dy = e.clientY - dragStartY;
+		// Set before the vertical-intent bail below, and off total travel, not
+		// just dx: a gesture that wandered mostly vertically still isn't a
+		// click, and the jump it would otherwise fire on release (see jumpTo)
+		// would land on whichever card the pointer happened to end over.
+		if (Math.hypot(dx, dy) > DRAG_SLOP_PX) dragMoved = true;
 		// Undecided-intent moves (still mostly vertical) don't drive the fan
 		// yet, so an in-progress vertical scroll doesn't creep sideways.
 		if (Math.abs(dx) <= Math.abs(dy)) return;
@@ -296,6 +326,25 @@
 						buttonLabel={item.buttonLabel}
 						buttonHref={item.buttonHref}
 					/>
+
+					<!-- Desktop click-to-jump (CSS-hidden below 1024px). Only on the
+					     two visible side cards: the centre card must keep its own
+					     link clickable, and ±2 is off-screen, so covering it would
+					     put a hit target over nothing. aria-hidden + tabindex="-1"
+					     on purpose — this is a pointer affordance, not a second
+					     control. The keyboard path is already complete and better
+					     labelled via the dots below (same goTo) and Prev/Next;
+					     another focusable element per card would only duplicate
+					     them and sit next to that card's own link in the tab order. -->
+					{#if positions[i] === 1 || positions[i] === -1}
+						<button
+							type="button"
+							class="treatments__jump"
+							tabindex="-1"
+							aria-hidden="true"
+							onclick={() => jumpTo(i)}
+						></button>
+					{/if}
 				</div>
 			{/each}
 		</div>
@@ -449,6 +498,18 @@
 		transition-duration: 180ms;
 	}
 
+	/* Desktop-only click target over a visible side card (see the {#if} in the
+	   template for why only those two). Hidden here, restored in the desktop
+	   media query at the bottom — mobile navigates that section by swiping the
+	   fan itself, and a tap target sitting on top of a card would swallow the
+	   pointerdown that starts the drag. Sized off .treatments__pivot, which is
+	   already position:absolute and therefore this element's containing block,
+	   so it tracks the card through the rotation without needing its own
+	   transform. */
+	.treatments__jump {
+		display: none;
+	}
+
 	/* Card size/padding/layout itself lives in TreatmentCard.svelte — the one
 	   place it's defined, used identically for all 5 cards. --card-width is
 	   declared here instead, on .treatments__fan, so the carousel's own
@@ -594,6 +655,29 @@
 
 		.treatments__nav {
 			display: inline-block;
+		}
+
+		/* inset:0 rather than a width/height pair — .treatments__pivot is sized
+		   by the card inside it, and the card's own size is set in
+		   TreatmentCard.svelte off --card-width. Matching the card's radius
+		   keeps the hover wash from squaring off its corners. The wash is the
+		   only affordance beyond the cursor: anything that moved or resized the
+		   card would fight geometry (--pivot-distance, --tilt-step, the fan
+		   height) that was tuned against measured bounding boxes. */
+		.treatments__jump {
+			display: block;
+			position: absolute;
+			inset: 0;
+			padding: 0;
+			border: none;
+			border-radius: var(--radius-lg);
+			background: transparent;
+			cursor: pointer;
+			transition: background-color var(--motion-fast);
+		}
+
+		.treatments__jump:hover {
+			background: color-mix(in srgb, var(--color-bg-sand) 12%, transparent);
 		}
 	}
 </style>
