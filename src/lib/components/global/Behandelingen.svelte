@@ -226,15 +226,30 @@
 	// distance plus a fling bonus. That produced a measurable pause (the
 	// first step waiting to start) followed by rigid, constant-speed hops
 	// with nothing decaying, which is exactly what a fling shouldn't feel
-	// like. Release now stays on the same continuous offset the drag
-	// already drives: momentum keeps integrating it with a decaying
-	// velocity (see beginMomentum/momentumTick), then a short per-frame
-	// ease (see beginSettle/settleTick — never a CSS transition handoff,
-	// that handoff was the pause) brings it to rest on the nearest card.
-	// One continuous motion from finger-down to rest, no seam.
+	// like.
+	//
+	// Release now stays on the same continuous offset the drag already
+	// drives, and runs ONE physical motion from finger-up to rest (see
+	// beginMotion/motionTick) rather than two stitched-together ones. It
+	// used to be two: exponential velocity decay (momentum), then a
+	// fixed-300ms cubic ease onto the nearest card (settle) once momentum
+	// judged itself "slow enough." Velocity was not continuous across that
+	// handoff — settle's speed was fixed to (distance / 300ms) regardless
+	// of how fast or slow momentum actually was the instant before, an
+	// entirely separate curve grafted on at the seam, not a continuation of
+	// it (see RESEARCH-carousel-physics-gsap.md's hypothesis section for
+	// the measured reasoning). motionTick still has two regimes internally
+	// — free deceleration while coasting, then a critically-damped spring
+	// pulling onto the nearest card once slow enough — but the second only
+	// ever starts from whatever position AND velocity the first regime had
+	// at that exact instant (see beginLatch), never a value reset to a new
+	// curve. That's the actual fix: not eliminating the regime change, but
+	// making it velocity-continuous, the same way real touch platforms
+	// hand a decelerating scroll off to a snap/rubber-band spring (see the
+	// UIKit Dynamics source in the research note).
 	//
 	// offset itself is kept inside (-1, 1) at all times, during drag AND
-	// momentum AND settle (see absorbWholeSteps): the instant it would cross
+	// coast AND latch (see absorbWholeSteps): the instant it would cross
 	// ±1, positions[i] is permanently advanced by shiftOne(±1) and offset is
 	// adjusted back by the same amount in the same tick, so --pos
 	// (positions[i] + offset) never jumps. That's the same |delta| = 1
@@ -245,39 +260,64 @@
 	const PX_PER_STEP = 90; // ~one mobile card-width of drag == one step
 	const VELOCITY_WINDOW_MS = 80; // trailing window the exit velocity is averaged over
 
-	// Release physics: exponential velocity decay, then a short settle onto
-	// the nearest card. Both tuned by feel against real flicks, not
-	// derived — MOMENTUM_TAU_MS is the time for velocity to fall to ~37%
-	// (1/e) of its starting value, so a hard flick keeps visibly drifting
-	// for roughly a second before it's slow enough to settle.
-	const MOMENTUM_TAU_MS = 180;
-	const MOMENTUM_STOP_THRESHOLD = 0.0004; // steps/ms — below this, motion is imperceptible; switch to settling
-	// Below this exit speed, treat the release as a deliberate drag stop, not
-	// a flick, and skip momentum entirely (settle straight from wherever
-	// offset already is). Reuses the old fling model's own 0.35 px/ms
-	// threshold, converted to steps/ms — a slow, unhurried release measured
-	// at ~0.12 px/ms in testing, which is real, non-zero exit velocity, but
-	// integrating even that small a velocity over the full decay tail
-	// (v0 * MOMENTUM_TAU_MS) still added enough distance to round an
-	// intentionally-uncommitted drag onto the next card. A flick and an
-	// unhurried release are physically different gestures; this is the line
-	// between them, not a discrete step-count threshold like the deleted
-	// FLING_VELOCITY_PER_STEP was.
-	const MOMENTUM_MIN_VELOCITY = 0.35 / PX_PER_STEP; // steps/ms
-	const SETTLE_DURATION_MS = 300; // ease onto the nearest card over this long, driven per-frame (see settleTick)
+	// Release physics, one continuous model from finger-up to rest (see
+	// motionTick): a "coast" regime of exponential velocity decay, handing
+	// off — without resetting position OR velocity — into a "latch" regime
+	// once slow enough, a critically-damped spring pulling onto the nearest
+	// card (see beginLatch's own comment for why a spring rather than
+	// another fixed-duration tween).
+	//
+	// MOMENTUM_TAU_MS is the time for coast velocity to fall to ~37% (1/e)
+	// of its starting value. Retuned from an original 180ms — measured
+	// (see RESEARCH-carousel-physics-gsap.md) to decay roughly twice as
+	// fast as real touch platforms, whose own momentum time constant is
+	// closer to 325-500ms — up to a still-conservative 350ms, the low end
+	// of that range: a longer tau makes the SAME exit velocity coast a
+	// proportionally longer distance before crossing VELOCITY_EPSILON
+	// below, which is exactly the risk a deliberate slow drag-and-stop (a
+	// genuinely small but non-zero exit velocity) could cross the halfway
+	// point onto the next card purely from a longer tail. Picking the low
+	// end of the real-platform range, and separately removing the old
+	// MOMENTUM_MIN_VELOCITY gate (a slow release no longer skips coasting
+	// altogether, it just crosses VELOCITY_EPSILON almost immediately —
+	// see beginMotion below), was verified empirically (Playwright,
+	// synthetic slow release) to still land back on the same card rather
+	// than creeping onto the next one.
+	const MOMENTUM_TAU_MS = 300;
+	// Below this speed, motion is imperceptible as "still coasting" — hand
+	// off to the latch spring (see beginLatch). NOT a gate on whether to
+	// coast at all (every release coasts now, see endDrag) and NOT a
+	// discrete step-count threshold like the deleted MOMENTUM_MIN_VELOCITY
+	// was — a release that's already this slow the instant the pointer
+	// lifts crosses this threshold in the very first coast frame, which is
+	// what keeps a deliberate slow drag-and-stop behaving the same as
+	// before (see MOMENTUM_TAU_MS's own comment).
+	const VELOCITY_EPSILON = 0.0025; // steps/ms
+	// Angular frequency (1/ms) of the critically-damped spring beginLatch
+	// hands off into. Not a fixed duration — settling time falls out of the
+	// physics (see beginLatch) — but chosen so the analytic decay-to-~10%
+	// time (≈4.74 / SPRING_OMEGA) lands close to the old fixed
+	// SETTLE_DURATION_MS = 300 this replaces, as a feel reference point.
+	const SPRING_OMEGA = 0.016;
+	// How close (in steps) and how slow (in steps/ms) the latch spring has
+	// to get before the gesture is declared over. Small enough that the
+	// landing is visually indistinguishable from "arrived," at which point
+	// motionTick snaps offset to the exact integer target rather than
+	// trailing the spring's asymptotic tail indefinitely.
+	const LATCH_DONE_EPSILON = 0.01;
 
 	const DRAG_SLOP_PX = 4; // past this, the gesture is a drag and not a click
 
 	let dragging = $state(false); // true only while the pointer is actually down and moving the fan
-	// True from pointerdown through drag, momentum, AND settle — the whole
+	// True from pointerdown through drag, coast, AND latch — the whole
 	// gesture, not just the drag itself. Drives .treatments__pivot--motion
 	// (transition: none) so none of that continuous, per-frame offset math
-	// ever fights a CSS transition. Only goes false once settle actually
-	// lands on a card (see endGesture).
+	// ever fights a CSS transition. Only goes false once the latch spring
+	// actually lands on a card (see endGesture).
 	let inGesture = $state(false);
 	// Continuous fractional offset added to every item's integer position
-	// (see positions above) to produce --pos. Live during drag, momentum,
-	// and settle alike — this is the one thing that never mode-switches.
+	// (see positions above) to produce --pos. Live during drag, coast, and
+	// latch alike — this is the one thing that never mode-switches.
 	let offset = $state(0);
 	let dragStartX = 0;
 	let dragStartY = 0;
@@ -296,15 +336,20 @@
 	let pendingDx = 0;
 	let rafId: number | null = null;
 
-	// Momentum and settle run in their own rAF loop, sharing one id: only
-	// one of the two is ever active at a time, and a new pointerdown cancels
-	// whichever is running (see cancelMotion).
+	// Coast and latch run in the same rAF loop (see motionTick) as two
+	// regimes of one motion, not two separate loops — a new pointerdown
+	// cancels whichever is running (see cancelMotion).
 	let motionRafId: number | null = null;
-	let velocity = 0; // steps per ms, decays toward 0 during momentum
+	let motionPhase: 'coast' | 'latch' = 'coast';
+	let velocity = 0; // steps per ms, decays toward 0 during coast
 	let lastFrameTime = 0;
-	let settleFrom = 0;
-	let settleTarget = 0;
-	let settleStartTime = 0;
+	// Latch spring state, set once by beginLatch at the exact instant coast
+	// hands off (see its own comment for why: y0/v0 carry over coast's real
+	// position and velocity, which is what makes the handoff continuous).
+	let latchTarget = 0; // nearest integer offset is latching onto
+	let latchY0 = 0; // offset - latchTarget at latch start
+	let latchV0 = 0; // velocity at latch start (steps/ms)
+	let latchStartTime = 0;
 
 	function prefersReducedMotion(): boolean {
 		// matchMedia is guarded, not assumed — same reasoning as
@@ -357,7 +402,7 @@
 		velocity = 0;
 	}
 
-	// A new pointerdown while momentum or settle is still running must take
+	// A new pointerdown while coast or latch is still running must take
 	// over from wherever the fan currently is, not fight it or snap it back
 	// — cancel the loop, leave offset/positions exactly as they are, and let
 	// onPointerDown's dragBaseOffset pick up from there.
@@ -368,55 +413,92 @@
 		}
 	}
 
-	function beginMomentum(): void {
+	function beginMotion(): void {
+		motionPhase = 'coast';
 		lastFrameTime = performance.now();
-		motionRafId = requestAnimationFrame(momentumTick);
+		motionRafId = requestAnimationFrame(motionTick);
 	}
 
-	function momentumTick(now: number): void {
+	// Hands the coast regime off into the latch spring, carrying its real
+	// position (y0) and velocity (v0) over exactly as they were the instant
+	// before — never resetting either to a value a new curve picked. That
+	// carry-over is the entire fix for the old seam: the old beginSettle
+	// re-derived a brand new fixed-300ms curve from settleFrom/settleTarget
+	// alone, with an initial speed set by (distance / 300ms) — unrelated to,
+	// and often much faster than, whatever momentum's actual velocity was
+	// at that instant (see this file's own release-physics comment above
+	// for the measured reasoning). A critically-damped spring seeded with
+	// the real v0 has no such jump: at t=0 its velocity IS v0 by
+	// construction (see motionTick's closed-form evaluation).
+	function beginLatch(now: number): void {
+		motionPhase = 'latch';
+		latchTarget = Math.round(offset);
+		latchY0 = offset - latchTarget;
+		latchV0 = velocity;
+		latchStartTime = now;
+	}
+
+	// One rAF loop, two regimes of the same continuous motion — see this
+	// file's release-physics comment for why it's two regimes and not one
+	// formula throughout (a pure spring aimed at the nearest card from the
+	// moment of release would prevent a hard flick from ever coasting past
+	// its immediate neighbour, which is real, desired behaviour — see
+	// behandelingen-momentum.spec.ts).
+	function motionTick(now: number): void {
 		// Clamped so a stalled/backgrounded frame can't integrate one huge,
 		// visibly-teleporting jump — a normal frame is ~16ms.
 		const dt = Math.min(now - lastFrameTime, 50);
 		lastFrameTime = now;
-		velocity *= Math.exp(-dt / MOMENTUM_TAU_MS);
-		offset += velocity * dt;
-		absorbWholeSteps();
-		if (Math.abs(velocity) < MOMENTUM_STOP_THRESHOLD) {
-			beginSettle();
-			return;
-		}
-		motionRafId = requestAnimationFrame(momentumTick);
-	}
 
-	function beginSettle(): void {
-		settleFrom = offset;
-		settleTarget = Math.round(offset);
-		if (settleFrom === settleTarget) {
-			offset = settleTarget;
+		if (motionPhase === 'coast') {
+			velocity *= Math.exp(-dt / MOMENTUM_TAU_MS);
+			offset += velocity * dt;
 			absorbWholeSteps();
-			endGesture();
-			return;
+			if (Math.abs(velocity) < VELOCITY_EPSILON) {
+				// Falls through to run the latch spring's own t=0 frame
+				// immediately below, in this same tick — no extra rAF wait,
+				// which is exactly the "pause before it starts" bug 1 fixed
+				// on the recycle side; the handoff itself must not
+				// reintroduce that on the settle side.
+				beginLatch(now);
+			} else {
+				motionRafId = requestAnimationFrame(motionTick);
+				return;
+			}
 		}
-		settleStartTime = performance.now();
-		motionRafId = requestAnimationFrame(settleTick);
-	}
 
-	function settleTick(now: number): void {
-		const t = Math.min(1, (now - settleStartTime) / SETTLE_DURATION_MS);
-		const eased = 1 - Math.pow(1 - t, 3); // ease-out — same weight as the old CSS ease-in-out hop, no transition handoff
-		offset = settleFrom + (settleTarget - settleFrom) * eased;
-		if (t >= 1) {
-			// Land exactly on the integer, then fold it into positions[i] one
+		// Critically-damped harmonic oscillator, exact closed-form solution
+		// (not a per-frame Euler integration, which would need a small-dt
+		// stability check against SPRING_OMEGA and this codebase already
+		// prefers exact math — see the coast regime's own Math.exp decay
+		// above). Standard derivation for y'' + 2*omega*y' + omega^2*y = 0
+		// with y0/v0 as initial conditions:
+		//   y(t) = e^(-omega*t) * (y0 + (v0 + omega*y0) * t)
+		//   v(t) = e^(-omega*t) * (v0 - omega*t*(v0 + omega*y0))
+		// y0/v0 came from beginLatch, so this is the same trajectory the
+		// coast regime was already on, just now pulled toward latchTarget
+		// instead of drifting freely — never a discontinuous restart.
+		const t = now - latchStartTime;
+		const decay = Math.exp(-SPRING_OMEGA * t);
+		const b = latchV0 + SPRING_OMEGA * latchY0;
+		const y = decay * (latchY0 + b * t);
+		const v = decay * (latchV0 - SPRING_OMEGA * t * b);
+		offset = latchTarget + y;
+		absorbWholeSteps(); // defence-in-depth, see the coast regime's own call
+
+		if (Math.abs(y) < LATCH_DONE_EPSILON && Math.abs(v) < VELOCITY_EPSILON) {
+			// Land exactly on the integer (not the spring's asymptotic-but-
+			// never-quite-zero tail), then fold it into positions[i] one
 			// last time so offset always ends a gesture at exactly 0.
-			offset = settleTarget;
+			offset = latchTarget;
 			absorbWholeSteps();
 			endGesture();
 			return;
 		}
-		motionRafId = requestAnimationFrame(settleTick);
+		motionRafId = requestAnimationFrame(motionTick);
 	}
 
-	// prefers-reduced-motion: no decaying drift, no eased settle — jump
+	// prefers-reduced-motion: no decaying drift, no spring latch — jump
 	// straight to the nearest card the instant the pointer lifts.
 	function settleInstant(): void {
 		offset = Math.round(offset);
@@ -503,7 +585,8 @@
 
 		// Exit velocity from the same smoothed trailing window as before — a
 		// single last sample is noisy — converted from px/ms to steps/ms so
-		// it integrates directly against offset (see momentumTick).
+		// it integrates directly against offset (see motionTick's coast
+		// regime).
 		let velocityPxPerMs = 0;
 		if (moveHistory.length >= 2) {
 			const first = moveHistory[0]!;
@@ -517,12 +600,12 @@
 			settleInstant();
 			return;
 		}
-		if (Math.abs(velocity) < MOMENTUM_MIN_VELOCITY) {
-			// Not a flick — settle straight from the current offset, no coast.
-			beginSettle();
-			return;
-		}
-		beginMomentum();
+		// Every release coasts now — no minimum-velocity gate. A gentle
+		// release just coasts a very short distance before VELOCITY_EPSILON
+		// hands it to the latch spring almost immediately (see
+		// MOMENTUM_TAU_MS's own comment for why that still doesn't creep an
+		// intentionally-uncommitted drag onto the next card).
+		beginMotion();
 	}
 
 	function onWindowPointerUp(): void {
