@@ -127,8 +127,21 @@
 
 	@media (min-width: 1024px) {
 		.tcard__button {
-			width: 1.75rem;
-			height: 1.75rem;
+			/* ~50% bigger than the base 1.75rem (2.625rem) — tap target and
+			   glyph scale together (see the svg rule below) so the arrow's
+			   proportions inside the circle hold at the new size. Mobile's
+			   1.5rem/14x14 is untouched. */
+			width: 2.625rem;
+			height: 2.625rem;
+		}
+
+		.tcard__button svg {
+			/* Scaled by the same ~1.5x as the button circle above (14px ->
+			   21px) so the glyph keeps the same visual proportion inside its
+			   now-bigger tap target. Overrides the width/height attributes
+			   set in the markup, which stay 14x14 for mobile. */
+			width: 21px;
+			height: 21px;
 		}
 
 		.tcard__number {
