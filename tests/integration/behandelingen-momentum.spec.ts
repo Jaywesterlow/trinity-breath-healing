@@ -27,6 +27,14 @@ const DESKTOP = { width: 1440, height: 900 };
 
 test.use({ viewport: DESKTOP });
 
+// The sampling loop below stashes its results on `window` rather than a
+// closure, since it has to survive across the separate `page.evaluate` calls
+// that start it, stop it, and read it back.
+interface SamplingWindow extends Window {
+	__samples: { t: number; pos: number }[];
+	__sampling: boolean;
+}
+
 async function flickAndSample(page: Page) {
 	await page.goto('/');
 	await page.locator('.treatments__fan').scrollIntoViewIfNeeded();
@@ -36,13 +44,14 @@ async function flickAndSample(page: Page) {
 	const y = box!.y + box!.height / 2;
 
 	await page.evaluate(() => {
-		(window as any).__samples = [];
-		(window as any).__sampling = true;
+		const win = window as unknown as SamplingWindow;
+		win.__samples = [];
+		win.__sampling = true;
 		const el = document.querySelector('.treatments__pivot') as HTMLElement;
 		function tick() {
 			const pos = Number(getComputedStyle(el).getPropertyValue('--pos'));
-			(window as any).__samples.push({ t: performance.now(), pos });
-			if ((window as any).__sampling) requestAnimationFrame(tick);
+			win.__samples.push({ t: performance.now(), pos });
+			if (win.__sampling) requestAnimationFrame(tick);
 		}
 		requestAnimationFrame(tick);
 	});
@@ -58,10 +67,12 @@ async function flickAndSample(page: Page) {
 	await page.waitForTimeout(2500);
 
 	await page.evaluate(() => {
-		(window as any).__sampling = false;
+		(window as unknown as SamplingWindow).__sampling = false;
 	});
 
-	const samples: { t: number; pos: number }[] = await page.evaluate(() => (window as any).__samples);
+	const samples: { t: number; pos: number }[] = await page.evaluate(
+		() => (window as unknown as SamplingWindow).__samples
+	);
 	return { samples, releaseTime };
 }
 
@@ -90,7 +101,10 @@ test('desktop: a fast flick keeps drifting after release and decelerates, rather
 	// first couple of frames after release.
 	const EPS = 1e-5;
 	const immediateSpeed = speeds.slice(0, 3).some((s) => s.speed > EPS);
-	expect(immediateSpeed, 'fan should already be moving in the first frames after release, not paused').toBe(true);
+	expect(
+		immediateSpeed,
+		'fan should already be moving in the first frames after release, not paused'
+	).toBe(true);
 
 	// 2) Motion continues for a real stretch of time — not an instant snap.
 	// Find the last frame (relative to release) where the fan was still
@@ -120,7 +134,9 @@ test('desktop: a fast flick keeps drifting after release and decelerates, rather
 	).toBeLessThan(earlyAvg * 0.75);
 });
 
-test('prefers-reduced-motion: release settles immediately with no lingering drift', async ({ page }) => {
+test('prefers-reduced-motion: release settles immediately with no lingering drift', async ({
+	page
+}) => {
 	await page.emulateMedia({ reducedMotion: 'reduce' });
 	const { samples, releaseTime } = await flickAndSample(page);
 
@@ -133,5 +149,8 @@ test('prefers-reduced-motion: release settles immediately with no lingering drif
 	const settled = after.filter((s) => s.t >= releaseTime + 100);
 	expect(settled.length).toBeGreaterThan(0);
 	const drift = Math.max(...settled.map((s) => s.pos)) - Math.min(...settled.map((s) => s.pos));
-	expect(drift, 'no lingering movement once past the settle frame under prefers-reduced-motion').toBeLessThan(1e-6);
+	expect(
+		drift,
+		'no lingering movement once past the settle frame under prefers-reduced-motion'
+	).toBeLessThan(1e-6);
 });

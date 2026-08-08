@@ -300,7 +300,7 @@
 	// one of the two is ever active at a time, and a new pointerdown cancels
 	// whichever is running (see cancelMotion).
 	let motionRafId: number | null = null;
-	let phase: 'idle' | 'momentum' | 'settle' = 'idle';
+	let _phase: 'idle' | 'momentum' | 'settle' = 'idle';
 	let velocity = 0; // steps per ms, decays toward 0 during momentum
 	let lastFrameTime = 0;
 	let settleFrom = 0;
@@ -335,7 +335,7 @@
 	}
 
 	function endGesture(): void {
-		phase = 'idle';
+		_phase = 'idle';
 		inGesture = false;
 		motionRafId = null;
 		velocity = 0;
@@ -350,11 +350,11 @@
 			cancelAnimationFrame(motionRafId);
 			motionRafId = null;
 		}
-		phase = 'idle';
+		_phase = 'idle';
 	}
 
 	function beginMomentum(): void {
-		phase = 'momentum';
+		_phase = 'momentum';
 		lastFrameTime = performance.now();
 		motionRafId = requestAnimationFrame(momentumTick);
 	}
@@ -375,7 +375,7 @@
 	}
 
 	function beginSettle(): void {
-		phase = 'settle';
+		_phase = 'settle';
 		settleFrom = offset;
 		settleTarget = Math.round(offset);
 		if (settleFrom === settleTarget) {
