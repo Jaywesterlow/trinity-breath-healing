@@ -15,13 +15,22 @@
 		/** Service name — shown as the visible bottom title. */
 		label: string;
 		icon?: string | null;
+		/** TEMPORARY diagnostic aid (see Behandelingen.svelte) — when set,
+		 * renders this number in place of the icon/image, large and legible,
+		 * so the carousel owner can tell cards apart by number while testing
+		 * more items than ship ("card 5 jumped"). Optional and additive on
+		 * purpose so this component stays position-unaware and presentational
+		 * — the carousel decides the number, this just draws it. Will be
+		 * removed, along with every call site that passes it, once the
+		 * diagnostic is reverted. */
+		cardNumber?: number | null;
 		/** Where the corner button goes. Accessible name only for now — the
 		 * arrow itself carries no visible text (not final copy either way). */
 		buttonLabel: string;
 		buttonHref: string;
 	}
 
-	let { label, icon = null, buttonLabel, buttonHref }: Props = $props();
+	let { label, icon = null, cardNumber = null, buttonLabel, buttonHref }: Props = $props();
 </script>
 
 <div class="tcard">
@@ -38,7 +47,9 @@
 	</a>
 
 	<div class="tcard__icon-wrap">
-		{#if icon}
+		{#if cardNumber !== null}
+			<span class="tcard__number" aria-hidden="true">{cardNumber}</span>
+		{:else if icon}
 			<img src={icon} alt="" aria-hidden="true" class="tcard__icon" />
 		{/if}
 	</div>
@@ -92,6 +103,19 @@
 		object-fit: contain;
 	}
 
+	/* TEMPORARY (see cardNumber in the script block above) — sized to read at
+	   a glance at the mobile card width (--card-width defaults to 6.5rem, see
+	   TreatmentCard's own default and Behandelingen.svelte's override), bumped
+	   further at the desktop breakpoint below where cards are noticeably
+	   bigger. Reuses the same sand-on-forest contrast as the rest of the card,
+	   so no separate accessibility check is needed for this throwaway state. */
+	.tcard__number {
+		font-family: var(--font-display);
+		font-size: 2.5rem;
+		font-weight: var(--font-weight-medium);
+		line-height: 1;
+	}
+
 	.tcard__title {
 		margin: 0;
 		text-align: center;
@@ -105,6 +129,10 @@
 		.tcard__button {
 			width: 1.75rem;
 			height: 1.75rem;
+		}
+
+		.tcard__number {
+			font-size: 4.5rem;
 		}
 
 		.tcard__title {

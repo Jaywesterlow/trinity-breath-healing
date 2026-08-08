@@ -15,6 +15,22 @@
 	// 5th card by design (see ROADMAP.md LND-05) — never implemented on the old
 	// auto-scroll version. No icon file for it; TreatmentCard renders it with
 	// no image, same as every other card would if it had none.
+	//
+	// TEMPORARY: DIAG_ITEMS below (and cardNumber on every TreatmentCard in
+	// the template) are a throwaway diagnostic aid so the carousel owner can
+	// watch the fan behave with more than 5 cards and tell them apart — NOT
+	// real services. They will be reverted before merge; do not build on top
+	// of them. Labelled unmistakably as test content (not plausible service
+	// names) so the placeholder-content audit and any reviewer can spot them
+	// at a glance.
+	const DIAG_ITEMS = [6, 7, 8].map((n) => ({
+		key: `diag-test-card-${n}`,
+		label: `TESTKAART ${n} — TIJDELIJK, GEEN ECHTE DIENST`,
+		icon: null,
+		buttonLabel: 'Test',
+		buttonHref: '/diensten'
+	}));
+
 	const items = [
 		...BRAND.services.map((s) => ({
 			key: s.slug,
@@ -29,7 +45,8 @@
 			icon: null,
 			buttonLabel: 'Bekijk alles',
 			buttonHref: '/diensten'
-		}
+		},
+		...DIAG_ITEMS
 	];
 
 	const count = items.length;
@@ -350,6 +367,7 @@
 					<TreatmentCard
 						label={item.label}
 						icon={item.icon}
+						cardNumber={i + 1}
 						buttonLabel={item.buttonLabel}
 						buttonHref={item.buttonHref}
 					/>
