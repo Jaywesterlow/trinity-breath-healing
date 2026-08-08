@@ -125,10 +125,12 @@
 	// distance apart from each other *during* the transition, since
 	// different-length sweeps reach their targets at different rates under
 	// the same easing curve — confirmed via bounding-box measurement as
-	// real, visible overlapping and gapping mid-swipe). commitSteps below
-	// gets a multi-step swipe's speed by calling this several times in a
-	// fast cascade instead, so every individual step stays exactly the
-	// shape that's already proven safe.
+	// real, visible overlapping and gapping mid-swipe). Multi-step motion
+	// today travels through the continuous offset instead (see motionTick/
+	// absorbWholeSteps and driveMotion further down) — a single frame can
+	// fold more than one step, but only by calling this exactly once per
+	// boundary actually crossed, so every individual step still stays
+	// exactly the shape that's already proven safe.
 	function shiftOne(delta: number): void {
 		positions = positions.map((p, i) => {
 			let next = p + delta;
@@ -144,69 +146,33 @@
 		});
 	}
 
-	// A multi-step commit (see endDrag/goTo below) as a rapid cascade of
-	// single, already-safe steps rather than one big jump. Firing each new
-	// step before the previous one's transition had actually finished —
-	// redirecting it mid-flight toward the new target — was the first
-	// approach here, on the assumption that's ordinary, smooth CSS
-	// behavior. It measurably isn't safe for this: retargeting a
-	// transition for 5 items simultaneously, with one of them also
-	// recycling (see shiftOne) partway through, doesn't keep their
-	// relative spacing intact for that redirect — confirmed via
-	// bounding-box measurement as real overlap, independent of how long
-	// the interval between steps was. Letting each step's transition
-	// genuinely finish before the next one starts fixes that outright, so
-	// a cascade runs with a shorter transition duration (see
-	// .treatments__pivot--fast) instead of the normal one — several quick,
-	// fully-settled hops reads as one fast sweep without ever redirecting
-	// a transition in progress. A single step (the overwhelming majority
-	// of interactions) never touches this — it keeps the normal duration.
-	const FAST_STEP_MS = 220; // headroom over .treatments__pivot--fast's 180ms transition-duration
-	let cascading = $state(false);
-
-	function commitSteps(steps: number): void {
-		if (steps === 0) return;
-		const direction = steps > 0 ? 1 : -1;
-		let remaining = Math.abs(steps);
-		if (remaining === 1) {
-			shiftOne(direction);
-			return;
-		}
-		cascading = true;
-		function tick(): void {
-			shiftOne(direction);
-			remaining--;
-			if (remaining > 0) {
-				setTimeout(tick, FAST_STEP_MS);
-			} else {
-				cascading = false;
-			}
-		}
-		tick();
-	}
-
 	// Deliberately plain functions, not tied to how they're called — autoscroll
 	// (deferred, see KNOWN-ISSUES) drops in later as a paused-on-hover
 	// setInterval(next, …) here without touching anything else.
+	// Both routed through driveMotion/driveBy (defined further down, next to
+	// the rest of the motion state) — a button press is just the same
+	// continuous offset the pointer path already drives, given a target
+	// instead of a finger. See driveMotion's own comment for how it shapes
+	// the curve and handles a press arriving mid-motion.
 	function next(): void {
-		shiftOne(-1);
+		driveBy(-1);
 	}
 	function prev(): void {
-		shiftOne(1);
+		driveBy(1);
 	}
 	function goTo(i: number): void {
-		// A second commit entering while a cascade is still running is the
-		// "redirect a transition in progress" case commitSteps documents above
-		// — the one that measurably breaks relative spacing mid-sweep. The
-		// dots could already trigger it on a fast double-click; the desktop
-		// card overlay (see jumpTo) makes bigger targets for the same thing.
-		if (cascading) return;
-		commitSteps(-positions[i]!);
+		// Absolute, not relative: -positions[i] is item i's own already-
+		// committed position, independent of whatever an earlier press's
+		// motion may still have pending (see driveMotion). Every item shares
+		// the same offset, so setting the new target this way supersedes
+		// any in-flight motion cleanly instead of stacking on top of it —
+		// no cascading guard needed, unlike the old commitSteps.
+		driveMotion(-positions[i]!);
 	}
 
 	// Desktop: clicking a visible side card centres it. Deliberately just
-	// goTo — no new position maths, the same already-proven cascade the dots
-	// use. The overlay button this fires from only exists at |position| === 1
+	// goTo — no new position maths, the same continuous motion the dots use.
+	// The overlay button this fires from only exists at |position| === 1
 	// (see the template), so the centre card's own link is never covered and
 	// the off-screen ±2 cards never carry an invisible hit target.
 	function jumpTo(i: number): void {
@@ -475,16 +441,51 @@
 		// with y0/v0 as initial conditions:
 		//   y(t) = e^(-omega*t) * (y0 + (v0 + omega*y0) * t)
 		//   v(t) = e^(-omega*t) * (v0 - omega*t*(v0 + omega*y0))
-		// y0/v0 came from beginLatch, so this is the same trajectory the
-		// coast regime was already on, just now pulled toward latchTarget
-		// instead of drifting freely — never a discontinuous restart.
-		const t = now - latchStartTime;
+		// y0/v0 came from beginLatch or driveMotion (see their own comments),
+		// so this is the same trajectory the fan was already on, just now
+		// pulled toward latchTarget instead of drifting freely (coast) or
+		// sitting wherever a press left it (a retarget) — never a
+		// discontinuous restart.
+		//
+		// Clamped at 0: beginLatch always stamps latchStartTime from the
+		// SAME `now` a motionTick call already received, so the next frame's
+		// timestamp is guaranteed later. driveMotion (a button press) instead
+		// stamps it from a performance.now() read synchronously inside a
+		// click handler, off the animation-frame timeline entirely — and a
+		// browser's very first rAF callback afterward can occasionally
+		// report a timestamp for a frame that had already started a hair
+		// before that read, i.e. `now` slightly EARLIER than
+		// latchStartTime. Left unclamped, that negative t makes
+		// Math.exp(-SPRING_OMEGA*t) exceed 1, so y (and therefore offset)
+		// transiently overshoots past y0 — a real, if small and short-lived,
+		// step backward before the very next frame corrects it. Confirmed
+		// under load: reliably present with Playwright's parallel workers,
+		// not just a hypothetical.
+		const t = Math.max(0, now - latchStartTime);
 		const decay = Math.exp(-SPRING_OMEGA * t);
 		const b = latchV0 + SPRING_OMEGA * latchY0;
 		const y = decay * (latchY0 + b * t);
 		const v = decay * (latchV0 - SPRING_OMEGA * t * b);
 		offset = latchTarget + y;
-		absorbWholeSteps(); // defence-in-depth, see the coast regime's own call
+		// Kept current every latch frame, same as the coast regime already
+		// keeps its own `velocity` current — this is what lets a button
+		// press mid-latch (see driveMotion) read a real, live velocity to
+		// retarget from instead of guessing or resetting to 0.
+		velocity = v;
+		// A button press can seed latchTarget arbitrarily far from offset —
+		// a dot click several cards away, or several fast Next presses
+		// folded into one target (see driveMotion/driveBy) — so, unlike the
+		// single-card coast handoff, this can fold more than one step over
+		// the life of one latch. latchTarget itself must recede by whatever
+		// absorbWholeSteps just folded, or next frame's closed-form
+		// re-evaluation (still a pure function of elapsed time against the
+		// SAME latchY0/latchV0/latchStartTime) would recompute the same
+		// not-yet-corrected distance and fold the same step again. This is
+		// the same leap-second-style correction absorbWholeSteps' own
+		// comment documents for dragBaseOffset, applied to this closed form
+		// instead — the trajectory itself (y, v) is untouched, only the
+		// bookkeeping of how much of it has already been committed moves.
+		latchTarget -= absorbWholeSteps();
 
 		if (Math.abs(y) < LATCH_DONE_EPSILON && Math.abs(v) < VELOCITY_EPSILON) {
 			// Land exactly on the integer (not the spring's asymptotic-but-
@@ -504,6 +505,76 @@
 		offset = Math.round(offset);
 		absorbWholeSteps();
 		endGesture();
+	}
+
+	// Button navigation (next/prev/goTo/jumpTo) drives the exact same
+	// continuous motion the pointer path does, through this one entry
+	// point — the owner's ask was "less ease-in, a lot more ease-out," and
+	// that shape is the latch spring's own natural behaviour once it's
+	// seeded with a real initial velocity instead of starting from rest:
+	// with y0/v0 chosen so b = v0 + SPRING_OMEGA*y0 is exactly 0 (see
+	// motionTick's closed-form comment for b), the spring degenerates to
+	// pure exponential decay in y — maximum speed at t=0 (no ease-in at
+	// all) falling away smoothly to zero at the target (all ease-out).
+	// `target` is the exact value offset should end at once folded — the
+	// same coordinate latchTarget already lives in — so goTo/jumpTo can
+	// hand this an absolute destination (-positions[i]) and driveBy can
+	// hand it "wherever this is already headed, one more."
+	function driveMotion(target: number): void {
+		const now = performance.now();
+
+		if (prefersReducedMotion()) {
+			// Ensure transition:none is actually in effect before offset
+			// jumps — inGesture may still be false here (a button press,
+			// unlike settleInstant's drag-release, can start from fully
+			// idle), and without this the base 600ms CSS transition would
+			// animate the "instant" jump instead of skipping it.
+			cancelMotion();
+			inGesture = true;
+			offset = target;
+			absorbWholeSteps();
+			endGesture();
+			return;
+		}
+
+		// Idle (velocity is exactly 0, see endGesture) gets the synthetic
+		// b=0 kick described above. A press that instead interrupts an
+		// already-moving gesture — coast still running (the coast-interrupt
+		// edge case), or a previous press's own latch not yet settled —
+		// carries over whatever real velocity that motion already had, same
+		// continuity rule the coast->latch handoff itself uses (see
+		// beginLatch), so repeated presses accelerate through the cards
+		// fluidly instead of restarting from a dead stop each time.
+		const y0 = offset - target;
+		const v0 = inGesture ? velocity : -SPRING_OMEGA * y0;
+
+		inGesture = true;
+		motionPhase = 'latch';
+		latchTarget = target;
+		latchY0 = y0;
+		latchV0 = v0;
+		latchStartTime = now;
+
+		// Always cancel-and-reschedule rather than trying to reuse an
+		// already-queued frame — simpler to reason about than tracking
+		// whether one happens to be in flight, and costs at most one extra
+		// rAF (~16ms), imperceptible against a spring that runs for
+		// hundreds of ms. Whatever regime the *previous* frame was in
+		// (coast or latch) is irrelevant: motionTick reads motionPhase
+		// fresh every call, and it's already 'latch' by the time this next
+		// frame runs.
+		cancelMotion();
+		motionRafId = requestAnimationFrame(motionTick);
+	}
+
+	// next()/prev() move relative to wherever the fan is already headed —
+	// its current latch target if one is live, or its resting position
+	// (nearest integer offset) if it's idle or still coasting — so a rapid
+	// double Next extends the same journey by one more step rather than
+	// each press fighting over its own separate target.
+	function driveBy(delta: number): void {
+		const baseTarget = inGesture && motionPhase === 'latch' ? latchTarget : Math.round(offset);
+		driveMotion(baseTarget + delta);
 	}
 
 	function onPointerDown(e: PointerEvent): void {
@@ -638,7 +709,6 @@
 					class="treatments__pivot"
 					class:treatments__pivot--jump={noTransitionKeys.has(item.key)}
 					class:treatments__pivot--motion={inGesture}
-					class:treatments__pivot--fast={cascading}
 					style="--pos: {positions[i]! + offset}"
 				>
 					<TreatmentCard
@@ -798,32 +868,21 @@
 		transition: none;
 	}
 
-	/* Covers the WHOLE gesture — drag, momentum, and settle — not just the
-	   drag itself (see inGesture in the script). --pos is being driven
-	   directly, per frame, by the pointer during drag and by the momentum/
-	   settle rAF loop after release; a CSS transition here would fight that
-	   with its own easing on top of the JS-driven easing settle already
-	   does, which is exactly the pause-then-rigid-hop behaviour this whole
-	   mechanism replaced. Released only once settle actually lands on a
-	   card (see endGesture) — the discrete goTo/commitSteps path (dots,
-	   Prev/Next, desktop click-to-jump) is untouched by this and still gets
-	   its normal CSS transition. */
+	/* Covers the WHOLE gesture — drag, momentum, settle, AND button-driven
+	   motion (next/prev/goTo/jumpTo) — not just the drag itself (see
+	   inGesture in the script). --pos is being driven directly, per frame,
+	   by the pointer during drag and by the same motion rAF loop for every
+	   other case (coast, latch, and a button press driving that loop
+	   straight into latch — see driveMotion); a CSS transition here would
+	   fight that with its own easing on top of the JS-driven easing that
+	   loop already does, which is exactly the pause-then-rigid-hop
+	   behaviour this whole mechanism replaced. Buttons used to be the one
+	   path left on a discrete CSS transition (commitSteps' cascade) — now
+	   they drive the same continuous offset everything else does, so
+	   there's no second path left needing its own transition. Released
+	   only once motion actually lands on a card (see endGesture). */
 	.treatments__pivot--motion {
 		transition: none;
-	}
-
-	/* A multi-step cascade (see commitSteps in the script) runs each of its
-	   individual, already-safe ±1 steps back to back at this shorter
-	   duration instead of the normal 600ms — several quick, fully-settled
-	   hops read as one fast sweep. Kept comfortably under the script's
-	   FAST_STEP_MS (the gap between cascaded steps) by hand, since the two
-	   live in separate files with no shared source of truth: the
-	   transition must finish with room to spare before the next step
-	   fires, or steps start redirecting each other mid-flight again —
-	   confirmed via bounding-box measurement as the actual cause of real,
-	   visible overlap during a cascade. */
-	.treatments__pivot--fast {
-		transition-duration: 180ms;
 	}
 
 	/* Desktop-only click target over a visible side card (see the {#if} in the
