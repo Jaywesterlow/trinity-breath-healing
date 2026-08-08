@@ -54,8 +54,13 @@ test.describe('desktop', () => {
 		const target = await indexAt(page, 1);
 
 		await page.locator(PIVOT).nth(target).locator(JUMP).click();
-		// One step at the normal 600ms duration, plus headroom.
-		await page.waitForTimeout(900);
+		// jumpTo routes through goTo/driveMotion, the same JS spring latch
+		// button navigation uses (BUTTON_SPRING_OMEGA — see its own comment),
+		// not the CSS transition. Single-step settle measures ~1.22s at the
+		// current BUTTON_SPRING_OMEGA = SPRING_OMEGA / 4 in isolation; 2s
+		// keeps real headroom under parallel-worker CPU contention (other
+		// suites in this same run measurably slow rAF timing down).
+		await page.waitForTimeout(2000);
 
 		expect((await positions(page))[target]).toBe(0);
 	});
@@ -64,7 +69,7 @@ test.describe('desktop', () => {
 		const target = await indexAt(page, -1);
 
 		await page.locator(PIVOT).nth(target).locator(JUMP).click();
-		await page.waitForTimeout(900);
+		await page.waitForTimeout(2000);
 
 		expect((await positions(page))[target]).toBe(0);
 	});

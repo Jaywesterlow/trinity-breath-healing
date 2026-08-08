@@ -295,15 +295,34 @@
 	// Button-driven motion's own omega — Prev/Next/dots/desktop
 	// click-to-jump (goTo/driveMotion), NOT the pointer-release latch above.
 	// The owner signed off on the release latch's feel already and
-	// explicitly does not want it touched; they separately asked for the
-	// BUTTON motion to take twice as long. Halving omega doubles the
-	// analytic settling time constant (see SPRING_OMEGA's own comment for
-	// the ≈4.74/omega relationship), so this is exactly half SPRING_OMEGA,
-	// kept as its own named/commented constant rather than overwriting
+	// explicitly does not want it touched.
+	//
+	// First set to SPRING_OMEGA / 2 (a direct owner request for the BUTTON
+	// motion to take twice as long — measured single-step settle ~656ms).
+	// The owner then asked for "a lot more" ease-out, "still needs to be a
+	// little bit longer" — halved again, to SPRING_OMEGA / 4, measured
+	// single-step settle ~1221ms (roughly double the previous round, as
+	// expected: halving omega doubles the analytic settling time constant,
+	// see SPRING_OMEGA's own comment for the ≈4.74/omega relationship).
+	//
+	// Deliberately still the simple b=0 critically-damped kick (see
+	// driveMotion's own comment: max speed at t=0, no ease-in, pure
+	// exponential decay to the target) rather than a faster-departing,
+	// separately-tuned curve — for a fixed omega, b=0 IS the fastest
+	// possible departure speed (v0 = -omega*y0) that still reaches the
+	// target monotonically with zero overshoot; going faster than that at
+	// the same omega necessarily either overshoots or re-introduces ease-in
+	// (see the closed-form in motionTick: b<0 crosses zero before decaying
+	// back, b>0 moves the wrong way first). Halving omega again scales the
+	// whole curve's timeline uniformly — same brisk-departure, all-ease-out
+	// shape, just stretched — rather than changing that shape, which is
+	// exactly "leaves promptly, decelerates over a longer distance."
+	//
+	// Kept as its own named/commented constant rather than overwriting
 	// SPRING_OMEGA so the two stay independently tunable. See latchOmega
 	// below for how motionTick's single latch implementation picks between
 	// the two per gesture.
-	const BUTTON_SPRING_OMEGA = SPRING_OMEGA / 2;
+	const BUTTON_SPRING_OMEGA = SPRING_OMEGA / 4;
 	// How close (in steps) and how slow (in steps/ms) the latch spring has
 	// to get before the gesture is declared over. Small enough that the
 	// landing is visually indistinguishable from "arrived," at which point

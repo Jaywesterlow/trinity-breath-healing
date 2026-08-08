@@ -75,7 +75,15 @@ test('a second Next press mid-flight extends the same motion instead of stalling
 	await page.waitForTimeout(60);
 	const secondPressTime = await page.evaluate(() => performance.now());
 	await next.click();
-	await page.waitForTimeout(1200);
+	// Long enough for the two-step retarget to fully land at
+	// BUTTON_SPRING_OMEGA (see its own comment for the current value) — a
+	// two-card retarget starting ~60ms into the first card's own motion
+	// measures ~1.87s to settle in isolation at BUTTON_SPRING_OMEGA =
+	// SPRING_OMEGA / 4. 3s gives real headroom under parallel-worker CPU
+	// contention (this suite is explicitly run alongside four others —
+	// see the file-level task instructions — which measurably slows rAF
+	// timing down; 2.5s was not enough margin under that load).
+	await page.waitForTimeout(3000);
 
 	await page.evaluate(() => {
 		(window as unknown as SamplingWindow).__sampling = false;
