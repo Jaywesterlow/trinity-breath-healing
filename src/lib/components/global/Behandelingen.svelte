@@ -1044,12 +1044,18 @@
 
 		.treatments__pivot {
 			--pivot-baseline: 18rem;
-			/* Scaled past the proportional 1273px (1010px x 1.26) on purpose —
-			   the owner asked for more breathing room between cards, not just
-			   the same gap at a bigger size. Verified via measured bbox edge
-			   gaps: the pos0/pos1 gap roughly doubled (56.77px -> 114.35px at
-			   1440px) versus the ~26% a proportional-only change would give. */
-			--pivot-distance: 1450px;
+			/* Widening this to 1450px (from the original, proportional 1010px)
+			   roughly doubled the pos0/pos1 edge gap (56.77px -> 114.35px at
+			   1440px) — more breathing room than the owner actually wanted once
+			   seen live. Pulled back to 1340px: measured bbox gap is 87.74px at
+			   both 1440px and 1280px (identical at both — the gap is purely a
+			   function of rotation, not viewport width), roughly the midpoint
+			   between the original and the overshoot, with cards still clearly
+			   separated (no touch/overlap) and no vertical clipping introduced
+			   (--pivot-baseline/height untouched: the pos ±1 bbox height and y
+			   range barely move between 1340px and 1450px). Card size
+			   (--card-width) is untouched — only the fan's spread changed. */
+			--pivot-distance: 1340px;
 		}
 
 		.treatments__controls {
