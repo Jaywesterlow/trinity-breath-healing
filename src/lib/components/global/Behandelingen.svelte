@@ -292,6 +292,18 @@
 	// time (≈4.74 / SPRING_OMEGA) lands close to the old fixed
 	// SETTLE_DURATION_MS = 300 this replaces, as a feel reference point.
 	const SPRING_OMEGA = 0.016;
+	// Button-driven motion's own omega — Prev/Next/dots/desktop
+	// click-to-jump (goTo/driveMotion), NOT the pointer-release latch above.
+	// The owner signed off on the release latch's feel already and
+	// explicitly does not want it touched; they separately asked for the
+	// BUTTON motion to take twice as long. Halving omega doubles the
+	// analytic settling time constant (see SPRING_OMEGA's own comment for
+	// the ≈4.74/omega relationship), so this is exactly half SPRING_OMEGA,
+	// kept as its own named/commented constant rather than overwriting
+	// SPRING_OMEGA so the two stay independently tunable. See latchOmega
+	// below for how motionTick's single latch implementation picks between
+	// the two per gesture.
+	const BUTTON_SPRING_OMEGA = SPRING_OMEGA / 2;
 	// How close (in steps) and how slow (in steps/ms) the latch spring has
 	// to get before the gesture is declared over. Small enough that the
 	// landing is visually indistinguishable from "arrived," at which point
@@ -343,6 +355,15 @@
 	let latchY0 = 0; // offset - latchTarget at latch start
 	let latchV0 = 0; // velocity at latch start (steps/ms)
 	let latchStartTime = 0;
+	// Which omega the CURRENT latch spring runs at — SPRING_OMEGA for a
+	// pointer-release handoff (set by beginLatch) or BUTTON_SPRING_OMEGA for
+	// a button-driven one (set by driveMotion). One latch implementation
+	// (motionTick) serves both; only this value differs between them, so a
+	// button press that interrupts an in-flight release-latch (or vice
+	// versa — see driveMotion) simply swaps which curve continues from the
+	// real, current y/v, same continuity rule the coast->latch handoff
+	// itself already uses.
+	let latchOmega = SPRING_OMEGA;
 
 	function prefersReducedMotion(): boolean {
 		// matchMedia is guarded, not assumed — same reasoning as
@@ -429,6 +450,12 @@
 		latchY0 = offset - latchTarget;
 		latchV0 = velocity;
 		latchStartTime = now;
+		// The pointer-release latch always runs at SPRING_OMEGA — this is
+		// the feel the owner already signed off on and explicitly does not
+		// want touched (see SPRING_OMEGA's own comment; contrast
+		// driveMotion, which stamps BUTTON_SPRING_OMEGA here instead for a
+		// button-driven latch).
+		latchOmega = SPRING_OMEGA;
 	}
 
 	// One rAF loop, two regimes of the same continuous motion — see this
@@ -483,16 +510,22 @@
 		// report a timestamp for a frame that had already started a hair
 		// before that read, i.e. `now` slightly EARLIER than
 		// latchStartTime. Left unclamped, that negative t makes
-		// Math.exp(-SPRING_OMEGA*t) exceed 1, so y (and therefore offset)
+		// Math.exp(-latchOmega*t) exceed 1, so y (and therefore offset)
 		// transiently overshoots past y0 — a real, if small and short-lived,
 		// step backward before the very next frame corrects it. Confirmed
 		// under load: reliably present with Playwright's parallel workers,
 		// not just a hypothetical.
+		//
+		// latchOmega, not a hardcoded SPRING_OMEGA: this one closed form
+		// serves both the pointer-release latch (beginLatch stamps
+		// SPRING_OMEGA) and button-driven motion (driveMotion stamps
+		// BUTTON_SPRING_OMEGA) — only the omega differs, the physics and
+		// continuity guarantees are identical either way.
 		const t = Math.max(0, now - latchStartTime);
-		const decay = Math.exp(-SPRING_OMEGA * t);
-		const b = latchV0 + SPRING_OMEGA * latchY0;
+		const decay = Math.exp(-latchOmega * t);
+		const b = latchV0 + latchOmega * latchY0;
 		const y = decay * (latchY0 + b * t);
-		const v = decay * (latchV0 - SPRING_OMEGA * t * b);
+		const v = decay * (latchV0 - latchOmega * t * b);
 		offset = latchTarget + y;
 		// Kept current every latch frame, same as the coast regime already
 		// keeps its own `velocity` current — this is what lets a button
@@ -539,14 +572,20 @@
 	// point — the owner's ask was "less ease-in, a lot more ease-out," and
 	// that shape is the latch spring's own natural behaviour once it's
 	// seeded with a real initial velocity instead of starting from rest:
-	// with y0/v0 chosen so b = v0 + SPRING_OMEGA*y0 is exactly 0 (see
-	// motionTick's closed-form comment for b), the spring degenerates to
-	// pure exponential decay in y — maximum speed at t=0 (no ease-in at
+	// with y0/v0 chosen so b = v0 + BUTTON_SPRING_OMEGA*y0 is exactly 0
+	// (see motionTick's closed-form comment for b), the spring degenerates
+	// to pure exponential decay in y — maximum speed at t=0 (no ease-in at
 	// all) falling away smoothly to zero at the target (all ease-out).
 	// `target` is the exact value offset should end at once folded — the
 	// same coordinate latchTarget already lives in — so goTo/jumpTo can
 	// hand this an absolute destination (-positions[i]) and driveBy can
 	// hand it "wherever this is already headed, one more."
+	//
+	// Runs at BUTTON_SPRING_OMEGA, not SPRING_OMEGA — a direct owner
+	// request for button-driven motion (Prev/Next/dots/desktop
+	// click-to-jump, all of which route through here) to take twice as
+	// long, without touching the pointer-release latch's own feel (see
+	// BUTTON_SPRING_OMEGA's own comment).
 	function driveMotion(target: number): void {
 		const now = performance.now();
 
@@ -573,7 +612,7 @@
 		// beginLatch), so repeated presses accelerate through the cards
 		// fluidly instead of restarting from a dead stop each time.
 		const y0 = offset - target;
-		const v0 = inGesture ? velocity : -SPRING_OMEGA * y0;
+		const v0 = inGesture ? velocity : -BUTTON_SPRING_OMEGA * y0;
 
 		inGesture = true;
 		motionPhase = 'latch';
@@ -581,6 +620,13 @@
 		latchY0 = y0;
 		latchV0 = v0;
 		latchStartTime = now;
+		// Every button-driven latch — fresh or retargeted mid-flight, from
+		// idle or from an in-progress release latch/coast — runs at this
+		// slower omega from here on. See latchOmega's own comment for why a
+		// single latchOmega value (rather than passing omega through the
+		// call chain) is enough to make motionTick's one implementation
+		// serve both curves correctly.
+		latchOmega = BUTTON_SPRING_OMEGA;
 
 		// Always cancel-and-reschedule rather than trying to reuse an
 		// already-queued frame — simpler to reason about than tracking
