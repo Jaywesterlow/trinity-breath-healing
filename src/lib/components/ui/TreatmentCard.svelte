@@ -34,7 +34,12 @@
 </script>
 
 <div class="tcard">
-	<a href={buttonHref} class="tcard__button" aria-label={`${buttonLabel} over ${label}`}>
+	<a
+		href={buttonHref}
+		class="tcard__button"
+		aria-label={`${buttonLabel} over ${label}`}
+		draggable="false"
+	>
 		<svg width="14" height="14" viewBox="0 0 22 22" fill="none" aria-hidden="true">
 			<path
 				d="M5 17L17 5M17 5H9M17 5V13"
