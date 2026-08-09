@@ -1014,6 +1014,15 @@
 		   DOWN the tree, and .treatments__pivot (the card's own parent) needs
 		   to read this too. A child can't hand a variable up to its parent. */
 		--card-width: 6.27rem;
+		/* A drag over the fan was selecting the card title/number text
+		   underneath the pointer instead of dragging the carousel — the
+		   fan has no other user-facing text to lose, and selection isn't
+		   crawled, so this costs nothing for SEO/AEO. Deliberately not
+		   solved with preventDefault() in onPointerDown: that would also
+		   kill the cards' own links and focus, and this component's whole
+		   click model depends on the native click still firing. */
+		-webkit-user-select: none; /* Safari/iOS */
+		user-select: none;
 	}
 
 	/* Rotates around ONE shared point far below the row (a real fan hub) —

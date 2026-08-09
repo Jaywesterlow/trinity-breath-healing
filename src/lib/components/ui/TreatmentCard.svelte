@@ -50,7 +50,7 @@
 		{#if cardNumber !== null}
 			<span class="tcard__number" aria-hidden="true">{cardNumber}</span>
 		{:else if icon}
-			<img src={icon} alt="" aria-hidden="true" class="tcard__icon" />
+			<img src={icon} alt="" aria-hidden="true" class="tcard__icon" draggable="false" />
 		{/if}
 	</div>
 
