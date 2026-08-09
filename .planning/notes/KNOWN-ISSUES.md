@@ -1,6 +1,6 @@
 # Known Issues — deferred, not fixed yet
 
-Last updated: **2026-08-07**
+Last updated: **2026-08-09**
 
 Read the date above before answering "what issues are still open?" — anything here
 was true as of that date and may have been fixed since.
@@ -284,3 +284,45 @@ from-scratch re-derivation (recover the source PNG, re-trace, re-derive the six 
 lists by eye and verify with `--dump-sections`, then paste the finished command in) and refuses
 to run until that's done, rather than fabricating indices. If any trace is ever re-paced again,
 the invocation goes in this file, not a commit body or a terminal.
+
+---
+
+## Six `behandelingen-*` Playwright specs fail on the owner's Windows machine (2026-08-09)
+
+**Not a component bug. Do not "fix" the carousel because of these.**
+
+Running the carousel specs locally on Windows gives 6 failures, the sharpest being
+`behandelingen-drag-band.spec.ts` → *"a drag starting on the card row must still move the fan"*
+with positions completely unchanged, which reads exactly like the primary gesture being broken.
+
+It is not. Established by bisect, checking out only the two component files at each commit and
+rebuilding between runs:
+
+| commit | `behandelingen-drag-band` |
+|---|---|
+| `a482f4e` — before **any** of the 2026-08-09 code changes | 4 failed / 2 passed |
+| `66a4696` — after `user-select: none` | 4 failed / 2 passed |
+| `b14cc27` — after the cursor affordance | 4 failed / 2 passed |
+| `7c557ae` — after the stretched centre-card link | **2 failed / 4 passed** |
+| `e361ffb` — after `draggable="false"` on the anchor | 2 failed / 4 passed |
+
+So the failures **predate** that session's work, and that session's work halved them. The same
+holds for `-momentum`, `-click-to-jump` and `-button-retarget`: identical 4-failed/5-passed at
+three different commits including the pre-session baseline.
+
+**The real browser is fine.** The owner drove the carousel by drag throughout that session —
+they reported its speed and its text-selection behaviour from live use, which is only possible
+if dragging works.
+
+**Most likely cause:** the Chromium these specs run against locally is not the one they were
+written and verified against. `HANDOFF.md` → "Environment gotchas" already documents a version
+mismatch (`package-lock.json` pins `@playwright/test` 1.61.1 wanting Chromium 1228; the dev
+container ships 1194) and says to run with an override config. Synthetic `pointermove`
+sequences are precisely the thing that behaves differently across Chromium builds — a real
+finger and a `page.mouse` script do not take the same code path.
+
+**What to actually do about it:** treat local carousel spec runs as unreliable until the browser
+situation is pinned down. Before spending time on a "failing" carousel test, first run the same
+spec at `a482f4e` — if it fails there too, it is this, not your change. Worth fixing properly by
+pinning a known-good browser in a committed Playwright config so the suite means the same thing
+on every machine, but nobody has done that yet.
