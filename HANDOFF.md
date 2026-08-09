@@ -325,12 +325,15 @@ guessed. If one needs changing again, re-measure the same way.
 | `MOMENTUM_TAU_MS` | 500ms | *"I want the snap to happen later."* Top of the real touch-platform range (325–500ms) cited in the research note, up from 300. Hard flick coast went ~1.4s/~25 cards → ~2.1s/~41 cards. |
 | `VELOCITY_EPSILON` | 0.0025 steps/ms | The coast→latch threshold, sized empirically. An order-of-magnitude smaller value (0.00025) reintroduced the exact failure the old `MOMENTUM_MIN_VELOCITY` prevented: a small deliberate drag-and-stop coasted ~0.9 extra steps onto the next card. Caught by an existing test failing. |
 | `SPRING_OMEGA` | 0.016 /ms | Latch spring for **pointer release**. Tuned so decay-to-~10% (~4.74/ω ≈ 300ms) matches the old settle duration as a feel reference, then verified by per-frame `--pos` sampling that nothing jumps. Owner has signed off on this feel — don't move it for a button-speed request. |
-| `BUTTON_SPRING_OMEGA` | `SPRING_OMEGA / 4` | Latch spring for **buttons/dots/jump**, halved twice on two separate *"needs to be a lot more ease out"* rounds. Single-step settle ~426ms → ~686ms → ~1221ms. Halving ω doubles the settling time constant and scales the whole curve uniformly — same shape, longer distance, no second phase and no overshoot. |
+| `BUTTON_SPRING_OMEGA` | `SPRING_OMEGA / 4` | Latch spring for **Prev/Next/dots only** (`260809-kcf` split click-to-jump off onto its own constant below), halved twice on two separate *"needs to be a lot more ease out"* rounds. Single-step settle ~426ms → ~686ms → ~1221ms. Halving ω doubles the settling time constant and scales the whole curve uniformly — same shape, longer distance, no second phase and no overshoot. |
+| `JUMP_SPRING_OMEGA` | `SPRING_OMEGA / 2` | Latch spring for **click-to-jump only** (`jumpTo` — desktop side-card click), added `260809-kcf` per *"click-to-jump only should take half its current time, more ease-out less ease-in."* Half the settle time means double ω, so this reuses the exact value `f6ecb82` already measured at ~656ms (before that commit halved it again to `BUTTON_SPRING_OMEGA`) rather than guessing a new number. Measured against a built preview: single-jump settle ~1695ms (old, at `BUTTON_SPRING_OMEGA` via a real click through `.treatments__fan`) → ~853ms (new) — 50.3% of the original. Threaded through as parameters (`driveMotion(target, omega, kick)` / `goTo(i, omega?, kick?)`), not a second hardcoded path — Prev/Next/dots call with no extra args and are byte-identical to before. |
+| `JUMP_KICK` | `1` | Departure-speed multiplier for `jumpTo`'s spring (`v0 = -JUMP_KICK * omega * y0`), added alongside `JUMP_SPRING_OMEGA`. `1` is the existing b=0 critically-damped case (max speed at t=0, no ease-in, no overshoot) — named/exposed so the owner can raise it later (safe range 1.0–1.5 per the overshoot maths in `.planning/quick/260809-kcf-carousel-cursor-selection-jump-speed/PLAN.md`; above ~1.6 the bounce becomes the feature) without touching the physics. |
 | `PX_PER_STEP` | 90 | Unchanged. ~one mobile card-width of drag per step. |
 
 `motionTick` reads a live `latchOmega`; `beginLatch` stamps `SPRING_OMEGA`, `driveMotion`
-stamps `BUTTON_SPRING_OMEGA`. **The two are independent on purpose** — that is the whole reason
-the second constant exists.
+stamps whichever `omega` its caller passed (`BUTTON_SPRING_OMEGA` by default for Prev/Next/dots,
+`JUMP_SPRING_OMEGA` for `jumpTo`). **All three are independent on purpose** — that is the whole reason
+these extra constants exist instead of one shared value.
 
 Note the reach: **the dots exist at every breakpoint**, so the slower button timing applies on
 mobile too, not just desktop. That was known and accepted, not an oversight.
