@@ -82,8 +82,7 @@
 
 	<!-- Always in the DOM, hidden with opacity/transform — never {#if hovered}.
 	     Conditionally-rendered content is invisible to AI crawlers, and this
-	     project is judged first on AEO. The hover reveal itself (260809-hov
-	     task 2) lives in a later commit. -->
+	     project is judged first on AEO. -->
 	<p class="tcard__description">{description}</p>
 </a>
 
@@ -101,6 +100,10 @@
 		color: var(--color-bg-sand);
 		text-decoration: none;
 		cursor: pointer;
+		--tcard-scale: 1;
+		--tcard-desc-shift: 2.25rem;
+		transform: scale(var(--tcard-scale));
+		transition: transform var(--motion-base) var(--ease-out);
 	}
 
 	.tcard__icon-wrap {
@@ -110,6 +113,7 @@
 		align-items: center;
 		justify-content: center;
 		width: 100%;
+		transition: opacity var(--motion-base) var(--ease-out);
 	}
 
 	.tcard__icon {
@@ -141,6 +145,7 @@
 		justify-content: space-between;
 		gap: var(--space-2);
 		width: 100%;
+		transition: transform var(--motion-base) var(--ease-out);
 	}
 
 	.tcard__title {
@@ -177,7 +182,50 @@
 		font-size: var(--fs-body-xs);
 		line-height: var(--line-height-tight);
 		opacity: 0;
+		transform: translateY(6px);
 		pointer-events: none;
+		transition:
+			opacity var(--motion-base) var(--ease-out),
+			transform var(--motion-base) var(--ease-out);
+	}
+
+	/* Whole hover reveal gated behind (hover: hover) and (pointer: fine) —
+	   touch keeps exactly what it has today: icon, title, arrow, no
+	   description, no scale. :focus-visible mirrors :hover throughout so
+	   the reveal is reachable by keyboard, not just a mouse. One shared
+	   motion token (--motion-base/--ease-out) across every property here —
+	   and on .tcard__icon-wrap/.tcard__bottom above — so it reads as one
+	   movement, not four unrelated ones. */
+	@media (hover: hover) and (pointer: fine) {
+		.tcard:hover .tcard__icon-wrap,
+		.tcard:focus-visible .tcard__icon-wrap {
+			opacity: 0;
+		}
+
+		.tcard:hover .tcard__bottom,
+		.tcard:focus-visible .tcard__bottom {
+			transform: translateY(calc(-1 * var(--tcard-desc-shift, 2.25rem)));
+		}
+
+		.tcard:hover .tcard__description,
+		.tcard:focus-visible .tcard__description {
+			opacity: 1;
+			transform: translateY(0);
+		}
+
+		/* Scale is deliberately its own, narrower media query (adds
+		   prefers-reduced-motion: no-preference on top of hover/pointer) —
+		   the owner asked for NO scale at all under reduced motion, whereas
+		   the fade/slide above may stay, just instant (the site-wide
+		   reduced-motion override in app.css already forces near-0
+		   transition durations globally, so nothing extra is needed here
+		   for that). */
+		@media (prefers-reduced-motion: no-preference) {
+			.tcard:hover,
+			.tcard:focus-visible {
+				--tcard-scale: 1.1;
+			}
+		}
 	}
 
 	@media (min-width: 1024px) {
@@ -209,6 +257,13 @@
 
 		.tcard__description {
 			font-size: var(--fs-body-sm);
+		}
+
+		.tcard {
+			/* Desktop cards are noticeably bigger (--card-width 15rem vs 6.5rem
+			   mobile, see Behandelingen.svelte) — the description needs more
+			   reserved room to read as a real sentence, not a cramped sliver. */
+			--tcard-desc-shift: 3.5rem;
 		}
 	}
 </style>
