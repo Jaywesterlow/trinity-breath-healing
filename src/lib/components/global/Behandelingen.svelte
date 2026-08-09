@@ -160,14 +160,18 @@
 	function prev(): void {
 		driveBy(1);
 	}
-	function goTo(i: number): void {
+	// omega/kick default to the button curve (BUTTON_SPRING_OMEGA, b=0) so
+	// every existing caller — Prev/Next, the dots — is byte-identical with
+	// no change at the call site. jumpTo below is the one caller that passes
+	// its own, faster curve (see JUMP_SPRING_OMEGA/JUMP_KICK).
+	function goTo(i: number, omega = BUTTON_SPRING_OMEGA, kick = 1): void {
 		// Absolute, not relative: -positions[i] is item i's own already-
 		// committed position, independent of whatever an earlier press's
 		// motion may still have pending (see driveMotion). Every item shares
 		// the same offset, so setting the new target this way supersedes
 		// any in-flight motion cleanly instead of stacking on top of it —
 		// no cascading guard needed, unlike the old commitSteps.
-		driveMotion(-positions[i]!);
+		driveMotion(-positions[i]!, omega, kick);
 	}
 
 	// Desktop: clicking a visible side card centres it. Deliberately just
@@ -175,11 +179,16 @@
 	// The overlay button this fires from only exists at |position| === 1
 	// (see the template), so the centre card's own link is never covered and
 	// the off-screen ±2 cards never carry an invisible hit target.
+	//
+	// The one caller that does NOT take the default BUTTON_SPRING_OMEGA
+	// curve: click-to-jump only gets its own, faster JUMP_SPRING_OMEGA/
+	// JUMP_KICK (see their own comments) — Prev/Next/dots keep the slower
+	// button feel the owner asked for twice already.
 	function jumpTo(i: number): void {
 		// A mouse drag ends in a click on whatever sat under the pointer, so
 		// without this a desktop drag-follow would also fire a jump on release.
 		if (dragMoved) return;
-		goTo(i);
+		goTo(i, JUMP_SPRING_OMEGA, JUMP_KICK);
 	}
 
 	// Swipe (mobile/tablet — Prev/Next buttons are CSS-hidden below the
@@ -323,6 +332,29 @@
 	// below for how motionTick's single latch implementation picks between
 	// the two per gesture.
 	const BUTTON_SPRING_OMEGA = SPRING_OMEGA / 4;
+	// Click-to-jump only (jumpTo, desktop side-card click) — NOT Prev/Next
+	// or the dots, which keep BUTTON_SPRING_OMEGA above untouched. The owner
+	// asked for click-to-jump specifically to take half its current time,
+	// "more ease-out, less ease-in." Settling time scales as 1/omega (see
+	// SPRING_OMEGA's own ~4.74/omega note), so halving the settle time means
+	// DOUBLING omega. BUTTON_SPRING_OMEGA is SPRING_OMEGA/4, measured
+	// ~1221ms; this is SPRING_OMEGA/2 — the value f6ecb82 measured at
+	// ~656ms, before that commit halved it again to BUTTON_SPRING_OMEGA. So
+	// this is a return to an already-measured number, not a guess.
+	const JUMP_SPRING_OMEGA = SPRING_OMEGA / 2;
+	// Departure speed multiplier for jumpTo's spring: v0 = -JUMP_KICK *
+	// omega * y0 (see driveMotion's own comment for the general form). 1 is
+	// the existing b=0 critically-damped case — maximum speed at t=0, zero
+	// ease-in, pure exponential ease-out, no overshoot (see
+	// BUTTON_SPRING_OMEGA's own comment for why b=0 is the fastest possible
+	// departure that still lands without overshoot). A value above 1 leaves
+	// faster and decays longer (more ease-out, less ease-in) at the cost of
+	// a small overshoot past the target — safe range 1.0-1.5 per the
+	// overshoot maths in the plan this shipped from; above ~1.6 the bounce
+	// becomes the feature. Left at 1 here: the owner asked for the speed
+	// change, not a bounce, and this constant is named/exposed specifically
+	// so it can be tuned later without touching the physics.
+	const JUMP_KICK = 1;
 	// How close (in steps) and how slow (in steps/ms) the latch spring has
 	// to get before the gesture is declared over. Small enough that the
 	// landing is visually indistinguishable from "arrived," at which point
@@ -600,12 +632,17 @@
 	// hand this an absolute destination (-positions[i]) and driveBy can
 	// hand it "wherever this is already headed, one more."
 	//
-	// Runs at BUTTON_SPRING_OMEGA, not SPRING_OMEGA — a direct owner
-	// request for button-driven motion (Prev/Next/dots/desktop
-	// click-to-jump, all of which route through here) to take twice as
-	// long, without touching the pointer-release latch's own feel (see
-	// BUTTON_SPRING_OMEGA's own comment).
-	function driveMotion(target: number): void {
+	// Runs at BUTTON_SPRING_OMEGA by default, not SPRING_OMEGA — a direct
+	// owner request for button-driven motion (Prev/Next/dots) to take twice
+	// as long, without touching the pointer-release latch's own feel (see
+	// BUTTON_SPRING_OMEGA's own comment). `omega`/`kick` are parameters, not
+	// hardcoded, so a caller can hand this a different curve — currently
+	// only jumpTo does, passing JUMP_SPRING_OMEGA/JUMP_KICK (see their own
+	// comments) for a faster click-to-jump without touching this default or
+	// any other caller. Every other caller (next/prev/goTo's own default)
+	// omits both, so their behaviour is byte-identical to before this
+	// parameterisation.
+	function driveMotion(target: number, omega = BUTTON_SPRING_OMEGA, kick = 1): void {
 		const now = performance.now();
 
 		if (prefersReducedMotion()) {
@@ -623,15 +660,20 @@
 		}
 
 		// Idle (velocity is exactly 0, see endGesture) gets the synthetic
-		// b=0 kick described above. A press that instead interrupts an
+		// kick described above, scaled by `kick` (1 = the existing b=0
+		// critically-damped case; see JUMP_KICK's own comment for what a
+		// value above 1 does). A press that instead interrupts an
 		// already-moving gesture — coast still running (the coast-interrupt
 		// edge case), or a previous press's own latch not yet settled —
 		// carries over whatever real velocity that motion already had, same
 		// continuity rule the coast->latch handoff itself uses (see
 		// beginLatch), so repeated presses accelerate through the cards
-		// fluidly instead of restarting from a dead stop each time.
+		// fluidly instead of restarting from a dead stop each time. `kick`
+		// only shapes the idle-start case — a retarget mid-flight keeps
+		// carrying the real, live velocity regardless of which curve it's
+		// joining, same as before this parameter existed.
 		const y0 = offset - target;
-		const v0 = inGesture ? velocity : -BUTTON_SPRING_OMEGA * y0;
+		const v0 = inGesture ? velocity : -kick * omega * y0;
 
 		inGesture = true;
 		motionPhase = 'latch';
@@ -641,11 +683,12 @@
 		latchStartTime = now;
 		// Every button-driven latch — fresh or retargeted mid-flight, from
 		// idle or from an in-progress release latch/coast — runs at this
-		// slower omega from here on. See latchOmega's own comment for why a
-		// single latchOmega value (rather than passing omega through the
-		// call chain) is enough to make motionTick's one implementation
-		// serve both curves correctly.
-		latchOmega = BUTTON_SPRING_OMEGA;
+		// caller-chosen omega from here on. See latchOmega's own comment for
+		// why a single latchOmega value (rather than passing omega through
+		// to motionTick itself) is enough to make motionTick's one
+		// implementation serve every curve correctly — motionTick needs no
+		// change at all for this.
+		latchOmega = omega;
 
 		// Always cancel-and-reschedule rather than trying to reuse an
 		// already-queued frame — simpler to reason about than tracking
