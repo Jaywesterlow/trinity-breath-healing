@@ -25,15 +25,6 @@
 		/** Service name — shown as the visible bottom title. */
 		label: string;
 		icon?: string | null;
-		/** TEMPORARY diagnostic aid (see Behandelingen.svelte) — when set,
-		 * renders this number in place of the icon/image, large and legible,
-		 * so the carousel owner can tell cards apart by number while testing
-		 * more items than ship ("card 5 jumped"). Optional and additive on
-		 * purpose so this component stays position-unaware and presentational
-		 * — the carousel decides the number, this just draws it. Will be
-		 * removed, along with every call site that passes it, once the
-		 * diagnostic is reverted. */
-		cardNumber?: number | null;
 		/** Where the corner button goes. Accessible name only for now — the
 		 * arrow itself carries no visible text (not final copy either way). */
 		buttonLabel: string;
@@ -59,18 +50,23 @@
 		 * Replaces the .treatments__jump overlay, which covered the card and
 		 * so blocked :hover from ever reaching it. */
 		onCardClick?: (e: MouseEvent) => void;
+		/** True for the repeated copies the carousel renders so its loop has
+		 * off-screen slots to recycle through. Visually identical, but taken out
+		 * of the accessibility tree and the tab order so each service is
+		 * announced and reachable exactly once. */
+		duplicate?: boolean;
 	}
 
 	let {
 		label,
 		icon = null,
-		cardNumber = null,
 		buttonLabel,
 		buttonHref,
 		description,
 		magnetic: isMagnetic = false,
 		dragging = false,
-		onCardClick
+		onCardClick,
+		duplicate = false
 	}: Props = $props();
 </script>
 
@@ -79,13 +75,13 @@
 	class="tcard"
 	aria-label={`${buttonLabel} over ${label}`}
 	draggable="false"
+	aria-hidden={duplicate ? 'true' : undefined}
+	tabindex={duplicate ? -1 : undefined}
 	onclick={onCardClick}
 	use:magnetic={{ enabled: isMagnetic, dragging }}
 >
 	<div class="tcard__icon-wrap">
-		{#if cardNumber !== null}
-			<span class="tcard__number" aria-hidden="true">{cardNumber}</span>
-		{:else if icon}
+		{#if icon}
 			<img src={icon} alt="" aria-hidden="true" class="tcard__icon" draggable="false" />
 		{/if}
 	</div>
@@ -189,19 +185,6 @@
 		width: 100%;
 		height: 100%;
 		object-fit: contain;
-	}
-
-	/* TEMPORARY (see cardNumber in the script block above) — sized to read at
-	   a glance at the mobile card width (--card-width defaults to 6.5rem, see
-	   TreatmentCard's own default and Behandelingen.svelte's override), bumped
-	   further at the desktop breakpoint below where cards are noticeably
-	   bigger. Reuses the same sand-on-forest contrast as the rest of the card,
-	   so no separate accessibility check is needed for this throwaway state. */
-	.tcard__number {
-		font-family: var(--font-display);
-		font-size: 2.5rem;
-		font-weight: var(--font-weight-medium);
-		line-height: 1;
 	}
 
 	.tcard__bottom {
@@ -311,10 +294,6 @@
 			   in the markup, which stay 14x14 for mobile. */
 			width: 21px;
 			height: 21px;
-		}
-
-		.tcard__number {
-			font-size: 4.5rem;
 		}
 
 		.tcard__title {

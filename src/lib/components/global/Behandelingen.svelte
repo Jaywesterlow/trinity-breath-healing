@@ -16,29 +16,17 @@
 	// 5th card by design (see ROADMAP.md LND-05) — never implemented on the old
 	// auto-scroll version. No icon file for it; TreatmentCard renders it with
 	// no image, same as every other card would if it had none.
-	//
-	// TEMPORARY: DIAG_ITEMS below (and cardNumber on every TreatmentCard in
-	// the template) are a throwaway diagnostic aid so the carousel owner can
-	// watch the fan behave with more than 5 cards and tell them apart — NOT
-	// real services. They will be reverted before merge; do not build on top
-	// of them. Labelled unmistakably as test content (not plausible service
-	// names) so the placeholder-content audit and any reviewer can spot them
-	// at a glance.
-	const DIAG_ITEMS = [6, 7, 8].map((n) => ({
-		key: `diag-test-card-${n}`,
-		label: 'TESTKAART',
-		icon: null,
-		buttonLabel: 'Test',
-		buttonHref: '/diensten',
-		description: 'TESTKAART diagnostic — not real copy.'
-	}));
 
-	// 'Meer diensten' description is placeholder copy (260809-hov), same
-	// TODO_-prefixed convention as BRAND.services' own descriptions in
-	// brand.ts — not ours to invent real copy for, see that file's comment.
-	const MEER_DIENSTEN_DESCRIPTION = 'TODO_ Korte omschrijving van het volledige aanbod volgt nog.';
+	// Slots that are actually on screen at once. Desktop shows five cards
+	// (0, +/-1, +/-2) since the fan was widened. Declared up here because the
+	// item list below is sized against it.
+	const VISIBLE_SLOT_MAX = 2;
 
-	const items = [
+	function isVisibleSlot(position: number): boolean {
+		return Math.abs(position) <= VISIBLE_SLOT_MAX;
+	}
+
+	const SERVICE_ITEMS = [
 		...BRAND.services.map((s) => ({
 			key: s.slug,
 			label: s.name,
@@ -53,10 +41,38 @@
 			icon: null,
 			buttonLabel: 'Bekijk alles',
 			buttonHref: '/diensten',
-			description: MEER_DIENSTEN_DESCRIPTION
-		},
-		...DIAG_ITEMS
+			// Placeholder copy (260809-hov), same TODO_-prefixed convention as
+			// BRAND.services' own descriptions — not ours to invent, see brand.ts.
+			description: 'TODO_ Korte omschrijving van het volledige aanbod volgt nog.'
+		}
 	];
+
+	const BASE_COUNT = SERVICE_ITEMS.length;
+
+	// The loop needs at least one slot hidden on EACH side of the visible
+	// range, because that is where a card recycles: shiftOne wraps an item
+	// once it steps past HIGH_SLOT/LOW_SLOT, and the whole design rests on
+	// that wrap only ever touching an item nobody can see.
+	//
+	// With 5 real services and 5 visible slots there is nowhere to hide it —
+	// HIGH_SLOT = floor(5/2) = 2 lands exactly on the visible edge, so every
+	// single step would teleport a card from +2 straight to -2 in full view.
+	// It was masked until now only because 3 throwaway TESTKAART diagnostic
+	// cards (since removed) pushed the count to 8.
+	//
+	// So the list is repeated until it is long enough. Duplicates are visually
+	// identical and carry aria-hidden + tabindex="-1", so the accessibility
+	// tree and the tab order still see each service exactly once.
+	const MIN_ITEMS = 2 * VISIBLE_SLOT_MAX + 2;
+	const REPEATS = Math.max(1, Math.ceil(MIN_ITEMS / BASE_COUNT));
+
+	const items = Array.from({ length: REPEATS }, (_, r) =>
+		SERVICE_ITEMS.map((item) => ({
+			...item,
+			key: r === 0 ? item.key : `${item.key}--dup${r}`,
+			duplicate: r > 0
+		}))
+	).flat();
 
 	const count = items.length;
 
@@ -864,21 +880,6 @@
 	// one).
 	const CARD_BAND_SAFE_MARGIN_PX = 24; // "a slight safe area under and above the cards" per the owner
 
-	// Slots that are actually on screen. Desktop shows five cards (0, ±1, ±2)
-	// since the fan was widened; mobile shows fewer, but the two things gated
-	// on this — the click-to-jump overlay and the magnet — are both
-	// desktop-only anyway (the overlay is CSS-hidden below 1024px, the magnet
-	// requires (hover: hover) and (pointer: fine)), so one range serves both.
-	//
-	// Worth stating plainly because getting it wrong is exactly the bug the
-	// owner found: anything NOT covered here falls through to the card's own
-	// <a> and navigates, i.e. silently behaves like the centre card.
-	const VISIBLE_SLOT_MAX = 2;
-
-	function isVisibleSlot(position: number): boolean {
-		return Math.abs(position) <= VISIBLE_SLOT_MAX;
-	}
-
 	// The grab cursor must advertise the band getCardBandY actually computes,
 	// not .treatments__fan's box. The fan is deliberately full-bleed and very
 	// tall as clipping headroom for the rotated cards, so `cursor: grab` on it
@@ -1144,6 +1145,29 @@
 		return window.matchMedia(JUMP_ON_CLICK_MQ).matches;
 	}
 
+	// The item list is repeated so the loop has off-screen slots to recycle
+	// through (see REPEATS), so every service exists at more than one index.
+	// Dots therefore have to reason about a service, not a slot.
+	function nearestCopyOf(s: number): number {
+		let best = s;
+		let bestDistance = Infinity;
+		for (let i = s; i < count; i += BASE_COUNT) {
+			const d = Math.abs(positions[i]!);
+			if (d < bestDistance) {
+				bestDistance = d;
+				best = i;
+			}
+		}
+		return best;
+	}
+
+	function isServiceCentred(s: number): boolean {
+		for (let i = s; i < count; i += BASE_COUNT) {
+			if (positions[i] === 0) return true;
+		}
+		return false;
+	}
+
 	function onCardClick(e: MouseEvent, i: number): void {
 		if (positions[i] === 0) return; // centre card: follow its own link
 		if (e.detail === 0) return; // keyboard: navigate directly
@@ -1185,11 +1209,11 @@
 					<TreatmentCard
 						label={item.label}
 						icon={item.icon}
-						cardNumber={i + 1}
 						buttonLabel={item.buttonLabel}
 						buttonHref={item.buttonHref}
 						description={item.description}
 						magnetic={isVisibleSlot(positions[i]!)}
+						duplicate={item.duplicate}
 						onCardClick={(e) => onCardClick(e, i)}
 						{dragging}
 					/>
@@ -1200,15 +1224,21 @@
 		<div class="treatments__controls">
 			<button type="button" class="treatments__nav" onclick={prev} aria-label="Vorige">Prev</button>
 
+			<!-- One dot per SERVICE, not per slot: the item list is repeated so the
+			     loop has hidden slots to recycle through (see REPEATS), and surfacing
+			     that repetition in the navigation would be nonsense to a visitor.
+			     Each dot targets whichever copy of its service currently sits nearest
+			     the centre, so pressing it always travels the short way round rather
+			     than sometimes sweeping across the whole fan. -->
 			<ul class="treatments__dots">
-				{#each items as item, i (item.key)}
+				{#each SERVICE_ITEMS as service, s (service.key)}
 					<li class="treatments__dot">
 						<button
 							type="button"
 							class="treatments__dot-visual"
-							class:treatments__dot-visual--active={positions[i] === 0}
-							aria-label={`Ga naar ${item.label}`}
-							onclick={() => goTo(i)}
+							class:treatments__dot-visual--active={isServiceCentred(s)}
+							aria-label={`Ga naar ${service.label}`}
+							onclick={() => goTo(nearestCopyOf(s))}
 						></button>
 					</li>
 				{/each}
