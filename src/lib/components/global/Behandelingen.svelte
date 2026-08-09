@@ -753,8 +753,26 @@
 		// only shapes the idle-start case — a retarget mid-flight keeps
 		// carrying the real, live velocity regardless of which curve it's
 		// joining, same as before this parameter existed.
+		//
+		// "Already moving" is a velocity test, NOT the inGesture flag alone.
+		// inGesture is true for any live pointer interaction including one
+		// that never moved: a plain CLICK on a card lands on .treatments__fan
+		// first, so onPointerDown/onWindowPointerUp run a complete
+		// zero-distance "drag" and leave inGesture true with velocity 0 in
+		// the same tick that the click handler then calls jumpTo. Testing
+		// inGesture alone therefore took the carry-over branch with velocity
+		// 0 — seeding the spring from a dead stop, which is exactly the
+		// ease-in the owner asked to remove, and it silently made `kick`
+		// dead code on every real click (it only ran when a press came from
+		// a genuinely idle fan, which a click never is). Comparing against
+		// VELOCITY_EPSILON rather than 0 reuses this file's own definition of
+		// "slow enough to count as stopped" (see its comment) instead of
+		// inventing a second threshold: below it the coast has already ended,
+		// so the synthetic kick is both the more correct seed and the one
+		// with no ease-in.
 		const y0 = offset - target;
-		const v0 = inGesture ? velocity : -kick * omega * y0;
+		const isMoving = inGesture && Math.abs(velocity) > VELOCITY_EPSILON;
+		const v0 = isMoving ? velocity : -kick * omega * y0;
 
 		inGesture = true;
 		motionPhase = 'latch';
