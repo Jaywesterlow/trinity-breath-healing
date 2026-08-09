@@ -13,8 +13,14 @@
 	 *
 	 * The card root is now the `<a>` itself (not a wrapped stretched-link
 	 * pseudo-element) — see the arrow's own comment below for why that
-	 * simplification is safe here (260809-hov).
+	 * simplification is safe here (260809-hov). `magnetic`/`dragging` are
+	 * the one addition in that same spirit-only-not-practice sense as
+	 * `cardNumber`: opaque flags the carousel hands down, not position
+	 * knowledge this component computes itself (see use:magnetic below and
+	 * its own file for what they drive).
 	 */
+	import { magnetic } from '$lib/actions/magnetic';
+
 	interface Props {
 		/** Service name — shown as the visible bottom title. */
 		label: string;
@@ -37,6 +43,13 @@
 		 * the DOM (never conditionally rendered) so AI crawlers can read it
 		 * regardless of hover state — hidden purely via opacity/transform. */
 		description: string;
+		/** Whether THIS card runs the magnetic cursor-follow. Only the centre
+		 * carousel card ever gets true — see the magnetic action's own file
+		 * header for the full contract (touch/reduced-motion/drag gating). */
+		magnetic?: boolean;
+		/** Whether the carousel fan itself is currently being dragged — the
+		 * magnet must release immediately when this is true. */
+		dragging?: boolean;
 	}
 
 	let {
@@ -45,11 +58,19 @@
 		cardNumber = null,
 		buttonLabel,
 		buttonHref,
-		description
+		description,
+		magnetic: isMagnetic = false,
+		dragging = false
 	}: Props = $props();
 </script>
 
-<a href={buttonHref} class="tcard" aria-label={`${buttonLabel} over ${label}`} draggable="false">
+<a
+	href={buttonHref}
+	class="tcard"
+	aria-label={`${buttonLabel} over ${label}`}
+	draggable="false"
+	use:magnetic={{ enabled: isMagnetic, dragging }}
+>
 	<div class="tcard__icon-wrap">
 		{#if cardNumber !== null}
 			<span class="tcard__number" aria-hidden="true">{cardNumber}</span>
@@ -102,8 +123,16 @@
 		cursor: pointer;
 		--tcard-scale: 1;
 		--tcard-desc-shift: 2.25rem;
-		transform: scale(var(--tcard-scale));
-		transition: transform var(--motion-base) var(--ease-out);
+		--magnet-x: 0px;
+		--magnet-y: 0px;
+		/* Magnet (translate) and hover scale share this one property, composed
+		   rather than one clobbering the other — translate first, then scale,
+		   so the magnet offset itself isn't also scaled up by 1.1. The
+		   use:magnetic action only ever writes --magnet-x/y (and, while
+		   actively tracking, --tcard-transition-duration) — see that action's
+		   own file for why. */
+		transform: translate(var(--magnet-x), var(--magnet-y)) scale(var(--tcard-scale));
+		transition: transform var(--tcard-transition-duration, var(--motion-base)) var(--ease-out);
 	}
 
 	.tcard__icon-wrap {

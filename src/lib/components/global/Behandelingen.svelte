@@ -1068,6 +1068,8 @@
 						buttonLabel={item.buttonLabel}
 						buttonHref={item.buttonHref}
 						description={item.description}
+						magnetic={positions[i] === 0}
+						{dragging}
 					/>
 
 					<!-- Desktop click-to-jump (CSS-hidden below 1024px). Only on the
