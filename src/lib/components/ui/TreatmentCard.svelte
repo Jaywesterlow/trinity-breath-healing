@@ -137,7 +137,20 @@
 		   use:magnetic action only ever writes --magnet-x/y (and, while
 		   actively tracking, --tcard-transition-duration) — see that action's
 		   own file for why. */
-		transform: translate(var(--magnet-x), var(--magnet-y)) scale(var(--tcard-scale));
+		/* The magnet offset is computed in SCREEN space (cursor position minus
+		   the card's own rect centre), but this element sits inside
+		   .treatments__pivot, which is rotated by --pos * --tilt-step. A plain
+		   translate here would therefore be applied in the pivot's rotated
+		   frame and pull the card off-axis — at --tilt-step: 14deg the ±2 cards
+		   sit at 28deg, so a pull toward the cursor would visibly miss it.
+		   Sandwiching the translate between the inverse rotation and the
+		   rotation cancels the parent's frame for that one step only:
+		   R(θ)·[R(-θ)·T·R(θ)·S] = T·R(θ)·S — the card still rotates and scales
+		   exactly as before, and the translate lands in screen space.
+		   Both custom properties inherit down from the pivot. */
+		transform: rotate(calc(-1 * var(--pos, 0) * var(--tilt-step, 0deg)))
+			translate(var(--magnet-x), var(--magnet-y))
+			rotate(calc(var(--pos, 0) * var(--tilt-step, 0deg))) scale(var(--tcard-scale));
 		/* --motion-fast (150ms), not --motion-base: this one transition covers
 		   BOTH the magnet translate and the hover scale, because they share
 		   this single transform property. It has to be short enough that the

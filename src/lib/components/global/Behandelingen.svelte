@@ -864,6 +864,21 @@
 	// one).
 	const CARD_BAND_SAFE_MARGIN_PX = 24; // "a slight safe area under and above the cards" per the owner
 
+	// Slots that are actually on screen. Desktop shows five cards (0, ±1, ±2)
+	// since the fan was widened; mobile shows fewer, but the two things gated
+	// on this — the click-to-jump overlay and the magnet — are both
+	// desktop-only anyway (the overlay is CSS-hidden below 1024px, the magnet
+	// requires (hover: hover) and (pointer: fine)), so one range serves both.
+	//
+	// Worth stating plainly because getting it wrong is exactly the bug the
+	// owner found: anything NOT covered here falls through to the card's own
+	// <a> and navigates, i.e. silently behaves like the centre card.
+	const VISIBLE_SLOT_MAX = 2;
+
+	function isVisibleSlot(position: number): boolean {
+		return Math.abs(position) <= VISIBLE_SLOT_MAX;
+	}
+
 	// The grab cursor must advertise the band getCardBandY actually computes,
 	// not .treatments__fan's box. The fan is deliberately full-bleed and very
 	// tall as clipping headroom for the rotated cards, so `cursor: grab` on it
@@ -1111,20 +1126,27 @@
 						buttonLabel={item.buttonLabel}
 						buttonHref={item.buttonHref}
 						description={item.description}
-						magnetic={positions[i] === 0}
+						magnetic={isVisibleSlot(positions[i]!)}
 						{dragging}
 					/>
 
-					<!-- Desktop click-to-jump (CSS-hidden below 1024px). Only on the
-					     two visible side cards: the centre card must keep its own
-					     link clickable, and ±2 is off-screen, so covering it would
-					     put a hit target over nothing. aria-hidden + tabindex="-1"
-					     on purpose — this is a pointer affordance, not a second
-					     control. The keyboard path is already complete and better
-					     labelled via the dots below (same goTo) and Prev/Next;
-					     another focusable element per card would only duplicate
-					     them and sit next to that card's own link in the tab order. -->
-					{#if positions[i] === 1 || positions[i] === -1}
+					<!-- Desktop click-to-jump (CSS-hidden below 1024px). Every VISIBLE
+					     card except the centre one: a side card centres itself, the
+					     centre card follows its own link. This used to be gated to
+					     exactly ±1 on the reasoning that "±2 is off-screen, so
+					     covering it would put a hit target over nothing" — that was
+					     true of the original geometry and stopped being true once the
+					     desktop fan was widened to show five cards. The consequence
+					     was the bug the owner found: with no overlay, ±2 fell through
+					     to the card's own <a> and NAVIGATED on click, behaving like
+					     the centre card instead of like its ±1 neighbours.
+					     aria-hidden + tabindex="-1" on purpose — this is a pointer
+					     affordance, not a second control. The keyboard path is already
+					     complete and better labelled via the dots below (same goTo)
+					     and Prev/Next; another focusable element per card would only
+					     duplicate them and sit next to that card's own link in the tab
+					     order. -->
+					{#if positions[i] !== 0 && isVisibleSlot(positions[i]!)}
 						<button
 							type="button"
 							class="treatments__jump"
