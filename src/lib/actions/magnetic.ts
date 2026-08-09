@@ -32,56 +32,31 @@ export type MagneticOptions = {
 	dragging: boolean;
 };
 
-// Fraction of the cursor's offset from the card's centre that the card
-// follows by, before the falloff below is applied.
-//
-// This does NOT set the pull on its own — strength and radius are coupled.
-// Actual peak offset is MAGNET_STRENGTH * radius / 4 (the maximum of the
-// d * (1 - d/r) curve, reached at d = r/2). So halving the radius also
-// halves the pull unless strength rises to match. The owner spotted this
-// coupling: "I think that might be tied to the strength."
-//
-// Held at 0.3 through the latest radius drop, deliberately: that round asked
-// for the pull to shrink WITH the range (the round before it asked for the
-// opposite), so the compensation that kept peak offset flat at ~14px is not
-// applied again. Peak is now ~7px.
-const MAGNET_STRENGTH = 0.3;
+// Fraction of the cursor's offset from the card's CENTRE that the card
+// follows by, before the edge falloff below is applied. This is what sets
+// how far the card actually moves: at the card's own left/right edge the
+// pull is MAGNET_STRENGTH * halfWidth, i.e. ~10px on a 240px-wide desktop
+// card. Raise it for a stickier card, lower it for a subtler one.
+const MAGNET_STRENGTH = 0.08;
 
-// Multiple of the card's own half-diagonal beyond which the magnet releases
-// (a fixed px value would only be correct at one breakpoint — --card-width
-// is 6.5rem on mobile and 15rem on desktop, see Behandelingen.svelte's own
-// pxPerStep comment for the exact same breakpoint trap already hit once in
-// this file). Measured live off the card's own getBoundingClientRect on
-// every move instead, the same "measure the real geometry, don't hardcode
-// it" pattern getCardBandY/measurePxPerStep already use elsewhere in this
-// carousel.
+// How far OUTSIDE the card's edge the magnet starts tracking, in px.
 //
-// 0.4x half-diagonal (1.6 -> 0.8 -> 0.4 over three rounds of owner review).
-// The engagement circle now sits well inside the card's own footprint, so the
-// magnet only wakes up once the cursor is genuinely on the card.
+// This replaced a radius measured from the card's centre (a multiple of its
+// half-diagonal), which went through three rounds of tuning without ever
+// landing, because a circle cannot describe a 240x390 rectangle. Big enough
+// to reach the left/right edges and it overshot top and bottom by ~100px;
+// small enough to sit near the edges vertically and it never reached them
+// horizontally at all. The owner's report is exactly that failure: "even if
+// I move to the outer edge of the card, it doesn't track... it only starts
+// tracking when I move towards the center."
 //
-// Halving this halves BOTH things the owner asked to halve, which is why it
-// is the only value that changed: peak offset is MAGNET_STRENGTH * radius / 4
-// (see that constant's comment), so range and pull-at-the-outer-edge scale
-// together on this one lever. "The distance at which it starts tracking and
-// the amount of movement the card actually makes when being pulled at the
-// outer range should be about half" — both now ~7px peak, down from ~14px.
-//
-// Note what this does NOT change: how fast the card moves once engaged. That
-// is MAGNET_TRACK_MS, deliberately left at 300ms. A smaller radius does make
-// the pull ramp up over less cursor travel (the falloff is steeper), which
-// can read as "snappier" even at an unchanged duration — the compensating
-// lever if that happens is this multiplier, not the duration.
-const MAGNET_RADIUS_MULTIPLIER = 0.4;
+// Measuring to the card's RECTANGLE instead makes the knob mean what it
+// says: the magnet engages this many pixels out from whichever edge the
+// cursor approaches, uniformly on all four sides, and is fully engaged
+// anywhere on the card itself. Breakpoint-safe without a multiplier, since
+// it is a margin around the real measured box rather than a fraction of it.
+const MAGNET_MARGIN_PX = 60;
 
-// How long the shared transform transition runs WHILE the magnet is tracking
-// the cursor. Not zero, deliberately — the magnet translate and the hover
-// scale are composed into one transform property, so this duration is also
-// the only thing the scale has to animate over (see the comment at its use
-// site below). Was 150ms; doubled to 300ms on the owner's "it needs to snap
-// half as fast to the card". This is also the only thing the hover scale has
-// to animate over, so it doubles that too — which is fine, the grow reads
-// better slower.
 const MAGNET_TRACK_MS = 300;
 
 function prefersReducedMotion(): boolean {
@@ -128,21 +103,21 @@ export function magnetic(node: HTMLElement, options: MagneticOptions) {
 			const centreY = rect.top + rect.height / 2;
 			const dx = pendingX - centreX;
 			const dy = pendingY - centreY;
-			const distance = Math.hypot(dx, dy);
-			// offsetWidth/offsetHeight, NOT rect.width/height: getBoundingClientRect
-			// on a rotated element returns the inflated axis-aligned box, not the
-			// card. The ±1/±2 cards sit at --tilt-step and twice it (14deg/28deg),
-			// where the bbox diagonal runs ~30% long — so deriving the engagement
-			// radius from the rect made the magnet reach noticeably further on the
-			// outer cards than the centre one, and pull harder there too (peak is
-			// MAGNET_STRENGTH * radius / 4). Same rotated-bbox trap getCardBandY
-			// documents at length in Behandelingen.svelte. The offset* properties
-			// are layout size, untouched by transforms, so they describe the card
-			// itself at any angle.
-			const halfDiagonal = Math.hypot(node.offsetWidth, node.offsetHeight) / 2;
-			const radius = halfDiagonal * MAGNET_RADIUS_MULTIPLIER;
+			// Distance from the cursor to the card's RECTANGLE, not to its
+			// centre: zero anywhere on the card, and the true perpendicular /
+			// corner distance once outside it. offsetWidth/offsetHeight rather
+			// than the rect's own width/height because getBoundingClientRect on
+			// a rotated element returns the inflated axis-aligned box — the ±1
+			// and ±2 cards sit at 14deg and 28deg, where that box runs ~30%
+			// long. Same rotated-bbox trap getCardBandY documents at length.
+			const halfWidth = node.offsetWidth / 2;
+			const halfHeight = node.offsetHeight / 2;
+			const edgeDistance = Math.hypot(
+				Math.max(0, Math.abs(dx) - halfWidth),
+				Math.max(0, Math.abs(dy) - halfHeight)
+			);
 
-			if (distance > radius) {
+			if (edgeDistance > MAGNET_MARGIN_PX) {
 				releaseTo('0px', '0px');
 				return;
 			}
@@ -160,23 +135,20 @@ export function magnetic(node: HTMLElement, options: MagneticOptions) {
 			// over.
 			node.style.setProperty('--tcard-transition-duration', `${MAGNET_TRACK_MS}ms`);
 
-			// Linear falloff to zero at the radius. Without it the pull was
-			// `distance * MAGNET_STRENGTH` with a hard cutoff, so the offset
-			// was at its LARGEST exactly where the magnet switched on: cross
-			// the boundary and the card jumped by strength * radius in one
-			// go (~52px at the old radius). That discontinuity is what
-			// the owner reported as "it snaps way too fast" — the duration
-			// only controlled how long the jump took, not that it was a jump.
+			// Falloff runs on the EDGE distance, so the card is fully engaged
+			// anywhere on itself and fades out across MAGNET_MARGIN_PX as the
+			// cursor leaves — reaching exactly zero at the boundary. That last
+			// part is the whole point: an earlier version cut off hard at the
+			// boundary while the pull was still at its maximum there, so
+			// crossing it teleported the card by tens of pixels. The owner
+			// reported that as "it snaps way too fast"; a longer transition
+			// would only have stretched the jump out rather than removed it.
 			//
-			// Scaling by (1 - distance/radius) makes the pull start at zero
-			// on the boundary and grow as the cursor closes in, so there is
-			// no step to see. Peak offset is now
-			// MAGNET_STRENGTH * radius / 4 (the maximum of d*(1-d/r)), i.e.
-			// ~14px on desktop — a card that "slightly sticks to the cursor",
-			// which is what was asked for originally. Both constants feed
-			// that one number; see MAGNET_STRENGTH's comment for why they
-			// have to be tuned as a pair.
-			const falloff = 1 - distance / radius;
+			// Magnitude still comes from the cursor's offset from the CENTRE,
+			// so the card leans toward wherever the cursor is on it: nothing
+			// at dead centre, ~MAGNET_STRENGTH * halfWidth (~10px) at the
+			// left/right edge.
+			const falloff = 1 - edgeDistance / MAGNET_MARGIN_PX;
 			const pull = MAGNET_STRENGTH * falloff;
 			node.style.setProperty('--magnet-x', `${dx * pull}px`);
 			node.style.setProperty('--magnet-y', `${dy * pull}px`);
@@ -192,7 +164,7 @@ export function magnetic(node: HTMLElement, options: MagneticOptions) {
 	}
 
 	// Listens on WINDOW, not on the node. Listening on the node only fires
-	// once the cursor is already over the card, which made the radius above
+	// once the cursor is already over the card, which made the margin above
 	// dead code — the magnet could never engage on approach, and the first
 	// event it ever saw was already up to a half-diagonal from the centre,
 	// so the card lurched the moment the cursor crossed its edge. The owner
