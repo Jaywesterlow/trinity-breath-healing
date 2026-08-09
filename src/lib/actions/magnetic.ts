@@ -48,6 +48,15 @@ const MAGNET_STRENGTH = 0.15;
 // cursor visually arrives at the card's corner.
 const MAGNET_RADIUS_MULTIPLIER = 1.5;
 
+// How long the shared transform transition runs WHILE the magnet is tracking
+// the cursor. Not zero, deliberately — the magnet translate and the hover
+// scale are composed into one transform property, so this duration is also
+// the only thing the scale has to animate over (see the comment at its use
+// site below). 150ms is short enough that the magnet still reads as
+// following the cursor rather than trailing it, and is the value the owner
+// asked for on the grow.
+const MAGNET_TRACK_MS = 150;
+
 function prefersReducedMotion(): boolean {
 	if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
 	return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -98,12 +107,18 @@ export function magnetic(node: HTMLElement, options: MagneticOptions) {
 				return;
 			}
 
-			// Actively tracking: no transition, so the translate follows the
-			// cursor 1:1 with no lag (a lagging transition here would visibly
-			// trail the cursor, the same reasoning this file's own
-			// onWindowPointerMove rAF-throttle comment already gives for why
-			// pointer events need careful handling against the display).
-			node.style.setProperty('--tcard-transition-duration', '0s');
+			// Actively tracking. This used to set 0s so the translate followed
+			// the cursor with no lag at all — but the magnet translate and the
+			// hover scale share ONE transform property (see TreatmentCard's
+			// own comment on it), so 0s here also killed the scale's
+			// transition: the card snapped to its hover size instead of
+			// growing into it. The owner reported exactly that ("the grow has
+			// to be smoothed out... I didn't see a transition speed").
+			//
+			// A short duration serves both: the magnet still reads as
+			// following the cursor, and the scale has something to animate
+			// over. MAGNET_TRACK_MS is the owner's requested 0.15s.
+			node.style.setProperty('--tcard-transition-duration', `${MAGNET_TRACK_MS}ms`);
 			node.style.setProperty('--magnet-x', `${dx * MAGNET_STRENGTH}px`);
 			node.style.setProperty('--magnet-y', `${dy * MAGNET_STRENGTH}px`);
 		});

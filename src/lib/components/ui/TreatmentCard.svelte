@@ -123,6 +123,12 @@
 		cursor: pointer;
 		--tcard-scale: 1;
 		--tcard-desc-shift: 2.25rem;
+		/* The reveal (icon fade-out, title/arrow slide-up, description
+		   fade-in) runs at half the speed of the site's base motion token —
+		   a direct owner request after seeing 250ms live. Kept as one local
+		   token rather than three literals so the three properties can never
+		   drift apart and stop reading as a single movement. */
+		--tcard-reveal-duration: 500ms;
 		--magnet-x: 0px;
 		--magnet-y: 0px;
 		/* Magnet (translate) and hover scale share this one property, composed
@@ -132,7 +138,14 @@
 		   actively tracking, --tcard-transition-duration) — see that action's
 		   own file for why. */
 		transform: translate(var(--magnet-x), var(--magnet-y)) scale(var(--tcard-scale));
-		transition: transform var(--tcard-transition-duration, var(--motion-base)) var(--ease-out);
+		/* --motion-fast (150ms), not --motion-base: this one transition covers
+		   BOTH the magnet translate and the hover scale, because they share
+		   this single transform property. It has to be short enough that the
+		   magnet still reads as following the cursor. The magnetic action
+		   overrides --tcard-transition-duration to the same 150ms while
+		   actively tracking (it used to override it to 0s, which silently
+		   removed the scale's animation entirely). */
+		transition: transform var(--tcard-transition-duration, var(--motion-fast)) var(--ease-out);
 	}
 
 	.tcard__icon-wrap {
@@ -142,7 +155,7 @@
 		align-items: center;
 		justify-content: center;
 		width: 100%;
-		transition: opacity var(--motion-base) var(--ease-out);
+		transition: opacity var(--tcard-reveal-duration) var(--ease-out);
 	}
 
 	.tcard__icon {
@@ -174,7 +187,7 @@
 		justify-content: space-between;
 		gap: var(--space-2);
 		width: 100%;
-		transition: transform var(--motion-base) var(--ease-out);
+		transition: transform var(--tcard-reveal-duration) var(--ease-out);
 	}
 
 	.tcard__title {
@@ -214,8 +227,8 @@
 		transform: translateY(6px);
 		pointer-events: none;
 		transition:
-			opacity var(--motion-base) var(--ease-out),
-			transform var(--motion-base) var(--ease-out);
+			opacity var(--tcard-reveal-duration) var(--ease-out),
+			transform var(--tcard-reveal-duration) var(--ease-out);
 	}
 
 	/* Whole hover reveal gated behind (hover: hover) and (pointer: fine) —
@@ -252,7 +265,7 @@
 		@media (prefers-reduced-motion: no-preference) {
 			.tcard:hover,
 			.tcard:focus-visible {
-				--tcard-scale: 1.1;
+				--tcard-scale: 1.05;
 			}
 		}
 	}

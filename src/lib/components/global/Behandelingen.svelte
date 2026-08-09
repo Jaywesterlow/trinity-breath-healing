@@ -864,6 +864,46 @@
 	// one).
 	const CARD_BAND_SAFE_MARGIN_PX = 24; // "a slight safe area under and above the cards" per the owner
 
+	// The grab cursor must advertise the band getCardBandY actually computes,
+	// not .treatments__fan's box. The fan is deliberately full-bleed and very
+	// tall as clipping headroom for the rotated cards, so `cursor: grab` on it
+	// promised a drag across a huge, mostly-empty region — including behind and
+	// below the nav — long after fb19441/a3f798d stopped that region from
+	// actually starting a drag. The owner caught exactly that mismatch: "my
+	// cursor still applies the drag effect in the area that was previously
+	// draggable."
+	//
+	// Tracked on hover rather than derived in CSS because the band is measured
+	// from live bounding boxes and has no CSS expression. Same rAF throttle and
+	// same reasoning as onWindowPointerMove: pointer events can outrun the
+	// display, and this reads layout.
+	let cursorInBand = $state(false);
+	let hoverRafId: number | null = null;
+	let pendingHoverY = 0;
+
+	function onFanHoverMove(e: PointerEvent): void {
+		// While dragging, --dragging already owns the cursor (grabbing) and the
+		// band is irrelevant — skip the layout read entirely rather than doing
+		// it every frame of a drag for a result nothing uses.
+		if (dragging) return;
+		pendingHoverY = e.clientY;
+		if (hoverRafId !== null) return;
+		hoverRafId = requestAnimationFrame(() => {
+			hoverRafId = null;
+			if (!fanEl) return;
+			const band = getCardBandY(fanEl);
+			cursorInBand = band !== null && pendingHoverY >= band.top && pendingHoverY <= band.bottom;
+		});
+	}
+
+	function onFanHoverLeave(): void {
+		if (hoverRafId !== null) {
+			cancelAnimationFrame(hoverRafId);
+			hoverRafId = null;
+		}
+		cursorInBand = false;
+	}
+
 	function getCardBandY(fanEl: HTMLElement): { top: number; bottom: number } | null {
 		const pivotEls = fanEl.querySelectorAll<HTMLElement>('.treatments__pivot');
 		let centreEl: HTMLElement | null = null;
@@ -1046,12 +1086,15 @@
 	<div class="treatments__carousel-wrap">
 		<div
 			class="treatments__fan"
+			class:treatments__fan--grabbable={cursorInBand}
 			class:treatments__fan--dragging={dragging}
 			role="group"
 			aria-roledescription="carrousel"
 			aria-label="Behandelingen"
 			bind:this={fanEl}
 			onpointerdown={onPointerDown}
+			onpointermove={onFanHoverMove}
+			onpointerleave={onFanHoverLeave}
 			onclickcapture={onFanClickCapture}
 		>
 			{#each items as item, i (item.key)}
@@ -1201,6 +1244,16 @@
 		   .treatments__jump and TreatmentCard's own cursor for those). Inert
 		   on touch, so no media query needed; harmless to leave in for
 		   pointer/touch too. */
+		/* Deliberately NOT grab. The fan's box is far taller than the region
+		   that actually starts a drag (see cursorInBand in the script) — a
+		   grab cursor here promised draggability across empty space behind
+		   and below the nav. --grabbable below carries it instead, driven by
+		   the same measured band onPointerDown gates on, so the cursor and
+		   the behaviour can't disagree. */
+		cursor: default;
+	}
+
+	.treatments__fan--grabbable {
 		cursor: grab;
 	}
 
