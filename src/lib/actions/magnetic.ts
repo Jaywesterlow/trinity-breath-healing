@@ -41,9 +41,10 @@ export type MagneticOptions = {
 // halves the pull unless strength rises to match. The owner spotted this
 // coupling: "I think that might be tied to the strength."
 //
-// Raised 0.15 -> 0.3 alongside the radius drop below, chosen to hold the
-// peak offset at ~14px on desktop across both changes: the range shrinks,
-// the strength of the pull itself does not.
+// Held at 0.3 through the latest radius drop, deliberately: that round asked
+// for the pull to shrink WITH the range (the round before it asked for the
+// opposite), so the compensation that kept peak offset flat at ~14px is not
+// applied again. Peak is now ~7px.
 const MAGNET_STRENGTH = 0.3;
 
 // Multiple of the card's own half-diagonal beyond which the magnet releases
@@ -55,18 +56,23 @@ const MAGNET_STRENGTH = 0.3;
 // it" pattern getCardBandY/measurePxPerStep already use elsewhere in this
 // carousel.
 //
-// 0.8x half-diagonal, down from 1.6 — "the range at which the magnet starts
-// tracking needs to be lowered a lot." At this multiple the engagement circle
-// sits roughly at the card's own left/right edges on desktop, so the magnet
-// is a close-range effect rather than something that reaches out across the
-// section.
+// 0.4x half-diagonal (1.6 -> 0.8 -> 0.4 over three rounds of owner review).
+// The engagement circle now sits well inside the card's own footprint, so the
+// magnet only wakes up once the cursor is genuinely on the card.
+//
+// Halving this halves BOTH things the owner asked to halve, which is why it
+// is the only value that changed: peak offset is MAGNET_STRENGTH * radius / 4
+// (see that constant's comment), so range and pull-at-the-outer-edge scale
+// together on this one lever. "The distance at which it starts tracking and
+// the amount of movement the card actually makes when being pulled at the
+// outer range should be about half" — both now ~7px peak, down from ~14px.
 //
 // Note what this does NOT change: how fast the card moves once engaged. That
 // is MAGNET_TRACK_MS, deliberately left at 300ms. A smaller radius does make
 // the pull ramp up over less cursor travel (the falloff is steeper), which
 // can read as "snappier" even at an unchanged duration — the compensating
 // lever if that happens is this multiplier, not the duration.
-const MAGNET_RADIUS_MULTIPLIER = 0.8;
+const MAGNET_RADIUS_MULTIPLIER = 0.4;
 
 // How long the shared transform transition runs WHILE the magnet is tracking
 // the cursor. Not zero, deliberately — the magnet translate and the hover
