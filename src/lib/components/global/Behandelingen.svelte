@@ -835,7 +835,7 @@
 	// margin (see the fan's own comment), and shrinking it re-clips cards
 	// mid-motion, a real bug already fixed once. An overlay on top isn't
 	// either: it would block the cards' own corner links and the desktop
-	// click-to-jump overlay (.treatments__jump). Instead, reject the gesture
+	// click-to-jump (now onCardClick, on the card itself). Instead, reject the gesture
 	// right here — before any drag state is touched, so nothing else in the
 	// gesture path has to change — whenever the pointer lands vertically
 	// outside the actual card row.
@@ -1074,7 +1074,7 @@
 	// The centre card's own root element is now the link (see
 	// TreatmentCard.svelte, 260809-hov — the whole card is a real <a>, no
 	// stretched-link pseudo-element needed any more), unlike
-	// .treatments__jump's plain <button>. jumpTo already
+	// a plain <button>. jumpTo already
 	// guards its own JS-driven navigation with `if (dragMoved) return;`, but
 	// a real link's navigation is the BROWSER's own default action on the
 	// native click that follows a mouse drag's release, not something jumpTo
@@ -1097,7 +1097,7 @@
 	// produces and nothing else.
 	//
 	// Deliberately NOT fixed by clearing dragMoved here: this runs in the
-	// capture phase, before .treatments__jump's own bubble-phase onclick, and
+	// capture phase, before onCardClick's own bubble-phase handler, and
 	// jumpTo reads the same flag to guard the side cards' JS path. Clearing
 	// it here would re-open that path and let a drag ending on a side card
 	// also centre it.
@@ -1105,6 +1105,51 @@
 		if (dragMoved && e.detail > 0) {
 			e.preventDefault();
 		}
+	}
+
+	// What a click on a card MEANS, decided here rather than by a separate
+	// overlay element sitting on top of the card.
+	//
+	// There used to be a .treatments__jump <button> absolutely positioned at
+	// inset:0 over every non-centre card, carrying the centring click. It had
+	// to go: as a later sibling with no pointer-events routing it hit-tested
+	// above the card, so :hover never reached .tcard and the entire hover
+	// reveal (scale, description fade-in, title slide-up) was dead on every
+	// side card — visibly so once the magnet was extended to all of them,
+	// since those cards then tracked the cursor while refusing to open.
+	//
+	// Collapsing it into the card's own handler also deletes a whole bug
+	// class rather than one bug. The overlay's existence was gated on a
+	// hand-written slot test that had already been wrong twice (first "only
+	// +/-1 is visible", then "positions[i] without offset", so a card
+	// rendering at --pos 2.x mid-motion had no overlay and navigated). There
+	// is no gate here to drift: the card asks where it is at the moment it is
+	// clicked.
+	//
+	// Keyboard deliberately navigates instead of centring. detail === 0 is a
+	// keyboard-synthesised click (see onFanClickCapture for the same
+	// discriminator): centring on Enter would strand a keyboard user on a
+	// card they cannot then open without a second, different key press, and
+	// the dots and Prev/Next already give them centring.
+	// Desktop-only, matching the media query that used to hide the overlay
+	// below 1024px. That `display: none` was load-bearing, not cosmetic:
+	// mobile navigates this section by swiping the fan, so tapping a card
+	// there has always meant "open it", and every card was a live link. Losing
+	// the overlay without reproducing its breakpoint gate would have silently
+	// changed mobile from "tap opens the page" to "tap centres the card".
+	const JUMP_ON_CLICK_MQ = '(min-width: 1024px)';
+
+	function canJumpOnClick(): boolean {
+		if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
+		return window.matchMedia(JUMP_ON_CLICK_MQ).matches;
+	}
+
+	function onCardClick(e: MouseEvent, i: number): void {
+		if (positions[i] === 0) return; // centre card: follow its own link
+		if (e.detail === 0) return; // keyboard: navigate directly
+		if (!canJumpOnClick()) return; // mobile: tap opens the page, as before
+		e.preventDefault();
+		jumpTo(i);
 	}
 </script>
 
@@ -1145,34 +1190,9 @@
 						buttonHref={item.buttonHref}
 						description={item.description}
 						magnetic={isVisibleSlot(positions[i]!)}
+						onCardClick={(e) => onCardClick(e, i)}
 						{dragging}
 					/>
-
-					<!-- Desktop click-to-jump (CSS-hidden below 1024px). Every VISIBLE
-					     card except the centre one: a side card centres itself, the
-					     centre card follows its own link. This used to be gated to
-					     exactly ±1 on the reasoning that "±2 is off-screen, so
-					     covering it would put a hit target over nothing" — that was
-					     true of the original geometry and stopped being true once the
-					     desktop fan was widened to show five cards. The consequence
-					     was the bug the owner found: with no overlay, ±2 fell through
-					     to the card's own <a> and NAVIGATED on click, behaving like
-					     the centre card instead of like its ±1 neighbours.
-					     aria-hidden + tabindex="-1" on purpose — this is a pointer
-					     affordance, not a second control. The keyboard path is already
-					     complete and better labelled via the dots below (same goTo)
-					     and Prev/Next; another focusable element per card would only
-					     duplicate them and sit next to that card's own link in the tab
-					     order. -->
-					{#if positions[i] !== 0 && isVisibleSlot(positions[i]!)}
-						<button
-							type="button"
-							class="treatments__jump"
-							tabindex="-1"
-							aria-hidden="true"
-							onclick={() => jumpTo(i)}
-						></button>
-					{/if}
 				</div>
 			{/each}
 		</div>
@@ -1281,7 +1301,7 @@
 		-webkit-user-select: none; /* Safari/iOS */
 		user-select: none;
 		/* Drag affordance over the fan's own background (not the cards — see
-		   .treatments__jump and TreatmentCard's own cursor for those). Inert
+		   TreatmentCard's own cursor for those). Inert
 		   on touch, so no media query needed; harmless to leave in for
 		   pointer/touch too. */
 		/* Deliberately NOT grab. The fan's box is far taller than the region
@@ -1353,18 +1373,6 @@
 	   only once motion actually lands on a card (see endGesture). */
 	.treatments__pivot--motion {
 		transition: none;
-	}
-
-	/* Desktop-only click target over a visible side card (see the {#if} in the
-	   template for why only those two). Hidden here, restored in the desktop
-	   media query at the bottom — mobile navigates that section by swiping the
-	   fan itself, and a tap target sitting on top of a card would swallow the
-	   pointerdown that starts the drag. Sized off .treatments__pivot, which is
-	   already position:absolute and therefore this element's containing block,
-	   so it tracks the card through the rotation without needing its own
-	   transform. */
-	.treatments__jump {
-		display: none;
 	}
 
 	/* Card size/padding/layout itself lives in TreatmentCard.svelte — the one
@@ -1561,29 +1569,6 @@
 
 		.treatments__nav {
 			display: inline-block;
-		}
-
-		/* inset:0 rather than a width/height pair — .treatments__pivot is sized
-		   by the card inside it, and the card's own size is set in
-		   TreatmentCard.svelte off --card-width. Matching the card's radius
-		   keeps the hover wash from squaring off its corners. The wash is the
-		   only affordance beyond the cursor: anything that moved or resized the
-		   card would fight geometry (--pivot-distance, --tilt-step, the fan
-		   height) that was tuned against measured bounding boxes. */
-		.treatments__jump {
-			display: block;
-			position: absolute;
-			inset: 0;
-			padding: 0;
-			border: none;
-			border-radius: var(--radius-lg);
-			background: transparent;
-			cursor: pointer;
-			transition: background-color var(--motion-fast);
-		}
-
-		.treatments__jump:hover {
-			background: color-mix(in srgb, var(--color-bg-sand) 12%, transparent);
 		}
 	}
 </style>

@@ -43,13 +43,22 @@
 		 * the DOM (never conditionally rendered) so AI crawlers can read it
 		 * regardless of hover state — hidden purely via opacity/transform. */
 		description: string;
-		/** Whether THIS card runs the magnetic cursor-follow. Only the centre
-		 * carousel card ever gets true — see the magnetic action's own file
-		 * header for the full contract (touch/reduced-motion/drag gating). */
+		/** Whether THIS card runs the magnetic cursor-follow. Every VISIBLE
+		 * card gets true (f1ff682 — the cards are all clickable, they just do
+		 * different things, so they should all feel the same); off-screen
+		 * slots stay false so they don't each hold a window listener. See the
+		 * magnetic action's own file header for the rest of the contract
+		 * (touch/reduced-motion/drag gating). */
 		magnetic?: boolean;
 		/** Whether the carousel fan itself is currently being dragged — the
 		 * magnet must release immediately when this is true. */
 		dragging?: boolean;
+		/** Click on the card root. The carousel decides what a click MEANS
+		 * (centre this card vs. follow its link) — this component just reports
+		 * that one happened, staying position-unaware like the rest of it.
+		 * Replaces the .treatments__jump overlay, which covered the card and
+		 * so blocked :hover from ever reaching it. */
+		onCardClick?: (e: MouseEvent) => void;
 	}
 
 	let {
@@ -60,7 +69,8 @@
 		buttonHref,
 		description,
 		magnetic: isMagnetic = false,
-		dragging = false
+		dragging = false,
+		onCardClick
 	}: Props = $props();
 </script>
 
@@ -69,6 +79,7 @@
 	class="tcard"
 	aria-label={`${buttonLabel} over ${label}`}
 	draggable="false"
+	onclick={onCardClick}
 	use:magnetic={{ enabled: isMagnetic, dragging }}
 >
 	<div class="tcard__icon-wrap">
@@ -133,7 +144,7 @@
 		--magnet-y: 0px;
 		/* Magnet (translate) and hover scale share this one property, composed
 		   rather than one clobbering the other — translate first, then scale,
-		   so the magnet offset itself isn't also scaled up by 1.1. The
+		   so the magnet offset itself isn't also scaled up by --tcard-scale. The
 		   use:magnetic action only ever writes --magnet-x/y (and, while
 		   actively tracking, --tcard-transition-duration) — see that action's
 		   own file for why. */

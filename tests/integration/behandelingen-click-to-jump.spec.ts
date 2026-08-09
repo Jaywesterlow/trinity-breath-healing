@@ -25,7 +25,14 @@ const DESKTOP = { width: 1440, height: 900 };
 const MOBILE = { width: 390, height: 844 };
 
 const PIVOT = '.treatments__pivot';
-const JUMP = '.treatments__jump';
+// The card root IS the click target now. There is no overlay element any
+// more: .treatments__jump was deleted because, as an inset:0 later sibling,
+// it hit-tested above the card and stopped :hover ever reaching it, killing
+// the whole hover reveal on every side card. What a click means is decided in
+// onCardClick instead, from the card's live position at click time — so these
+// tests assert the BEHAVIOUR (centres / navigates) rather than the presence
+// of a particular element, which is what let the old gate rot twice.
+const CARD = 'a.tcard';
 
 /** Every card's current `--pos`, in DOM order. */
 async function positions(page: Page): Promise<number[]> {
@@ -53,7 +60,7 @@ test.describe('desktop', () => {
 	test('clicking the right-hand side card centres it', async ({ page }) => {
 		const target = await indexAt(page, 1);
 
-		await page.locator(PIVOT).nth(target).locator(JUMP).click();
+		await page.locator(PIVOT).nth(target).locator(CARD).click();
 		// jumpTo routes through goTo/driveMotion, the same JS spring latch
 		// button navigation uses (BUTTON_SPRING_OMEGA — see its own comment),
 		// not the CSS transition. Single-step settle measures ~1.22s at the
@@ -68,36 +75,46 @@ test.describe('desktop', () => {
 	test('clicking the left-hand side card centres it', async ({ page }) => {
 		const target = await indexAt(page, -1);
 
-		await page.locator(PIVOT).nth(target).locator(JUMP).click();
+		await page.locator(PIVOT).nth(target).locator(CARD).click();
 		await page.waitForTimeout(2000);
 
 		expect((await positions(page))[target]).toBe(0);
 	});
 
-	test('the centre card carries no overlay, so its link stays clickable', async ({ page }) => {
-		const centre = await indexAt(page, 0);
+	test('clicking an outer visible card centres it instead of navigating', async ({ page }) => {
+		// The regression this exists for: ±2 used to fall through to the card's
+		// own <a> and NAVIGATE, behaving like the centre card rather than like
+		// its ±1 neighbours, because the overlay was gated to exactly ±1 back
+		// when only three cards were visible. Asserted on both axes — the card
+		// centres AND the page did not navigate away.
+		const target = await indexAt(page, 2);
 
-		await expect(page.locator(PIVOT).nth(centre).locator(JUMP)).toHaveCount(0);
-		// The link is the thing the overlay would have covered.
-		await expect(page.locator(PIVOT).nth(centre).locator('a[href^="/diensten/"]')).toBeVisible();
+		await page.locator(PIVOT).nth(target).locator(CARD).click();
+		await page.waitForTimeout(2500);
+
+		expect(new URL(page.url()).pathname).toBe('/');
+		expect((await positions(page))[target]).toBe(0);
 	});
 
-	test('every visible side card carries an overlay', async ({ page }) => {
-		// Desktop shows five cards (0, ±1, ±2) — every one of them except the
-		// centre gets the overlay (isVisibleSlot/VISIBLE_SLOT_MAX in
-		// Behandelingen.svelte), so a click on ±2 centres it instead of
-		// falling through to the card's own <a> and navigating (see f1ff682).
-		await expect(page.locator(JUMP)).toHaveCount(4);
+	test('clicking the centre card follows its link', async ({ page }) => {
+		const centre = await indexAt(page, 0);
+		const href = await page.locator(PIVOT).nth(centre).locator(CARD).getAttribute('href');
+		expect(href).toBeTruthy();
+
+		await page.locator(PIVOT).nth(centre).locator(CARD).click();
+		await page.waitForURL(`**${href}`);
+
+		expect(new URL(page.url()).pathname).toBe(href);
 	});
 
 	test('a drag does not also fire a jump on release', async ({ page }) => {
 		const target = await indexAt(page, 1);
 		const before = await positions(page);
 
-		// Deliberately started on the side card's own overlay, not on empty fan
+		// Deliberately started on the side card itself, not on empty fan
 		// background: the bug is the browser synthesising a click there after a
-		// drag, so a drag that never touches the overlay cannot catch it.
-		const box = await page.locator(PIVOT).nth(target).locator(JUMP).boundingBox();
+		// drag, so a drag that never touches a card cannot catch it.
+		const box = await page.locator(PIVOT).nth(target).locator(CARD).boundingBox();
 		expect(box).not.toBeNull();
 
 		// Short enough that the drag itself commits zero steps (well under
@@ -119,12 +136,23 @@ test.describe('desktop', () => {
 test.describe('mobile', () => {
 	test.use({ viewport: MOBILE });
 
-	test('the overlay is not rendered as a live target', async ({ page }) => {
+	test('tapping a side card opens it rather than centring it', async ({ page }) => {
 		await page.goto('/');
 		await page.locator('.treatments__fan').scrollIntoViewIfNeeded();
 
-		// Present in the DOM (the {#if} is position-driven, not breakpoint-driven)
-		// but display:none, so it cannot intercept the swipe's pointerdown.
-		await expect(page.locator(JUMP).first()).toBeHidden();
+		// Mobile navigates this section by swiping the fan, so a tap has always
+		// meant "open this card" at every position — enforced by the media
+		// query that used to hide the overlay below 1024px, and now by
+		// onCardClick's canJumpOnClick gate. Deleting the overlay without
+		// reproducing that gate would silently have turned every mobile tap on
+		// a side card into a centring gesture.
+		const target = await indexAt(page, 1);
+		const href = await page.locator(PIVOT).nth(target).locator(CARD).getAttribute('href');
+		expect(href).toBeTruthy();
+
+		await page.locator(PIVOT).nth(target).locator(CARD).click();
+		await page.waitForURL(`**${href}`);
+
+		expect(new URL(page.url()).pathname).toBe(href);
 	});
 });
