@@ -265,7 +265,7 @@
 		@media (prefers-reduced-motion: no-preference) {
 			.tcard:hover,
 			.tcard:focus-visible {
-				--tcard-scale: 1.05;
+				--tcard-scale: 1.025;
 			}
 		}
 	}

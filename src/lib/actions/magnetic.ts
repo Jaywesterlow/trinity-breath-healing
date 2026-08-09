@@ -44,18 +44,24 @@ const MAGNET_STRENGTH = 0.15;
 // this file). Measured live off the card's own getBoundingClientRect on
 // every move instead, the same "measure the real geometry, don't hardcode
 // it" pattern getCardBandY/measurePxPerStep already use elsewhere in this
-// carousel. 1.5x half-diagonal per the plan: engages a little before the
-// cursor visually arrives at the card's corner.
-const MAGNET_RADIUS_MULTIPLIER = 1.5;
+// carousel.
+//
+// 1.6x half-diagonal: the magnet engages while the cursor is still short of
+// the card, not on contact, which is what "snap whenever my cursor is close
+// to the card" asks for. Safe to have it reach this far ONLY because the
+// pull now tapers to zero at the boundary (see the falloff at its use site);
+// with the old hard cutoff a bigger radius meant a bigger jump.
+const MAGNET_RADIUS_MULTIPLIER = 1.6;
 
 // How long the shared transform transition runs WHILE the magnet is tracking
 // the cursor. Not zero, deliberately — the magnet translate and the hover
 // scale are composed into one transform property, so this duration is also
 // the only thing the scale has to animate over (see the comment at its use
-// site below). 150ms is short enough that the magnet still reads as
-// following the cursor rather than trailing it, and is the value the owner
-// asked for on the grow.
-const MAGNET_TRACK_MS = 150;
+// site below). Was 150ms; doubled to 300ms on the owner's "it needs to snap
+// half as fast to the card". This is also the only thing the hover scale has
+// to animate over, so it doubles that too — which is fine, the grow reads
+// better slower.
+const MAGNET_TRACK_MS = 300;
 
 function prefersReducedMotion(): boolean {
 	if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
@@ -117,10 +123,27 @@ export function magnetic(node: HTMLElement, options: MagneticOptions) {
 			//
 			// A short duration serves both: the magnet still reads as
 			// following the cursor, and the scale has something to animate
-			// over. MAGNET_TRACK_MS is the owner's requested 0.15s.
+			// over.
 			node.style.setProperty('--tcard-transition-duration', `${MAGNET_TRACK_MS}ms`);
-			node.style.setProperty('--magnet-x', `${dx * MAGNET_STRENGTH}px`);
-			node.style.setProperty('--magnet-y', `${dy * MAGNET_STRENGTH}px`);
+
+			// Linear falloff to zero at the radius. Without it the pull was
+			// `distance * MAGNET_STRENGTH` with a hard cutoff, so the offset
+			// was at its LARGEST exactly where the magnet switched on: cross
+			// the boundary and the card jumped by strength * radius in one
+			// go (~52px at the old radius). That discontinuity is what
+			// the owner reported as "it snaps way too fast" — the duration
+			// only controlled how long the jump took, not that it was a jump.
+			//
+			// Scaling by (1 - distance/radius) makes the pull start at zero
+			// on the boundary and grow as the cursor closes in, so there is
+			// no step to see. Peak offset is now
+			// MAGNET_STRENGTH * radius / 4 (the maximum of d*(1-d/r)), i.e.
+			// ~9px on desktop — a card that "slightly sticks to the cursor",
+			// which is what was asked for originally.
+			const falloff = 1 - distance / radius;
+			const pull = MAGNET_STRENGTH * falloff;
+			node.style.setProperty('--magnet-x', `${dx * pull}px`);
+			node.style.setProperty('--magnet-y', `${dy * pull}px`);
 		});
 	}
 
@@ -132,18 +155,27 @@ export function magnetic(node: HTMLElement, options: MagneticOptions) {
 		releaseTo('0px', '0px');
 	}
 
+	// Listens on WINDOW, not on the node. Listening on the node only fires
+	// once the cursor is already over the card, which made the radius above
+	// dead code — the magnet could never engage on approach, and the first
+	// event it ever saw was already up to a half-diagonal from the centre,
+	// so the card lurched the moment the cursor crossed its edge. The owner
+	// asked for the opposite: "it needs to snap whenever my cursor is close
+	// to the card." Distance is computed from the card's own live rect, so a
+	// window listener costs one rAF-throttled read and nothing else, and
+	// only the centre card ever attaches one (see the enabled gate).
 	function attach(): void {
 		if (attached) return;
 		attached = true;
-		node.addEventListener('pointermove', onPointerMove);
-		node.addEventListener('pointerleave', onPointerLeave);
+		window.addEventListener('pointermove', onPointerMove);
+		window.addEventListener('pointerleave', onPointerLeave);
 	}
 
 	function detach(): void {
 		if (!attached) return;
 		attached = false;
-		node.removeEventListener('pointermove', onPointerMove);
-		node.removeEventListener('pointerleave', onPointerLeave);
+		window.removeEventListener('pointermove', onPointerMove);
+		window.removeEventListener('pointerleave', onPointerLeave);
 		if (rafId !== null) {
 			cancelAnimationFrame(rafId);
 			rafId = null;
