@@ -878,6 +878,7 @@
 	<div class="treatments__carousel-wrap">
 		<div
 			class="treatments__fan"
+			class:treatments__fan--dragging={dragging}
 			role="group"
 			aria-roledescription="carrousel"
 			aria-label="Behandelingen"
@@ -1023,6 +1024,21 @@
 		   click model depends on the native click still firing. */
 		-webkit-user-select: none; /* Safari/iOS */
 		user-select: none;
+		/* Drag affordance over the fan's own background (not the cards — see
+		   .treatments__jump and TreatmentCard's own cursor for those). Inert
+		   on touch, so no media query needed; harmless to leave in for
+		   pointer/touch too. */
+		cursor: grab;
+	}
+
+	/* Bound to `dragging` specifically, not `inGesture` — inGesture stays
+	   true through coast and latch after the finger/mouse lifts, so tying
+	   this to it would leave the hand closed for up to a second after the
+	   gesture is physically over. `dragging` goes false the instant
+	   onPointerUp/onPointerCancel fires (see endDrag), which is exactly
+	   when the cursor should reopen. */
+	.treatments__fan--dragging {
+		cursor: grabbing;
 	}
 
 	/* Rotates around ONE shared point far below the row (a real fan hub) —
