@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { reveal } from '$lib/actions/reveal';
 	import { BRAND } from '$lib/constants/brand';
 	import TreatmentCard from '$lib/components/ui/TreatmentCard.svelte';
@@ -232,7 +233,87 @@
 	// than replacing it, because shiftOne is still only ever called at the
 	// exact moment the fan has travelled one full card, so the item it
 	// recycles is still off-screen exactly as it is today.
-	const PX_PER_STEP = 90; // ~one mobile card-width of drag == one step
+	// Steps-per-pixel geometry: how many horizontal screen pixels correspond to
+	// one step (--pos moving by 1, i.e. one card advancing to the next slot).
+	// Used at both call sites below (the drag follow and the release exit
+	// velocity) to convert a raw pixel measurement into --pos's fractional
+	// unit. This USED to be a single hardcoded constant (90, "~one mobile
+	// card-width of drag"), which was a breakpoint bug: --card-width is
+	// 6.27rem on mobile but 15rem on desktop, and the fan's spread
+	// (--pivot-distance) is tuned per breakpoint too, so the real on-screen
+	// distance between adjacent card centres is nowhere near the same number
+	// at both sizes. Against a single 90px constant, desktop's actual
+	// centre-to-centre distance made the cards travel roughly 3x the cursor's
+	// own movement — the owner's report ("cards move about twice as fast as
+	// my cursor").
+	//
+	// Fixed by measuring the real geometry at runtime instead of hardcoding a
+	// number, using the exact technique getCardBandY (below) already uses to
+	// find a pivot's TRUE unrotated rectangle from a live bounding box: a
+	// rectangle is point-symmetric about its own centre, so a rotated
+	// element's getBoundingClientRect() — even though inflated in width/height
+	// by the rotation, and even though the rotation here pivots around a
+	// point far below the row, not the element's own centre — still has its
+	// bounding-box CENTRE land exactly on the card's true centre, at any
+	// angle. Measuring the centre pivot (slot 0) and its slot-1 neighbour's
+	// bbox centres and taking the distance between them is therefore an exact
+	// measurement of centre-to-centre spacing, not an approximation, and it
+	// self-corrects if --card-width/--pivot-distance/--tilt-step are ever
+	// retuned again — which, per this file's own tuning history above, has
+	// happened often. Measured once on mount and again on resize (breakpoint
+	// changes), not per-frame inside the drag hot path, so it adds no
+	// per-frame getBoundingClientRect cost (a real concern the plan for this
+	// fix flagged explicitly).
+	const FALLBACK_PX_PER_STEP = 90; // only in effect before the first live measurement lands
+	let pxPerStep = $state(FALLBACK_PX_PER_STEP);
+	let fanEl: HTMLElement | undefined;
+
+	// Reads positions[]/offset (both $state) but is called imperatively from
+	// onMount/resize below, never from inside a Svelte $effect — so it never
+	// becomes a reactive dependency that would re-run on every drag-frame
+	// offset write. See fanEl's own use here: bound once via bind:this on
+	// .treatments__fan, so this doesn't rely on onPointerDown's
+	// e.currentTarget the way getCardBandY does.
+	function measurePxPerStep(el: HTMLElement): number | null {
+		const pivotEls = el.querySelectorAll<HTMLElement>('.treatments__pivot');
+		let centreEl: HTMLElement | null = null;
+		let centreDist = Infinity;
+		let neighbourEl: HTMLElement | null = null;
+		let neighbourDist = Infinity;
+		pivotEls.forEach((pivotEl, i) => {
+			const p = positions[i]! + offset;
+			const dc = Math.abs(p);
+			if (dc < centreDist) {
+				centreDist = dc;
+				centreEl = pivotEl;
+			}
+			const dn = Math.abs(p - 1);
+			if (dn < neighbourDist) {
+				neighbourDist = dn;
+				neighbourEl = pivotEl;
+			}
+		});
+		if (!centreEl || !neighbourEl || centreEl === neighbourEl) return null;
+		const centreRect = (centreEl as HTMLElement).getBoundingClientRect();
+		const neighbourRect = (neighbourEl as HTMLElement).getBoundingClientRect();
+		const centreX = centreRect.left + centreRect.width / 2;
+		const neighbourX = neighbourRect.left + neighbourRect.width / 2;
+		const distance = Math.abs(neighbourX - centreX);
+		return distance > 0 ? distance : null;
+	}
+
+	function remeasurePxPerStep(): void {
+		if (!fanEl) return;
+		const measured = measurePxPerStep(fanEl);
+		if (measured !== null) pxPerStep = measured;
+	}
+
+	onMount(() => {
+		remeasurePxPerStep();
+		window.addEventListener('resize', remeasurePxPerStep);
+		return () => window.removeEventListener('resize', remeasurePxPerStep);
+	});
+
 	const VELOCITY_WINDOW_MS = 80; // trailing window the exit velocity is averaged over
 
 	// Release physics, one continuous model from finger-up to rest (see
@@ -439,7 +520,7 @@
 	// write offset itself, so folding it in place is the whole story. The
 	// drag path is different: its offset is NOT accumulated frame to frame,
 	// it's recomputed from scratch every frame as `dragBaseOffset +
-	// pendingDx / PX_PER_STEP`. If a whole step gets folded into
+	// pendingDx / pxPerStep`. If a whole step gets folded into
 	// positions[] but dragBaseOffset is left untouched, the very next frame
 	// recomputes the same pre-fold offset from that formula and undoes the
 	// fold — positions[] keeps advancing but offset snaps back out of
@@ -852,7 +933,7 @@
 		if (rafId === null) {
 			rafId = requestAnimationFrame(() => {
 				rafId = null;
-				offset = dragBaseOffset + pendingDx / PX_PER_STEP;
+				offset = dragBaseOffset + pendingDx / pxPerStep;
 				// Recycle DURING the drag, not only after release — a drag
 				// spanning more than `count` cards must keep producing cards
 				// the whole time it's held, not just once the pointer lifts.
@@ -887,7 +968,7 @@
 			const dt = last.t - first.t;
 			if (dt > 0) velocityPxPerMs = (last.x - first.x) / dt;
 		}
-		velocity = velocityPxPerMs / PX_PER_STEP;
+		velocity = velocityPxPerMs / pxPerStep;
 
 		if (prefersReducedMotion()) {
 			settleInstant();
@@ -942,6 +1023,7 @@
 			role="group"
 			aria-roledescription="carrousel"
 			aria-label="Behandelingen"
+			bind:this={fanEl}
 			onpointerdown={onPointerDown}
 			onclickcapture={onFanClickCapture}
 		>
