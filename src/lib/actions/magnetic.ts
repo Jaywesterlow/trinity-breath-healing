@@ -105,10 +105,13 @@ export function magnetic(node: HTMLElement, options: MagneticOptions) {
 	}
 
 	function onPointerMove(e: PointerEvent): void {
-		if (opts.dragging) {
-			releaseTo('0px', '0px');
-			return;
-		}
+		// Return without writing. The drag->release is already handled once,
+		// on the transition, by update() below. Calling releaseTo() here
+		// instead ran three inline-style writes on EVERY raw pointer sample —
+		// bypassing the rAF throttle immediately below, on the drag hot path,
+		// and now multiplied by every visible card since the magnet stopped
+		// being centre-only.
+		if (opts.dragging) return;
 		pendingX = e.clientX;
 		pendingY = e.clientY;
 		if (rafId !== null) return;
@@ -120,7 +123,17 @@ export function magnetic(node: HTMLElement, options: MagneticOptions) {
 			const dx = pendingX - centreX;
 			const dy = pendingY - centreY;
 			const distance = Math.hypot(dx, dy);
-			const halfDiagonal = Math.hypot(rect.width, rect.height) / 2;
+			// offsetWidth/offsetHeight, NOT rect.width/height: getBoundingClientRect
+			// on a rotated element returns the inflated axis-aligned box, not the
+			// card. The ±1/±2 cards sit at --tilt-step and twice it (14deg/28deg),
+			// where the bbox diagonal runs ~30% long — so deriving the engagement
+			// radius from the rect made the magnet reach noticeably further on the
+			// outer cards than the centre one, and pull harder there too (peak is
+			// MAGNET_STRENGTH * radius / 4). Same rotated-bbox trap getCardBandY
+			// documents at length in Behandelingen.svelte. The offset* properties
+			// are layout size, untouched by transforms, so they describe the card
+			// itself at any angle.
+			const halfDiagonal = Math.hypot(node.offsetWidth, node.offsetHeight) / 2;
 			const radius = halfDiagonal * MAGNET_RADIUS_MULTIPLIER;
 
 			if (distance > radius) {

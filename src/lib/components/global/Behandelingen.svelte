@@ -1083,8 +1083,26 @@
 	// of the fan's own bubble-phase handlers), so a drag that ends on the
 	// centre card's link is suppressed before the browser navigates, exactly
 	// mirroring the guard jumpTo already applies to the side cards' JS path.
+	//
+	// `e.detail > 0` matters and is not defensive noise. dragMoved is only
+	// ever reset in onPointerDown, so after any mouse drag it stays true
+	// indefinitely — nothing clears it until the next pointer press. A
+	// keyboard activation (Tab to the card, press Enter) synthesises a click
+	// with NO preceding pointerdown, so it used to hit this guard's stale
+	// true and get preventDefault()d: the link silently refused to navigate
+	// for keyboard users, and only for them, until they happened to click
+	// something with a mouse first. A keyboard-generated click reports
+	// detail === 0 (no click count), while every real mouse click reports at
+	// least 1 — so this suppresses exactly the trailing click a drag
+	// produces and nothing else.
+	//
+	// Deliberately NOT fixed by clearing dragMoved here: this runs in the
+	// capture phase, before .treatments__jump's own bubble-phase onclick, and
+	// jumpTo reads the same flag to guard the side cards' JS path. Clearing
+	// it here would re-open that path and let a drag ending on a side card
+	// also centre it.
 	function onFanClickCapture(e: MouseEvent): void {
-		if (dragMoved) {
+		if (dragMoved && e.detail > 0) {
 			e.preventDefault();
 		}
 	}
