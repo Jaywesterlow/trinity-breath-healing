@@ -56,12 +56,33 @@ export const BRAND = {
 	 * Services offered — slugs are the stable identifier for routing + schema @id.
 	 * Phase 0 ships stubs; Phase 1 adds content. Plan 03 builds Service schema from this array.
 	 * Slugs locked by CONTEXT.md "Service slugs (Dutch)".
+	 *
+	 * `description` is placeholder copy for the Behandelingen card hover reveal (260809-hov) —
+	 * no real practitioner-provided description exists yet, and writing one is not ours to
+	 * invent for a health/wellness site whose primary metric is E-E-A-T trust. TODO_-prefixed
+	 * so `npm run audit:placeholders` flags it, same convention as `phone` above.
 	 */
 	services: [
-		{ slug: 'mahatma-healing', name: 'Mahatma Healing' },
-		{ slug: 'goldhealing', name: 'Goldhealing' },
-		{ slug: 'raster-energie', name: 'Raster Energie' },
-		{ slug: 'spinal-touch', name: 'Spinal Touch' }
+		{
+			slug: 'mahatma-healing',
+			name: 'Mahatma Healing',
+			description: 'TODO_ Korte omschrijving van Mahatma Healing volgt nog.'
+		},
+		{
+			slug: 'goldhealing',
+			name: 'Goldhealing',
+			description: 'TODO_ Korte omschrijving van Goldhealing volgt nog.'
+		},
+		{
+			slug: 'raster-energie',
+			name: 'Raster Energie',
+			description: 'TODO_ Korte omschrijving van Raster Energie volgt nog.'
+		},
+		{
+			slug: 'spinal-touch',
+			name: 'Spinal Touch',
+			description: 'TODO_ Korte omschrijving van Spinal Touch volgt nog.'
+		}
 	] as const,
 
 	stats: {

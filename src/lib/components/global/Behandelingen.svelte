@@ -29,8 +29,14 @@
 		label: 'TESTKAART',
 		icon: null,
 		buttonLabel: 'Test',
-		buttonHref: '/diensten'
+		buttonHref: '/diensten',
+		description: 'TESTKAART diagnostic — not real copy.'
 	}));
+
+	// 'Meer diensten' description is placeholder copy (260809-hov), same
+	// TODO_-prefixed convention as BRAND.services' own descriptions in
+	// brand.ts — not ours to invent real copy for, see that file's comment.
+	const MEER_DIENSTEN_DESCRIPTION = 'TODO_ Korte omschrijving van het volledige aanbod volgt nog.';
 
 	const items = [
 		...BRAND.services.map((s) => ({
@@ -38,14 +44,16 @@
 			label: s.name,
 			icon: ICONS[s.slug] as string | null,
 			buttonLabel: 'Meer info',
-			buttonHref: `/diensten/${s.slug}`
+			buttonHref: `/diensten/${s.slug}`,
+			description: s.description
 		})),
 		{
 			key: 'meer-diensten',
 			label: 'Meer diensten',
 			icon: null,
 			buttonLabel: 'Bekijk alles',
-			buttonHref: '/diensten'
+			buttonHref: '/diensten',
+			description: MEER_DIENSTEN_DESCRIPTION
 		},
 		...DIAG_ITEMS
 	];
@@ -1008,9 +1016,10 @@
 		endDrag();
 	}
 
-	// The centre card's corner link (.tcard__button) now has a stretched
-	// pseudo-element covering the whole card (see TreatmentCard.svelte), a
-	// real <a>, unlike .treatments__jump's plain <button>. jumpTo already
+	// The centre card's own root element is now the link (see
+	// TreatmentCard.svelte, 260809-hov — the whole card is a real <a>, no
+	// stretched-link pseudo-element needed any more), unlike
+	// .treatments__jump's plain <button>. jumpTo already
 	// guards its own JS-driven navigation with `if (dragMoved) return;`, but
 	// a real link's navigation is the BROWSER's own default action on the
 	// native click that follows a mouse drag's release, not something jumpTo
@@ -1058,6 +1067,7 @@
 						cardNumber={i + 1}
 						buttonLabel={item.buttonLabel}
 						buttonHref={item.buttonHref}
+						description={item.description}
 					/>
 
 					<!-- Desktop click-to-jump (CSS-hidden below 1024px). Only on the

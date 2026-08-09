@@ -10,6 +10,10 @@
 	 * carousel (Behandelingen.svelte) owns where this card sits — cards
 	 * never resize or overlap, at any position or breakpoint, on purpose,
 	 * so there's nothing here to inherit for that.
+	 *
+	 * The card root is now the `<a>` itself (not a wrapped stretched-link
+	 * pseudo-element) — see the arrow's own comment below for why that
+	 * simplification is safe here (260809-hov).
 	 */
 	interface Props {
 		/** Service name — shown as the visible bottom title. */
@@ -28,29 +32,24 @@
 		 * arrow itself carries no visible text (not final copy either way). */
 		buttonLabel: string;
 		buttonHref: string;
+		/** Placeholder copy shown on hover (260809-hov) — see brand.ts for why
+		 * it's real Dutch-shaped placeholder text, not lorem ipsum. Always in
+		 * the DOM (never conditionally rendered) so AI crawlers can read it
+		 * regardless of hover state — hidden purely via opacity/transform. */
+		description: string;
 	}
 
-	let { label, icon = null, cardNumber = null, buttonLabel, buttonHref }: Props = $props();
+	let {
+		label,
+		icon = null,
+		cardNumber = null,
+		buttonLabel,
+		buttonHref,
+		description
+	}: Props = $props();
 </script>
 
-<div class="tcard">
-	<a
-		href={buttonHref}
-		class="tcard__button"
-		aria-label={`${buttonLabel} over ${label}`}
-		draggable="false"
-	>
-		<svg width="14" height="14" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-			<path
-				d="M5 17L17 5M17 5H9M17 5V13"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			/>
-		</svg>
-	</a>
-
+<a href={buttonHref} class="tcard" aria-label={`${buttonLabel} over ${label}`} draggable="false">
 	<div class="tcard__icon-wrap">
 		{#if cardNumber !== null}
 			<span class="tcard__number" aria-hidden="true">{cardNumber}</span>
@@ -59,62 +58,53 @@
 		{/if}
 	</div>
 
-	<p class="tcard__title">{label}</p>
-</div>
+	<div class="tcard__bottom">
+		<p class="tcard__title">{label}</p>
+
+		<!-- Decorative only — the whole card above is now the single <a>, so
+		     this no longer needs to be its own link or carry a stretched-link
+		     pseudo-element (simplification of what shipped in 7c557ae: with no
+		     second link inside the card there's no nested-link problem left to
+		     solve). aria-hidden since it adds no information beyond the card's
+		     own accessible name. -->
+		<span class="tcard__arrow" aria-hidden="true">
+			<svg width="14" height="14" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+				<path
+					d="M5 17L17 5M17 5H9M17 5V13"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
+			</svg>
+		</span>
+	</div>
+
+	<!-- Always in the DOM, hidden with opacity/transform — never {#if hovered}.
+	     Conditionally-rendered content is invisible to AI crawlers, and this
+	     project is judged first on AEO. The hover reveal itself (260809-hov
+	     task 2) lives in a later commit. -->
+	<p class="tcard__description">{description}</p>
+</a>
 
 <style>
 	.tcard {
-		/* Positioned so .tcard__button::after below (the stretched-link
-		   overlay) has this box, not the small corner circle, as its
-		   containing block — see that rule's own comment. */
+		display: grid;
+		grid-template-rows: 1fr auto;
+		justify-items: center;
 		position: relative;
 		width: var(--card-width, 6.5rem);
 		aspect-ratio: 282 / 459;
-		display: grid;
-		grid-template-rows: auto 1fr auto;
-		justify-items: center;
 		padding: var(--space-3); /* consistent on all 4 sides */
 		border-radius: var(--radius-lg);
 		background: var(--color-fg-forest);
 		color: var(--color-bg-sand);
+		text-decoration: none;
 		cursor: pointer;
 	}
 
-	.tcard__button {
-		justify-self: end;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 1.5rem;
-		height: 1.5rem;
-		border-radius: var(--radius-full);
-		color: inherit;
-		transition: background-color var(--motion-fast);
-	}
-
-	.tcard__button:hover {
-		background: var(--brand-muted);
-	}
-
-	/* Stretched-link pattern: the whole card becomes this link's hit area
-	   without a second <a> (nesting links is invalid HTML and breaks screen
-	   readers — this keeps exactly one link, one tab stop, and the existing
-	   aria-label as its accessible name). .tcard__button itself is left
-	   position:static on purpose, so this pseudo-element's containing block
-	   is .tcard (the nearest positioned ancestor) and inset:0 covers the
-	   full card, not just the small corner circle. Only the centre card
-	   uses this in practice — the carousel keeps the ±1 side cards' own
-	   .treatments__jump overlay stacked above this pseudo-element (verified
-	   in a real browser, not assumed from paint-order rules alone), so a
-	   click there still centres the card instead of navigating. */
-	.tcard__button::after {
-		content: '';
-		position: absolute;
-		inset: 0;
-		border-radius: var(--radius-lg); /* the card's own radius, not the button's circle */
-	}
-
 	.tcard__icon-wrap {
+		grid-row: 1;
 		align-self: center;
 		display: flex;
 		align-items: center;
@@ -125,7 +115,7 @@
 	.tcard__icon {
 		/* ~75% bigger than the icon's original 65% — the source art has a lot
 		   of built-in padding, so this is close to the practical ceiling
-		   before it starts crowding the button/title above and below it. */
+		   before it starts crowding the title/arrow row below it. */
 		width: 100%;
 		height: 100%;
 		object-fit: contain;
@@ -144,18 +134,55 @@
 		line-height: 1;
 	}
 
+	.tcard__bottom {
+		grid-row: 2;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: var(--space-2);
+		width: 100%;
+	}
+
 	.tcard__title {
 		margin: 0;
-		text-align: center;
 		font-family: var(--font-body);
 		font-size: var(--fs-body-xs);
 		font-weight: var(--font-weight-medium);
 		line-height: var(--line-height-tight);
 	}
 
+	.tcard__arrow {
+		flex-shrink: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.5rem;
+		height: 1.5rem;
+		border-radius: var(--radius-full);
+		border: 1px solid currentColor;
+	}
+
+	/* Anchored to the same bottom padding edge .tcard__bottom rests on — see
+	   this file's hover-reveal commit for how fading this in while
+	   .tcard__bottom translates up reads as one movement. Hidden with
+	   opacity/transform (never display/height): the text stays real,
+	   readable DOM content at all times, resting state included. */
+	.tcard__description {
+		position: absolute;
+		left: var(--space-3);
+		right: var(--space-3);
+		bottom: var(--space-3);
+		margin: 0;
+		font-family: var(--font-body);
+		font-size: var(--fs-body-xs);
+		line-height: var(--line-height-tight);
+		opacity: 0;
+		pointer-events: none;
+	}
+
 	@media (min-width: 1024px) {
-		.tcard__button {
-			/* ~50% bigger than the base 1.75rem (2.625rem) — tap target and
+		.tcard__arrow {
+			/* ~50% bigger than the base 1.5rem (2.625rem) — tap target and
 			   glyph scale together (see the svg rule below) so the arrow's
 			   proportions inside the circle hold at the new size. Mobile's
 			   1.5rem/14x14 is untouched. */
@@ -163,11 +190,11 @@
 			height: 2.625rem;
 		}
 
-		.tcard__button svg {
-			/* Scaled by the same ~1.5x as the button circle above (14px ->
+		.tcard__arrow svg {
+			/* Scaled by the same ~1.5x as the arrow circle above (14px ->
 			   21px) so the glyph keeps the same visual proportion inside its
-			   now-bigger tap target. Overrides the width/height attributes
-			   set in the markup, which stay 14x14 for mobile. */
+			   now-bigger circle. Overrides the width/height attributes set
+			   in the markup, which stay 14x14 for mobile. */
 			width: 21px;
 			height: 21px;
 		}
@@ -177,6 +204,10 @@
 		}
 
 		.tcard__title {
+			font-size: var(--fs-body-sm);
+		}
+
+		.tcard__description {
 			font-size: var(--fs-body-sm);
 		}
 	}
