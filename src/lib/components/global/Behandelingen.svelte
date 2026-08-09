@@ -865,6 +865,23 @@
 	function onWindowPointerCancel(): void {
 		endDrag();
 	}
+
+	// The centre card's corner link (.tcard__button) now has a stretched
+	// pseudo-element covering the whole card (see TreatmentCard.svelte), a
+	// real <a>, unlike .treatments__jump's plain <button>. jumpTo already
+	// guards its own JS-driven navigation with `if (dragMoved) return;`, but
+	// a real link's navigation is the BROWSER's own default action on the
+	// native click that follows a mouse drag's release, not something jumpTo
+	// runs — so it needs the same guard at the DOM level. Capture phase, on
+	// the fan itself (fires before the click reaches the link and before any
+	// of the fan's own bubble-phase handlers), so a drag that ends on the
+	// centre card's link is suppressed before the browser navigates, exactly
+	// mirroring the guard jumpTo already applies to the side cards' JS path.
+	function onFanClickCapture(e: MouseEvent): void {
+		if (dragMoved) {
+			e.preventDefault();
+		}
+	}
 </script>
 
 <section class="treatments" aria-label="Behandelingen">
@@ -883,6 +900,7 @@
 			aria-roledescription="carrousel"
 			aria-label="Behandelingen"
 			onpointerdown={onPointerDown}
+			onclickcapture={onFanClickCapture}
 		>
 			{#each items as item, i (item.key)}
 				<div

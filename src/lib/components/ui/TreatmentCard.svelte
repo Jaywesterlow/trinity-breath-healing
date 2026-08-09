@@ -59,6 +59,10 @@
 
 <style>
 	.tcard {
+		/* Positioned so .tcard__button::after below (the stretched-link
+		   overlay) has this box, not the small corner circle, as its
+		   containing block — see that rule's own comment. */
+		position: relative;
 		width: var(--card-width, 6.5rem);
 		aspect-ratio: 282 / 459;
 		display: grid;
@@ -68,6 +72,7 @@
 		border-radius: var(--radius-lg);
 		background: var(--color-fg-forest);
 		color: var(--color-bg-sand);
+		cursor: pointer;
 	}
 
 	.tcard__button {
@@ -84,6 +89,24 @@
 
 	.tcard__button:hover {
 		background: var(--brand-muted);
+	}
+
+	/* Stretched-link pattern: the whole card becomes this link's hit area
+	   without a second <a> (nesting links is invalid HTML and breaks screen
+	   readers — this keeps exactly one link, one tab stop, and the existing
+	   aria-label as its accessible name). .tcard__button itself is left
+	   position:static on purpose, so this pseudo-element's containing block
+	   is .tcard (the nearest positioned ancestor) and inset:0 covers the
+	   full card, not just the small corner circle. Only the centre card
+	   uses this in practice — the carousel keeps the ±1 side cards' own
+	   .treatments__jump overlay stacked above this pseudo-element (verified
+	   in a real browser, not assumed from paint-order rules alone), so a
+	   click there still centres the card instead of navigating. */
+	.tcard__button::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border-radius: var(--radius-lg); /* the card's own radius, not the button's circle */
 	}
 
 	.tcard__icon-wrap {
