@@ -82,9 +82,12 @@ test.describe('desktop', () => {
 		await expect(page.locator(PIVOT).nth(centre).locator('a[href^="/diensten/"]')).toBeVisible();
 	});
 
-	test('off-screen cards carry no overlay', async ({ page }) => {
-		// Only ±1 is visible; ±2 is clipped by .treatments__fan's overflow.
-		await expect(page.locator(JUMP)).toHaveCount(2);
+	test('every visible side card carries an overlay', async ({ page }) => {
+		// Desktop shows five cards (0, ±1, ±2) — every one of them except the
+		// centre gets the overlay (isVisibleSlot/VISIBLE_SLOT_MAX in
+		// Behandelingen.svelte), so a click on ±2 centres it instead of
+		// falling through to the card's own <a> and navigating (see f1ff682).
+		await expect(page.locator(JUMP)).toHaveCount(4);
 	});
 
 	test('a drag does not also fire a jump on release', async ({ page }) => {
