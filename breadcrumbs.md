@@ -8,7 +8,7 @@ project? If it is specific to Trinity, it does not belong here.
 
 Each entry: what was decided, why, and how to spot the same situation again.
 
-Last updated **2026-08-01**.
+Last updated **2026-08-07**.
 
 ---
 
@@ -163,6 +163,56 @@ animation. `element.animate()` composites separately and clobbers nothing.
 A leftover `transform` makes the element a **containing block for any `fixed` or `sticky`
 descendant**, so a stray one silently breaks sticky positioning elsewhere in the tree. Remove
 every inline style on finish, and back the cleanup with a timeout.
+
+### A CSS custom property's computed value is not what transitions
+
+`getComputedStyle(el).getPropertyValue('--foo')` reports the property's **target** value the
+instant it changes — custom properties are not interpolated by a `transition` unless registered
+with `@property` and a numeric syntax. If `--foo` only feeds a `calc()` inside `transform`, the
+thing that actually animates is `transform`'s own computed matrix, smoothly, over the declared
+duration — while `--foo` itself appears to jump instantly in every sample.
+
+This produced a full false-positive debugging thread: sampling `--pos` every animation frame
+showed a value jumping from `0` straight to `-3` within ~70ms of a 600ms transition and looked
+exactly like a broken/skipped animation. It wasn't — `getBoundingClientRect()` on the same
+element, sampled at the same instants, showed the position moving smoothly the entire 600ms.
+**When verifying a transition, measure the rendered box (`getBoundingClientRect`,
+`getComputedStyle(...).transform`) or take screenshots — never the custom property that merely
+feeds it.**
+
+### Redirecting an in-flight CSS transition doesn't preserve relative spacing across elements
+
+Retargeting a transition mid-flight (setting a new value before the current one finishes) is
+ordinary, smooth CSS behaviour **for one element in isolation**. It is not safe to assume that
+holds when several elements are meant to move in lockstep and get redirected at the same
+moment: confirmed via bounding-box measurement that a set of 5 elements sharing one transform
+formula, redirected together partway through, did not keep the same relative spacing they had
+at rest — real, visible overlap for ~100-200ms before settling, not a sampling artifact.
+
+The fix that held: let each step's transition **genuinely finish** before starting the next,
+using a shorter transition duration for the individual steps so a rapid sequence of them still
+reads as one fast motion. Composing "fast" out of several short, complete, already-correct
+animations was more reliable than one bigger animation or one redirected one.
+
+### Rotated elements' bounding boxes overlap before their pixels do
+
+`getBoundingClientRect()` on a rotated element returns its **axis-aligned** bounding box, which
+is strictly larger than the rotated shape itself — two rotated rectangles' boxes can register a
+few pixels of numeric "overlap" while nothing painted actually touches. Treat a small (single-
+digit-to-low-double-digit px) bounding-box overlap between rotated/tilted elements as
+inconclusive on its own; confirm with a screenshot before calling it a real visual bug or a real
+fix. A large, sustained overlap (dozens to 100+ px, held across several consecutive frames) is a
+different signal and does mean something is actually wrong.
+
+### Throttle high-frequency input to one state write per frame
+
+Touch/pointer `move` events can fire faster than the display repaints (touch sampling commonly
+outpaces 60Hz). Writing straight to a reactive value on every event pushes more framework +
+DOM updates than the screen can ever show, and reads as choppy rather than smooth even though
+every individual write is "correct." Fix: record the latest input value in a plain variable
+inside the event handler (cheap, no reactivity), and let a single `requestAnimationFrame`
+callback be the only thing that writes to reactive state, at most once per frame. Cancel the
+pending frame on gesture end so a stale value can't land after release.
 
 ---
 

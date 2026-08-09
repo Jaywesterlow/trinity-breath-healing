@@ -117,8 +117,10 @@ here. Filling the gap at a summary level; `breadcrumbs.md` and `HANDOFF.md` have
 
 **Built and polished:** Hero (staggered CSS entrance cascade, self-drawing SVG illustration),
 site nav + mobile menu, Werkwijze (CSS `view-timeline` scroll-pin, replacing a JS scroll listener
-that stuttered), About + stats (count-up animation), Behandelingen carousel (functional but
-transitions still janky, deliberately deferred), inline FAQ + standalone `/faq` route, footer.
+that stuttered), About + stats (count-up animation), Behandelingen carousel — rebuilt from
+scratch 2026-08-07 on `claude/accessible-work-repos-kb67gy` (PR #10, open, not yet merged into
+`main`); the old Embla-based version and its jank are gone, see root `HANDOFF.md` for the
+current curved-fan mechanism — inline FAQ + standalone `/faq` route, footer.
 
 **Not built:** the Contact section. `ContactForm.svelte`/`DatePlanner.svelte` are placeholder
 boxes on unmerged branch `feat/contact-section` — no fields, no validation, no Resend endpoint,
