@@ -49,6 +49,14 @@ Everything still outstanding. Detail for each is further down.
 14. `validate-json-ld.ts` accepts a `FAQPage` with an empty `mainEntity`. WARNING-2 says reject.
 15. PRF-02's hero-image-preload contract is obsolete — the hero is an inlined SVG.
 
+**Never migrated from the 2026-07-27 audit** — re-verified still true on 2026-08-10
+16. `NavLogo.svelte` loads Cinzel and Montserrat from the **Google Fonts CDN**. Breaks the
+    self-hosted-fonts policy, and on a Dutch site it is an AVG problem, not only a perf one.
+17. `og:image` and `twitter:image` point at `/og-default.jpg`, which **does not exist**. Every
+    page ships a 404 preview image.
+18. Carousel dots fail WCAG 2.2 AA target size (SC 2.5.8): 0.4rem button in a 0.7rem box,
+    against a 24×24 CSS px minimum.
+
 ---
 
 ## Waiting on real-world data (owner to check after launch)
@@ -372,3 +380,49 @@ returned was never read. Canonicals were unaffected, which is why the html-audit
 and it stayed hidden. Fixed in `1597d1f` by reading `page.data.meta`. For a site whose stated
 core value is discoverability, that was duplicate-content signal across the entire domain — and
 the tests had been calling it out the whole time.
+
+---
+
+## Three findings the 2026-07-27 audit raised that never got migrated
+
+The audit itself now lives at `.planning/archive/2026-07-27-audit.md`. Its other findings were
+either fixed or already listed above. These three were re-verified against the working tree on
+**2026-08-10** and are all still true.
+
+### 16. Google Fonts CDN in `NavLogo.svelte`
+
+`src/lib/components/global/NavLogo.svelte` opens with `preconnect` to `fonts.googleapis.com` and
+`fonts.gstatic.com` and then loads Cinzel + Montserrat from the CDN. Three problems, in order of
+severity:
+
+1. **AVG/GDPR.** A German court has already ruled that embedding Google Fonts transmits the
+   visitor's IP to a US server without consent. This site's entire privacy posture — Plausible
+   EU, Resend EU, `fra1`, no cookie banner — is built on not doing that, and the privacy policy
+   Phase 2 will write is supposed to list every processor. This one is not on the list.
+2. It contradicts the project's own self-hosted-font decision; the woff2 files are already in
+   `static/fonts/`.
+3. Two extra connections plus a render-blocking stylesheet on every page, against an LCP budget
+   that is already tight.
+
+Fix: self-host both faces the way the others are, and delete the three tags.
+
+### 17. `og:image` points at a file that does not exist
+
+`src/lib/components/seo/Head.svelte:18` falls back to `${SITE_URL}/og-default.jpg`. There is no
+`og-default.jpg` in `static/`. No page overrides it, so **every** page — and every share on
+WhatsApp, LinkedIn or Instagram DM — requests a 404.
+
+Fix: produce a 1200×630 share image and drop it at `static/og-default.jpg`. Cheap, and it is the
+first impression for anything the practitioner shares with her own audience.
+
+### 18. Carousel dots are below the WCAG 2.2 AA target size
+
+`.treatments__dot` is `0.7rem` (≈11px) and the `.treatments__dot-visual` button inside it is
+`0.4rem` (≈6.4px). SC 2.5.8 (AA, new in WCAG 2.2) requires 24×24 CSS px unless the spacing
+exception applies, and with seven dots in a row it does not.
+
+Fix without touching the design: keep the visible dot at its current size and grow the button's
+hit area around it — `padding` plus a transparent border, or a `::before` overlay sized 24×24.
+The dots are the only keyboard-and-touch route to a specific service, so this is a real
+blocker, not a checkbox. `pa11y-ci` is in CI but does not catch target size; this needs a manual
+assertion or an axe rule.
