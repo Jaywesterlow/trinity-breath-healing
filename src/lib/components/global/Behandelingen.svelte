@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, tick } from 'svelte';
+	import { onMount, onDestroy, tick } from 'svelte';
 	import { reveal } from '$lib/actions/reveal';
 	import { BRAND } from '$lib/constants/brand';
 	import TreatmentCard from '$lib/components/ui/TreatmentCard.svelte';
@@ -1232,10 +1232,31 @@
 	const MODAL_CARD_FADE_MS = 150; // step 1 of the open animation, per the plan's contract
 	const MODAL_BOX_GROW_MS = 400; // step 2
 	const MODAL_CONTENT_FADE_MS = 250; // step 3 — matches --motion-base; not otherwise specified
+	// Per-element stagger inside step 3: content leads (0ms extra delay), then
+	// close/prev/next each start NAV_STAGGER_MS later than the one before —
+	// see fadeElements' own `staggerMs` param. Small enough that the whole
+	// group still reads as one movement, not four separate pops.
+	const NAV_STAGGER_MS = 60;
 	// WAAPI's `easing` option is parsed independently of this element's own
 	// cascade, so a var() reference does not resolve here the way it would
 	// in a stylesheet — these are literal copies of app.css's --ease-out/
 	// --ease-in-out tokens. Keep them in sync if those tokens ever change.
+	//
+	// MODAL_EASE_OUT drives the box grow/shrink (growBox) — a direct owner
+	// request for "a lot more ease-out" there, same duration: this is
+	// app.css's own --ease-out token, already a pronounced fast-start/
+	// slow-finish curve (far more so than --ease-in-out's symmetric shape),
+	// so swapping to it is the "add a lot of ease-out" fix rather than a
+	// bespoke curve. growBox is the one function both open (grow) and close
+	// (shrink) already call, so this one swap gives both directions the same
+	// ease-out feel the owner asked for, not just open.
+	//
+	// MODAL_EASE_IN_OUT now drives fadeElements (opacity) instead — MODAL_EASE_OUT's
+	// steep initial velocity was exactly why the card's own content used to
+	// read as "instantly vanishing" rather than fading: front-loading ~80%
+	// of the opacity change into the first third of MODAL_CARD_FADE_MS is
+	// technically a 150ms animation but not a visible one. --ease-in-out
+	// departs from rest instead, which is what actually reads as a fade.
 	const MODAL_EASE_OUT = 'cubic-bezier(0.16, 1, 0.3, 1)';
 	const MODAL_EASE_IN_OUT = 'cubic-bezier(0.65, 0, 0.35, 1)';
 
@@ -1264,18 +1285,34 @@
 	// would be silently clobbered). `instant` (prefers-reduced-motion) skips
 	// the animation and writes the end state directly.
 	//
-	// Fading OUT is left in its animated "forwards" end state on purpose —
-	// nothing clears it, so the element stays hidden for as long as the
-	// modal is open with no separate inline-style bookkeeping required.
-	// Fading IN cancels its own animation once finished, handing the
-	// property back to the normal CSS cascade (same cleanup discipline
-	// reveal.ts uses) — harmless here since nothing else sets opacity on
-	// these elements at rest.
+	// `staggerMs` (default 0) delays each element in `els` by its own index
+	// times this value — used to fade the modal's close/prev/next buttons in
+	// one after another instead of all at once (see the openModal call site).
+	// `fill: 'both'`, not just 'forwards': a delayed animation with only
+	// 'forwards' fill has NO effect during its own delay, so a staggered
+	// fade-IN element would sit at whatever opacity the cascade already gives
+	// it (1, since nothing else sets a resting opacity on these elements)
+	// for the length of its delay — visible immediately, stagger or not.
+	// 'both' also fills backwards, holding keyframe 0 (opacity 0) for the
+	// delay's duration, which is what actually makes the stagger visible.
+	//
+	// Fading OUT is left in its animated end state on purpose — nothing
+	// clears it, so the element stays hidden for as long as the modal is
+	// open with no separate inline-style bookkeeping required. Fading IN
+	// cancels its own animation once finished, handing the property back to
+	// the normal CSS cascade (same cleanup discipline reveal.ts uses) — and
+	// also clears any leftover inline opacity from an earlier INSTANT call
+	// (openModal's pre-hide, below): cancelling only removes the WAAPI
+	// effect, so without this an element instant-hidden via el.style.opacity
+	// = '0' would cancel back down to that stale inline value instead of the
+	// cascade's true resting opacity (1), snapping invisible again right
+	// after it had just finished fading in.
 	function fadeElements(
 		els: HTMLElement[],
 		visible: boolean,
 		instant: boolean,
-		duration: number
+		duration: number,
+		staggerMs = 0
 	): Promise<void> {
 		if (els.length === 0) return Promise.resolve();
 		if (instant) {
@@ -1286,12 +1323,13 @@
 			});
 			return Promise.resolve();
 		}
-		const anims = els.map((el) => {
+		const anims = els.map((el, i) => {
 			lastFade.get(el)?.cancel();
 			const anim = el.animate([{ opacity: visible ? 0 : 1 }, { opacity: visible ? 1 : 0 }], {
 				duration,
-				easing: MODAL_EASE_OUT,
-				fill: 'forwards'
+				delay: staggerMs * i,
+				easing: MODAL_EASE_IN_OUT,
+				fill: 'both'
 			});
 			lastFade.set(el, anim);
 			return anim;
@@ -1299,13 +1337,27 @@
 		return Promise.all(anims.map((a) => a.finished.catch(() => {}))).then(() => {
 			if (visible) {
 				anims.forEach((a) => a.cancel());
-				els.forEach((el) => lastFade.delete(el));
+				els.forEach((el) => {
+					lastFade.delete(el);
+					el.style.opacity = '';
+				});
 			}
 		});
 	}
 
 	function cardFaceEls(cardEl: HTMLElement): HTMLElement[] {
 		return Array.from(cardEl.querySelectorAll<HTMLElement>('.tcard__icon-wrap, .tcard__bottom'));
+	}
+
+	// Close/Prev/Next — queried live off modalDialogEl rather than given their
+	// own bindable refs, since ServiceModal already exposes the one ref
+	// (dialogRef) needed to find them. Order here is the stagger order (see
+	// NAV_STAGGER_MS): close leads, then prev, then next.
+	function modalNavEls(): HTMLElement[] {
+		if (!modalDialogEl) return [];
+		return Array.from(
+			modalDialogEl.querySelectorAll<HTMLElement>('.service-modal__close, .service-modal__nav')
+		);
 	}
 
 	// Morphs the dialog box between two live rects — used for both the open
@@ -1333,7 +1385,7 @@
 					height: `${to.height}px`
 				}
 			],
-			{ duration: MODAL_BOX_GROW_MS, easing: MODAL_EASE_IN_OUT, fill: 'forwards' }
+			{ duration: MODAL_BOX_GROW_MS, easing: MODAL_EASE_OUT, fill: 'forwards' }
 		);
 		// Hand control back to the stylesheet once settled — .service-modal's
 		// own CSS already expresses the near-fullscreen size responsively
@@ -1347,9 +1399,34 @@
 		);
 	}
 
+	// Native showModal() makes the rest of the page inert (unclickable,
+	// unfocusable) but does NOT reliably stop it scrolling underneath — the
+	// backdrop blocks pointer/click but a wheel/trackpad gesture or the
+	// keyboard can still move the page in some engines, since nothing about
+	// [inert] or ::backdrop is a scroll gate. Explicit overflow:hidden on the
+	// body is the standard fix; toggled here (not a CSS class keyed off the
+	// dialog's own [open] state) because it has to be paired with the JS
+	// sequence's own start/end, not the dialog's, so it locks BEFORE the open
+	// animation's first frame and unlocks only once the close animation's
+	// last one has actually landed.
+	function setBodyScrollLocked(locked: boolean): void {
+		// Guarded, not assumed: onDestroy below fires during SSR prerendering
+		// too (SvelteKit mounts and destroys each component once per request
+		// to render its HTML), and there is no `document` there.
+		if (typeof document === 'undefined') return;
+		document.body.style.overflow = locked ? 'hidden' : '';
+	}
+
+	// The modal's own CTA ("Naar de pagina") client-side-navigates away —
+	// SvelteKit tears this component down on that route change without ever
+	// running closeModal(), which would otherwise leave the body permanently
+	// unscrollable on the destination page.
+	onDestroy(() => setBodyScrollLocked(false));
+
 	async function openModal(cardEl: HTMLElement, serviceIndex: number): Promise<void> {
 		if (modalAnimating) return;
 		modalAnimating = true;
+		setBodyScrollLocked(true);
 
 		const reduced = prefersReducedMotion();
 		// Captured before the fade below touches opacity — hiding the card's
@@ -1368,9 +1445,23 @@
 			// click can happen — but restore the card's face rather than
 			// leave it stuck invisible if it somehow occurs.
 			await fadeElements(cardFaceEls(cardEl), true, true, 0);
+			setBodyScrollLocked(false);
 			modalAnimating = false;
 			return;
 		}
+
+		if (!reduced) {
+			// Hide content and nav buttons BEFORE the dialog is shown at all —
+			// otherwise their resting opacity (1; nothing else in the
+			// cascade hides them) paints for real on showModal()'s first
+			// frame, at the dialog's full stylesheet size, before growBox
+			// below has a chance to even start. The box is supposed to grow
+			// out of the card completely blank; without this instant
+			// pre-hide it instead flashes the full panel then snaps back
+			// down to card size as growBox's first keyframe takes over.
+			fadeElements([...(modalContentEl ? [modalContentEl] : []), ...modalNavEls()], false, true, 0);
+		}
+
 		dialog.showModal();
 
 		if (reduced) {
@@ -1385,7 +1476,17 @@
 		const targetRect = dialog.getBoundingClientRect();
 
 		await growBox(dialog, originRect, targetRect);
-		await fadeElements(modalContentEl ? [modalContentEl] : [], true, false, MODAL_CONTENT_FADE_MS);
+		// Content leads, then close/prev/next fade in one after another
+		// (NAV_STAGGER_MS apart) — same fade, same easing, just staggered,
+		// so the buttons read as part of the same reveal instead of popping
+		// in ahead of it.
+		await fadeElements(
+			[...(modalContentEl ? [modalContentEl] : []), ...modalNavEls()],
+			true,
+			false,
+			MODAL_CONTENT_FADE_MS,
+			NAV_STAGGER_MS
+		);
 		modalAnimating = false;
 	}
 
@@ -1405,13 +1506,22 @@
 		if (reduced) {
 			dialog.close();
 			if (cardEl) await fadeElements(cardFaceEls(cardEl), true, true, 0);
+			setBodyScrollLocked(false);
 			modalAnimating = false;
 			return;
 		}
 
-		// Reverse order of the open sequence: modal content fades out first,
-		// then the box shrinks, then the card's own face fades back in.
-		await fadeElements(modalContentEl ? [modalContentEl] : [], false, false, MODAL_CONTENT_FADE_MS);
+		// Reverse order of the open sequence: nav buttons and content fade out
+		// first, then the box shrinks, then the card's own face fades back
+		// in. Same stagger group and lead order (content, close, prev, next)
+		// as openModal's own call, just fading out instead of in.
+		await fadeElements(
+			[...(modalContentEl ? [modalContentEl] : []), ...modalNavEls()],
+			false,
+			false,
+			MODAL_CONTENT_FADE_MS,
+			NAV_STAGGER_MS
+		);
 
 		const fromRect = dialog.getBoundingClientRect();
 		// No sensible shrink target if the card has somehow vanished from the
@@ -1422,6 +1532,7 @@
 
 		dialog.close();
 		if (cardEl) await fadeElements(cardFaceEls(cardEl), true, false, MODAL_CARD_FADE_MS);
+		setBodyScrollLocked(false);
 		modalAnimating = false;
 	}
 
