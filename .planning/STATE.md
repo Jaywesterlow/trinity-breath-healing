@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: verifying
-last_updated: "2026-07-05T18:56:48.229Z"
+last_updated: "2026-08-10T00:00:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 2
@@ -18,7 +18,9 @@ progress:
 
 **Core Value:** SEO + AEO discoverability of trustworthy, citeable content — the site must be found AND cited by Google, AI Overviews, ChatGPT, Perplexity, and Claude on Dutch breathwork/trauma queries. Visual fidelity to Figma matters, but never at the expense of discoverability.
 
-**Current Focus:** Phase 0 — Foundation & SEO Scaffolding (lock-in BEFORE any visible landing section).
+**Current Focus:** post-Phase-1. The landing page is built and has been through a polish pass, a
+contact section, a full carousel rebuild and (in flight) the service modal. Phases 2–5 have not
+started.
 
 **Granularity:** fine
 **Mode:** yolo
@@ -27,14 +29,18 @@ progress:
 
 ## Current Position
 
-**Phase:** 1 — Landing Sections
-**Plan:** Wave 1 in progress. Plan 01-01 (Hero) done. Plans 01-02, 01-03 next.
-**Status:** Plan 01-01 complete. HeroSection.svelte built, +page.svelte updated, 0 TS errors. Build verification pending (npm run build blocked in sandbox — user must verify).
-**Progress:** [█████░░░░░] 55%
+**Phase:** 1 — Landing Sections, all ten plans executed (`01-00` … `01-09` each have a SUMMARY).
+Formal phase verification was never recorded, and the page has since moved well past what the
+phase described.
+**Status:** shipping incremental work on `main` as quick tasks, not as phase plans. **The live
+record of what the site does and what is open is `HANDOFF.md` and
+`.planning/notes/KNOWN-ISSUES.md`, not this file.**
+**Phases 2–5:** not started.
 
-```
-[█████░░░░░] 55% — Phase 1 Wave 1 in progress (01-01 done; 01-02, 01-03 next)
-```
+> **This file is the GSD ledger: decisions, roadmap-level todos, and the quick-task log.** It is
+> not a narrative of what happened — that lives in `HANDOFF.md`, which is maintained. A
+> session-by-session history used to sit at the bottom of this file; it was removed on
+> 2026-08-10 because it duplicated HANDOFF.md in less detail and had been stale since June.
 
 ## Performance Metrics
 
@@ -92,8 +98,10 @@ progress:
 
 **Downstream blockers (do not block Phase 0):**
 
-- [ ] Photography for hero — real practitioner photo, not stock (blocks Phase 1 hero sub-unit)
-- [ ] Brand-voice samples from practitioner (blocks Phase 1 copy)
+- [ ] Photography for hero — real practitioner photo, not stock. The hero shipped as a drawn SVG
+      illustration instead, so this no longer blocks it; still open for the About section.
+- [x] ~~Brand-voice samples from practitioner~~ → supplied 2026-08-10: seven service descriptions
+      in her own words, restructured into `BRAND.services`. She has not read the result back yet.
 - [ ] CMS-overlay decision: Sveltia on git vs PR-based editing (blocks Phase 3 — content workflow)
 - [ ] Pricing transparency decision (FAQ #6) — show price on page or not (blocks Phase 1 FAQ + copy)
 - [ ] BIG / non-BIG status confirmation (blocks Phase 4 — vocabulary scope)
@@ -103,7 +111,9 @@ progress:
 
 ### Blockers
 
-None. Wave 4 complete. Wave 5 (Plan 08) ready.
+Tracked in `.planning/notes/KNOWN-ISSUES.md`, which carries a numbered index at the top. The two
+that block launch outright: the real domain has never been chosen, and `TODO_PHONE` is still in
+the prerendered HTML. Both are owner decisions.
 
 ### Quick Tasks Completed
 
@@ -117,62 +127,22 @@ None. Wave 4 complete. Wave 5 (Plan 08) ready.
 | 260809-kcf | Four Behandelingen carousel fixes from one review round, each its own commit: `user-select: none` + `draggable="false"` stop text/image selecting during a drag; `cursor: grab`/`grabbing` bound to the drag flag (not `inGesture`); whole centre card is a link via the stretched-link pattern (`.tcard__button::after`), guarded against drag-then-click navigation; `jumpTo` gets its own `JUMP_SPRING_OMEGA = SPRING_OMEGA / 2` / `JUMP_KICK = 1` threaded through `driveMotion`/`goTo` as parameters, halving click-to-jump settle time (~1695ms → ~853ms, measured) while Prev/Next/dots keep `BUTTON_SPRING_OMEGA` byte-identical. `motionTick` untouched. HANDOFF.md constants table updated as a 5th commit. | 2026-08-09 | 66a4696, b14cc27, 7c557ae, 76c7795, fc8dad5 | [260809-kcf-carousel-cursor-selection-jump-speed](./quick/260809-kcf-carousel-cursor-selection-jump-speed/) |
 | 260809-hov | TreatmentCard restructured (`7e41bac`) — card root is now the `<a>` itself, replacing the `.tcard__button` + stretched-link pattern from `7c557ae`; new resting layout (icon centred, title+decorative-arrow bottom row, description always in the DOM hidden via opacity). Pure-CSS hover reveal added (`98294c7`) — title/arrow slide up, icon fades, description fades in, card scales 1.1, gated to `(hover: hover) and (pointer: fine)` with `:focus-visible` mirroring `:hover`; scale alone additionally gated off under `prefers-reduced-motion`. Magnetic cursor-follow added (`3c44eca`) — new `use:magnetic` action, centre card only, translate-only, rAF-throttled, releases past a live-measured `MAGNET_RADIUS_MULTIPLIER (1.5) * halfDiagonal`, composes with the hover scale on one `transform` via `--magnet-x`/`--magnet-y` custom properties. Placeholder `TODO_`-prefixed Dutch descriptions added to `BRAND.services` + 'Meer diensten'. Real-browser clip check at 1440x900 (Playwright against the built `npm run preview` output): no clip, no CSS fix needed. `npm run check`/`build` clean; `behandelingen-*` specs intentionally not run (environmental failures, see KNOWN-ISSUES.md). SUMMARY.md could not be written this session — the file-write tool blocked creating a `SUMMARY.md`-named file as a "report file"; full summary content was returned in the executing agent's final chat response instead. | 2026-08-09 | 7e41bac, 98294c7, 3c44eca | [260809-hov-card-hover-magnetic](./quick/260809-hov-card-hover-magnetic/) |
 
-## Session Continuity
-
-**Last action (2026-06-25, session 16):** Both Phase 1 TDD gates complete. GATE 1 — EnhancedImage primitive at `src/lib/components/ui/media/EnhancedImage.svelte`. 7/7 image tests pass. GATE 2 — landing dateModified: `__BUILD_DATE__` already in vite.config.ts, `<time datetime>` added to +page.svelte, layout fixed to use `$page.data.graph` (page-specific nodes incl. WebPage were lost via layout-only graph). 5/5 landing-date tests pass. Full suite: 133 passed / 6 skipped / 0 failed across 17 test files. svelte-check: 0 errors. Build: passes. Phase ready for verification.
-
-**Previously (2026-06-23, session 15):** Plan 01-01 complete. HeroSection.svelte (H1, eager LCP image, svelte:head preload, 3 service tiles, mobile-first CSS). +page.svelte Phase 0 placeholder replaced; SEO-09 time block preserved. EnhancedImage src type fixed: string → Picture|string. 0 TS errors (522 files). Build sandbox-blocked — user must run: PUBLIC_SITE_URL=https://trinity-breath-healing.vercel.app npm run build. Commits: 53ddf58 (HeroSection), 682d347 (+page.svelte).
-
-**Previously (2026-06-23, session 14):** Phase 1 Wave 0 complete. Plan 01-00 done. check-copy.sh (LND-09/LND-10), Phase 1 html-audit red tests (6 assertions), schema-faq conditional guard, 5 PNG stubs, logo.svg, ci.yml updated. 139 unit tests pass + 1 skip. Wave 1 next: Plans 01-01 through 01-03.
-
-**Previously (2026-06-22, session 13):** Phase 1 context gathered. 01-CONTEXT.md + 01-DISCUSSION-LOG.md written and committed. 40 decisions locked (D-01–D-40). User must provide 6 image assets before Phase 1 execution. Next: `/gsd-plan-phase` (Phase 1).
-
-**Previously (2026-06-22, session 12):** Phase 0 COMPLETE. Plan 09 all tasks done. GSC meta tag wired. PR #1 merged. Production deploy READY. AI crawler smoke tests 4/4 pass. robots.txt ✓ sitemap 15 loc ✓. PHASE0-LAUNCH-CHECKLIST.md + 00-09-SUMMARY.md done. Wave 6 done.
-
-**Previously (2026-06-20, session 11):** Wave 5 complete. Plan 08 — all CI quality gates wired. Scripts: check-html.ts (H1/title/desc/canonical/hreflang/OG/Twitter/og:locale/landmarks/font-preload/SEO-09 <time datetime>), validate-json-ld.ts (schema types/dateModified cross-check/WARNING-2 FAQPage policy), check-initial-html-ai.ts, grep-placeholders.sh. Synthetic violations: 19/19. HTML audit integration: 153/153. Full ci.yml (build-and-audit + lighthouse-and-a11y + playwright-integration). lighthouserc.json (LCP/CLS/SEO/A11y budgets). Windows workaround: node --import tsx/esm + direct vite/playwright invocation. 140/140 unit tests. Commit ee3d961.
-
-**Previously (2026-06-20, session 10):** pnpm→npm migration complete. Deleted pnpm `node_modules/` (crashed npm due to `.pnpm/` symlink tree), ran `npm install --legacy-peer-deps` successfully, added `legacy-peer-deps=true` to `.npmrc`. Fixed `runTscOnFixture` in `image.test.ts` to call `node typescript/bin/tsc` directly (avoids npm `.cmd` wrapper + `&`-in-path cmd.exe bug on Windows). 140/140 tests pass.
-
-**Previously (2026-06-20, session 8):** Session resumed. Deleted stale HANDOFF.json. Confirmed master at `a4760c3`, 127/127 tests, Wave 3 done.
-
-**Previously (2026-06-19, session 7):** Wave 3 complete. Plan 06 done — CSS token system (static/global.css, 25 tokens), placeholder woff2 fonts (DM Sans + Cormorant Garamond), enforcement scripts (check-tokens.sh, no-shared-css.sh), 127/127 tests passing.
-
-**Previously (2026-06-18, session 4):** Plan 01 fully executed. All 18 remaining Task 2 items written. Build verified (`lang="nl"` confirmed, fail-loud verified, 2/2 unit tests passing). `pnpm check` 0 errors. Fixed: removed `paths` from `tsconfig.json`; installed `jsdom`.
-
-**Previously (2026-06-18, session 3):** Plan 01 execution started. Paused mid-Task-2.
-
-**Previously (2026-06-18, session 2):** Locked 4 Phase 0 blockers. PROJECT.md NAP block added.
-
-**Wave map locked:**
-
-- Wave 0: Plan 01 ✓ DONE
-- Wave 1: Plan 02 ✓ DONE, Plan 07 ✓ DONE (merged)
-- Wave 2: Plan 03 ✓ DONE
-- Wave 3: Plan 04 ✓ DONE, Plan 06 ✓ DONE
-- Wave 4: Plan 05 ✓ DONE
-- Wave 5: Plan 08 ✓ DONE
-- Wave 6: Plan 09 ✓ DONE
-
-**Next action:** Phase 1 plan. Start new session → `/gsd-plan-phase` (Phase 1).
-
-**Outstanding uncommitted artifacts:** None.
-
 **Files of record:**
 
 - `.planning/PROJECT.md` — scope, audience, constraints, key decisions
 - `.planning/REQUIREMENTS.md` — 70 v1 requirements + v2 deferred + Out of Scope + traceability
 - `.planning/ROADMAP.md` — 6 phases, success criteria, dependencies
 - `.planning/STATE.md` — this file
-- `.planning/phases/00-foundation-seo-scaffolding/00-01-SUMMARY.md` — Plan 01 completion record
+- `HANDOFF.md` (root) — **the live account of what the site does and how it works**
+- `.planning/notes/KNOWN-ISSUES.md` — **the single list of open work**
+- `Insights/owner-profile.md` — how the owner works, the review loop, decisions and reasoning
+- `breadcrumbs.md` — portable technical lessons, with the evidence
 - `.planning/research/SUMMARY.md` — research synthesis + "Implications for Roadmap"
 - `.planning/research/STACK.md` — SvelteKit + Vercel + Cal.com + Resend + Plausible
 - `.planning/research/ARCHITECTURE.md` — hub-spoke + SSG + primitives + per-section build order
 - `.planning/research/FEATURES.md` — 20 table stakes + 15 differentiators + 20 anti-features + 12-question FAQ bank
 - `.planning/research/PITFALLS.md` — 20 pitfalls + recovery + pitfall-to-phase mapping
-- `seo-aeo-samenvatting-checklist.md` (project root) — Dutch SEO/AEO playbook, authoritative reference
+- `Insights/seo-aeo-samenvatting-checklist.md` — Dutch SEO/AEO playbook, authoritative reference
 
 ---
-*Last updated: 2026-06-20 — Wave 5 complete. Plans 01–08 done. 140 unit + 19 synthetic-violation + 153 html-audit tests pass. Wave 6 (Plan 09) next.*
-*Previously: 2026-06-19 — Wave 3 complete. Plans 01+02+03+04+06+07 done, 127/127 tests pass.*
-*2026-06-18 — Wave 0 complete; Plan 01 done.*
-*2026-06-15 — Phase 0 plan-phase complete; revision loop closed at iter 3.*
+*Last updated: 2026-08-10 — session narrative removed (HANDOFF.md owns it); position, progress and files of record corrected.*
