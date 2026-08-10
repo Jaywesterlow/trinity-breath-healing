@@ -96,15 +96,22 @@ test.describe('desktop', () => {
 		expect((await positions(page))[target]).toBe(0);
 	});
 
-	test('clicking the centre card follows its link', async ({ page }) => {
+	// 260810-mdl: the centre card now opens the service modal instead of navigating —
+	// see behandelingen-service-modal.spec.ts for the modal's own coverage. This test keeps
+	// the still-true half of the old contract (a real href survives in the markup, for
+	// crawlers and JS-off visitors) and asserts the new half (clicking does NOT navigate).
+	test('clicking the centre card has a real href but does not navigate (opens the modal instead)', async ({
+		page
+	}) => {
 		const centre = await indexAt(page, 0);
 		const href = await page.locator(PIVOT).nth(centre).locator(CARD).getAttribute('href');
 		expect(href).toBeTruthy();
 
 		await page.locator(PIVOT).nth(centre).locator(CARD).click();
-		await page.waitForURL(`**${href}`);
+		await page.waitForTimeout(200);
 
-		expect(new URL(page.url()).pathname).toBe(href);
+		expect(new URL(page.url()).pathname).toBe('/');
+		await expect(page.locator('dialog.service-modal')).toBeVisible();
 	});
 
 	test('a drag does not also fire a jump on release', async ({ page }) => {
