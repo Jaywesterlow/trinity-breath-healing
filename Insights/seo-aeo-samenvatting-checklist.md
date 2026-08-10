@@ -174,6 +174,140 @@ Concreet en implementeerbaar. **(+)** = aanvulling buiten de koers (geverifieerd
 
 ---
 
+## Deel 4 — Uit de projectpraktijk (Trinity, Fase 0)
+
+Samengevoegd uit `seo-aeo.md` op 2026-08-10. Alles hieronder is in dit project daadwerkelijk
+geïmplementeerd en geverifieerd; het stond niet in de koers en niet in Deel 1–3.
+
+### 4.1 Nederlandse regelgeving bij gezondheidsclaims (YMYL)
+
+Zwaarwegend voor deze site, en het soort fout dat achteraf duur is:
+
+- **Wet BIG** — ben je niet BIG-geregistreerd, vermijd dan taal die klinische diagnose of
+  behandeling impliceert. Gebruik "begeleiding" waar "behandeling" een voorbehouden handeling zou
+  suggereren.
+- **Reclame Code Stichting** — gezondheidsclaims vragen bewijs, of moeten als persoonlijke
+  ervaring geformuleerd zijn.
+- **Twee-zinnen-patroon** — elke claim krijgt een nuancerende zin erachter, niet erin. *"Ademwerk
+  kan rust geven. Resultaten verschillen per persoon."* Dat houdt de eerste zin citeerbaar
+  (zie Deel 1 §7) én de pagina juridisch verdedigbaar.
+- Zet de disclaimer ook expliciet op de pagina: een behandeling vervangt geen reguliere zorg, en
+  er wordt geen diagnose gesteld.
+
+### 4.2 URL-architectuur
+
+- **Eén permanente URL per stuk content.** Een URL wijzigen ná indexatie kost de linkwaarde én de
+  citatiegeschiedenis van de oude URL.
+- **Reserveer alle URL's op dag één**, desnoods als stub die 200 teruggeeft. Een stub moet een
+  **eigen** `<title>`, meta description, canonical en JSON-LD hebben — niet dezelfde placeholder
+  op elke stub. Bij het uitwerken in v2 verandert alleen de body; URL en schema blijven staan.
+- **Zet stubs niet op `noindex`.** Ze claimen URL-ruimte; dat is hun hele functie.
+- Nederlandse woorden in slugs (`/werkwijze`, niet `/method`), koppeltekens geen underscores,
+  en één consistente keuze rond trailing slashes die je canonicaliseert.
+- Gebruik **statische routes** waar pagina's eigen schema nodig hebben, geen dynamische
+  `[slug]`-route: elke pagina krijgt dan zijn eigen gecompileerde HTML met eigen JSON-LD.
+
+### 4.3 robots.txt — het volledige allowlist-patroon
+
+Expliciete `Allow` bóven de wildcard: sommige crawler-implementaties stoppen bij de eerste
+match, dus de volgorde is defensief bedoeld.
+
+```
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+User-agent: *
+Allow: /
+
+Sitemap: https://domain.nl/sitemap.xml
+```
+
+Genereer de sitemap uit je routelijst — nooit met de hand bijhouden — en zet er `lastmod` op.
+
+### 4.4 JSON-LD in de praktijk
+
+- Gebruik **`@graph`** (array), geen geneste objecten. Nesting maakt entiteitsrelaties ambigu;
+  in een `@graph` is elke entiteit een eersteklas node met eigen `@id`.
+- Voor een praktijk: **`ProfessionalService`** in plaats van kaal `LocalBusiness`, plus een
+  **`Person`**-node voor de behandelaar (E-E-A-T: bewijs dat er een mens achter zit), met
+  `jobTitle`, `worksFor`, `sameAs` en beroepsverenigingen in `memberOf`.
+- KvK- of BIG-registratie hoort in `identifier` én zichtbaar in de footer.
+
+| Situatie | Type |
+|---|---|
+| Praktijk / lokale dienstverlening | `LocalBusiness` → `ProfessionalService` |
+| Losse dienst | `Service` met `provider` naar de organisatie |
+| FAQ-sectie | `FAQPage` + `Question` + `Answer` |
+| Blog / artikel | `BlogPosting` of `Article` (`datePublished`, `dateModified`, `author`) |
+| Behandelaar | `Person` |
+| Kruimelpad | `BreadcrumbList` op elke pagina behalve home |
+
+### 4.5 Actualiteit implementeren
+
+Eén bron van waarheid, twee uitgangen: injecteer de builddatum op buildtijd (bijv. Vite
+`define`) en render die zowel als zichtbare `<time datetime="JJJJ-MM-DD">` als in
+`WebPage.dateModified`. Nooit hardcoden, nooit twee losse data die uit elkaar kunnen lopen.
+Let op de waarschuwing uit Deel 2 §4: alleen de datum verzetten telt niet, er moet inhoudelijk
+iets veranderd zijn.
+
+### 4.6 Nederlandse zoekspecifieken
+
+| Punt | Detail |
+|---|---|
+| `lang="nl"` op `<html>` | Voorwaarde om op Nederlandse queries geserveerd te worden |
+| Titels en descriptions in het Nederlands | Niet "voor internationaal bereik" naar het Engels vertalen bij een lokale praktijk |
+| `hreflang="nl"` + `x-default` | Ook bij een eentalige site — achteraf herstellen is lastig |
+| `inLanguage: "nl"` | Op je `WebPage`-nodes |
+| NAP in Nederlands formaat | Telefoon `+31 …`, adres volgens Nederlandse conventie |
+| Google Business Profile | Los beheerd door de behandelaar; moet exact matchen met de site |
+
+### 4.7 Verifiëren op de commandline
+
+Naast Rich Results Test, Lighthouse (mobiel) en pa11y:
+
+```
+curl -A "OAI-SearchBot" https://domain.nl/
+curl -A "PerplexityBot" https://domain.nl/
+```
+
+Zie je daar geen H1, meta en JSON-LD in de rauwe respons, dan ziet de AI-crawler ze ook niet.
+Sluit af met de echte test: stel ChatGPT en Perplexity een vraag uit je vakgebied en kijk of je
+geciteerd wordt.
+
+### 4.8 Volgorde bij een nieuw project
+
+1. Framework dat SSR/SSG kan.
+2. HTML-primitives (title, meta, canonical, OG, hreflang).
+3. JSON-LD-primitives (graph-builder, breadcrumb, schematypes).
+4. `robots.txt` met AI-allowlist + gegenereerde `sitemap.xml`.
+5. Alle URL's reserveren als stubs met eigen meta en schema.
+6. Zichtbare `dateModified` via buildtijd-injectie.
+7. CI-gates: JSON-LD valideren, H1-telling, initiële HTML via `curl` controleren.
+8. Pas dán zichtbaar UI-werk.
+
+---
+
 ## Bronnen (aanvullingen)
 - Aggarwal et al., *GEO: Generative Engine Optimization*, Princeton/Georgia Tech/Allen AI/IIT Delhi — ACM KDD 2024 (arXiv:2311.09735). +30–41% AI-zichtbaarheid door statistieken/quotes/citaten.
 - HubSpot AI Search Trends 2025 — recency: verse content ~3× vaker geciteerd.

@@ -20,7 +20,7 @@ Marketing website for Trinity Breath & Healing — a Holland-based breathwork an
 - **Discoverability**: SEO + AEO are primary success metrics — overrides aesthetic preferences when in conflict.
 - **Tech rendering**: SSG via SvelteKit prerender; client-only rendering blocks AI crawlers and degrades SEO.
 - **Language**: Dutch primary. Hreflang-ready architecture even though v1 ships Dutch-only.
-- **Verification**: Every SEO/AEO technique adopted must be cross-referenced against the project's `seo-aeo-samenvatting-checklist.md` and fresh online evidence. No speculative tactics.
+- **Verification**: Every SEO/AEO technique adopted must be cross-referenced against `Insights/seo-aeo-samenvatting-checklist.md` and fresh online evidence. No speculative tactics.
 - **Design fidelity**: Match Figma frames for landing page; infer missing frames (Frame 2 mobile accordion, Frame 4 mobile active state) from their desktop counterparts.
 - **Trust signals**: Health/wellness category — E-E-A-T (practitioner identity, credentials, consistency, freshness) is non-negotiable.
 - **Performance**: LCP < 2.5s, INP < 200ms, CLS < 0.1 — measured on real Chrome users via Search Console.

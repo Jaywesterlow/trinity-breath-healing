@@ -90,13 +90,13 @@ This is the **single canonical source** for all on-site NAP rendering, JSON-LD `
 
 ## Context
 
-- **Reference document:** `seo-aeo-samenvatting-checklist.md` at project root — authoritative Dutch SEO/AEO playbook (Princeton/KDD 2024 GEO, HubSpot 2025, 2026 crawler refs). All SEO/AEO choices cross-reference this.
+- **Reference document:** `Insights/seo-aeo-samenvatting-checklist.md` — authoritative Dutch SEO/AEO playbook (Princeton/KDD 2024 GEO, HubSpot 2025, 2026 crawler refs). All SEO/AEO choices cross-reference this.
 - **Design source:** `Figma/Landingpage/Desktop/*.png` (6 frames) + `Figma/Landingpage/Mobile/*.png` (5 frames + menu open). Landing page only in v1.
 - **Known design gaps (infer from desktop counterparts):**
   - Frame 2 mobile — Werkwijze section becomes a 3-card accordion on mobile
   - Frame 4 mobile — inactive-card state for service selector (active state visible on Mahatma Healing only)
 - **Locked content from design** (no need to ask aunt): hero H1 + body, Werkwijze 3 cards, About + stats (8+/65+/∞), Contact section, footer NAP. Brand voice = the existing copy.
-- **Service portfolio (5):** Mahatma Healing · Goldhealing · Raster Energie · Spinal Touch · "Meer diensten" link. Brand body copy also names: ademwerk (breathwork), lichaamsgerichte therapie, energetische / energiegerichte behandelingen.
+- **Service portfolio (7, updated 2026-08-10 from the practitioner's own descriptions):** Mahatma Healing · Goldhealing · Raster Energie · Cranio & Fascia Unwinding · Spinal Touch · BRTT Body · Trauma Release Breathwork. The "Meer diensten" link card was dropped once the list was complete — a more-services card inside a carousel of every service is nonsense. Brand body copy also names: ademwerk (breathwork), lichaamsgerichte therapie, energetische / energiegerichte behandelingen.
 - **Audience composition:**
   1. Existing Instagram followers (warm, intent-driven)
   2. Cold Dutch search traffic (don't know brand, may not know modality) — primary SEO target
@@ -112,7 +112,7 @@ This is the **single canonical source** for all on-site NAP rendering, JSON-LD `
 - **CI:** GitHub Actions for tests + Lighthouse CI + pa11y/axe + JSON-LD validation. Vercel handles deploy via GitHub integration.
 - **Repository:** `trinity-breath-healing` on GitHub, private, owned by user. Main branch protected.
 - **Language:** Dutch primary. Hreflang-ready architecture for future EN.
-- **Verification:** Every SEO/AEO technique cross-referenced against `seo-aeo-samenvatting-checklist.md` + fresh evidence. No speculative tactics.
+- **Verification:** Every SEO/AEO technique cross-referenced against `Insights/seo-aeo-samenvatting-checklist.md` + fresh evidence. No speculative tactics.
 - **Design fidelity:** Match Figma frames pixel-faithfully where they exist. Infer missing frames per user direction. Override design ONLY where user explicitly approves (inline FAQ addition, eyebrow tag renames, footer KvK+BIG slots).
 - **Trust signals:** E-E-A-T non-negotiable. Practitioner identity + credentials + consistency + freshness.
 - **Performance:** LCP < 2.5s, INP < 200ms, CLS < 0.1 — measured via Lighthouse CI + CrUX field data.
