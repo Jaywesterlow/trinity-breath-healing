@@ -7,7 +7,9 @@
  * provider: links to organizationNode @id
  * areaServed: mirrors BRAND.areaServed
  *
- * D-locked: 4 service slugs (mahatma-healing, goldhealing, raster-energie, spinal-touch)
+ * 7 service slugs as of 260810-mdl (mahatma-healing, goldhealing, raster-energie,
+ * cranio-fascia-unwinding, spinal-touch, brtt-body, trb-breathwork) — was 4, D-locked by
+ * CONTEXT.md; superseded by the 260810-mdl owner decision to ship all 7 real services.
  */
 import type { Service } from 'schema-dts';
 import { SITE_URL } from '$lib/seo/defaults';
@@ -28,7 +30,7 @@ export function makeServiceNode(slug: string, name: string): Service {
 	};
 }
 
-/** All 4 locked modality Service nodes — single source of truth for SCH-04 */
+/** All 7 modality Service nodes — single source of truth for SCH-04 */
 export const allServiceNodes: Service[] = BRAND.services.map((s) =>
 	makeServiceNode(s.slug, s.name)
 );

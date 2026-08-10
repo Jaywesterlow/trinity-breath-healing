@@ -54,36 +54,146 @@ export const BRAND = {
 
 	/**
 	 * Services offered — slugs are the stable identifier for routing + schema @id.
-	 * Phase 0 ships stubs; Phase 1 adds content. Plan 03 builds Service schema from this array.
-	 * Slugs locked by CONTEXT.md "Service slugs (Dutch)".
+	 * Seven real services (260810-mdl), practitioner-provided copy, owner-approved 2026-08-10.
+	 * Do not embellish or translate this copy — it is final as given.
 	 *
-	 * `description` is placeholder copy for the Behandelingen card hover reveal (260809-hov) —
-	 * no real practitioner-provided description exists yet, and writing one is not ours to
-	 * invent for a health/wellness site whose primary metric is E-E-A-T trust. TODO_-prefixed
-	 * so `npm run audit:placeholders` flags it, same convention as `phone` above.
+	 * `teaser` — one sentence, the Behandelingen card hover reveal. Was `description`
+	 * (TODO_-prefixed placeholder copy, 260809-hov) — renamed now that real copy exists, since
+	 * "description" no longer says what it is once there's also a modal `intro` paragraph.
+	 * `intro` — the ServiceModal's paragraph under the title.
+	 * `helpsWith` — the ServiceModal's "helpt bij" list.
+	 *
+	 * BRTT Body and Trauma Release Breathwork (`trb-breathwork`) are deliberately separate
+	 * services with separate cards/modals/pages — an owner decision, not an oversight.
 	 */
 	services: [
 		{
 			slug: 'mahatma-healing',
 			name: 'Mahatma Healing',
-			description: 'TODO_ Korte omschrijving van Mahatma Healing volgt nog.'
+			teaser:
+				'Krachtige, harmoniserende energie die blokkades opheft en je energetisch systeem opschoont.',
+			intro:
+				'Voorafgaand aan een sessie stem ik af op jouw I AM Presence, jouw Hogere Zelf, zodat ik intuïtief weet welke energie nodig is. Als Mahatma Coach faciliteer ik de Mahatma energie, die harmoniserend en balancerend werkt. Oude energie mag los, zodat er ruimte komt voor nieuwe energie en alles weer kan stromen vanuit je eigen kracht.',
+			helpsWith: [
+				'stress',
+				'burn-out',
+				'vermoeidheidsklachten',
+				'angsten',
+				'slaapproblemen',
+				'ADHD',
+				'trauma',
+				'allergieën',
+				'rouwverwerking'
+			]
 		},
 		{
 			slug: 'goldhealing',
 			name: 'Goldhealing',
-			description: 'TODO_ Korte omschrijving van Goldhealing volgt nog.'
+			teaser:
+				'Gouden lichtenergie die negativiteit omzet, beschermt en vooral op het psychische vlak werkt.',
+			intro:
+				'Goldhealing stemt je af op een van de sterkst transformerende energiestralen uit de kosmos. Het gouden licht zet negatieve gevoelens en gedachten om en blijft je na de behandeling omringen als bescherming. Ik combineer het vaak met de Mahatma of Kundalini energie, zodat zowel de bron als de klacht wordt aangeraakt. Ook heel geschikt voor kinderen.',
+			helpsWith: [
+				'angstgevoelens',
+				'negativiteit en depressieve klachten',
+				'stress en overprikkeling',
+				'hooggevoeligheid bij kinderen',
+				'ADHD',
+				'autisme en PDD-NOS'
+			]
 		},
 		{
 			slug: 'raster-energie',
 			name: 'Raster Energie',
-			description: 'TODO_ Korte omschrijving van Raster Energie volgt nog.'
+			teaser:
+				'Herstel van je Goddelijke blauwdruk — energetische stempels en blokkades worden gereinigd.',
+			intro:
+				'Rond je auraveld ligt een geometrische structuur, verbonden met de axitonale en galaxitonale lijnen. Samen vormen die je blauwdruk, en daarmee je verbinding met je Hogere Zelf. Invloeden van buitenaf kunnen daar stempels en blokkades op achterlaten. De rasterenergie heeft een hoge trillingsfrequentie en herbedraadt je als het ware, zodat je originele blauwdruk hersteld wordt.',
+			helpsWith: [
+				'energetische blokkades',
+				'karmische belasting',
+				'herstel van je aura',
+				'heling op mentaal, emotioneel en fysiek niveau',
+				'activeren van je zelfgenezend vermogen',
+				'inzicht en bewustwording'
+			]
+		},
+		{
+			slug: 'cranio-fascia-unwinding',
+			name: 'Cranio & Fascia Unwinding',
+			teaser:
+				'Zacht lichaamswerk waarbij je lichaam zelf het tempo bepaalt en opgeslagen spanning loslaat.',
+			intro:
+				'Met lichte aanraking en subtiele cranio-technieken nodig ik je zenuwstelsel en je fascia uit om spanning los te laten die er vaak al langer zit. Je lichaam kan spontaan gaan bewegen, zuchten, trillen of juist heel stil worden: fascia unwinding, een natuurlijk ontladingsproces waarbij oude spanning veilig losgelaten wordt, zonder forceren. Er is geen moeten, alleen uitnodiging.',
+			helpsWith: [
+				'langdurige stress en burn-outklachten',
+				'spanning die niet verdwijnt met praten of sporten',
+				'vermoeidheid, onrust en overprikkeling',
+				'moeite met voelen of ontspannen',
+				'emotionele verwerking na intensieve periodes'
+			]
 		},
 		{
 			slug: 'spinal-touch',
 			name: 'Spinal Touch',
-			description: 'TODO_ Korte omschrijving van Spinal Touch volgt nog.'
+			teaser:
+				'Zachte methode langs de wervelkolom die je centrale zenuwstelsel weer laat doorstromen.',
+			intro:
+				'Stress en trauma slaan zich op aan de achterzijde van je lichaam en kunnen zich daar inkapselen. De blokkades die zo ontstaan houden signalen tussen je centrale zenuwstelsel en je organen, spieren en weefsels tegen. Via lichte aanraking op specifieke punten langs je wervelkolom geef ik subtiele signalen aan dat zenuwstelsel. Geschikt voor alle leeftijden, van pasgeborenen tot ouderen.',
+			helpsWith: [
+				'rugpijn en hernia',
+				'hoofdpijn en migraine',
+				'angsten en depressieve klachten',
+				'burn-outklachten',
+				'gewrichtspijn en fibromyalgie',
+				'spijsverteringsklachten',
+				'(chronische) vermoeidheid',
+				'slaapproblemen',
+				'tinnitus'
+			]
+		},
+		{
+			slug: 'brtt-body',
+			name: 'BRTT Body',
+			teaser:
+				'Lichaamsgericht proces dat via de psoas — de spier van de ziel — opgeslagen trauma bevrijdt.',
+			intro:
+				'BRTT, Body Release Trauma Therapy, is een krachtig lichaamsgericht proces dat opgeslagen trauma, heftige gebeurtenissen en stress uit je lichaam bevrijdt. Met gevarieerde technieken activeren we de psoas-spier, ook wel de spier van de ziel genoemd. Het lichaam mag ontladen, je zenuwstelsel kalmeert en lagen van lichaamspantsering laten los.',
+			helpsWith: [
+				'PTSS-symptomen',
+				'chronische spanning en pantsering',
+				'burn-outklachten en depressieve gevoelens',
+				'migraine, rug-, nek- en schouderklachten',
+				'ontspanning van de bekkenbodem',
+				'slaapkwaliteit',
+				'veerkracht'
+			]
+		},
+		{
+			slug: 'trb-breathwork',
+			name: 'Trauma Release Breathwork',
+			teaser:
+				'Zeven ademtechnieken die de poort naar je onderbewuste openen en oude lading loslaten.',
+			intro:
+				"TRB is een diepgaande vorm van ademwerk. Via zeven ademtechnieken maak je verbinding met de kern van je overtuigingen en ervaringen. De sessie brengt je in een diepe, soms trance-achtige staat waarin opgeslagen emoties en trauma's veilig losgelaten of gereset mogen worden — ook ervaringen waar je geen bewuste herinnering meer aan hebt.",
+			helpsWith: [
+				"onverwerkte trauma's",
+				'onderdrukte emoties',
+				'angst en depressieve gevoelens',
+				'spanning vastgezet in het lichaam',
+				'verankering en aarding',
+				'diepe ontspanning en rust'
+			]
 		}
 	] as const,
+
+	/**
+	 * Shared disclaimer — rendered once in ServiceModal's footer (260810-mdl) and, later, once
+	 * per service page once those graduate from stubs. A single constant, not seven copies, so
+	 * it can never drift between services. Her words, condensed.
+	 */
+	disclaimer:
+		'Een behandeling vervangt nooit reguliere zorg en ik stel geen diagnose. Bij fysieke klachten ga je altijd eerst naar de huisarts.',
 
 	stats: {
 		yearsExperience: '8+',
