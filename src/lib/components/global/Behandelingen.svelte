@@ -1,21 +1,26 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import { reveal } from '$lib/actions/reveal';
 	import { BRAND } from '$lib/constants/brand';
 	import TreatmentCard from '$lib/components/ui/TreatmentCard.svelte';
+	import ServiceModal from '$lib/components/ui/ServiceModal.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 
+	// Only 3 of the 7 real services have art (260810-mdl) — Raster Energie's old
+	// infinity.png was never the owner's artwork and is gone from this map (the
+	// file itself stays under static/, just unreferenced, in case art arrives
+	// under the same name). A service absent from this map renders a number in
+	// the icon slot instead — see SERVICE_ITEMS' own `number` field below and
+	// TreatmentCard's `number` prop. Driven by absence from this map, not a
+	// flag: drop a new icon file in and add its entry here, and the number for
+	// that service disappears on its own.
 	const ICONS: Record<string, string> = {
 		'mahatma-healing': '/images/card-mahatma-healing.svg',
 		goldhealing: '/images/card-goldhealing.svg',
-		'raster-energie': '/images/infinity.png',
 		'spinal-touch': '/images/card-spinal-touch.svg'
 	};
 
 	// buttonLabel is placeholder copy, not final — see TreatmentCard.svelte.
-	// 5th card by design (see ROADMAP.md LND-05) — never implemented on the old
-	// auto-scroll version. No icon file for it; TreatmentCard renders it with
-	// no image, same as every other card would if it had none.
 
 	// Slots that are actually on screen at once. Desktop shows five cards
 	// (0, +/-1, +/-2) since the fan was widened. Declared up here because the
@@ -26,26 +31,22 @@
 		return Math.abs(position) <= VISIBLE_SLOT_MAX;
 	}
 
-	const SERVICE_ITEMS = [
-		...BRAND.services.map((s) => ({
-			key: s.slug,
-			label: s.name,
-			icon: ICONS[s.slug] as string | null,
-			buttonLabel: 'Meer info',
-			buttonHref: `/diensten/${s.slug}`,
-			description: s.description
-		})),
-		{
-			key: 'meer-diensten',
-			label: 'Meer diensten',
-			icon: null,
-			buttonLabel: 'Bekijk alles',
-			buttonHref: '/diensten',
-			// Placeholder copy (260809-hov), same TODO_-prefixed convention as
-			// BRAND.services' own descriptions — not ours to invent, see brand.ts.
-			description: 'TODO_ Korte omschrijving van het volledige aanbod volgt nog.'
-		}
-	];
+	// Seven real services, one card each (260810-mdl) — no "Meer diensten" nav
+	// card any more; a "more services" card inside a carousel that already
+	// shows every service was nonsense. `number` is set only when the service
+	// has no entry in ICONS, and is the service's fixed 1-based position in
+	// BRAND.services — stable regardless of where the fan has rotated it to,
+	// since it's computed from the source array's own index, not from
+	// `positions[]`.
+	const SERVICE_ITEMS = BRAND.services.map((s, i) => ({
+		key: s.slug,
+		label: s.name,
+		icon: ICONS[s.slug] ?? null,
+		number: ICONS[s.slug] ? undefined : i + 1,
+		buttonLabel: 'Meer info',
+		buttonHref: `/diensten/${s.slug}`,
+		teaser: s.teaser
+	}));
 
 	const BASE_COUNT = SERVICE_ITEMS.length;
 
@@ -54,16 +55,32 @@
 	// once it steps past HIGH_SLOT/LOW_SLOT, and the whole design rests on
 	// that wrap only ever touching an item nobody can see.
 	//
-	// With 5 real services and 5 visible slots there is nowhere to hide it —
-	// HIGH_SLOT = floor(5/2) = 2 lands exactly on the visible edge, so every
-	// single step would teleport a card from +2 straight to -2 in full view.
-	// It was masked until now only because 3 throwaway TESTKAART diagnostic
-	// cards (since removed) pushed the count to 8.
+	// At 7 real services and 5 visible slots there's a spare slot on each
+	// side already (HIGH_SLOT/LOW_SLOT below work out to ±3), so REPEATS
+	// collapses to 1 below and this list is exactly BRAND.services, no
+	// duplicates. Kept general rather than hardcoded to 7, because a smaller
+	// service count needs exactly this padding — at 5 services and 5 visible
+	// slots there is nowhere to hide the recycle: HIGH_SLOT = floor(5/2) = 2
+	// lands exactly on the visible edge, so every single step would teleport
+	// a card from +2 straight to -2 in full view (the bug e3ad763 fixed once
+	// TESTKAART's throwaway padding cards were removed).
+	//
+	// `+ 3`, not `+ 2`: an EVEN base count breaks the smaller margin. Perfect
+	// symmetry around slot 0 is impossible for an even count, so the one
+	// extra slot always lands on the positive side (see HIGH_SLOT/LOW_SLOT's
+	// own comment below) — which means the NEGATIVE side is one slot short
+	// of the positive side's margin, and `+ 2` alone doesn't cover that
+	// shortfall. Concretely, at a hypothetical count=6 with the old `+ 2`,
+	// REPEATS stays 1 (MIN_ITEMS=6 exactly meets BASE_COUNT), giving
+	// HIGH_SLOT=3 but LOW_SLOT=-2 — a *visible* slot, so every step would
+	// teleport a card in full view, the exact e3ad763 failure again. `+ 3`
+	// forces one more repeat whenever the base count alone can't cover it,
+	// which is harmless here (7 already clears it) and correct at any count.
 	//
 	// So the list is repeated until it is long enough. Duplicates are visually
 	// identical and carry aria-hidden + tabindex="-1", so the accessibility
 	// tree and the tab order still see each service exactly once.
-	const MIN_ITEMS = 2 * VISIBLE_SLOT_MAX + 2;
+	const MIN_ITEMS = 2 * VISIBLE_SLOT_MAX + 3;
 	const REPEATS = Math.max(1, Math.ceil(MIN_ITEMS / BASE_COUNT));
 
 	const items = Array.from({ length: REPEATS }, (_, r) =>
@@ -1168,8 +1185,313 @@
 		return false;
 	}
 
+	// ---------------------------------------------------------------------
+	// Service modal (260810-mdl) — the centre card, and only the centre
+	// card, opens a near-fullscreen modal instead of navigating. Side cards
+	// keep click-to-jump exactly as above; the centre card is the one card
+	// the fan never rotates, which is what makes the rect maths below
+	// honest (a rotated card's bounding box is not its true rectangle — see
+	// getCardBandY's own comment for the same fact used elsewhere in this
+	// file).
+	// ---------------------------------------------------------------------
+
+	// One entry per SERVICE (not per slot/duplicate), in BRAND.services'
+	// own fixed order — this is what ServiceModal's Prev/Next index into,
+	// independent of where the fan has rotated any given copy to.
+	const MODAL_SERVICES = BRAND.services.map((s, i) => ({
+		slug: s.slug,
+		name: s.name,
+		intro: s.intro,
+		helpsWith: s.helpsWith,
+		icon: ICONS[s.slug] ?? null,
+		number: ICONS[s.slug] ? undefined : i + 1
+	}));
+
+	// Bound per pivot in the each-block below (bind:this={pivotEls[i]}) so
+	// the modal can find a service's live card element without a fresh
+	// click event — needed for Prev/Next inside the modal (no click ever
+	// happens on those cards) and for close (which must shrink back onto
+	// whichever service is active, not necessarily the one that was
+	// originally clicked).
+	let pivotEls: (HTMLElement | null)[] = [];
+
+	// Same "which copy is nearest centre" reasoning nearestCopyOf already
+	// uses for the dots — reused rather than assuming index === service
+	// index. True 1:1 at today's REPEATS=1, but this stays correct if the
+	// service count ever drops low enough to need duplicates again.
+	function cardElFor(serviceIndex: number): HTMLElement | null {
+		const i = nearestCopyOf(serviceIndex);
+		return pivotEls[i]?.querySelector('a.tcard') ?? null;
+	}
+
+	let modalIndex = $state(0); // which SERVICE (0..BASE_COUNT-1) the modal is showing
+	let modalDialogEl = $state<HTMLDialogElement | null>(null);
+	let modalContentEl = $state<HTMLElement | null>(null);
+	let modalAnimating = false; // guards re-entrancy — plain, not $state: nothing renders from it
+
+	const MODAL_CARD_FADE_MS = 150; // step 1 of the open animation, per the plan's contract
+	const MODAL_BOX_GROW_MS = 400; // step 2
+	const MODAL_CONTENT_FADE_MS = 250; // step 3 — matches --motion-base; not otherwise specified
+	// WAAPI's `easing` option is parsed independently of this element's own
+	// cascade, so a var() reference does not resolve here the way it would
+	// in a stylesheet — these are literal copies of app.css's --ease-out/
+	// --ease-in-out tokens. Keep them in sync if those tokens ever change.
+	const MODAL_EASE_OUT = 'cubic-bezier(0.16, 1, 0.3, 1)';
+	const MODAL_EASE_IN_OUT = 'cubic-bezier(0.65, 0, 0.35, 1)';
+
+	// Tracks the most recent fadeElements() animation per element, so a new
+	// call can cancel it before starting its own. Necessary, not defensive:
+	// a fade-OUT is deliberately left in its finished fill:'forwards' state
+	// (see below) rather than cancelled — so when modalStep's fade-IN later
+	// runs on the SAME element, cancelling the fade-IN once IT finishes
+	// only removes the top of that element's effect stack. The never-
+	// cancelled fade-OUT animation is still sitting underneath it, and once
+	// the fade-IN is gone, ITS finished opacity:0 effect reasserts itself —
+	// the element silently snaps back to invisible (and, since opacity < 1
+	// promotes a new stacking context, back to intercepting clicks meant
+	// for the modal's Prev/Next/Close buttons). Confirmed exactly this way:
+	// a second Prev/Next press inside the modal timed out on
+	// ".service-modal__content intercepts pointer events" only after a
+	// first successful fade cycle, never on the first press. Cancelling the
+	// previous animation up front, every call, means at most one WAAPI
+	// effect ever exists per element for this property.
+	const lastFade = new WeakMap<HTMLElement, Animation>();
+
+	// Fades one or more elements' opacity via the Web Animations API — never
+	// node.style.transition, for the reason src/lib/actions/reveal.ts
+	// documents (the shorthand replaces whatever the stylesheet declared;
+	// TreatmentCard's own hover-reveal transition on these exact elements
+	// would be silently clobbered). `instant` (prefers-reduced-motion) skips
+	// the animation and writes the end state directly.
+	//
+	// Fading OUT is left in its animated "forwards" end state on purpose —
+	// nothing clears it, so the element stays hidden for as long as the
+	// modal is open with no separate inline-style bookkeeping required.
+	// Fading IN cancels its own animation once finished, handing the
+	// property back to the normal CSS cascade (same cleanup discipline
+	// reveal.ts uses) — harmless here since nothing else sets opacity on
+	// these elements at rest.
+	function fadeElements(
+		els: HTMLElement[],
+		visible: boolean,
+		instant: boolean,
+		duration: number
+	): Promise<void> {
+		if (els.length === 0) return Promise.resolve();
+		if (instant) {
+			els.forEach((el) => {
+				lastFade.get(el)?.cancel();
+				lastFade.delete(el);
+				el.style.opacity = visible ? '' : '0';
+			});
+			return Promise.resolve();
+		}
+		const anims = els.map((el) => {
+			lastFade.get(el)?.cancel();
+			const anim = el.animate([{ opacity: visible ? 0 : 1 }, { opacity: visible ? 1 : 0 }], {
+				duration,
+				easing: MODAL_EASE_OUT,
+				fill: 'forwards'
+			});
+			lastFade.set(el, anim);
+			return anim;
+		});
+		return Promise.all(anims.map((a) => a.finished.catch(() => {}))).then(() => {
+			if (visible) {
+				anims.forEach((a) => a.cancel());
+				els.forEach((el) => lastFade.delete(el));
+			}
+		});
+	}
+
+	function cardFaceEls(cardEl: HTMLElement): HTMLElement[] {
+		return Array.from(cardEl.querySelectorAll<HTMLElement>('.tcard__icon-wrap, .tcard__bottom'));
+	}
+
+	// Morphs the dialog box between two live rects — used for both the open
+	// grow and the close shrink (same helper, `from`/`to` swapped), so
+	// there's exactly one geometry animation to reason about. top/left/
+	// width/height rather than a transform matrix: simpler to get right for
+	// a one-shot, rare (open/close only) animation than compounding scale
+	// and translate against a rotated-fan coordinate frame, and easy to
+	// verify directly with Playwright's own boundingBox() the way this
+	// file's carousel geometry already is (see the file-level tuning
+	// history above).
+	function growBox(dialog: HTMLDialogElement, from: DOMRect, to: DOMRect): Promise<void> {
+		const anim = dialog.animate(
+			[
+				{
+					top: `${from.top}px`,
+					left: `${from.left}px`,
+					width: `${from.width}px`,
+					height: `${from.height}px`
+				},
+				{
+					top: `${to.top}px`,
+					left: `${to.left}px`,
+					width: `${to.width}px`,
+					height: `${to.height}px`
+				}
+			],
+			{ duration: MODAL_BOX_GROW_MS, easing: MODAL_EASE_IN_OUT, fill: 'forwards' }
+		);
+		// Hand control back to the stylesheet once settled — .service-modal's
+		// own CSS already expresses the near-fullscreen size responsively
+		// (vh/vw), which an inline WAAPI end-state would otherwise pin in
+		// place across a later viewport resize.
+		return anim.finished.then(
+			() => {
+				anim.cancel();
+			},
+			() => {}
+		);
+	}
+
+	async function openModal(cardEl: HTMLElement, serviceIndex: number): Promise<void> {
+		if (modalAnimating) return;
+		modalAnimating = true;
+
+		const reduced = prefersReducedMotion();
+		// Captured before the fade below touches opacity — hiding the card's
+		// inner content doesn't change the card's own outer box, but doing
+		// this first keeps the intent ("where did the user click") obvious.
+		const originRect = cardEl.getBoundingClientRect();
+
+		await fadeElements(cardFaceEls(cardEl), false, reduced, MODAL_CARD_FADE_MS);
+
+		modalIndex = serviceIndex;
+		await tick(); // let the newly-active panel's `hidden` attribute update land first
+
+		const dialog = modalDialogEl;
+		if (!dialog) {
+			// Pathological — the ref should always be bound by the time a
+			// click can happen — but restore the card's face rather than
+			// leave it stuck invisible if it somehow occurs.
+			await fadeElements(cardFaceEls(cardEl), true, true, 0);
+			modalAnimating = false;
+			return;
+		}
+		dialog.showModal();
+
+		if (reduced) {
+			modalAnimating = false;
+			return;
+		}
+
+		// One rAF so the dialog's own stylesheet-driven near-fullscreen size
+		// is what gets measured below — showModal() alone doesn't yet reflect
+		// post-layout geometry synchronously in every engine.
+		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+		const targetRect = dialog.getBoundingClientRect();
+
+		await growBox(dialog, originRect, targetRect);
+		await fadeElements(modalContentEl ? [modalContentEl] : [], true, false, MODAL_CONTENT_FADE_MS);
+		modalAnimating = false;
+	}
+
+	async function closeModal(): Promise<void> {
+		if (modalAnimating) return;
+		modalAnimating = true;
+
+		const dialog = modalDialogEl;
+		const reduced = prefersReducedMotion();
+		const cardEl = cardElFor(modalIndex);
+
+		if (!dialog) {
+			modalAnimating = false;
+			return;
+		}
+
+		if (reduced) {
+			dialog.close();
+			if (cardEl) await fadeElements(cardFaceEls(cardEl), true, true, 0);
+			modalAnimating = false;
+			return;
+		}
+
+		// Reverse order of the open sequence: modal content fades out first,
+		// then the box shrinks, then the card's own face fades back in.
+		await fadeElements(modalContentEl ? [modalContentEl] : [], false, false, MODAL_CONTENT_FADE_MS);
+
+		const fromRect = dialog.getBoundingClientRect();
+		// No sensible shrink target if the card has somehow vanished from the
+		// DOM mid-session — shrink toward its own current box instead of
+		// throwing, which is visually a plain fade-out rather than a morph.
+		const toRect = cardEl ? cardEl.getBoundingClientRect() : fromRect;
+		await growBox(dialog, fromRect, toRect);
+
+		dialog.close();
+		if (cardEl) await fadeElements(cardFaceEls(cardEl), true, false, MODAL_CARD_FADE_MS);
+		modalAnimating = false;
+	}
+
+	// Switches which service the modal shows AND drives the carousel
+	// underneath to match (goTo — the same JS spring latch Prev/Next/dots
+	// already use, BUTTON_SPRING_OMEGA and all; no new constant), so the
+	// fan is already centred correctly by the time the modal closes,
+	// whether or not the user ever presses the fan's own Prev/Next.
+	async function modalStep(delta: number): Promise<void> {
+		// Same guard openModal/closeModal use, and set for the same reason:
+		// without it, a Close pressed mid-transition could run its own fade
+		// concurrently against this one, both targeting modalContentEl.
+		if (modalAnimating) return;
+		modalAnimating = true;
+
+		const reduced = prefersReducedMotion();
+		const nextIndex = (modalIndex + delta + BASE_COUNT) % BASE_COUNT;
+		const content = modalContentEl ? [modalContentEl] : [];
+
+		if (reduced) {
+			modalIndex = nextIndex;
+			goTo(nearestCopyOf(nextIndex));
+			modalAnimating = false;
+			return;
+		}
+
+		await fadeElements(content, false, false, MODAL_CONTENT_FADE_MS);
+		modalIndex = nextIndex;
+		goTo(nearestCopyOf(nextIndex));
+		await tick();
+		await fadeElements(content, true, false, MODAL_CONTENT_FADE_MS);
+		modalAnimating = false;
+	}
+
+	function modalNext(): void {
+		modalStep(1);
+	}
+	function modalPrev(): void {
+		modalStep(-1);
+	}
+
+	// Esc fires 'cancel' and would close the native dialog INSTANTLY —
+	// prevented so the animated close above runs instead; the dialog only
+	// actually closes once that sequence calls dialog.close() itself.
+	function onModalCancel(e: Event): void {
+		e.preventDefault();
+		closeModal();
+	}
+
+	// A click that lands on the dialog element itself, not any of its
+	// children, is a backdrop click — the dialog's own box IS the click
+	// target in that case, since nothing inside it covers that point.
+	function onModalBackdropClick(e: MouseEvent): void {
+		if (e.target === modalDialogEl) closeModal();
+	}
+
 	function onCardClick(e: MouseEvent, i: number): void {
-		if (positions[i] === 0) return; // centre card: follow its own link
+		if (positions[i] === 0) {
+			// onFanClickCapture (capture phase, runs first) already calls
+			// preventDefault() when a drag ended on this link — checking
+			// defaultPrevented here reuses that exact signal instead of
+			// re-testing dragMoved a second time, per the plan's own
+			// instruction not to add a second guard. When it's already
+			// true, the browser's default has been suppressed and there's
+			// nothing left to do.
+			if (e.defaultPrevented) return;
+			e.preventDefault();
+			openModal(e.currentTarget as HTMLElement, i % BASE_COUNT);
+			return;
+		}
 		if (e.detail === 0) return; // keyboard: navigate directly
 		if (!canJumpOnClick()) return; // mobile: tap opens the page, as before
 		e.preventDefault();
@@ -1205,13 +1527,15 @@
 					class:treatments__pivot--jump={noTransitionKeys.has(item.key)}
 					class:treatments__pivot--motion={inGesture}
 					style="--pos: {positions[i]! + offset}"
+					bind:this={pivotEls[i]}
 				>
 					<TreatmentCard
 						label={item.label}
 						icon={item.icon}
+						number={item.number}
 						buttonLabel={item.buttonLabel}
 						buttonHref={item.buttonHref}
-						description={item.description}
+						description={item.teaser}
 						magnetic={isVisibleSlot(positions[i]!)}
 						duplicate={item.duplicate}
 						onCardClick={(e) => onCardClick(e, i)}
@@ -1249,6 +1573,23 @@
 			>
 		</div>
 	</div>
+
+	<!-- Rendered once, always — every service's full body is prerendered
+	     inside it (see ServiceModal.svelte), inactive ones carrying `hidden`.
+	     Nothing here is built by JS at open time; showModal()/close() only
+	     ever toggle visibility of what's already in the initial HTML. -->
+	<ServiceModal
+		services={MODAL_SERVICES}
+		activeIndex={modalIndex}
+		disclaimer={BRAND.disclaimer}
+		bind:dialogRef={modalDialogEl}
+		bind:contentRef={modalContentEl}
+		onPrev={modalPrev}
+		onNext={modalNext}
+		onClose={closeModal}
+		onCancel={onModalCancel}
+		onBackdropClick={onModalBackdropClick}
+	/>
 </section>
 
 <style>

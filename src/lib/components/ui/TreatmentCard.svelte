@@ -25,6 +25,13 @@
 		/** Service name — shown as the visible bottom title. */
 		label: string;
 		icon?: string | null;
+		/** Shown in the icon slot instead of art when `icon` is null (260810-mdl) — driven by
+		 * absence from Behandelingen.svelte's ICONS map, not a flag, so dropping art in later
+		 * makes the number disappear on its own. Real text content, not a background image or
+		 * CSS `content:`, so it stays readable to AI crawlers — but `aria-label` above is
+		 * already this card's one accessible name, so the number itself is `aria-hidden` to
+		 * avoid announcing it twice. */
+		number?: number;
 		/** Where the corner button goes. Accessible name only for now — the
 		 * arrow itself carries no visible text (not final copy either way). */
 		buttonLabel: string;
@@ -60,6 +67,7 @@
 	let {
 		label,
 		icon = null,
+		number,
 		buttonLabel,
 		buttonHref,
 		description,
@@ -83,6 +91,8 @@
 	<div class="tcard__icon-wrap">
 		{#if icon}
 			<img src={icon} alt="" aria-hidden="true" class="tcard__icon" draggable="false" />
+		{:else if number}
+			<span class="tcard__number" aria-hidden="true">{number}</span>
 		{/if}
 	</div>
 
@@ -185,6 +195,16 @@
 		width: 100%;
 		height: 100%;
 		object-fit: contain;
+	}
+
+	/* Stand-in for missing art (260810-mdl) — the display font at roughly the
+	   size the icon art occupies, so a numbered card reads at the same visual
+	   weight as an illustrated one rather than looking like an error state. */
+	.tcard__number {
+		font-family: var(--font-display);
+		font-size: clamp(2rem, 8vw, 2.75rem);
+		font-weight: var(--font-weight-medium);
+		line-height: 1;
 	}
 
 	.tcard__bottom {
@@ -302,6 +322,10 @@
 
 		.tcard__description {
 			font-size: var(--fs-body-sm);
+		}
+
+		.tcard__number {
+			font-size: clamp(3rem, 5vw, 4.5rem);
 		}
 
 		.tcard {
