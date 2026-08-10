@@ -1,6 +1,6 @@
 # Known Issues — deferred, not fixed yet
 
-Last updated: **2026-08-09**
+Last updated: **2026-08-10**
 
 Read the date above before answering "what issues are still open?" — anything here
 was true as of that date and may have been fixed since.
@@ -23,13 +23,12 @@ Everything still outstanding. Detail for each is further down.
 
 **Deferred by the owner**
 4. Contact section is placeholders — no form, no send, no Cal.com.
-5. ~~Behandelingen transitions are janky~~ — **rebuilt from scratch 2026-08-07** on
-   `claude/accessible-work-repos-kb67gy` (PR #10, **open, not merged**). Old Embla version and
-   its `[carousel-debug]` logs are gone entirely. See root `HANDOFF.md` → "The Behandelingen
-   carousel rebuild" for the mechanism and what's still open on it (desktop click-to-index
-   never implemented; swipe feel untested on a real device). Detail below has been updated to
-   match — do not trust anything under "Services / Behandelingen section" further down that
-   isn't marked superseded.
+5. ~~Behandelingen transitions are janky~~ — **rebuilt from scratch 2026-08-07**, merged to
+   `main` on 2026-08-09 via PR #10 (merge commit `58466c5`). Old Embla version and its
+   `[carousel-debug]` logs are gone entirely; desktop click-to-jump shipped the same week. See
+   root `HANDOFF.md` → "Carousel session 2026-08-08/09" for how it works now. Still open on it:
+   swipe feel has never been tried by a real thumb on a real phone. Do not trust anything under
+   "Services / Behandelingen section" further down that isn't marked superseded.
 
 **Small but real**
 6. PRF-03 lazy loading unimplemented — needs an exclusion list first (the pinned pan would pop in).
@@ -44,6 +43,19 @@ Everything still outstanding. Detail for each is further down.
 12. ~~The teacup `--section` invocation lives only in a commit message.~~ Clarified 2026-08-01:
     it was never recorded anywhere, not just in a commit — see detail below. A guarded script
     now exists so future invocations get saved.
+
+**Test suite** — migrated 2026-08-10 from `docs/E2E-TRIAGE.md`, which is now deleted
+13. The e2e suite is permanently red: ~17 specs assert features that do not exist yet.
+14. `validate-json-ld.ts` accepts a `FAQPage` with an empty `mainEntity`. WARNING-2 says reject.
+15. PRF-02's hero-image-preload contract is obsolete — the hero is an inlined SVG.
+
+**Never migrated from the 2026-07-27 audit** — re-verified still true on 2026-08-10
+16. `NavLogo.svelte` loads Cinzel and Montserrat from the **Google Fonts CDN**. Breaks the
+    self-hosted-fonts policy, and on a Dutch site it is an AVG problem, not only a perf one.
+17. `og:image` and `twitter:image` point at `/og-default.jpg`, which **does not exist**. Every
+    page ships a 404 preview image.
+18. Carousel dots fail WCAG 2.2 AA target size (SC 2.5.8): 0.4rem button in a 0.7rem box,
+    against a 24×24 CSS px minimum.
 
 ---
 
@@ -326,3 +338,91 @@ situation is pinned down. Before spending time on a "failing" carousel test, fir
 spec at `a482f4e` — if it fails there too, it is this, not your change. Worth fixing properly by
 pinning a known-good browser in a committed Playwright config so the suite means the same thing
 on every machine, but nobody has done that yet.
+
+---
+
+## The e2e suite is permanently red (migrated from `docs/E2E-TRIAGE.md`, 2026-08-10)
+
+The triage document this replaces was written 2026-07-13 during the Tailwind/shadcn migration
+and self-flagged as stale two weeks later: its counts predate three test files and the suite has
+not been re-run since. **The counts below are therefore historical — re-measure before acting.**
+The shape of the problem is what survives, and it has not changed.
+
+**Not caused by the migration.** Measured, not assumed: the pre-migration app and the migrated
+fork produced an identical 33 failed / 167 passed once both were built with the same
+`PUBLIC_SITE_URL`. An earlier count of 48 was an artifact of comparing a stale build against a
+fresh one — see HANDOFF.md's environment gotchas, which now carries that trap.
+
+Three different things are tangled together and they want different treatment:
+
+1. **Tests asserting features that do not exist yet** — 17 of the remaining 20. A11Y-01 expects
+   `role="dialog"` with no modal built; A11Y-02 expects form labels with no contact form;
+   FND-06 expects font preloads never implemented. A suite that is *expected* to be red teaches
+   everyone to ignore red. Convert them to `test.fixme()` with the owning phase in the title, so
+   they light up by themselves when the feature lands. Biggest available win: it clears 17
+   permanent failures without weakening a single contract. **Note (2026-08-10):** A11Y-01 is
+   about to become live — the service modal on `feat/behandelingen-service-modal` is a real
+   `<dialog>`. Re-check that one first; it may simply pass.
+2. **Two obsolete contracts.** PRF-02 (hero image preload) and PRF-03 (`loading="eager"` appears
+   exactly once) both describe an architecture that no longer exists — since `81bbe8f` the hero
+   is an inlined SVG, so there is no image to preload and no eager `<img>` to count. PRF-03 was
+   passing until that commit. Retire them or rewrite them to assert what is actually wanted now:
+   the hero paints without a render-blocking fetch. PRF-03 has its own fuller entry above.
+3. **One genuine bug.** `validate-json-ld.ts` accepts a `FAQPage` whose `mainEntity` is empty,
+   when the WARNING-2 contract says it must be rejected. Caught by `synthetic-violations.spec.ts`.
+   Small, self-contained, worth fixing.
+
+**Already fixed, kept because it explains why the suite was worth reading.** 14 of the original
+33 were `routes.spec.ts` title failures, and they were a real SEO bug, not test rot: every one of
+the 15 pages shipped the same `<title>` and the same meta description. `+layout.svelte` rendered
+`<Head meta={data.meta} />` using the *layout's* load data, so the per-page `meta` each `+page.ts`
+returned was never read. Canonicals were unaffected, which is why the html-audit checks passed
+and it stayed hidden. Fixed in `1597d1f` by reading `page.data.meta`. For a site whose stated
+core value is discoverability, that was duplicate-content signal across the entire domain — and
+the tests had been calling it out the whole time.
+
+---
+
+## Three findings the 2026-07-27 audit raised that never got migrated
+
+The audit itself now lives at `.planning/archive/2026-07-27-audit.md`. Its other findings were
+either fixed or already listed above. These three were re-verified against the working tree on
+**2026-08-10** and are all still true.
+
+### 16. Google Fonts CDN in `NavLogo.svelte`
+
+`src/lib/components/global/NavLogo.svelte` opens with `preconnect` to `fonts.googleapis.com` and
+`fonts.gstatic.com` and then loads Cinzel + Montserrat from the CDN. Three problems, in order of
+severity:
+
+1. **AVG/GDPR.** A German court has already ruled that embedding Google Fonts transmits the
+   visitor's IP to a US server without consent. This site's entire privacy posture — Plausible
+   EU, Resend EU, `fra1`, no cookie banner — is built on not doing that, and the privacy policy
+   Phase 2 will write is supposed to list every processor. This one is not on the list.
+2. It contradicts the project's own self-hosted-font decision; the woff2 files are already in
+   `static/fonts/`.
+3. Two extra connections plus a render-blocking stylesheet on every page, against an LCP budget
+   that is already tight.
+
+Fix: self-host both faces the way the others are, and delete the three tags.
+
+### 17. `og:image` points at a file that does not exist
+
+`src/lib/components/seo/Head.svelte:18` falls back to `${SITE_URL}/og-default.jpg`. There is no
+`og-default.jpg` in `static/`. No page overrides it, so **every** page — and every share on
+WhatsApp, LinkedIn or Instagram DM — requests a 404.
+
+Fix: produce a 1200×630 share image and drop it at `static/og-default.jpg`. Cheap, and it is the
+first impression for anything the practitioner shares with her own audience.
+
+### 18. Carousel dots are below the WCAG 2.2 AA target size
+
+`.treatments__dot` is `0.7rem` (≈11px) and the `.treatments__dot-visual` button inside it is
+`0.4rem` (≈6.4px). SC 2.5.8 (AA, new in WCAG 2.2) requires 24×24 CSS px unless the spacing
+exception applies, and with seven dots in a row it does not.
+
+Fix without touching the design: keep the visible dot at its current size and grow the button's
+hit area around it — `padding` plus a transparent border, or a `::before` overlay sized 24×24.
+The dots are the only keyboard-and-touch route to a specific service, so this is a real
+blocker, not a checkbox. `pa11y-ci` is in CI but does not catch target size; this needs a manual
+assertion or an axe rule.

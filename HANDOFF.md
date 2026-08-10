@@ -608,6 +608,14 @@ outstanding item 2 anyway.
   Use a gitignored `.env`, never a tracked file.
 - The shell's working directory drifts between calls. Use absolute paths in scripts.
 - `vite preview` dies frequently; check it is up before each browser run.
+- **Playwright serves whatever build is on disk.** `vite preview` does not rebuild, so a stale
+  `.svelte-kit/output` silently invalidates a whole run — one comparison in July reported 48
+  failures purely because two checkouts had been built against different `PUBLIC_SITE_URL`
+  values. Always `npm run build` first, and build both sides the same way before comparing.
+- **An isolated worktree does not inherit uncommitted changes.** Work sitting unstaged in the
+  primary checkout is simply absent there, which shows up as `Cannot find module` on files that
+  plainly exist, or a build that fails app-wide for no visible reason. Commit before spawning
+  worktree-isolated work.
 - Full-page screenshots and pixel diffs are the reliable way to prove a change is visually
   inert. Two were decisive this session: the card art `<img>` switch and the hero CTA wrapper,
   both **zero differing pixels**.
