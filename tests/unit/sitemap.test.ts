@@ -23,12 +23,12 @@ describe('sitemap.xml GET handler', () => {
 		expect(body).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
 	});
 
-	it('response body contains exactly 15 <url> elements', async () => {
+	it('response body contains exactly 18 <url> elements', async () => {
 		const { GET } = await import('../../src/routes/sitemap.xml/+server');
 		const response = await GET({} as Parameters<typeof GET>[0]);
 		const body = await response.text();
 		const matches = body.match(/<url>/g);
-		expect(matches?.length).toBe(15);
+		expect(matches?.length).toBe(18);
 	});
 
 	it('every <loc> is absolute and starts with SITE_URL', async () => {
@@ -36,7 +36,7 @@ describe('sitemap.xml GET handler', () => {
 		const response = await GET({} as Parameters<typeof GET>[0]);
 		const body = await response.text();
 		const locs = [...body.matchAll(/<loc>(.+?)<\/loc>/g)].map((m) => m[1] ?? '');
-		expect(locs.length).toBe(15);
+		expect(locs.length).toBe(18);
 		for (const loc of locs) {
 			expect(loc.startsWith('https://')).toBe(true);
 			expect(loc.startsWith(MOCK_SITE_URL)).toBe(true);
@@ -50,12 +50,12 @@ describe('sitemap.xml GET handler', () => {
 		expect(body).toContain('<priority>1.0</priority>');
 	});
 
-	it('exactly 14 entries have priority 0.5', async () => {
+	it('exactly 17 entries have priority 0.5', async () => {
 		const { GET } = await import('../../src/routes/sitemap.xml/+server');
 		const response = await GET({} as Parameters<typeof GET>[0]);
 		const body = await response.text();
 		const priorities = [...body.matchAll(/<priority>(.+?)<\/priority>/g)].map((m) => m[1]);
-		expect(priorities.filter((p) => p === '0.5').length).toBe(14);
+		expect(priorities.filter((p) => p === '0.5').length).toBe(17);
 	});
 
 	it('module exports prerender = true', async () => {
