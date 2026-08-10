@@ -199,22 +199,32 @@
 		place-items: center;
 		width: 2.5rem;
 		height: 2.5rem;
-		border-radius: var(--radius-full);
-		border: 1px solid currentColor;
+		border: none;
 		background: transparent;
 		color: inherit;
 		cursor: pointer;
-		transition: background-color var(--motion-fast);
 	}
 
-	.service-modal__close:hover,
-	.service-modal__nav:hover {
-		background: var(--color-fg-forest-92);
-	}
-
+	/* Close keeps its circular button chrome (the one control here that
+	   isn't paired with an obvious "this is clickable" affordance like an
+	   arrow shape already implies motion) — Prev/Next below deliberately
+	   don't, per a direct owner request to remove the circles around them. */
 	.service-modal__close {
 		top: var(--space-4);
 		right: var(--space-4);
+		border-radius: var(--radius-full);
+		border: 1px solid currentColor;
+		transition: background-color var(--motion-fast);
+	}
+
+	.service-modal__close:hover {
+		background: var(--color-fg-forest-92);
+	}
+
+	/* Bare arrows, no circle/border — opacity is the only hover affordance
+	   left once the circle (and its own hover background) is gone. */
+	.service-modal__nav:hover {
+		opacity: 0.65;
 	}
 
 	/* Vertically centred against the dialog's own left/right edge, per the plan. */
@@ -234,9 +244,27 @@
 		flex: 1;
 		min-height: 0;
 		overflow-y: auto;
-		/* Room for the absolutely-positioned close/prev/next buttons so they
-		   never overlap the first line of copy. */
-		padding: var(--space-10) var(--space-10) 0;
+		/* Room for the absolutely-positioned close/prev/next buttons so text
+		   never runs under them. Right side is deliberately split between
+		   margin and padding (reset to a single uniform padding again at the
+		   1024px breakpoint below) — see margin-right's own comment for why
+		   that split, not just a bigger padding, is what actually fixes the
+		   mobile scrollbar issue. */
+		padding: var(--space-10) var(--space-4) 0 var(--space-10);
+		/* Mobile only. The browser's own scrollbar for this element paints at
+		   its BORDER-BOX edge, not inside its padding — and, measured
+		   directly on a real 390px viewport, that edge landed 32px INSIDE
+		   the close/next buttons' own 40px-wide footprint (buttons sit
+		   space-4 in from the DIALOG's edge; this element, with no margin,
+		   only starts space-6 in — the dialog's own padding — which is
+		   closer to the edge than the buttons are). A scrollbar drawn right
+		   at that edge sits on top of the buttons. Padding can't fix this —
+		   it's INSIDE the box the scrollbar hugs, so widening it only pushes
+		   text inward, not the scrollbar itself — margin instead shrinks the
+		   whole scrolling box (scrollbar included) so its edge clears the
+		   buttons' left edge (space-4 + button width, 3.5rem in) with room
+		   to spare. */
+		margin-right: calc(var(--space-8) + var(--space-1));
 	}
 
 	.service-modal__panel {
@@ -253,6 +281,11 @@
 	.service-modal__title {
 		grid-area: title;
 		margin: 0;
+		/* Mobile only — reset to the default (left) at 1024px, where the
+		   title sits in its own narrow column next to the media/helps
+		   columns and reads better left-aligned against the intro text
+		   directly below it. */
+		text-align: center;
 		font-family: var(--font-display);
 		font-size: var(--fs-h3);
 		font-weight: var(--font-weight-medium);
@@ -351,6 +384,23 @@
 
 		.service-modal__cta {
 			align-self: start;
+		}
+
+		/* The mobile scrollbar/button collision (see its own comment) hasn't
+		   been observed at this breakpoint — desktop pointer input scrolls
+		   via an overlay/invisible scrollbar in every browser tested — so
+		   this restores the original single, uniform padding rather than
+		   carrying the mobile-only margin split forward unnecessarily. */
+		.service-modal__content {
+			margin-right: 0;
+			padding: var(--space-10) var(--space-10) 0;
+		}
+
+		/* Title sits in its own narrow column here, directly above the
+		   left-aligned intro paragraph — left-aligned reads as one block
+		   with it; centred (the mobile-only default above) would not. */
+		.service-modal__title {
+			text-align: left;
 		}
 	}
 </style>

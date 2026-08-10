@@ -1239,26 +1239,32 @@
 	const NAV_STAGGER_MS = 60;
 	// WAAPI's `easing` option is parsed independently of this element's own
 	// cascade, so a var() reference does not resolve here the way it would
-	// in a stylesheet — these are literal copies of app.css's --ease-out/
-	// --ease-in-out tokens. Keep them in sync if those tokens ever change.
-	//
-	// MODAL_EASE_OUT drives the box grow/shrink (growBox) — a direct owner
-	// request for "a lot more ease-out" there, same duration: this is
-	// app.css's own --ease-out token, already a pronounced fast-start/
-	// slow-finish curve (far more so than --ease-in-out's symmetric shape),
-	// so swapping to it is the "add a lot of ease-out" fix rather than a
-	// bespoke curve. growBox is the one function both open (grow) and close
-	// (shrink) already call, so this one swap gives both directions the same
-	// ease-out feel the owner asked for, not just open.
-	//
-	// MODAL_EASE_IN_OUT now drives fadeElements (opacity) instead — MODAL_EASE_OUT's
-	// steep initial velocity was exactly why the card's own content used to
-	// read as "instantly vanishing" rather than fading: front-loading ~80%
-	// of the opacity change into the first third of MODAL_CARD_FADE_MS is
-	// technically a 150ms animation but not a visible one. --ease-in-out
-	// departs from rest instead, which is what actually reads as a fade.
-	const MODAL_EASE_OUT = 'cubic-bezier(0.16, 1, 0.3, 1)';
+	// in a stylesheet — MODAL_EASE_IN_OUT is a literal copy of app.css's own
+	// --ease-in-out token (keep them in sync if that token ever changes).
+	// Drives fadeElements (opacity): a first attempt used app.css's --ease-out
+	// instead, whose steep initial velocity was exactly why the card's own
+	// content used to read as "instantly vanishing" rather than fading —
+	// front-loading ~80% of the opacity change into the first third of
+	// MODAL_CARD_FADE_MS is technically a 150ms animation but not a visible
+	// one. --ease-in-out departs from rest instead, which is what actually
+	// reads as a fade.
 	const MODAL_EASE_IN_OUT = 'cubic-bezier(0.65, 0, 0.35, 1)';
+	// growBox's own curve (box grow/shrink) — went through two owner rounds:
+	// app.css's --ease-out first (a direct request for "a lot more ease-out"
+	// over the previous --ease-in-out), then this, a second, more specific
+	// request for still more, "move slowly at the end." --ease-out itself
+	// already reaches y=1 within the first ~65% of its duration (the tail is
+	// there but short) — this is easings.net's own "easeOutExpo"
+	// (cubic-bezier(0.19, 1, 0.22, 1)), a standard, well-known curve rather
+	// than a hand-tuned guess, whose smaller x2 control point (0.22 vs
+	// --ease-out's 0.3) stretches that same deceleration out over noticeably
+	// more of the animation's back half — the box keeps visibly slowing
+	// right up to the last frame instead of arriving early and sitting
+	// still. Kept as its own constant rather than overwriting app.css's
+	// --ease-out token itself: this curve is stronger than that token on
+	// purpose, specific to this one box-morph animation, not a change to the
+	// site's shared motion language.
+	const MODAL_BOX_EASE_OUT = 'cubic-bezier(0.19, 1, 0.22, 1)';
 
 	// Tracks the most recent fadeElements() animation per element, so a new
 	// call can cancel it before starting its own. Necessary, not defensive:
@@ -1385,7 +1391,7 @@
 					height: `${to.height}px`
 				}
 			],
-			{ duration: MODAL_BOX_GROW_MS, easing: MODAL_EASE_OUT, fill: 'forwards' }
+			{ duration: MODAL_BOX_GROW_MS, easing: MODAL_BOX_EASE_OUT, fill: 'forwards' }
 		);
 		// Hand control back to the stylesheet once settled — .service-modal's
 		// own CSS already expresses the near-fullscreen size responsively

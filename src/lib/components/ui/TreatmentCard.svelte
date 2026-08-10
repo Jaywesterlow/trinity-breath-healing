@@ -180,7 +180,22 @@
 
 	.tcard__icon-wrap {
 		grid-row: 1;
-		align-self: center;
+		/* Deliberately NOT align-self: center (removed — see own history):
+		   that gave this element an indefinite (shrink-to-fit) height, so
+		   .tcard__icon's own height: 100% below had nothing definite to
+		   resolve against and the wrap ended up shorter than its actual
+		   grid row, unevenly — the shortfall landed almost entirely below
+		   the wrap rather than split top/bottom. Most icons are tall/narrow
+		   enough that the gap was barely visible, but Goldhealing's wide,
+		   short sun art made it obvious: the icon visibly sat high, with a
+		   big gap to the title below and almost none above. Grid's own
+		   default (align-self: stretch, i.e. no override at all) instead
+		   makes this element fill the ENTIRE row — confirmed via
+		   getBoundingClientRect() to land with zero px of slack above or
+		   below — which gives .tcard__icon a real, definite height to
+		   resolve 100% against, so object-fit: contain's own default
+		   centering (object-position: 50% 50%) actually has the full,
+		   correct space to centre within. */
 		display: flex;
 		align-items: center;
 		justify-content: center;
