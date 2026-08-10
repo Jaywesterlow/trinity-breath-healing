@@ -15,7 +15,12 @@ Updated again **2026-08-09**. Same branch, same PR #10, ~20 further commits: the
 motion was rewritten from stepped animation to continuous physics, and the desktop geometry
 was retuned repeatedly against live measurement. **Read "Carousel session 2026-08-08/09"
 below before touching that component** — it supersedes the "What is not done" list in the
-older section, and it records a temporary diagnostic state that must be reverted before merge.
+older section.
+
+**PR #10 was merged into `main` on 2026-08-09** (merge commit `58466c5`, 73 commits), after a
+further session that added the card hover reveal and the magnetic cursor-follow, removed the
+TESTKAART diagnostic, and fixed the recycle-slot bug that removal exposed. The carousel now
+lives on `main`; there is no unmerged carousel work.
 
 **Read these first — they are maintained, this one is background:**
 
@@ -67,10 +72,14 @@ harmless.** Details under "Open risk: LCP" further down.
 As of **2026-08-09** the repo has exactly **two** branches. Ten were deleted on 2026-08-08 —
 see "Branch cleanup" below before looking for one that is missing.
 
+As of **2026-08-09, after the PR #10 merge**, `main` is the only branch. It carries the polish
+work, the Contact section (PR #11), and the full carousel rebuild including the hover/magnet
+work. There is no unmerged work anywhere.
+
 | branch | state |
 |---|---|
-| `main` | Polish work **and** the Contact section (PR #11, merged 2026-08-08). Does **not** have the carousel rebuild. |
-| `claude/accessible-work-repos-kb67gy` | **Behandelingen carousel, PR #10, open.** The only branch with unmerged work. |
+| `main` | Everything. |
+| ~~`claude/accessible-work-repos-kb67gy`~~ | Merged via PR #10 and deleted. Its commits live on `main` — the SHAs cited throughout this file and in KNOWN-ISSUES.md are still valid, which is why this was merged with a merge commit rather than squashed. |
 
 ### Branch cleanup, 2026-08-08
 
@@ -220,7 +229,12 @@ untouched:** the persistent `positions[i]` model, rotation around the shared piv
 rule that `shiftOne` is only ever called with `|delta| = 1`. Everything else about how the
 fan moves is different.
 
-### ⚠️ First: the carousel currently renders 8 fake cards, not 5 real ones
+### ~~⚠️ First: the carousel currently renders 8 fake cards, not 5 real ones~~ — RESOLVED 2026-08-09
+
+**Removed in `e3ad763`, before the merge.** Kept below because removing it turned out to be
+coupled to a real bug, and the coupling is the part worth carrying forward. See "The recycle
+slot bug the diagnostic was hiding" at the end of this section.
+
 
 `aa9522d` added three **TESTKAART** diagnostic items on top of the real 5, and a `cardNumber`
 prop that draws a big number in place of each card's icon, so the owner could tell cards apart
@@ -405,11 +419,35 @@ nothing visible and will eat the clipping margin the rotated cards need.
   none. It was first renamed `_phase` to quiet the linter, then deleted. Write-only state reads
   as meaningful to whoever maintains this next.
 
+### The recycle slot bug the diagnostic was hiding
+
+Worth understanding before changing the number of treatments or how many cards are visible.
+
+A card recycles — wraps once around the loop — when it steps past
+`HIGH_SLOT = floor(count / 2)`. The whole design rests on that wrap only ever touching an item
+nobody can see. At `count = 8` (5 real + 3 TESTKAART) it held: slots 3 and 4 are off-screen. At
+the real `count = 5` it does not, because desktop shows slots −2..2, so `HIGH_SLOT = 2` lands
+**exactly on the visible edge** — every single step would have teleported a card from +2 to −2
+in full view.
+
+The diagnostic cards were accidentally holding the carousel together. The component's own
+comment still asserted "Only 3 cards (position −1, 0, 1) are ever visible", which was true when
+written and stopped being true when the desktop fan was widened.
+
+**The fix:** the item list repeats until it is long enough
+(`MIN_ITEMS = 2 * VISIBLE_SLOT_MAX + 2`) — 5 services × 2 = 10 slots, three hidden per side.
+Duplicates carry `aria-hidden="true"` and `tabindex="-1"`; dots iterate services, not slots, and
+target whichever copy is nearest the centre.
+
+**If you ever change the treatment count or how many cards are visible, re-check this.** It is
+the one piece of arithmetic in the component that fails silently and looks like a rendering
+glitch rather than a maths error.
+
 ### Still open here
 
-- **The TESTKAART revert.** Top of this section. Blocks merge.
-- **PR #10 is still open and unmerged.** Nothing else in this section matters until that is
-  resolved one way or the other.
+- **Description copy is still `TODO_` placeholder** on all five cards — it is live in the
+  prerendered HTML. It is the hover text, and it needs the practitioner's own words; not ours to
+  invent for a health practice whose primary metric is E-E-A-T trust.
 - Swipe feel has still never been checked by a real thumb on a real phone — every measurement
   above is a synthetic Playwright gesture. The owner has reviewed the *result* on their phone
   via Vercel previews, which is not the same as the gesture having been tuned there.
