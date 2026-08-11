@@ -1229,6 +1229,23 @@
 	let modalContentEl = $state<HTMLElement | null>(null);
 	let modalAnimating = false; // guards re-entrancy — plain, not $state: nothing renders from it
 
+	// Swipe-to-navigate inside the modal (mobile only — see onModalContentPointerDown's
+	// own touch-only gate). A discrete swipe-and-release, not a live drag-follow like
+	// the fan's own gesture: the modal already has a JS-driven transition for stepping
+	// between services (modalStep, via modalNext/modalPrev below), so a swipe just
+	// decides direction and calls the same thing a button press would, rather than
+	// tracking the finger continuously.
+	const MODAL_SWIPE_THRESHOLD_PX = 50; // deliberately far above DRAG_SLOP_PX (4px) —
+	// this has to reject an ordinary vertical scroll-with-a-little-horizontal-wobble,
+	// not just a click.
+	let modalSwipeStartX = 0;
+	let modalSwipeStartY = 0;
+	// Set true only when a swipe actually crossed the threshold and fired a step —
+	// read once by onModalContentClickCapture to swallow the click a touch release
+	// synthesises on whatever sat under the finger (the same problem, and the same
+	// fix, onFanClickCapture's own dragMoved check addresses for the fan itself).
+	let modalSwiped = false;
+
 	const MODAL_CARD_FADE_MS = 150; // step 1 of the open animation, per the plan's contract
 	const MODAL_BOX_GROW_MS = 400; // step 2
 	const MODAL_CONTENT_FADE_MS = 250; // step 3 — matches --motion-base; not otherwise specified
@@ -1580,6 +1597,59 @@
 		modalStep(-1);
 	}
 
+	// Touch-only (mouse/trackpad users already have the Prev/Next buttons, and
+	// a mouse-drag gesture here would fight text selection inside the
+	// description/helps list, which was never a problem worth trading away for
+	// a gesture nobody asked for on desktop). window-level pointerup, not a
+	// listener on the content element itself, for the same reason the fan's
+	// own drag uses window listeners: a real swipe can easily end with the
+	// finger outside the element it started on.
+	function onModalContentPointerDown(e: PointerEvent): void {
+		if (e.pointerType !== 'touch') return;
+		modalSwipeStartX = e.clientX;
+		modalSwipeStartY = e.clientY;
+		window.addEventListener('pointerup', onModalContentPointerUp);
+		window.addEventListener('pointercancel', onModalContentPointerCancel);
+	}
+
+	function endModalSwipeTracking(): void {
+		window.removeEventListener('pointerup', onModalContentPointerUp);
+		window.removeEventListener('pointercancel', onModalContentPointerCancel);
+	}
+
+	// Direction only, decided once on release — not a live drag-follow. dx > 0
+	// (finger moved right) means the PREVIOUS service; dx < 0 means NEXT,
+	// matching the usual "swipe left to advance" convention image galleries
+	// and card stacks already use.
+	function onModalContentPointerUp(e: PointerEvent): void {
+		endModalSwipeTracking();
+		const dx = e.clientX - modalSwipeStartX;
+		const dy = e.clientY - modalSwipeStartY;
+		// Predominantly horizontal AND past the threshold — an ordinary
+		// vertical scroll (reading a long description) has to pass through
+		// here untouched, same as it already does for the fan's own drag.
+		if (Math.abs(dx) <= Math.abs(dy) || Math.abs(dx) < MODAL_SWIPE_THRESHOLD_PX) return;
+		modalSwiped = true;
+		if (dx < 0) modalNext();
+		else modalPrev();
+	}
+
+	function onModalContentPointerCancel(): void {
+		endModalSwipeTracking();
+	}
+
+	// A touch release synthesises a click on whatever sat under the finger —
+	// without this, a swipe ending over the CTA link or a helps-list item
+	// would also fire that element's own click right after navigating.
+	// Capture phase, mirroring onFanClickCapture's identical reasoning for
+	// the fan's own drag-then-click problem.
+	function onModalContentClickCapture(e: MouseEvent): void {
+		if (modalSwiped) {
+			e.preventDefault();
+			modalSwiped = false;
+		}
+	}
+
 	// Esc fires 'cancel' and would close the native dialog INSTANTLY —
 	// prevented so the animated close above runs instead; the dialog only
 	// actually closes once that sequence calls dialog.close() itself.
@@ -1706,6 +1776,8 @@
 		onClose={closeModal}
 		onCancel={onModalCancel}
 		onBackdropClick={onModalBackdropClick}
+		onContentPointerDown={onModalContentPointerDown}
+		onContentClickCapture={onModalContentClickCapture}
 	/>
 </section>
 

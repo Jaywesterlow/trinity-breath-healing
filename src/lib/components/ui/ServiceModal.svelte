@@ -50,6 +50,12 @@
 		 * parent's onModalCancel for why this must call preventDefault(). */
 		onCancel: (e: Event) => void;
 		onBackdropClick: (e: MouseEvent) => void;
+		/** Swipe-to-navigate (mobile). This component only wires the raw
+		 * pointer/click events through — direction, threshold, and the
+		 * swipe-then-click guard all live in the parent, same split as
+		 * everything else here. */
+		onContentPointerDown: (e: PointerEvent) => void;
+		onContentClickCapture: (e: MouseEvent) => void;
 	}
 
 	let {
@@ -62,7 +68,9 @@
 		onNext,
 		onClose,
 		onCancel,
-		onBackdropClick
+		onBackdropClick,
+		onContentPointerDown,
+		onContentClickCapture
 	}: Props = $props();
 </script>
 
@@ -117,7 +125,20 @@
 		</svg>
 	</button>
 
-	<div class="service-modal__content" bind:this={contentRef}>
+	<!-- onpointerdown below is a passive swipe-gesture listener, not a
+	     click/keyboard interaction this element itself performs: it never
+	     preventDefaults the native touch-scroll, and every service it
+	     navigates to is equally reachable via the Prev/Next buttons, the
+	     dots below the fan, and normal keyboard/AT navigation of this same
+	     content — no functionality is gated behind this div having its own
+	     interactive role. -->
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div
+		class="service-modal__content"
+		bind:this={contentRef}
+		onpointerdown={onContentPointerDown}
+		onclickcapture={onContentClickCapture}
+	>
 		{#each services as service, idx (service.slug)}
 			<section class="service-modal__panel" hidden={idx !== activeIndex}>
 				<h3 id={`service-modal-title-${service.slug}`} class="service-modal__title">
@@ -269,10 +290,20 @@
 
 	.service-modal__panel {
 		display: grid;
+		/* Without this, the single implicit column sizes itself to its
+		   widest content (auto), not the full available width — which left
+		   .service-modal__media's own width: 100% resolving against a column
+		   narrower than the actual content area (measured: 224px of 304px
+		   available). 1fr stretches the column itself first. Reset at the
+		   1024px breakpoint below, which declares its own 3-column template. */
+		grid-template-columns: 1fr;
+		/* Mobile order: image first, then title/intro/helps/cta — reset
+		   entirely at the 1024px breakpoint below, which defines its own
+		   3-column layout rather than reordering this one. */
 		grid-template-areas:
+			'media'
 			'title'
 			'intro'
-			'media'
 			'helps'
 			'cta';
 		gap: var(--space-4);
@@ -299,13 +330,19 @@
 		grid-area: media;
 		display: grid;
 		place-items: center;
-		min-height: 8rem;
+		/* Mobile: full-width square (owner request, "a lot bigger") — reset to
+		   the original, unconstrained sizing at the 1024px breakpoint below,
+		   where media sits in its own narrower grid column instead. */
+		width: 100%;
+		aspect-ratio: 1 / 1;
 	}
 
 	.service-modal__icon {
+		/* Fills the now-square media box; object-fit: contain keeps the
+		   artwork's own aspect ratio intact (most icons aren't square
+		   themselves) rather than stretching it to fill the square. */
 		width: 100%;
-		max-width: 12rem;
-		height: auto;
+		height: 100%;
 		object-fit: contain;
 	}
 
@@ -379,6 +416,23 @@
 
 		.service-modal__cta {
 			align-self: start;
+		}
+
+		/* The full-width square above is a mobile-only concession to a small
+		   viewport ("a lot bigger" was specifically a mobile complaint) —
+		   restore the original width-capped, auto-height sizing here, where
+		   media sits in its own narrower column next to title/intro and helps
+		   instead of spanning the full content width. */
+		.service-modal__media {
+			width: auto;
+			aspect-ratio: auto;
+			min-height: 8rem;
+		}
+
+		.service-modal__icon {
+			width: 100%;
+			max-width: 12rem;
+			height: auto;
 		}
 
 		/* Restore a visible scrollbar at this breakpoint — the hide is a
