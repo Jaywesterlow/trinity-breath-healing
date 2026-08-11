@@ -247,8 +247,8 @@
 		justify-content: center;
 		width: 1.5rem;
 		height: 1.5rem;
-		border-radius: var(--radius-full);
-		border: 1px solid currentColor;
+		/* Bare arrow on mobile — no circle/border (owner request); desktop
+		   keeps its circle, restored in the 1024px breakpoint below. */
 	}
 
 	/* Anchored to the same bottom padding edge .tcard__bottom rests on — see
@@ -320,6 +320,10 @@
 			   1.5rem/14x14 is untouched. */
 			width: 2.625rem;
 			height: 2.625rem;
+			/* Desktop keeps the circle mobile just lost — restored here rather
+			   than left in the base rule. */
+			border-radius: var(--radius-full);
+			border: 1px solid currentColor;
 		}
 
 		.tcard__arrow svg {
