@@ -39,6 +39,11 @@
 		/** The dialog's own DOM node — the parent drives showModal()/close()
 		 * and the open/close geometry animation directly against it. */
 		dialogRef?: HTMLDialogElement | null;
+		/** A real element behind the dialog, standing in for the native
+		 * ::backdrop pseudo-element — see its own CSS comment for why. The
+		 * parent fades this in/out via a plain el.animate() call, no
+		 * pseudoElement targeting needed. */
+		backdropRef?: HTMLElement | null;
 		/** The fading content wrapper (all panels + the disclaimer) — the
 		 * parent fades this in/out as step 3 of open and the first step of
 		 * close. */
@@ -64,6 +69,7 @@
 		disclaimer,
 		dialogRef = $bindable(null),
 		contentRef = $bindable(null),
+		backdropRef = $bindable(null),
 		onPrev,
 		onNext,
 		onClose,
@@ -73,6 +79,19 @@
 		onContentClickCapture
 	}: Props = $props();
 </script>
+
+<!-- Stands in for the native ::backdrop pseudo-element — see its own CSS
+     comment for why. Purely a dismiss affordance duplicating the close
+     button's own action (aria-hidden, no independent role/functionality of
+     its own): a sighted pointer user clicking outside the dialog's content
+     expects that to close it, but nothing here is reachable by keyboard/AT
+     that isn't already reachable via the close button or Esc. -->
+<div
+	class="service-modal__backdrop"
+	bind:this={backdropRef}
+	aria-hidden="true"
+	onclick={onClose}
+></div>
 
 <dialog
 	class="service-modal"
@@ -208,16 +227,43 @@
 		display: flex;
 	}
 
-	/* Only meaningful while open (native [open] gates display: block automatically).
-	   opacity: 1 is the resting/reduced-motion value — Behandelingen.svelte
-	   fades this via WAAPI's pseudoElement targeting on open/close (native
-	   showModal()/close() show and remove the backdrop with no transition of
-	   their own otherwise, which read as a hard cut even with the box/content
-	   around it animating — easy to miss since they draw the eye first, but
-	   real once you look for it). */
+	/* Left transparent on purpose — .service-modal__backdrop below is what
+	   actually dims the page now. A first attempt animated the NATIVE
+	   backdrop's opacity via el.animate(..., { pseudoElement: '::backdrop' }),
+	   which worked in this project's own Chromium-based testing but was
+	   confirmed NOT to fade on a real device — cross-browser support for
+	   animating pseudo-elements through the Web Animations API is real but
+	   inconsistent, and this dialog still needs the ::backdrop pseudo-element
+	   to exist (showModal() always creates one) even though nothing here
+	   renders it visibly any more. */
 	.service-modal::backdrop {
+		background: transparent;
+	}
+
+	/* Stands in for the native ::backdrop — a real element, so it animates
+	   with a plain el.animate() call and nothing depends on pseudo-element
+	   support. position: fixed + inset: 0 makes it cover the full viewport
+	   independent of the dialog's own box, which is what's actually
+	   growing/shrinking during open/close. display and opacity are both
+	   JS-driven (Behandelingen.svelte's fadeBackdrop/openModal/closeModal) —
+	   display toggles alongside dialog.showModal()/close() so this is never
+	   in the hit-testing tree while the modal is closed; opacity 0 is simply
+	   this element's own resting value, matching a fade-in's own starting
+	   keyframe with no extra pre-hide step needed (contrast the content/nav
+	   fade, whose resting opacity is 1 and does need one — see openModal's
+	   own comment). */
+	.service-modal__backdrop {
+		position: fixed;
+		inset: 0;
 		background: var(--color-fg-forest-92);
-		opacity: 1;
+		opacity: 0;
+		display: none;
+		/* Above Nav's own highest z-index (100) — needs to sit above
+		   everything in normal document flow while the modal is open. The
+		   dialog itself, once shown via showModal(), is browser-native
+		   top-layer-promoted and always renders above this regardless of
+		   z-index, so this only ever needs to clear ordinary page content. */
+		z-index: 200;
 	}
 
 	.service-modal__close,
