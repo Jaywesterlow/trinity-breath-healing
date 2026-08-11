@@ -226,7 +226,11 @@
 		grid-row: 2;
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
+		/* Mobile: the arrow is gone (display: none below), so this row's only
+		   child is the title — centre it in the space the arrow left behind.
+		   Desktop restores the original title-left/arrow-right split, once
+		   the arrow is back. */
+		justify-content: center;
 		gap: var(--space-2);
 		width: 100%;
 		transition: transform var(--tcard-reveal-duration) var(--ease-out);
@@ -240,15 +244,13 @@
 		line-height: var(--line-height-tight);
 	}
 
+	/* Removed on mobile entirely (owner request) — not just its circle, the
+	   whole element. Every other property this needs (size, centring, the
+	   circle) only ever applied on top of that visibility, so they live
+	   entirely in the 1024px breakpoint below now instead of splitting
+	   "shown, no circle" here and "circle added" there. */
 	.tcard__arrow {
-		flex-shrink: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 1.5rem;
-		height: 1.5rem;
-		/* Bare arrow on mobile — no circle/border (owner request); desktop
-		   keeps its circle, restored in the 1024px breakpoint below. */
+		display: none;
 	}
 
 	/* Anchored to the same bottom padding edge .tcard__bottom rests on — see
@@ -313,15 +315,24 @@
 	}
 
 	@media (min-width: 1024px) {
+		.tcard__bottom {
+			/* Arrow is back at this breakpoint — restore the original
+			   title-left/arrow-right split the mobile-only centring above
+			   replaced. */
+			justify-content: space-between;
+		}
+
 		.tcard__arrow {
-			/* ~50% bigger than the base 1.5rem (2.625rem) — tap target and
-			   glyph scale together (see the svg rule below) so the arrow's
-			   proportions inside the circle hold at the new size. Mobile's
-			   1.5rem/14x14 is untouched. */
+			/* Only ever shown here — see its own display: none above. Sized
+			   ~50% bigger than the old mobile 1.5rem (2.625rem); tap target
+			   and glyph (the svg rule below) scale together so the arrow's
+			   proportions inside the circle hold. */
+			display: flex;
+			flex-shrink: 0;
+			align-items: center;
+			justify-content: center;
 			width: 2.625rem;
 			height: 2.625rem;
-			/* Desktop keeps the circle mobile just lost — restored here rather
-			   than left in the base rule. */
 			border-radius: var(--radius-full);
 			border: 1px solid currentColor;
 		}
@@ -329,8 +340,9 @@
 		.tcard__arrow svg {
 			/* Scaled by the same ~1.5x as the arrow circle above (14px ->
 			   21px) so the glyph keeps the same visual proportion inside its
-			   now-bigger circle. Overrides the width/height attributes set
-			   in the markup, which stay 14x14 for mobile. */
+			   circle. Overrides the width/height attributes set in the
+			   markup (still 14x14, since this component has no
+			   breakpoint-awareness of its own to size them from). */
 			width: 21px;
 			height: 21px;
 		}
