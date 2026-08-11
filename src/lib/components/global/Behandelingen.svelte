@@ -1283,6 +1283,26 @@
 	// site's shared motion language.
 	const MODAL_BOX_EASE_OUT = 'cubic-bezier(0.19, 1, 0.22, 1)';
 
+	// Close's own box-shrink timing — deliberately separate from growBox/
+	// MODAL_BOX_GROW_MS above, and NOT a bezier curve. Two rounds of tuning a
+	// single cubic-bezier for "more ease-out" (--ease-in-out, then --ease-out,
+	// then easeOutExpo above) never read as a felt difference on this specific
+	// animation — a curve's shape is a small, easy-to-miss signal at 400ms.
+	// shrinkBox below builds the close animation from these two numbers
+	// instead of a bezier: MODAL_BOX_SHRINK_FAST_DISTANCE of the shrink's
+	// total distance happens within MODAL_BOX_SHRINK_FAST_TIME of its total
+	// duration, piecewise LINEAR on both sides of that point (no easing curve
+	// at all — WAAPI's default interpolation between keyframes). The GAP
+	// between those two fractions (85% of the distance in the first 45% of
+	// the time) IS the ease-out: the box covers most of its distance fast,
+	// then visibly, obviously lingers for the rest of the duration. To make
+	// the tail longer/more obvious: raise MODAL_BOX_SHRINK_FAST_DISTANCE,
+	// lower MODAL_BOX_SHRINK_FAST_TIME, or both — each number is directly
+	// legible on its own, without reasoning about what a bezier curve does.
+	const MODAL_BOX_SHRINK_MS = 500; // 400 * 1.25 — a direct "25% slower" owner request
+	const MODAL_BOX_SHRINK_FAST_DISTANCE = 0.85;
+	const MODAL_BOX_SHRINK_FAST_TIME = 0.45;
+
 	// Tracks the most recent fadeElements() animation per element, so a new
 	// call can cancel it before starting its own. Necessary, not defensive:
 	// a fade-OUT is deliberately left in its finished fill:'forwards' state
@@ -1422,6 +1442,90 @@
 		);
 	}
 
+	// Close's own box-shrink — NOT growBox run with from/to swapped. See
+	// MODAL_BOX_SHRINK_FAST_DISTANCE/MODAL_BOX_SHRINK_FAST_TIME's own comment
+	// for why: three keyframes (start, an intermediate point already most of
+	// the way there, end) with NO easing curve at all — 'linear' is the
+	// actual easing passed to animate(), so the piecewise shape comes purely
+	// from where that middle keyframe's offset sits, not from a bezier.
+	function shrinkBox(dialog: HTMLDialogElement, from: DOMRect, to: DOMRect): Promise<void> {
+		const at = (t: number, a: number, b: number) => a + (b - a) * t;
+		const mid = {
+			top: at(MODAL_BOX_SHRINK_FAST_DISTANCE, from.top, to.top),
+			left: at(MODAL_BOX_SHRINK_FAST_DISTANCE, from.left, to.left),
+			width: at(MODAL_BOX_SHRINK_FAST_DISTANCE, from.width, to.width),
+			height: at(MODAL_BOX_SHRINK_FAST_DISTANCE, from.height, to.height)
+		};
+		const anim = dialog.animate(
+			[
+				{
+					top: `${from.top}px`,
+					left: `${from.left}px`,
+					width: `${from.width}px`,
+					height: `${from.height}px`,
+					offset: 0
+				},
+				{
+					top: `${mid.top}px`,
+					left: `${mid.left}px`,
+					width: `${mid.width}px`,
+					height: `${mid.height}px`,
+					offset: MODAL_BOX_SHRINK_FAST_TIME
+				},
+				{
+					top: `${to.top}px`,
+					left: `${to.left}px`,
+					width: `${to.width}px`,
+					height: `${to.height}px`,
+					offset: 1
+				}
+			],
+			{ duration: MODAL_BOX_SHRINK_MS, easing: 'linear', fill: 'forwards' }
+		);
+		// dialog.close() runs immediately after this in closeModal, which
+		// removes the whole dialog from layout — cancelling still happens for
+		// hygiene/consistency with growBox, but nothing depends on it here.
+		return anim.finished.then(
+			() => {
+				anim.cancel();
+			},
+			() => {}
+		);
+	}
+
+	// Opacity fade for the dialog's own ::backdrop — WAAPI can target a
+	// pseudo-element directly via the `pseudoElement` option, so this needs
+	// no separate DOM overlay stacked behind the dialog. Previously instant
+	// (native showModal()/close() show and remove the backdrop with no
+	// transition of their own); see .service-modal::backdrop's own CSS
+	// comment for why that read as a real, if easy-to-miss, hard cut.
+	//
+	// fill: 'both' fading IN so opacity holds at 0 from t=0 — the backdrop's
+	// resting CSS value is opacity: 1 (see its own comment), and nothing else
+	// would hide it before this animation's first frame otherwise, same
+	// reasoning as fadeElements' own 'both' comment. Fading OUT is left in
+	// its finished state on purpose: dialog.close() runs right after this in
+	// closeModal and destroys the backdrop entirely, so there is nothing left
+	// to clean up.
+	function fadeBackdrop(
+		dialog: HTMLDialogElement,
+		visible: boolean,
+		duration: number
+	): Promise<void> {
+		const anim = dialog.animate([{ opacity: visible ? 0 : 1 }, { opacity: visible ? 1 : 0 }], {
+			duration,
+			easing: MODAL_EASE_IN_OUT,
+			fill: visible ? 'both' : 'forwards',
+			pseudoElement: '::backdrop'
+		});
+		return anim.finished.then(
+			() => {
+				if (visible) anim.cancel();
+			},
+			() => {}
+		);
+	}
+
 	// Native showModal() makes the rest of the page inert (unclickable,
 	// unfocusable) but does NOT reliably stop it scrolling underneath — the
 	// backdrop blocks pointer/click but a wheel/trackpad gesture or the
@@ -1492,13 +1596,21 @@
 			return;
 		}
 
+		// Started here, synchronously right after showModal() (before the
+		// backdrop's own first paint), not inside the Promise.all below —
+		// WAAPI applies an animation's first keyframe immediately on
+		// creation, same reasoning as the content/nav instant pre-hide above,
+		// so this is what stops the backdrop flashing to its resting opacity
+		// (1) for a frame before fading in.
+		const backdropIn = fadeBackdrop(dialog, true, MODAL_BOX_GROW_MS);
+
 		// One rAF so the dialog's own stylesheet-driven near-fullscreen size
 		// is what gets measured below — showModal() alone doesn't yet reflect
 		// post-layout geometry synchronously in every engine.
 		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
 		const targetRect = dialog.getBoundingClientRect();
 
-		await growBox(dialog, originRect, targetRect);
+		await Promise.all([growBox(dialog, originRect, targetRect), backdropIn]);
 		// Content leads, then close/prev/next fade in one after another
 		// (NAV_STAGGER_MS apart) — same fade, same easing, just staggered,
 		// so the buttons read as part of the same reveal instead of popping
@@ -1534,24 +1646,31 @@
 			return;
 		}
 
-		// Reverse order of the open sequence: nav buttons and content fade out
-		// first, then the box shrinks, then the card's own face fades back
-		// in. Same stagger group and lead order (content, close, prev, next)
-		// as openModal's own call, just fading out instead of in.
-		await fadeElements(
-			[...(modalContentEl ? [modalContentEl] : []), ...modalNavEls()],
-			false,
-			false,
-			MODAL_CONTENT_FADE_MS,
-			NAV_STAGGER_MS
-		);
-
 		const fromRect = dialog.getBoundingClientRect();
 		// No sensible shrink target if the card has somehow vanished from the
 		// DOM mid-session — shrink toward its own current box instead of
 		// throwing, which is visually a plain fade-out rather than a morph.
 		const toRect = cardEl ? cardEl.getBoundingClientRect() : fromRect;
-		await growBox(dialog, fromRect, toRect);
+
+		// Content/nav fade-out, the box shrink, AND the backdrop fade-out all
+		// run CONCURRENTLY — a direct owner request ("the content fade away
+		// and the actual modal itself closing simultaneously"), replacing an
+		// earlier version that ran the fade, then the shrink, one after the
+		// other. Same stagger group and lead order (content, close, prev,
+		// next) fadeElements' own call in openModal uses, just fading out
+		// instead of in, and now starting at the same moment as shrinkBox
+		// rather than waiting for it to finish first.
+		await Promise.all([
+			fadeElements(
+				[...(modalContentEl ? [modalContentEl] : []), ...modalNavEls()],
+				false,
+				false,
+				MODAL_CONTENT_FADE_MS,
+				NAV_STAGGER_MS
+			),
+			shrinkBox(dialog, fromRect, toRect),
+			fadeBackdrop(dialog, false, MODAL_BOX_SHRINK_MS)
+		]);
 
 		dialog.close();
 		if (cardEl) await fadeElements(cardFaceEls(cardEl), true, false, MODAL_CARD_FADE_MS);

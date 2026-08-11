@@ -208,9 +208,16 @@
 		display: flex;
 	}
 
-	/* Only meaningful while open (native [open] gates display: block automatically) */
+	/* Only meaningful while open (native [open] gates display: block automatically).
+	   opacity: 1 is the resting/reduced-motion value — Behandelingen.svelte
+	   fades this via WAAPI's pseudoElement targeting on open/close (native
+	   showModal()/close() show and remove the backdrop with no transition of
+	   their own otherwise, which read as a hard cut even with the box/content
+	   around it animating — easy to miss since they draw the eye first, but
+	   real once you look for it). */
 	.service-modal::backdrop {
 		background: var(--color-fg-forest-92);
+		opacity: 1;
 	}
 
 	.service-modal__close,
@@ -218,8 +225,8 @@
 		position: absolute;
 		display: grid;
 		place-items: center;
-		width: 2.5rem;
-		height: 2.5rem;
+		width: var(--space-10);
+		height: var(--space-10);
 		border: none;
 		background: transparent;
 		color: inherit;
@@ -368,8 +375,11 @@
 
 	.service-modal__helps-list {
 		margin: 0;
-		padding: 0;
-		list-style: none;
+		/* Room for the marker list-style below now draws — plain list-style:
+		   none read as odd/unlabelled for a list of symptoms/complaints,
+		   a direct owner request to restore real bullets. */
+		padding-left: var(--space-5);
+		list-style: disc;
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-1);
