@@ -1296,7 +1296,14 @@
 	// same shape with just 2 straight-line segments glued together at a fixed
 	// point, which is a real velocity discontinuity, not an ease — it read as
 	// a stutter rather than a slow-down.
-	const MODAL_BOX_SHRINK_MS = 500; // 400 * 1.25 — a direct "25% slower" owner request
+	const MODAL_BOX_SHRINK_MS = 417; // 500 / 1.2 — a direct "speed the close up 1.2x" owner
+	// request on top of the earlier 500ms (itself 400 * 1.25, "25% slower" —
+	// still net slower than growBox's own 400ms open-side duration).
+	// Close's own content/nav fade-out duration — separate from
+	// MODAL_CONTENT_FADE_MS (open's fade-in, and modalStep's prev/next
+	// transition) precisely so this 1.2x speed-up applies to the close path
+	// only, not open or in-modal navigation.
+	const MODAL_CLOSE_FADE_MS = 208; // 250 / 1.2
 	// Tunable ease-out for the close-shrink: progress(t) = 1 - (1-t)^POWER.
 	// One number — raise it for a more drastic slow-down at the tail, lower
 	// it for a gentler one. This replaced an earlier 2-segment piecewise-
@@ -1679,7 +1686,7 @@
 			[...(modalContentEl ? [modalContentEl] : []), ...modalNavEls()],
 			false,
 			false,
-			MODAL_CONTENT_FADE_MS
+			MODAL_CLOSE_FADE_MS
 		);
 		await Promise.all([
 			shrinkBox(dialog, fromRect, toRect),
