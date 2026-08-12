@@ -1669,21 +1669,18 @@
 		// throwing, which is visually a plain fade-out rather than a morph.
 		const toRect = cardEl ? cardEl.getBoundingClientRect() : fromRect;
 
-		// Content fades out FIRST — box-shrink starts immediately after, with
-		// no added delay, since content shrinking along with the box crops it
-		// mid-fade. Only the CONTENT's own fade gates that start; the nav
-		// buttons' fade-out is fired alongside but not awaited, so its
-		// trailing stagger (close/prev/next, each further delayed by
-		// NAV_STAGGER_MS) doesn't hold up the box — they're small corner
-		// controls, not readable content, so letting their tail run
-		// concurrently with the shrink (which is moving/shrinking them
-		// anyway, being inside the same dialog box) doesn't crop anything
-		// that matters, and removes what would otherwise be a ~200ms dead
-		// pause between content going invisible and the box starting to move.
-		if (modalContentEl) {
-			await fadeElements([modalContentEl], false, false, MODAL_CONTENT_FADE_MS);
-		}
-		void fadeElements(modalNavEls(), false, false, MODAL_CONTENT_FADE_MS, NAV_STAGGER_MS);
+		// Content and nav buttons fade out TOGETHER (no stagger — owner
+		// request, replacing an earlier version that staggered the nav
+		// buttons after content and let their tail run unawaited alongside
+		// the shrink) — box-shrink starts immediately after, with no added
+		// delay, since content shrinking along with the box crops it
+		// mid-fade.
+		await fadeElements(
+			[...(modalContentEl ? [modalContentEl] : []), ...modalNavEls()],
+			false,
+			false,
+			MODAL_CONTENT_FADE_MS
+		);
 		await Promise.all([
 			shrinkBox(dialog, fromRect, toRect),
 			modalBackdropEl
