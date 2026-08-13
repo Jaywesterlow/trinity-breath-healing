@@ -1149,18 +1149,17 @@
 	// discriminator): centring on Enter would strand a keyboard user on a
 	// card they cannot then open without a second, different key press, and
 	// the dots and Prev/Next already give them centring.
-	// Desktop-only, matching the media query that used to hide the overlay
-	// below 1024px. That `display: none` was load-bearing, not cosmetic:
-	// mobile navigates this section by swiping the fan, so tapping a card
-	// there has always meant "open it", and every card was a live link. Losing
-	// the overlay without reproducing its breakpoint gate would have silently
-	// changed mobile from "tap opens the page" to "tap centres the card".
-	const JUMP_ON_CLICK_MQ = '(min-width: 1024px)';
-
-	function canJumpOnClick(): boolean {
-		if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
-		return window.matchMedia(JUMP_ON_CLICK_MQ).matches;
-	}
+	//
+	// Pointer clicks always centre, on every viewport — an earlier version
+	// gated this to desktop only (min-width: 1024px), on the reasoning that
+	// mobile navigates the fan by swiping so tapping a card there had always
+	// meant "open it." That reasoning predates the modal: once only the
+	// CENTRE card opens anything (openModal, above) and every other card is
+	// reachable purely by re-centring, a mobile tap on a non-centre card
+	// navigating straight to its real page is a bug, not a feature — the
+	// owner's own report ("clicking a card that is not centred redirects to
+	// the actual page... it should never redirect; only in the modal do you
+	// have a link"). There is no longer a device split to make here.
 
 	// The item list is repeated so the loop has off-screen slots to recycle
 	// through (see REPEATS), so every service exists at more than one index.
@@ -1822,7 +1821,6 @@
 			return;
 		}
 		if (e.detail === 0) return; // keyboard: navigate directly
-		if (!canJumpOnClick()) return; // mobile: tap opens the page, as before
 		e.preventDefault();
 		jumpTo(i);
 	}
