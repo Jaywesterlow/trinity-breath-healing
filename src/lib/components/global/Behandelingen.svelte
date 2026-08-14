@@ -352,7 +352,34 @@
 	onMount(() => {
 		remeasurePxPerStep();
 		window.addEventListener('resize', remeasurePxPerStep);
-		return () => window.removeEventListener('resize', remeasurePxPerStep);
+
+		// Idle auto-drift's own countdown starts here too, not only after a
+		// first real interaction — a page that loads and is never touched is
+		// exactly as "idle" as one that was touched once and then left
+		// alone (see scheduleIdleDrift/beginDrift, and IDLE_DRIFT_DELAY_MS's
+		// own comment).
+		scheduleIdleDrift();
+
+		// A backgrounded tab has no business running an indefinite rAF
+		// loop — most browsers already throttle/suspend rAF there, but this
+		// is the one motion in this file with no natural end, so it's worth
+		// being explicit rather than relying on that. Cancel outright on
+		// hide (cancelMotion also clears any pending countdown), restart the
+		// countdown fresh on return rather than resuming mid-drift.
+		function onVisibilityChange(): void {
+			if (document.hidden) {
+				cancelMotion();
+			} else {
+				scheduleIdleDrift();
+			}
+		}
+		document.addEventListener('visibilitychange', onVisibilityChange);
+
+		return () => {
+			window.removeEventListener('resize', remeasurePxPerStep);
+			document.removeEventListener('visibilitychange', onVisibilityChange);
+			cancelMotion();
+		};
 	});
 
 	const VELOCITY_WINDOW_MS = 80; // trailing window the exit velocity is averaged over
@@ -484,6 +511,25 @@
 	// trailing the spring's asymptotic tail indefinitely.
 	const LATCH_DONE_EPSILON = 0.01;
 
+	// Idle auto-drift — a slow, continuous, ambient advance through the
+	// cards (owner request: "moving slowly, scrolling towards the right,"
+	// clarified as "advance through the list in the direction of the next
+	// button" — same direction driveBy(-1)/next() already moves offset in,
+	// not a literal rightward pixel drift). Two directly-tunable numbers:
+	// IDLE_DRIFT_DELAY_MS (how long nothing has to happen before it starts
+	// or resumes) and DRIFT_SECONDS_PER_STEP (how long one full card-to-card
+	// advance takes while drifting — bigger number, slower/more ambient).
+	// Runs as a third motionPhase (see motionTick) so every existing
+	// interruption point — onPointerDown's cancelMotion(), driveMotion's own
+	// cancelMotion() before starting a fresh latch — already supersedes it
+	// for free, with no special-casing added at those call sites.
+	const IDLE_DRIFT_DELAY_MS = 4000;
+	const DRIFT_SECONDS_PER_STEP = 14;
+	// Negative: matches next()'s own driveBy(-1) direction (see driveBy),
+	// i.e. drifting is indistinguishable from someone slowly, continuously
+	// pressing "Volgende."
+	const DRIFT_VELOCITY_PER_MS = -1 / (DRIFT_SECONDS_PER_STEP * 1000);
+
 	const DRAG_SLOP_PX = 4; // past this, the gesture is a drag and not a click
 
 	let dragging = $state(false); // true only while the pointer is actually down and moving the fan
@@ -514,13 +560,20 @@
 	let pendingDx = 0;
 	let rafId: number | null = null;
 
-	// Coast and latch run in the same rAF loop (see motionTick) as two
-	// regimes of one motion, not two separate loops — a new pointerdown
-	// cancels whichever is running (see cancelMotion).
+	// Coast, latch, AND drift run in the same rAF loop (see motionTick) as
+	// three regimes of one motion, not separate loops — a new pointerdown or
+	// driveMotion cancels whichever is running (see cancelMotion).
 	let motionRafId: number | null = null;
-	let motionPhase: 'coast' | 'latch' = 'coast';
+	let motionPhase: 'coast' | 'latch' | 'drift' = 'coast';
 	let velocity = 0; // steps per ms, decays toward 0 during coast
 	let lastFrameTime = 0;
+	// setTimeout handle for the idle auto-drift's own countdown (see
+	// IDLE_DRIFT_DELAY_MS) — separate from motionRafId, which tracks an
+	// ACTIVE rAF loop; this tracks a pending FUTURE one. Cleared by
+	// cancelMotion (any real interaction/motion supersedes a pending drift
+	// start the same way it supersedes a running one) and by endGesture
+	// (which reschedules it fresh once whatever just happened settles).
+	let idleDriftTimer: ReturnType<typeof setTimeout> | null = null;
 	// Latch spring state, set once by beginLatch at the exact instant coast
 	// hands off (see its own comment for why: y0/v0 carry over coast's real
 	// position and velocity, which is what makes the handoff continuous).
@@ -587,17 +640,54 @@
 		inGesture = false;
 		motionRafId = null;
 		velocity = 0;
+		// Whatever just happened (drag settle, button-driven latch, an
+		// instant reduced-motion jump) is real activity — restart the idle
+		// countdown from here, not from whenever the page originally loaded.
+		scheduleIdleDrift();
 	}
 
 	// A new pointerdown while coast or latch is still running must take
 	// over from wherever the fan currently is, not fight it or snap it back
 	// — cancel the loop, leave offset/positions exactly as they are, and let
-	// onPointerDown's dragBaseOffset pick up from there.
+	// onPointerDown's dragBaseOffset pick up from there. Also clears a
+	// pending idle-drift countdown (see idleDriftTimer) — any real
+	// interaction, or any new motion superseding drift itself, has to push
+	// the next idle start back out, not let a stale timer fire mid-gesture.
 	function cancelMotion(): void {
 		if (motionRafId !== null) {
 			cancelAnimationFrame(motionRafId);
 			motionRafId = null;
 		}
+		if (idleDriftTimer !== null) {
+			clearTimeout(idleDriftTimer);
+			idleDriftTimer = null;
+		}
+	}
+
+	// Starts (or restarts) the countdown to the next idle auto-drift.
+	// Reduced motion is checked when the timer actually FIRES, not here at
+	// schedule time — cheap, and correct even if the OS-level setting
+	// changes mid-session, matching how every other motion entry point in
+	// this file (driveMotion, etc.) checks it live rather than once.
+	function scheduleIdleDrift(): void {
+		if (idleDriftTimer !== null) clearTimeout(idleDriftTimer);
+		idleDriftTimer = setTimeout(() => {
+			idleDriftTimer = null;
+			if (!prefersReducedMotion()) beginDrift();
+		}, IDLE_DRIFT_DELAY_MS);
+	}
+
+	// Slow, indefinite advance in next()'s own direction (see
+	// DRIFT_VELOCITY_PER_MS) — runs until cancelMotion() (any real
+	// interaction, or a button/dot/card press driving its own motion) cuts
+	// it off, same as coast/latch. inGesture=true for the same reason it's
+	// true through coast/latch: .treatments__pivot--motion has to disable
+	// the CSS transition for this continuous, per-frame offset write too.
+	function beginDrift(): void {
+		motionPhase = 'drift';
+		inGesture = true;
+		lastFrameTime = performance.now();
+		motionRafId = requestAnimationFrame(motionTick);
 	}
 
 	function beginMotion(): void {
@@ -631,17 +721,26 @@
 		latchOmega = SPRING_OMEGA;
 	}
 
-	// One rAF loop, two regimes of the same continuous motion — see this
-	// file's release-physics comment for why it's two regimes and not one
-	// formula throughout (a pure spring aimed at the nearest card from the
-	// moment of release would prevent a hard flick from ever coasting past
-	// its immediate neighbour, which is real, desired behaviour — see
-	// behandelingen-momentum.spec.ts).
+	// One rAF loop, three regimes of the same continuous motion — see this
+	// file's release-physics comment for why coast/latch are two regimes and
+	// not one formula throughout (a pure spring aimed at the nearest card
+	// from the moment of release would prevent a hard flick from ever
+	// coasting past its immediate neighbour, which is real, desired
+	// behaviour — see behandelingen-momentum.spec.ts). drift (see
+	// beginDrift) is the third: constant velocity, never decays, never
+	// hands off to latch — it just runs until something else cancels it.
 	function motionTick(now: number): void {
 		// Clamped so a stalled/backgrounded frame can't integrate one huge,
 		// visibly-teleporting jump — a normal frame is ~16ms.
 		const dt = Math.min(now - lastFrameTime, 50);
 		lastFrameTime = now;
+
+		if (motionPhase === 'drift') {
+			offset += DRIFT_VELOCITY_PER_MS * dt;
+			absorbWholeSteps();
+			motionRafId = requestAnimationFrame(motionTick);
+			return;
+		}
 
 		if (motionPhase === 'coast') {
 			velocity *= Math.exp(-dt / MOMENTUM_TAU_MS);
@@ -1567,6 +1666,15 @@
 		if (modalAnimating) return;
 		modalAnimating = true;
 		setBodyScrollLocked(true);
+		// The fan itself (idle drift in particular — see beginDrift) has no
+		// business still moving underneath a fullscreen modal the user is
+		// reading: wasted work while hidden, and closeModal's own shrink-back
+		// morph reads the origin card's LIVE rect at close time, so a fan
+		// that kept drifting the whole time the modal was open would morph
+		// back into a different on-screen spot than where it was opened
+		// from. Idle countdown resumes once the modal actually closes (see
+		// closeModal's own scheduleIdleDrift() call).
+		cancelMotion();
 
 		const reduced = prefersReducedMotion();
 		// Captured before the fade below touches opacity — hiding the card's
@@ -1666,6 +1774,7 @@
 			if (cardEl) await fadeElements(cardFaceEls(cardEl), true, true, 0);
 			setBodyScrollLocked(false);
 			modalAnimating = false;
+			scheduleIdleDrift();
 			return;
 		}
 
@@ -1698,6 +1807,9 @@
 		if (cardEl) await fadeElements(cardFaceEls(cardEl), true, false, MODAL_CARD_FADE_MS);
 		setBodyScrollLocked(false);
 		modalAnimating = false;
+		// Idle countdown paused for the whole time the modal was open (see
+		// openModal's own cancelMotion() call) — resumes fresh from here.
+		scheduleIdleDrift();
 	}
 
 	// Switches which service the modal shows AND drives the carousel
