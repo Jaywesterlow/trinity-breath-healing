@@ -121,10 +121,20 @@ test.describe('desktop', () => {
 		await page.waitForTimeout(700);
 
 		await page.locator('.service-modal__close').click();
-		// Close animation (~800ms) plus goTo's own button-spring settle
-		// (single-step measured ~1.2s elsewhere in this component) — generous
-		// margin, same as behandelingen-click-to-jump.spec.ts's own waits.
-		await page.waitForTimeout(3000);
+		// Close animation only needs ~630ms (content fade + box shrink, see
+		// Behandelingen.svelte's own MODAL_CLOSE_FADE_MS/MODAL_BOX_SHRINK_MS
+		// comments) — goTo's own carousel-sync settle already happened
+		// earlier, during the in-modal Next click above (700ms wait), well
+		// before this close. 2200ms is generous margin over that ~630ms
+		// requirement, but deliberately NOT as generous as it used to be:
+		// closeModal() reschedules idle auto-drift (see its own comment) to
+		// resume IDLE_DRIFT_DELAY_MS after the close animation finishes, and
+		// a wait long enough to cross that boundary would start measuring
+		// real, intended drift instead of the close settle this test
+		// actually cares about. Caught by this exact test going red the
+		// moment IDLE_DRIFT_DELAY_MS was halved — the old fixed 3000ms wait
+		// had quietly grown past the new, shorter boundary.
+		await page.waitForTimeout(2200);
 
 		const goldhealing = await indexForSlug(page, 'goldhealing');
 		expect((await positions(page))[goldhealing]).toBe(0);

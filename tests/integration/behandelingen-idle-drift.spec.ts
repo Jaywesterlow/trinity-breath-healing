@@ -29,7 +29,7 @@ test.use({ viewport: DESKTOP });
 // against directly (see the "matches next()'s own direction" test, which
 // checks the SIGN and a generous speed BAND, not an exact number, so a
 // future retune of either constant doesn't make this flaky).
-const IDLE_DRIFT_DELAY_MS = 4000;
+const IDLE_DRIFT_DELAY_MS = 2000;
 
 async function centrePos(page: Page): Promise<number> {
 	return page.evaluate(() => {
@@ -131,9 +131,18 @@ test('a button press cancels drift outright and settles with no further movement
 
 	// Sample a few more times — if drift somehow survived the button press
 	// (a stale, uncancelled rAF loop still running underneath), --pos would
-	// keep moving away from the settled 0 here.
+	// keep moving away from the settled 0 here. Total window is a FRACTION
+	// of IDLE_DRIFT_DELAY_MS, not a fixed number of ms: endGesture() (which
+	// the button-driven settle above already ran) legitimately reschedules
+	// idle drift to resume after IDLE_DRIFT_DELAY_MS — this check has to
+	// stay safely inside that window or it starts measuring real, intended
+	// drift resumption instead of a bug. (Caught by this exact test going
+	// red the moment IDLE_DRIFT_DELAY_MS was halved from 4000ms — the old
+	// fixed 3*700ms=2100ms window had quietly outlived the new 2000ms
+	// delay.)
+	const sampleGapMs = IDLE_DRIFT_DELAY_MS / 6;
 	for (let i = 0; i < 3; i++) {
-		await page.waitForTimeout(700);
+		await page.waitForTimeout(sampleGapMs);
 		expect(await centrePos(page), 'stays exactly on the settled card, not still drifting').toBe(0);
 	}
 });

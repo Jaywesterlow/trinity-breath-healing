@@ -523,8 +523,8 @@
 	// interruption point — onPointerDown's cancelMotion(), driveMotion's own
 	// cancelMotion() before starting a fresh latch — already supersedes it
 	// for free, with no special-casing added at those call sites.
-	const IDLE_DRIFT_DELAY_MS = 4000;
-	const DRIFT_SECONDS_PER_STEP = 8; // 14 / 1.75 — owner request, "speed up by 1.75"
+	const IDLE_DRIFT_DELAY_MS = 2000; // 4000 / 2 — owner request, "halve the pause duration"
+	const DRIFT_SECONDS_PER_STEP = 6.4; // 8 / 1.25 — owner request, "speed up by 1.25"
 	// Negative: matches next()'s own driveBy(-1) direction (see driveBy),
 	// i.e. drifting is indistinguishable from someone slowly, continuously
 	// pressing "Volgende."
