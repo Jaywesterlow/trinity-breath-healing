@@ -85,6 +85,7 @@ CSS) project without silently breaking on a `var()` that doesn't exist there.
 | `getOriginEl` | yes | `(index) => element \| null` — what the modal morphs from/to. |
 | `originFaceSelector` | no | CSS selector(s), queried inside the origin element, for a "face" that fades out on open and back in on close (e.g. an icon + label inside a card). Omit to skip this beat entirely. |
 | `onIndexChange` | no | `(index) => void` — fires on open/Prev/Next/swipe; wire it to keep an underlying carousel or list selection in sync. |
+| `onClosed` | no | `() => void` — fires once `close()` has actually finished, for ANY close path (button, Esc, backdrop click). Use this instead of wrapping the `onClose` prop yourself if you need a hook that also fires for Esc/backdrop-click, since those bypass whatever function is passed to `onClose` and call the engine's own `close()` directly. |
 
 ## Known constraints / things to check when reusing
 

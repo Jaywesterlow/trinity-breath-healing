@@ -70,6 +70,12 @@ export interface MorphModalEngineOptions {
 	/** Called whenever the active index changes (open, Prev/Next, swipe) —
 	 * e.g. to keep an underlying carousel/list selection in sync. Optional. */
 	onIndexChange?: (index: number) => void;
+	/** Called once close() has actually finished (any path — the close
+	 * button, Esc, or a backdrop click all route through the same close(),
+	 * see its own comment). Use this rather than wrapping onClose yourself
+	 * if you need a hook that also fires for Esc/backdrop-click, which
+	 * bypass whatever function you hand to the `onClose` prop. Optional. */
+	onClosed?: () => void;
 }
 
 // step 1 of open / last step of close — see the constructor doc above for
@@ -435,6 +441,7 @@ export class MorphModalEngine {
 			if (originEl) await this.#fadeElements(this.#originFaceEls(originEl), true, true, 0);
 			setBodyScrollLocked(false);
 			this.#animating = false;
+			this.#opts.onClosed?.();
 			return;
 		}
 
@@ -465,6 +472,7 @@ export class MorphModalEngine {
 			await this.#fadeElements(this.#originFaceEls(originEl), true, false, CARD_FADE_MS);
 		setBodyScrollLocked(false);
 		this.#animating = false;
+		this.#opts.onClosed?.();
 	}
 
 	async #step(delta: number): Promise<void> {
