@@ -493,4 +493,37 @@
 			display: inline-block;
 		}
 	}
+
+	/* Ultra-wide: flatten the arc so the outermost cards stop being cut off.
+
+	   .carousel__fan is full-bleed (100vw), so the wider the screen the more
+	   of the arc it reveals, and past ~1560px the outermost pair enters the
+	   viewport still carrying the steep 14deg-per-slot tilt — which drops it
+	   below the fan's own overflow:hidden box and shears its bottom off. The
+	   drop is a function of rotation alone, not of viewport width, so one
+	   flattened setting covers every width from here up.
+
+	   Radius and angle move together on purpose: horizontal spacing is
+	   R_eff * sin(--tilt-step), where R_eff is --pivot-distance plus half the
+	   card's height (the pivot sits below the card's BOTTOM edge). Raising
+	   the radius while lowering the angle to match therefore holds the cards
+	   where they already were left-to-right and changes only how far they
+	   dive. Retune these two together, by measuring rendered bounding boxes
+	   rather than by trig on one reference point — a rotated rectangle's
+	   bounding box does not move the way a single-point calculation
+	   predicts. --pivot-baseline, the fan's height and .carousel__controls
+	   all stay untouched: the centre card never moves, every other card only
+	   moves up.
+
+	   How far up this breakpoint has to start depends on how many items you
+	   pass in (that sets how many slots exist, so which one is outermost) and
+	   on --card-width/--pivot-distance at your own 1024px values. 1536px and
+	   these numbers are correct for the 7-item, 15rem-card configuration this
+	   was extracted from. */
+	@media (min-width: 1536px) {
+		.carousel__pivot {
+			--pivot-distance: 3000px;
+			--tilt-step: 6.5deg;
+		}
+	}
 </style>

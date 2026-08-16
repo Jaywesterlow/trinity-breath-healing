@@ -2408,4 +2408,45 @@
 			display: inline-block;
 		}
 	}
+
+	/* Ultra-wide: flatten the arc so the outermost cards stop being cut off.
+
+	   .treatments__fan is full-bleed (100vw), so the wider the screen the
+	   more of the arc it reveals. There are only ever 7 cards (MIN_ITEMS =
+	   2 * VISIBLE_SLOT_MAX + 3), so slots run exactly -3..3 and ±3 IS the
+	   outermost pair — nothing deeper can ever appear, which is why one
+	   flattened setting covers every width from here up rather than needing
+	   a ladder of breakpoints.
+
+	   Below ~1560px the ±3 pair sits fully past the viewport edge, so its
+	   rotation never mattered. From ~1600px it enters the viewport still
+	   carrying the steep 14deg-per-slot tilt, which drops it 127px below
+	   .treatments__fan's clip box — measured, identical at 1600/1920/2560/
+	   3440px, since the drop is a function of rotation alone and not of
+	   viewport width. This breakpoint fires at 1536px, just before that
+	   pair can appear at all, so the cut is never visible at any width.
+
+	   Radius and angle move together on purpose. Horizontal spacing is
+	   R_eff * sin(--tilt-step), where R_eff is --pivot-distance plus half
+	   the card's height (the pivot sits below the card's BOTTOM edge, so
+	   the radius to its centre is the longer one). Raising the radius while
+	   lowering the angle by the matching amount therefore holds the cards
+	   where they already were left-to-right and changes only how far they
+	   dive: measured spacing stays 362px (unchanged from the 1024px
+	   breakpoint) while slot ±3 gains 76px of bottom clearance instead of
+	   overflowing by 127px. 76px is deliberately not a round number — it's
+	   the same clearance slot ±2, the outermost card at 1440px, already
+	   has, so the widest layout keeps the safety margin the design was
+	   signed off with. Verified by bounding-box readout at 1600, 1920,
+	   2560 and 3440px; as everywhere else in this file the numbers come
+	   from measuring rendered boxes, never from trig on one reference
+	   point (see the file-level comment). --pivot-baseline, the fan's
+	   height and .treatments__controls' margin all stay untouched: the
+	   centre card never moves, and every other card only moves UP. */
+	@media (min-width: 1536px) {
+		.treatments__pivot {
+			--pivot-distance: 3000px;
+			--tilt-step: 6.5deg;
+		}
+	}
 </style>

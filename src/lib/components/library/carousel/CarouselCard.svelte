@@ -31,9 +31,10 @@
 		ctaLabel: string;
 		href: string;
 		/** Shown on hover — always in the DOM (never conditionally
-		 * rendered), hidden purely via opacity/transform, so it stays
-		 * readable to crawlers and JS-off visitors regardless of hover
-		 * state. */
+		 * rendered), collapsed to zero height rather than removed, so it
+		 * stays readable to crawlers and JS-off visitors regardless of
+		 * hover state. Any length: the title row is lifted by this text's
+		 * own rendered height, so it always sits directly above it. */
 		description: string;
 		/** Whether THIS card runs the magnetic cursor-follow (only the
 		 * centre/visible cards should, so off-screen slots don't each hold
@@ -85,27 +86,34 @@
 		{/if}
 	</div>
 
-	<div class="carousel-card__bottom">
-		<p class="carousel-card__title">{label}</p>
+	<!-- Title row and description share one bottom-anchored column so the
+	     description's own height is what lifts the title, rather than a
+	     fixed distance guessed per breakpoint — see __desc-wrap below. -->
+	<div class="carousel-card__footer">
+		<div class="carousel-card__bottom">
+			<p class="carousel-card__title">{label}</p>
 
-		<!-- Decorative only — the whole card above is the single <a>, so
-		     this carries no functionality of its own. -->
-		<span class="carousel-card__arrow" aria-hidden="true">
-			<svg width="14" height="14" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-				<path
-					d="M5 17L17 5M17 5H9M17 5V13"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				/>
-			</svg>
-		</span>
+			<!-- Decorative only — the whole card above is the single <a>, so
+			     this carries no functionality of its own. -->
+			<span class="carousel-card__arrow" aria-hidden="true">
+				<svg width="14" height="14" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+					<path
+						d="M5 17L17 5M17 5H9M17 5V13"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				</svg>
+			</span>
+		</div>
+
+		<!-- Always in the DOM, collapsed to zero height rather than removed,
+		     so it stays real, crawlable content at rest. -->
+		<div class="carousel-card__desc-wrap">
+			<p class="carousel-card__description">{description}</p>
+		</div>
 	</div>
-
-	<!-- Always in the DOM, hidden with opacity/transform — never
-	     {#if hovered}, so it stays real, crawlable content at rest. -->
-	<p class="carousel-card__description">{description}</p>
 </a>
 
 <style>
@@ -123,7 +131,6 @@
 		text-decoration: none;
 		cursor: pointer;
 		--carousel-card-scale: 1;
-		--carousel-card-desc-shift: 2.25rem;
 		/* One local token so the icon fade / title-arrow slide / description
 		   fade below can never drift apart and stop reading as one movement. */
 		--carousel-card-reveal-duration: 500ms;
@@ -163,6 +170,11 @@
 		align-items: center;
 		justify-content: center;
 		width: 100%;
+		/* Lets this row give up height as the description expands into it —
+		   a grid item's automatic minimum size would otherwise floor it at
+		   the image's own height. The image is fading out across the same
+		   duration, so the give is not visible. */
+		min-height: 0;
 		transition: opacity var(--carousel-card-reveal-duration) cubic-bezier(0.16, 1, 0.3, 1); /* ease was var(--ease-out) */
 	}
 
@@ -182,8 +194,15 @@
 		line-height: 1;
 	}
 
-	.carousel-card__bottom {
+	/* Bottom-anchored column holding the title row and the collapsible
+	   description. At rest — description collapsed to zero — the card's
+	   layout is identical to what it was before this element existed. */
+	.carousel-card__footer {
 		grid-row: 2;
+		width: 100%;
+	}
+
+	.carousel-card__bottom {
 		display: flex;
 		align-items: center;
 		/* Mobile: the arrow is gone (display: none below), so this row's
@@ -192,7 +211,6 @@
 		justify-content: center;
 		gap: 0.5rem; /* was var(--space-2) */
 		width: 100%;
-		transition: transform var(--carousel-card-reveal-duration) cubic-bezier(0.16, 1, 0.3, 1); /* ease was var(--ease-out) */
 	}
 
 	.carousel-card__title {
@@ -210,25 +228,44 @@
 		display: none;
 	}
 
-	/* Anchored to the same bottom padding edge .carousel-card__bottom
-	   rests on, so fading this in while that translates up reads as one
-	   movement. Hidden with opacity/transform (never display/height): the
-	   text stays real, readable DOM content at all times. */
+	/* The description's OWN height is what lifts the title row, replacing a
+	   fixed --carousel-card-desc-shift translate that had to be guessed per
+	   breakpoint and was wrong for any card whose copy ran to a different
+	   number of lines. This wrapper animates its grid row from 0fr to 1fr,
+	   and 1fr resolves to exactly the description's content height, so the
+	   title always lands directly on top of the description — one line or
+	   four, nothing to measure or re-tune per card.
+
+	   Collapsed via grid-template-rows rather than display:none or
+	   height:auto: the text stays real, readable DOM content at all times
+	   including at rest, and 0fr->1fr is animatable where height:auto is
+	   not. */
+	.carousel-card__desc-wrap {
+		display: grid;
+		grid-template-rows: 0fr;
+		/* The title-to-description gap lives here rather than as padding on
+		   the description: padding cannot collapse below its own size, so
+		   there it would leave the row 8px tall at rest and lift the resting
+		   title off the card's bottom edge. As a margin that is 0 until
+		   hover it costs nothing at rest. */
+		margin-top: 0;
+		transition:
+			grid-template-rows var(--carousel-card-reveal-duration) cubic-bezier(0.16, 1, 0.3, 1),
+			margin-top var(--carousel-card-reveal-duration) cubic-bezier(0.16, 1, 0.3, 1); /* ease was var(--ease-out) */
+	}
+
 	.carousel-card__description {
-		position: absolute;
-		left: 0.75rem; /* was var(--space-3) */
-		right: 0.75rem; /* was var(--space-3) */
-		bottom: 0.75rem; /* was var(--space-3) */
+		/* Defeats a grid item's automatic minimum size, which would
+		   otherwise refuse to shrink below the text's own height. */
+		min-height: 0;
+		overflow: hidden;
 		margin: 0;
 		font-family: 'DM Sans', system-ui, sans-serif; /* was var(--font-body) */
 		font-size: clamp(0.75rem, 0.662rem + 0.376vw, 1rem); /* was var(--fs-body-xs) */
 		line-height: 1.2; /* was var(--line-height-tight) */
 		opacity: 0;
-		transform: translateY(6px);
 		pointer-events: none;
-		transition:
-			opacity var(--carousel-card-reveal-duration) cubic-bezier(0.16, 1, 0.3, 1),
-			transform var(--carousel-card-reveal-duration) cubic-bezier(0.16, 1, 0.3, 1); /* ease was var(--ease-out) */
+		transition: opacity var(--carousel-card-reveal-duration) cubic-bezier(0.16, 1, 0.3, 1); /* ease was var(--ease-out) */
 	}
 
 	/* Hover reveal gated behind (hover: hover) and (pointer: fine) — touch
@@ -241,15 +278,15 @@
 			opacity: 0;
 		}
 
-		.carousel-card:hover .carousel-card__bottom,
-		.carousel-card:focus-visible .carousel-card__bottom {
-			transform: translateY(calc(-1 * var(--carousel-card-desc-shift, 2.25rem)));
+		.carousel-card:hover .carousel-card__desc-wrap,
+		.carousel-card:focus-visible .carousel-card__desc-wrap {
+			grid-template-rows: 1fr;
+			margin-top: 0.5rem; /* was var(--space-2) */
 		}
 
 		.carousel-card:hover .carousel-card__description,
 		.carousel-card:focus-visible .carousel-card__description {
 			opacity: 1;
-			transform: translateY(0);
 		}
 
 		/* Its own, narrower media query (adds prefers-reduced-motion:
@@ -293,12 +330,6 @@
 
 		.carousel-card__number {
 			font-size: clamp(3rem, 5vw, 4.5rem);
-		}
-
-		.carousel-card {
-			/* Desktop cards are noticeably bigger — the description needs
-			   more reserved room to read as a real sentence. */
-			--carousel-card-desc-shift: 3.5rem;
 		}
 	}
 </style>
