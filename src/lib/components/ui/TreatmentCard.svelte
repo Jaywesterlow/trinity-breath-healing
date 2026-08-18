@@ -259,7 +259,7 @@
 		margin: 0;
 		font-family: var(--font-body);
 		font-size: var(--fs-body-xs);
-		font-weight: var(--font-weight-medium);
+		font-weight: var(--font-weight-bold);
 		line-height: var(--line-height-tight);
 	}
 
