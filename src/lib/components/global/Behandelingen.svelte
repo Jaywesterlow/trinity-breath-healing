@@ -2104,6 +2104,21 @@
 		   DOWN the tree, and .treatments__pivot (the card's own parent) needs
 		   to read this too. A child can't hand a variable up to its parent. */
 		--card-width: 6.27rem;
+		/* Declared here rather than on .treatments__pivot so BOTH the pivots
+		   (which inherit it) and this element's own edge-fade pseudo-elements
+		   can read it — see the ultra-wide block for why the fade needs the
+		   card's rotation angle. */
+		--tilt-step: 14deg;
+		/* Geometry for the ultra-wide edge fade, both measured off the live
+		   DOM — see that block for the derivation. Declared here in the base
+		   rule, not inside the media query that uses them: the dead-CSS-var
+		   guard resolves every var() against a real element at its own
+		   viewport width, so a custom property both declared AND consumed
+		   inside the same media query reads as dead whenever that query is
+		   inactive. They are inert below the breakpoint regardless, since
+		   nothing renders the pseudo-elements there. */
+		--fade-start: 800px; /* where the fade begins, measured from the centre line */
+		--fade-ramp: 90px; /* transparent -> solid, landing on slot ±3's inner edge */
 		/* A drag over the fan was selecting the card title/number text
 		   underneath the pointer instead of dragging the carousel — the
 		   fan has no other user-facing text to lose, and selection isn't
@@ -2179,7 +2194,11 @@
 		bottom: var(--pivot-baseline, 7.54rem);
 		will-change: transform;
 		--pivot-distance: 532px; /* smaller = more overlap risk, bigger = flatter curve — verified empirically, not by trig alone */
-		--tilt-step: 14deg;
+		/* --tilt-step is declared on .treatments__fan, not here, and
+		   inherits down: the edge fade below is a pseudo-element of the FAN
+		   and has to derive its angle from the same value the cards rotate
+		   by, and a child cannot hand a variable back up to its parent
+		   (same reason --card-width lives up there). */
 		transform-origin: 50% calc(100% + var(--pivot-distance));
 		transform: translateX(-50%) rotate(calc(var(--pos) * var(--tilt-step)));
 		transition: transform 600ms var(--ease-in-out);
@@ -2444,9 +2463,90 @@
 	   height and .treatments__controls' margin all stay untouched: the
 	   centre card never moves, and every other card only moves UP. */
 	@media (min-width: 1536px) {
+		.treatments__fan {
+			--tilt-step: 6.5deg;
+		}
+
 		.treatments__pivot {
 			--pivot-distance: 3000px;
-			--tilt-step: 6.5deg;
+		}
+	}
+
+	/* Edge fade — the rule is "only ever five cards", not "fade the screen
+	   edge". Slots 0/±1/±2 are the design; ±3 is the recycle slot, where a
+	   card steps off one end and reappears at the other (see shiftOne). Once
+	   the viewport is wide enough to show ±3, that swap happens in plain
+	   sight. These two overlays cover it.
+
+	   The breakpoint is 1776px and not a round number on purpose: slot ±3's
+	   inner edge sits 888px from the centre line (measured, and identical at
+	   every width — see below), so 2 * 888 is exactly the viewport width at
+	   which it first crosses into view. Below that there is nothing to hide
+	   and the fade does not exist at all, which is why laptops never see it.
+
+	   Anchored to the carousel's CENTRE LINE, not to the viewport edge, and
+	   that is the whole trick: measured off the live DOM, every slot sits at
+	   a fixed distance from centre no matter how wide the screen is (slot ±2
+	   spans 558-880px, slot ±3 spans 888-1245px, identical at 1920/2560/
+	   3440). A viewport-anchored fade cannot track them — widen the screen
+	   and it walks away from the cards it is meant to hide.
+
+	   --fade-start (800px) deliberately overlaps slot ±2's outer corner.
+	   There are only 8px of clear air between slot ±2 ending at 880 and slot
+	   ±3 starting at 888, so a gradient that fully hides ±3 without touching
+	   ±2 is not geometrically available; a ramp finishing at 890 puts ±3
+	   behind full coverage from its very inner edge while costing ±2 only
+	   its outermost, thinnest rotated corner.
+
+	   The tilt is 2 * --tilt-step, NOT 3 *. The fade's visible boundary sits
+	   against slot ±2 — the outermost card anyone can actually see — so that
+	   is the edge it has to run parallel to. Matching slot ±3 instead (the
+	   card hidden behind the fade) over-rotates it by a whole step and reads
+	   as visibly off against its neighbour.
+
+	   The strip is a ROTATED ELEMENT with an axis-aligned gradient inside it,
+	   NOT an upright box with an angled gradient. The latter was tried and is
+	   the obvious-looking version that does not work: a gradient's colour
+	   stops run along its own axis, but the element is still a rectangle, so
+	   the fade gets truncated by the box's vertical inner edge. That leaves a
+	   hard vertical seam exactly where the thing is supposed to be reaching
+	   transparency, and the tilt barely reads. Rotating the element instead
+	   makes its edges and its gradient axis the same frame, so the
+	   transparent boundary is a genuine straight line parallel to the card
+	   beside it. */
+	@media (min-width: 1776px) {
+		.treatments__fan::before,
+		.treatments__fan::after {
+			content: '';
+			position: absolute;
+			/* Rotated about its inner edge, so the far end swings vertically
+			   by width * sin(angle) — at 3440px that is ~770px. The strip has
+			   to stay taller than that swing plus the fan itself, or the far
+			   top corner is left uncovered. Everything past the fan's own box
+			   is clipped, so the excess costs nothing. */
+			top: -250%;
+			height: 600%;
+			width: 100vw;
+			/* Above the cards (positioned, but un-z-indexed), and never a
+			   hit-test target — the fan underneath is a drag surface. */
+			z-index: 2;
+			pointer-events: none;
+		}
+
+		/* Right: transparent at the inner edge, solid by --fade-ramp, then
+		   flat sand the rest of the way out. */
+		.treatments__fan::after {
+			left: calc(50% + var(--fade-start));
+			transform-origin: left center;
+			transform: rotate(calc(2 * var(--tilt-step)));
+			background: linear-gradient(to right, transparent 0, var(--color-bg-sand) var(--fade-ramp));
+		}
+
+		.treatments__fan::before {
+			right: calc(50% + var(--fade-start));
+			transform-origin: right center;
+			transform: rotate(calc(-2 * var(--tilt-step)));
+			background: linear-gradient(to left, transparent 0, var(--color-bg-sand) var(--fade-ramp));
 		}
 	}
 </style>
