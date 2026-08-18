@@ -1,22 +1,56 @@
-# HANDOFF — Trinity rework (plain CSS → Tailwind v4 + shadcn-svelte)
+# HANDOFF — Trinity Breath & Healing (Active Development)
 
-_Rewritten 2026-07-14. Supersedes the 2026-07-13 version, which was stale on every load-bearing point (it claimed the working tree was clean and that Slice 2 hadn't started — both wrong now)._
+_Updated 2026-08-18 (session continues from prior context). Carousel (Behandelingen) is complete. Contact section (Email + Google Meets forms) is next, on separate branch._
 
 ---
 
-## 🔴 READ THIS FIRST — the one job waiting for you
+## 🔴 READ THIS FIRST — Current Status & Next Steps
 
-**The user is hand-converting the site's images to SVG right now. They said: "hold on and I'll tell you when I finish."**
+**Current session focus:** Contact section (feat/contact-section branch)
 
-Do not touch the working tree until they say they're done.
+### ✅ Completed
+- **Carousel (Behandelingen)** — All 5 cards with SVG-based rotated fan, edge fade on ultra-wide (1776px+), bold titles
+- **Hero section** — SVG draw-on animation, responsive sizing
+- **Global nav & footer** — Semantic tokens, design alignment
+- **SEO/AEO** — Meta tags per page, JSON-LD core structures
 
-When they say they're finished, do exactly this:
+### 🚀 In Progress
+1. **Contact section forms** (this session)
+   - Planning complete (see architecture doc)
+   - Email form (ContactForm.svelte) — placeholder → real
+   - Google Meets booking (DatePlanner.svelte) — placeholder → Cal.com embed
+   - `/api/contact` handler — Resend EU integration
+   - **Action item:** Sonnet model (via SAP Agent) will implement; awaiting user approval
 
-1. **Re-read the diff from scratch.** `git status --short` + `git diff --stat HEAD`. The file list in this doc is a snapshot from 2026-07-14 and is **certainly out of date** — they are actively changing it. Do not trust it. Do not reuse the commit plan below without re-checking what's actually there.
-2. **Propose commits and wait for a yes.** Per the user's git rule, no commit lands without explicit approval, and the message must be Conventional Commits format. A proposed plan is drafted below — treat it as a starting point, not the answer.
-3. **Then merge:** `git merge slice-2-readiness` while on `slice-1-foundation`.
+2. **Hover animations** (parallel research)
+   - Underline/border reveals, scale + shadow, color transitions
+   - Research doc complete (hover-animation-research.md)
+   - **Action item:** User to choose patterns; then implement across buttons, links, form inputs
 
-That merge target is **already decided** — the user chose it. Don't re-litigate it. See "Why into slice-1" below.
+### ⏳ Pending
+- Contact forms implementation (delegated to Sonnet)
+- Hover animation design choice + rollout
+- Full-page integration testing (Playwright 277-test suite)
+- Visual fidelity check vs Figma
+- Accessibility audit (pa11y-ci, WCAG 2.2 AA)
+
+---
+
+## Git Branches (2026-08-18)
+
+```
+main (production)
+└── origin/feat/behandelingen-service-modal  ← ACTIVE (carousel + edge fade complete)
+    └── Commit: 901a478 "Make carousel card titles bold"
+    
+└── origin/feat/contact-section  ← SWITCHING HERE (for forms work)
+    └── (To be updated with Email + Google Meets forms)
+```
+
+**Branch rules this session:**
+- Develop on `feat/behandelingen-service-modal` (carousel work) — DONE ✅
+- Push to `feat/contact-section` for forms — IN PROGRESS 🚀
+- No PR yet; user may batch at end of session
 
 ---
 
@@ -93,6 +127,47 @@ If the user's new SVGs convert the portraits or Verdieping card to fills, **the 
 
 ---
 
+## Action Items — What I Need From You
+
+### 1. Hover Animation Patterns (BLOCKING)
+**File:** `/scratchpad/hover-animation-research.md`
+
+Choose which hover patterns you want:
+- [ ] **Scale + Shadow lift** (spring-like, professional)
+  - Example: CTA buttons, card hovers
+  - Duration: 150–200ms, cubic-bezier(0.34, 1.56, 0.64, 1)
+  
+- [ ] **Underline/border reveal** (elegant, understated)
+  - Example: Navigation links, text links
+  - Duration: 200–300ms, scaleX transform-origin left
+  
+- [ ] **Background gradient shift** (eye-catching)
+  - Example: Highlight important CTAs
+  - Duration: 300ms, gradient slide
+
+- [ ] **Color transition only** (minimal, accessible)
+  - Example: Subtle text emphasis
+  - Duration: 150ms
+
+**What to provide:** Figma screenshot or video of hover states (if mocked) OR verbal preference. I'll implement once you choose.
+
+### 2. Contact Forms Implementation Plan (READY TO DELEGATE)
+**File:** `/scratchpad/contact-forms-architecture.md`
+
+Everything is planned — no implementation yet. Ready to hand off to Sonnet model via SAP Agent when you say:
+- Architecture: Email form (name/email/message) + Google Meets (Cal.com embed)
+- Toggle already built in Contact.svelte
+- `/api/contact` handler uses Resend EU
+- Full spec in the document
+
+**What to verify before I delegate:**
+1. ✅ Form fields match your vision (name, email, message)?
+2. ✅ Cal.com account set up with 30-min Google Meet link ready?
+3. ✅ Resend API key configured (EU region)?
+4. ✅ Contact email address (where form submissions go)?
+
+---
+
 ## 🚨 Landmine before any shadcn component gets added
 
 **The shadcn `ui` alias points at a directory that already holds Trinity's own components.**
@@ -102,6 +177,27 @@ If the user's new SVGs convert the portraits or Verdieping card to fills, **the 
 So `npx shadcn-svelte add button` writes **into that same folder**, next to Trinity's files, and touches `index.ts`.
 
 **Before the first `add`:** run `--dry-run` and diff. Either repoint `ui` to a fresh dir (e.g. `$lib/components/shadcn`) or accept co-habitation deliberately. Do not run a bare `add` and find out afterwards.
+
+---
+
+## This Session Summary (2026-08-18, ~1 hour available)
+
+### What Got Done
+- ✅ Carousel titles made bold (TreatmentCard.svelte)
+- ✅ Committed to feat/behandelingen-service-modal and pushed
+- ✅ Switched to feat/contact-section branch
+- ✅ Planned Contact forms architecture (detailed doc created)
+- ✅ Researched hover animations (patterns + resources compiled)
+- ✅ Updated HANDOFF.md with current status & action items
+
+### What's Waiting On You
+1. **Hover animation choice** — pick pattern(s) from research doc
+2. **Contact forms approval** — verify architecture looks good, then SAP Agent can implement
+
+### Time Remaining
+**~1 hour left this session.** User wants to finish work today.
+
+**Recommendation:** Provide hover animation choice + contact form approval, then I'll prepare SAP Agent handoff while you review any questions.
 
 ---
 
