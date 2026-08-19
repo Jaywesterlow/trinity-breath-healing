@@ -46,7 +46,8 @@ Nothing in this list can be done from inside a session. Two of them are actively
 | 3 | **Review / merge PR #14** (or say to keep stacking on it). It is ~95 commits ahead of `main` and carries everything below. **`claude/trinity-contact-hover-t7xsrf` now contains all of it** — merging that branch merges PR #14's work too. | Merge decisions are the owner's. | No, but it is a large unmerged surface. |
 | 4 | **Decide on PR #13** (`docs/consolidate`), open since 2026-08-10. | Same. | No. |
 | 5 | **Check LCP in Search Console** once the site is live and has a few weeks of traffic. | Cannot be measured in the container. Full detail in the section further down — the fix, if needed, is to shorten the hero draw, not to remove the wait. | No — post-launch. |
-| 6 | **Set the contact-form env vars in Vercel**: `RESEND_API_KEY`, `CONTACT_FROM_EMAIL` (verified sender on the Resend EU domain), optionally `CONTACT_TO_EMAIL` and `PUBLIC_CALCOM_LINK`. | Only the owner has the accounts. Unset, the form still renders and tells the visitor to mail `info@trinitybnh.nl`; the date planner hands off by e-mail instead of Cal.com. | **Yes** — the form cannot deliver until these exist. |
+| 6 | **Set the mail env vars in Vercel**: `RESEND_API_KEY`, `CONTACT_FROM_EMAIL` (verified sender on the Resend EU domain), optionally `CONTACT_TO_EMAIL`. Both the contact form and the booking flow use them. | Only the owner has the accounts. Unset, both still render and tell the visitor to mail `info@trinitybnh.nl` instead of failing silently. | **Yes** — neither form can deliver until these exist. |
+| 6b | **Paste a permanent Google Meet room link** somewhere the confirmation e-mail can use it (a constant for now, the CMS later). | Cal.com was dropped, so nothing generates a Meet link automatically. A permanent personal room is the one-off that keeps her off any other site. | Blocks sending a link with the confirmation. |
 | 7 | **Regenerate the visual-regression baselines on Windows** (`npm run test:visual -- --update-snapshots`). The committed baselines are `*-win32.png` and the landing page now renders a real contact form where a placeholder used to be. | The spec skips on Linux, so CI cannot do it. | No. |
 | 8 | **Decide on the sitewide colour contrast.** pa11y reports contrast errors on `/`; `--brand-muted` and `--brand-border` were already darkened for AA, but the tan CTA pills (nav "Maak een afspraak", the form's "Verstuur email") still fail at ~2.1-2.7:1. Fixing them changes the brand look. | A design decision, not a component one. | No. |
 | 9 | **Provide the real phone number.** `brand.ts` still ships `TODO_PHONE`, and the Phase 5 launch gate blocks on residual `TODO_` values in that file. | Only the practitioner has it. | Blocks launch, not current work. |
@@ -95,6 +96,38 @@ Why it was not settled during the session: it could not be measured in the dev c
 where first paint alone is ~13 seconds. That swamps an animation of this length completely, and an A/B
 against a zero-delay build came back as noise. **That noise is not evidence the wait is
 harmless.** Details under "Open risk: LCP" further down.
+
+---
+
+## Session 2026-08-19 (later still) — the three-step booking flow
+
+Cal.com is gone. It could not meet the owner's condition — using it means an account,
+a connected Google Calendar and an event type, all created by her on their site — and
+the whole point is that the site is one station she never has to leave. The booking is
+ours now, which also removes the two-sources-of-truth problem: the CMS will own her
+availability *and* the requests.
+
+The planner is a three-step machine, `datum → tijd → gegevens → klaar`:
+
+- The **back control is labelled with the step it returns to** (`Kies datum`, `Kies tijd`),
+  left chevron, so from the details step it takes two presses to reach the calendar.
+  That is the owner's explicit design, not an accident.
+- The **proceed button changes with the step**: `Gegevens invullen` on the times step,
+  `Boek een gesprek` on the details step. Each is disabled until its own step is
+  satisfied — a time picked, or voornaam/achternaam/e-mail filled.
+- The calendar stays faded under its mask for every step past the first, so the card
+  never changes shape between steps.
+- Confirming turns the card into a confirmation in place, with a control to plan
+  another moment. No `/bedankt` route.
+
+`POST /api/booking` re-validates the details **and re-derives the slot from the
+schedule** — a well-formed payload naming a time the schedule does not offer is
+refused with 409. `src/lib/server/email.ts` now delivers both forms through one
+`deliver()`, so the contact and booking mails cannot drift apart.
+
+**Still open:** nothing generates a Google Meet link now that Cal.com is gone (owner
+action item 6b), and the confirmation e-mail to the visitor is not written yet — only
+the notification to the practitioner is.
 
 ---
 

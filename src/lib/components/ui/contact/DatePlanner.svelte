@@ -17,8 +17,14 @@
 	 * size inside it is a clamp anchored to the Figma value at that reference.
 	 */
 	import { onMount, tick } from 'svelte';
-	import { env } from '$env/dynamic/public';
 	import { BRAND } from '$lib/constants/brand';
+	import {
+		bookingSchema,
+		emptyBooking,
+		toBookingErrors,
+		type BookingFieldErrors,
+		type BookingInput
+	} from '$lib/booking/booking';
 	import {
 		DEFAULT_SCHEDULE,
 		isBookable,
@@ -66,9 +72,32 @@
 	let viewYear = $state(buildToday.getFullYear());
 	let viewMonth = $state(buildToday.getMonth());
 
+	/**
+	 * The flow, in order. `klaar` is the confirmation the card becomes once the
+	 * request is away. Each step's back control is labelled with the step it
+	 * returns to, so stepping back from `gegevens` lands on `tijd`, not on the
+	 * calendar — two presses to get all the way home, deliberately.
+	 */
+	type Step = 'datum' | 'tijd' | 'gegevens' | 'klaar';
+
+	const STEP_LABEL: Record<Step, string> = {
+		datum: 'Kies datum',
+		tijd: 'Kies tijd',
+		gegevens: 'Gegevens',
+		klaar: 'Bevestiging'
+	};
+	const PREVIOUS: Partial<Record<Step, Step>> = { tijd: 'datum', gegevens: 'tijd' };
+
+	let step = $state<Step>('datum');
 	let selectedDate = $state<string | null>(null);
 	let selectedSlot = $state<TimeSlot | null>(null);
 	let focusedDay = $state(0); // day number holding the roving tabindex; 0 = none yet
+
+	let details = $state<BookingInput>({ ...emptyBooking, datum: '', start: '', end: '' });
+	let errors = $state<BookingFieldErrors>({});
+	let sending = $state(false);
+	let sendError = $state('');
+	let confirmation = $state('');
 
 	onMount(() => {
 		const real = new Date();
@@ -147,6 +176,7 @@
 		selectedDate = isoFor(day);
 		selectedSlot = null;
 		focusedDay = day;
+		step = 'tijd';
 		// The calendar shrinks under the mask when the slots appear; keep the day
 		// the visitor just chose in view instead of letting it scroll off.
 		await tick();
@@ -155,9 +185,85 @@
 			?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 	}
 
-	function clearDay() {
+	/** The back control: one step at a time, dropping what that step chose. */
+	function goBack() {
+		const previous = PREVIOUS[step];
+		if (!previous) return;
+		if (previous === 'datum') {
+			selectedDate = null;
+			selectedSlot = null;
+		}
+		step = previous;
+	}
+
+	function toDetails() {
+		if (!selectedSlot) return;
+		errors = {};
+		sendError = '';
+		step = 'gegevens';
+	}
+
+	const detailsReady = $derived(
+		Boolean(details.voornaam?.trim() && details.achternaam?.trim() && details.email?.trim())
+	);
+
+	async function book() {
+		if (!selectedDate || !selectedSlot || sending) return;
+
+		const payload = {
+			...details,
+			datum: selectedDate,
+			start: selectedSlot.start,
+			end: selectedSlot.end
+		};
+		const parsed = bookingSchema.safeParse(payload);
+		if (!parsed.success) {
+			errors = toBookingErrors(parsed.error);
+			sendError = 'Controleer de gemarkeerde velden en probeer het opnieuw.';
+			await tick();
+			document.querySelector<HTMLElement>('.planner [aria-invalid="true"]')?.focus();
+			return;
+		}
+
+		errors = {};
+		sending = true;
+		sendError = '';
+
+		try {
+			const response = await fetch('/api/booking', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+				body: JSON.stringify(parsed.data)
+			});
+			const body = (await response.json().catch(() => ({}))) as {
+				ok?: boolean;
+				message?: string;
+				errors?: BookingFieldErrors;
+			};
+
+			if (response.ok && body.ok) {
+				confirmation = body.message ?? 'Je aanvraag is verstuurd.';
+				step = 'klaar';
+				return;
+			}
+
+			errors = body.errors ?? {};
+			sendError = body.message ?? `Er ging iets mis. Mail gerust naar ${BRAND.email}.`;
+		} catch {
+			sendError = `Er is geen verbinding. Probeer het later opnieuw of mail naar ${BRAND.email}.`;
+		} finally {
+			sending = false;
+		}
+	}
+
+	function restart() {
+		step = 'datum';
 		selectedDate = null;
 		selectedSlot = null;
+		details = { ...emptyBooking, datum: '', start: '', end: '' };
+		errors = {};
+		sendError = '';
+		confirmation = '';
 	}
 
 	function focusDay(day: number) {
@@ -183,30 +289,6 @@
 
 		event.preventDefault();
 		focusDay(Math.min(Math.max(target, 1), daysInMonth));
-	}
-
-	const calcomLink = $derived(env.PUBLIC_CALCOM_LINK ?? '');
-
-	/**
-	 * Confirming hands the chosen slot to Cal.com, which captures who is booking
-	 * and issues the Google Meet link. Without a configured link it falls back to
-	 * an e-mail carrying the same slot, so the button always does something.
-	 */
-	function confirm() {
-		if (!selectedDate || !selectedSlot) return;
-
-		if (calcomLink) {
-			const separator = calcomLink.includes('?') ? '&' : '?';
-			const query = `date=${selectedDate}&month=${selectedDate.slice(0, 6)}&slot=${selectedDate}T${selectedSlot.start}`;
-			window.location.href = `${calcomLink}${separator}${query}`;
-			return;
-		}
-
-		const subject = encodeURIComponent('Aanvraag online meeting (30 minuten)');
-		const body = encodeURIComponent(
-			`Hallo,\n\nIk wil graag een online meeting van 30 minuten inplannen op ${spokenDate(selectedDate)} om ${selectedSlot.start}.\n\nMet vriendelijke groet,\n`
-		);
-		window.location.href = `mailto:${BRAND.email}?subject=${subject}&body=${body}`;
 	}
 </script>
 
@@ -248,7 +330,7 @@
 		</button>
 	</div>
 
-	<div class="planner__calendar" class:planner__calendar--compact={Boolean(selectedDate)}>
+	<div class="planner__calendar" class:planner__calendar--compact={step !== 'datum'}>
 		<div class="planner__grid" role="grid" aria-labelledby="planner-month">
 			<div class="planner__row planner__row--head" role="row">
 				{#each WEEKDAYS as weekday (weekday.long)}
@@ -287,51 +369,7 @@
 		</div>
 	</div>
 
-	{#if selectedDate}
-		<div class="planner__slots">
-			<p class="planner__date">{selectedLabel}</p>
-
-			{#if slots.length > 0}
-				<div class="planner__times" role="group" aria-label="Tijden op {spokenDate(selectedDate)}">
-					{#each slots as slot (slot.start)}
-						<button
-							class="planner__time"
-							class:planner__time--selected={selectedSlot?.start === slot.start}
-							type="button"
-							aria-pressed={selectedSlot?.start === slot.start}
-							onclick={() => (selectedSlot = slot)}
-						>
-							{slot.label}
-						</button>
-					{/each}
-				</div>
-			{:else}
-				<p class="planner__empty">Op deze dag zijn geen tijden meer vrij. Kies een andere dag.</p>
-			{/if}
-		</div>
-
-		<div class="planner__actions">
-			<button
-				class="planner__nav planner__back"
-				type="button"
-				onclick={clearDay}
-				aria-label="Terug naar de kalender"
-			>
-				<svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
-					<path
-						d="M32 20H8M8 20L18 10M8 20L18 30"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					/>
-				</svg>
-			</button>
-			<button class="planner__confirm" type="button" disabled={!selectedSlot} onclick={confirm}>
-				Boek een gesprek
-			</button>
-		</div>
-	{:else}
+	{#if step === 'datum'}
 		<div class="planner__legend">
 			<span class="planner__legend-item">
 				<span class="planner__swatch" aria-hidden="true"></span>
@@ -341,6 +379,166 @@
 				<span class="planner__swatch planner__swatch--selected" aria-hidden="true"></span>
 				Geselecteerd
 			</span>
+		</div>
+	{:else if step === 'klaar'}
+		<div class="planner__done" role="status">
+			<p class="planner__date">{selectedLabel}{selectedSlot ? `, ${selectedSlot.start}` : ''}</p>
+			<p class="planner__done-text">{confirmation}</p>
+		</div>
+
+		<div class="planner__actions">
+			<button class="planner__proceed" type="button" onclick={restart}>
+				Nog een moment plannen
+			</button>
+		</div>
+	{:else}
+		<div class="planner__slots">
+			<p class="planner__date">
+				{selectedLabel}{step === 'gegevens' && selectedSlot ? `, ${selectedSlot.start}` : ''}
+			</p>
+
+			{#if step === 'tijd'}
+				{#if slots.length > 0}
+					<div
+						class="planner__times"
+						role="group"
+						aria-label="Tijden op {selectedDate ? spokenDate(selectedDate) : ''}"
+					>
+						{#each slots as slot (slot.start)}
+							<button
+								class="planner__time"
+								class:planner__time--selected={selectedSlot?.start === slot.start}
+								type="button"
+								aria-pressed={selectedSlot?.start === slot.start}
+								onclick={() => (selectedSlot = slot)}
+							>
+								{slot.label}
+							</button>
+						{/each}
+					</div>
+				{:else}
+					<p class="planner__empty">Op deze dag zijn geen tijden meer vrij. Kies een andere dag.</p>
+				{/if}
+			{:else}
+				<div class="planner__fields">
+					<div class="planner__field-row">
+						<div class="planner__field">
+							<label class="planner__label" for="booking-voornaam">Voornaam</label>
+							<input
+								class="planner__input"
+								id="booking-voornaam"
+								type="text"
+								autocomplete="given-name"
+								placeholder="John"
+								bind:value={details.voornaam}
+								aria-invalid={errors.voornaam ? 'true' : undefined}
+								aria-describedby={errors.voornaam ? 'booking-voornaam-error' : undefined}
+							/>
+							{#if errors.voornaam}
+								<p class="planner__error" id="booking-voornaam-error">{errors.voornaam}</p>
+							{/if}
+						</div>
+
+						<div class="planner__field">
+							<label class="planner__label" for="booking-achternaam">Achternaam</label>
+							<input
+								class="planner__input"
+								id="booking-achternaam"
+								type="text"
+								autocomplete="family-name"
+								placeholder="Williams"
+								bind:value={details.achternaam}
+								aria-invalid={errors.achternaam ? 'true' : undefined}
+								aria-describedby={errors.achternaam ? 'booking-achternaam-error' : undefined}
+							/>
+							{#if errors.achternaam}
+								<p class="planner__error" id="booking-achternaam-error">{errors.achternaam}</p>
+							{/if}
+						</div>
+					</div>
+
+					<div class="planner__field">
+						<label class="planner__label" for="booking-email">Email</label>
+						<input
+							class="planner__input"
+							id="booking-email"
+							type="email"
+							inputmode="email"
+							autocomplete="email"
+							placeholder="voorbeeld@email.com"
+							bind:value={details.email}
+							aria-invalid={errors.email ? 'true' : undefined}
+							aria-describedby={errors.email ? 'booking-email-error' : undefined}
+						/>
+						{#if errors.email}
+							<p class="planner__error" id="booking-email-error">{errors.email}</p>
+						{/if}
+					</div>
+
+					<div class="planner__field">
+						<label class="planner__label" for="booking-klachten">
+							Waar loop je tegenaan? <span class="planner__optional">(optioneel)</span>
+						</label>
+						<textarea
+							class="planner__input planner__input--area"
+							id="booking-klachten"
+							rows="2"
+							placeholder="Kort in je eigen woorden"
+							bind:value={details.klachten}
+							aria-invalid={errors.klachten ? 'true' : undefined}
+							aria-describedby={errors.klachten ? 'booking-klachten-error' : undefined}></textarea>
+						{#if errors.klachten}
+							<p class="planner__error" id="booking-klachten-error">{errors.klachten}</p>
+						{/if}
+					</div>
+
+					<!-- Honeypot: off-screen, never announced, never tabbed into. -->
+					<div class="planner__honeypot" aria-hidden="true">
+						<label for="booking-website">Laat dit veld leeg</label>
+						<input
+							id="booking-website"
+							type="text"
+							tabindex="-1"
+							autocomplete="off"
+							bind:value={details.website}
+						/>
+					</div>
+				</div>
+			{/if}
+
+			{#if sendError}
+				<p class="planner__error planner__error--form" role="alert">{sendError}</p>
+			{/if}
+		</div>
+
+		<div class="planner__actions">
+			<button class="planner__back" type="button" onclick={goBack}>
+				<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+					<path
+						d="M15 5L8 12L15 19"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				</svg>
+				{STEP_LABEL[PREVIOUS[step]!]}
+			</button>
+
+			{#if step === 'tijd'}
+				<button class="planner__proceed" type="button" disabled={!selectedSlot} onclick={toDetails}>
+					Gegevens invullen
+				</button>
+			{:else}
+				<button
+					class="planner__proceed"
+					type="button"
+					disabled={!detailsReady || sending}
+					onclick={book}
+				>
+					{sending ? 'Versturen…' : 'Boek een gesprek'}
+				</button>
+			{/if}
 		</div>
 	{/if}
 </div>
@@ -643,6 +841,7 @@
 	/* ─── Actions (state 2) ─── */
 	.planner__actions {
 		margin-top: auto;
+		flex-wrap: wrap;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -650,7 +849,7 @@
 		flex-shrink: 0;
 	}
 
-	.planner__confirm {
+	.planner__proceed {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -672,17 +871,17 @@
 			opacity var(--motion-hover) var(--ease-hover);
 	}
 
-	.planner__confirm:hover:not(:disabled) {
+	.planner__proceed:hover:not(:disabled) {
 		transform: translateY(var(--lift-hover));
 		box-shadow: var(--shadow-hover);
 	}
 
-	.planner__confirm:active:not(:disabled) {
+	.planner__proceed:active:not(:disabled) {
 		transform: translateY(0);
 		box-shadow: none;
 	}
 
-	.planner__confirm:focus-visible {
+	.planner__proceed:focus-visible {
 		outline: 2px solid var(--color-card-warm);
 		outline-offset: 2px;
 	}
@@ -690,9 +889,154 @@
 	/* Figma draws only the enabled pill. Disabled reuses it at the same opacity
 	   the design uses for "not your turn yet" tiles, so the two read as one
 	   system — flagged as a design decision, not an invention. */
-	.planner__confirm:disabled {
+	.planner__proceed:disabled {
 		opacity: 0.35;
 		cursor: not-allowed;
+	}
+
+	/* Back: a chevron plus the name of the step it returns to, so "where does
+	   this take me" never has to be guessed. The label changes with the step. */
+	.planner__back {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		min-height: clamp(2.125rem, 4vh, 2.5rem);
+		padding: 0.5rem 0.75rem 0.5rem 0.5rem;
+		border: none;
+		border-radius: var(--radius-full);
+		background: transparent;
+		color: var(--pl-ink);
+		font-family: inherit;
+		font-size: clamp(0.75rem, 1.6vh, 1rem);
+		font-weight: var(--font-weight-medium);
+		line-height: 1;
+		white-space: nowrap;
+		cursor: pointer;
+		transition:
+			transform var(--motion-hover) var(--ease-hover),
+			background-color var(--motion-hover) var(--ease-hover);
+	}
+
+	.planner__back svg {
+		width: 1.25em;
+		height: 1.25em;
+		flex-shrink: 0;
+	}
+
+	.planner__back:hover {
+		background: rgb(var(--pl-tile) / 0.35);
+		transform: translateY(var(--lift-hover));
+	}
+
+	.planner__back:active {
+		transform: translateY(0);
+	}
+
+	.planner__back:focus-visible {
+		outline: 2px solid var(--color-accent-gold-soft);
+		outline-offset: 2px;
+	}
+
+	/* ─── Details (step 3) ─── */
+	.planner__fields {
+		display: flex;
+		flex-direction: column;
+		gap: clamp(0.5rem, 1.4vh, 1rem);
+	}
+
+	.planner__field-row {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
+		gap: clamp(0.5rem, 1.4vh, 1rem);
+	}
+
+	.planner__field {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		min-width: 0;
+	}
+
+	.planner__label {
+		font-size: clamp(0.75rem, 1.6vh, 1rem);
+		line-height: 1.2;
+	}
+
+	.planner__optional {
+		color: rgb(250 240 230 / 0.65);
+	}
+
+	.planner__input {
+		width: 100%;
+		min-height: clamp(2rem, 4.4vh, 2.75rem);
+		padding: 0.5rem 0.75rem;
+		background: rgb(var(--pl-tile) / 0.35);
+		border: 2px solid transparent;
+		border-radius: var(--pl-radius);
+		color: var(--pl-ink);
+		font-family: inherit;
+		font-size: clamp(0.75rem, 1.6vh, 1rem);
+		line-height: var(--line-height-normal);
+		transition:
+			background-color var(--motion-hover) var(--ease-hover),
+			border-color var(--motion-hover) var(--ease-hover);
+	}
+
+	.planner__input::placeholder {
+		color: rgb(250 240 230 / 0.45);
+	}
+
+	.planner__input:hover {
+		background: rgb(var(--pl-tile) / 0.5);
+	}
+
+	.planner__input:focus-visible {
+		outline: none;
+		border-color: var(--pl-ink);
+		background: rgb(var(--pl-tile) / 0.5);
+	}
+
+	.planner__input[aria-invalid='true'] {
+		border-color: var(--color-accent-gold);
+	}
+
+	.planner__input--area {
+		resize: vertical;
+	}
+
+	.planner__error {
+		font-size: clamp(0.6875rem, 1.4vh, 0.8125rem);
+		line-height: var(--line-height-normal);
+		color: var(--color-accent-gold);
+	}
+
+	.planner__error--form {
+		margin-top: 0.25rem;
+	}
+
+	.planner__honeypot {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		margin: -1px;
+		padding: 0;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+		border: 0;
+	}
+
+	/* ─── Confirmation ─── */
+	.planner__done {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.planner__done-text {
+		font-size: clamp(0.8125rem, 1.7vh, 1rem);
+		line-height: var(--line-height-normal);
+		color: rgb(250 240 230 / 0.85);
 	}
 
 	/* Below the desktop breakpoint the card is narrow, so the month title has to

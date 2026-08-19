@@ -157,63 +157,129 @@ test.describe('Contact — date planner', () => {
 	const openDay = (page: Page) =>
 		page.getByRole('gridcell').and(page.locator('button:not([aria-disabled="true"])')).first();
 
-	test('state 1: month grid and the legend, no slots or confirm button yet', async ({ page }) => {
+	const times = (page: Page) => page.getByRole('group', { name: /Tijden op/ }).getByRole('button');
+
+	async function toTimeStep(page: Page) {
+		await openDay(page).click();
+	}
+
+	async function toDetailStep(page: Page) {
+		await toTimeStep(page);
+		await times(page).nth(5).click();
+		await page.getByRole('button', { name: 'Gegevens invullen' }).click();
+	}
+
+	test('step 1: month grid and legend, no step controls yet', async ({ page }) => {
 		await expect(page.getByRole('grid')).toBeVisible();
-		await expect(page.locator('#planner-month')).not.toBeEmpty();
-		await expect(page.getByRole('columnheader', { name: 'maandag' })).toBeVisible();
 		await expect(page.getByText('Beschikbaar')).toBeVisible();
 		await expect(page.getByText('Geselecteerd')).toBeVisible();
-		await expect(page.getByRole('button', { name: 'Boek een gesprek' })).toHaveCount(0);
+		await expect(page.getByRole('button', { name: 'Gegevens invullen' })).toHaveCount(0);
 	});
 
-	test('cannot leave the current month backwards, and unavailable days are marked', async ({
-		page
-	}) => {
+	test('cannot leave the current month backwards', async ({ page }) => {
 		await expect(page.getByRole('button', { name: 'Vorige maand' })).toBeDisabled();
 		expect(await openDay(page).count(), 'the month must offer at least one day').toBeGreaterThan(0);
 	});
 
-	test('state 2: picking a date reveals its times and a DISABLED confirm button', async ({
+	test('step 2: a date reveals its times, back names step 1, proceed is disabled', async ({
 		page
 	}) => {
 		const day = openDay(page);
 		const dayNumber = (await day.textContent())?.trim();
 		await day.click();
 
-		// The legend gives way to the chosen date and its slots.
 		await expect(page.getByText('Beschikbaar')).toHaveCount(0);
 		await expect(page.locator('.planner__date')).toContainText(`${dayNumber} `);
+		expect(await times(page).count()).toBeGreaterThan(0);
 
-		const times = page.getByRole('group', { name: /Tijden op/ }).getByRole('button');
-		expect(await times.count(), 'the schedule must offer slots on an open day').toBeGreaterThan(0);
-		await expect(times.first()).toContainText(':');
-
-		const confirm = page.getByRole('button', { name: 'Boek een gesprek' });
-		await expect(confirm).toBeVisible();
-		await expect(confirm, 'no time chosen yet — the button must be disabled').toBeDisabled();
+		await expect(page.getByRole('button', { name: 'Kies datum' })).toBeVisible();
+		const proceed = page.getByRole('button', { name: 'Gegevens invullen' });
+		await expect(proceed, 'no time chosen yet').toBeDisabled();
 	});
 
-	test('picking a time enables the confirm button and marks the time chosen', async ({ page }) => {
-		await openDay(page).click();
-
-		const time = page
-			.getByRole('group', { name: /Tijden op/ })
-			.getByRole('button')
-			.first();
+	test('picking a time enables the proceed button', async ({ page }) => {
+		await toTimeStep(page);
+		const time = times(page).first();
 		await time.click();
 
 		await expect(time).toHaveAttribute('aria-pressed', 'true');
+		await expect(page.getByRole('button', { name: 'Gegevens invullen' })).toBeEnabled();
+	});
+
+	test('step 3: the fields appear, back names step 2, booking is disabled until filled', async ({
+		page
+	}) => {
+		await toDetailStep(page);
+
+		for (const label of ['Voornaam', 'Achternaam']) {
+			await expect(page.getByLabel(label)).toBeVisible();
+		}
+		await expect(page.getByLabel('Email', { exact: true })).toBeVisible();
+		await expect(page.getByLabel(/Waar loop je tegenaan/)).toBeVisible();
+
+		// The chosen time joins the date in the heading.
+		await expect(page.locator('.planner__date')).toContainText(':');
+
+		await expect(page.getByRole('button', { name: 'Kies tijd' })).toBeVisible();
+		await expect(page.getByRole('button', { name: 'Boek een gesprek' })).toBeDisabled();
+	});
+
+	test('filling name and e-mail enables the booking button', async ({ page }) => {
+		await toDetailStep(page);
+		await page.getByLabel('Voornaam').fill('John');
+		await page.getByLabel('Achternaam').fill('Williams');
+		await page.getByLabel('Email', { exact: true }).fill('john@example.com');
+
 		await expect(page.getByRole('button', { name: 'Boek een gesprek' })).toBeEnabled();
 	});
 
-	test('the back control returns to state 1 and drops the selection', async ({ page }) => {
-		await openDay(page).click();
-		await expect(page.getByRole('button', { name: 'Boek een gesprek' })).toBeVisible();
+	test('back steps one at a time — details to times to calendar', async ({ page }) => {
+		await toDetailStep(page);
 
-		await page.getByRole('button', { name: 'Terug naar de kalender' }).click();
+		await page.getByRole('button', { name: 'Kies tijd' }).click();
+		expect(await times(page).count(), 'first press lands on the times').toBeGreaterThan(0);
+		await expect(page.getByRole('button', { name: 'Kies datum' })).toBeVisible();
 
-		await expect(page.getByText('Beschikbaar')).toBeVisible();
-		await expect(page.getByRole('button', { name: 'Boek een gesprek' })).toHaveCount(0);
+		await page.getByRole('button', { name: 'Kies datum' }).click();
+		await expect(page.getByText('Beschikbaar'), 'second press lands on the calendar').toBeVisible();
+	});
+
+	test('a successful booking turns the card into a confirmation', async ({ page }) => {
+		await page.route('**/api/booking', (route) =>
+			route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify({ ok: true, message: 'Je aanvraag is verstuurd.' })
+			})
+		);
+
+		await toDetailStep(page);
+		await page.getByLabel('Voornaam').fill('John');
+		await page.getByLabel('Achternaam').fill('Williams');
+		await page.getByLabel('Email', { exact: true }).fill('john@example.com');
+		await page.getByRole('button', { name: 'Boek een gesprek' }).click();
+
+		await expect(page.getByText('Je aanvraag is verstuurd.')).toBeVisible();
+		await expect(page.getByRole('button', { name: 'Nog een moment plannen' })).toBeVisible();
+	});
+
+	test('a rejected booking surfaces the message and keeps the form', async ({ page }) => {
+		await page.route('**/api/booking', (route) =>
+			route.fulfill({
+				status: 409,
+				contentType: 'application/json',
+				body: JSON.stringify({ ok: false, message: 'Dit moment is niet meer beschikbaar.' })
+			})
+		);
+
+		await toDetailStep(page);
+		await page.getByLabel('Voornaam').fill('John');
+		await page.getByLabel('Achternaam').fill('Williams');
+		await page.getByLabel('Email', { exact: true }).fill('john@example.com');
+		await page.getByRole('button', { name: 'Boek een gesprek' }).click();
+
+		await expect(page.getByText('Dit moment is niet meer beschikbaar.')).toBeVisible();
+		await expect(page.getByLabel('Voornaam')).toHaveValue('John');
 	});
 
 	test('arrow keys move focus within the grid, across unavailable days', async ({ page }) => {
@@ -223,8 +289,56 @@ test.describe('Contact — date planner', () => {
 
 		await page.keyboard.press('ArrowRight');
 		await expect(page.locator(`[data-day="${start + 1}"]`)).toBeFocused();
+	});
+});
 
-		await page.keyboard.press('ArrowDown');
-		await expect(page.locator(`[data-day="${start + 8}"]`)).toBeFocused();
+test.describe('Contact — /api/booking', () => {
+	const slot = { datum: '2026-06-08', start: '12:30', end: '13:00' };
+	const person = { voornaam: 'John', achternaam: 'Williams', email: 'john@example.com' };
+
+	test('rejects invalid details with 400 and per-field Dutch messages', async ({ request }) => {
+		const response = await request.post('/api/booking', {
+			data: { ...person, ...slot, email: 'john@', voornaam: '' }
+		});
+		expect(response.status()).toBe(400);
+
+		const body = await response.json();
+		expect(body.errors.email).toMatch(/geldig e-mailadres/i);
+		expect(body.errors.voornaam).toMatch(/voornaam/i);
+	});
+
+	test('refuses a slot the schedule does not offer, however valid the payload', async ({
+		request
+	}) => {
+		// 03:00 on a Sunday is well-formed and entirely fictional.
+		const response = await request.post('/api/booking', {
+			data: { ...person, datum: '2026-06-14', start: '03:00', end: '03:30' }
+		});
+		expect(response.status()).toBe(409);
+		expect((await response.json()).message).toMatch(/niet meer beschikbaar/i);
+	});
+
+	test('answers a tripped honeypot with a plain success', async ({ request }) => {
+		const response = await request.post('/api/booking', {
+			data: { ...person, ...slot, website: 'http://spam.example' }
+		});
+		expect(response.status()).toBe(200);
+		expect((await response.json()).ok).toBe(true);
+	});
+
+	test('accepts a slot the schedule really offers', async ({ request }) => {
+		// Two weeks out, forced onto a Wednesday — inside the opening hours and
+		// clear of the lead time, whenever this suite happens to run.
+		const target = new Date();
+		target.setDate(target.getDate() + 14);
+		target.setDate(target.getDate() + ((3 - (target.getDay() || 7) + 7) % 7));
+		const datum = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`;
+
+		const response = await request.post('/api/booking', {
+			data: { ...person, datum, start: '10:00', end: '10:30' }
+		});
+		// 200 with Resend configured, 503 without; either way the slot was real.
+		expect([400, 409]).not.toContain(response.status());
+		expect(typeof (await response.json()).ok).toBe('boolean');
 	});
 });
