@@ -196,21 +196,26 @@ test.describe('Contact — date planner', () => {
 
 	const times = (page: Page) => page.getByRole('group', { name: /Tijden op/ }).getByRole('button');
 
+	/** Steps crossfade: for ~160ms both panels are mounted. Wait for one. */
+	const settled = (page: Page) => expect(page.locator('.planner__step')).toHaveCount(1);
+
 	async function toTimeStep(page: Page) {
 		await openDay(page).click();
+		await settled(page);
 	}
 
 	async function toDetailStep(page: Page) {
 		await toTimeStep(page);
 		await times(page).nth(5).click();
-		await page.getByRole('button', { name: 'Gegevens invullen' }).click();
+		await page.getByRole('button', { name: 'Verder' }).click();
+		await settled(page);
 	}
 
 	test('step 1: month grid and legend, no step controls yet', async ({ page }) => {
 		await expect(page.getByRole('grid')).toBeVisible();
-		await expect(page.getByText('Beschikbaar')).toBeVisible();
-		await expect(page.getByText('Geselecteerd')).toBeVisible();
-		await expect(page.getByRole('button', { name: 'Gegevens invullen' })).toHaveCount(0);
+		await expect(page.getByText('Beschikbaar', { exact: true })).toBeVisible();
+		await expect(page.getByText('Niet beschikbaar', { exact: true })).toBeVisible();
+		await expect(page.getByRole('button', { name: 'Verder' })).toHaveCount(0);
 	});
 
 	test('cannot leave the current month backwards', async ({ page }) => {
@@ -218,19 +223,21 @@ test.describe('Contact — date planner', () => {
 		expect(await openDay(page).count(), 'the month must offer at least one day').toBeGreaterThan(0);
 	});
 
-	test('step 2: a date reveals its times, back names step 1, proceed is disabled', async ({
+	test('step 2: a date reveals its times, back returns to step 1, proceed is disabled', async ({
 		page
 	}) => {
 		const day = openDay(page);
 		const dayNumber = (await day.textContent())?.trim();
 		await day.click();
+		await settled(page);
 
-		await expect(page.getByText('Beschikbaar')).toHaveCount(0);
+		// The calendar slides out entirely rather than staying under the slots.
+		await expect(page.getByRole('grid')).toHaveCount(0);
 		await expect(page.locator('.planner__date')).toContainText(`${dayNumber} `);
 		expect(await times(page).count()).toBeGreaterThan(0);
 
-		await expect(page.getByRole('button', { name: 'Kies datum' })).toBeVisible();
-		const proceed = page.getByRole('button', { name: 'Gegevens invullen' });
+		await expect(page.getByRole('button', { name: 'Terug naar kies datum' })).toBeVisible();
+		const proceed = page.getByRole('button', { name: 'Verder' });
 		await expect(proceed, 'no time chosen yet').toBeDisabled();
 	});
 
@@ -240,7 +247,7 @@ test.describe('Contact — date planner', () => {
 		await time.click();
 
 		await expect(time).toHaveAttribute('aria-pressed', 'true');
-		await expect(page.getByRole('button', { name: 'Gegevens invullen' })).toBeEnabled();
+		await expect(page.getByRole('button', { name: 'Verder' })).toBeEnabled();
 	});
 
 	test('step 3: the fields appear, back names step 2, booking is disabled until filled', async ({
@@ -257,8 +264,8 @@ test.describe('Contact — date planner', () => {
 		// The chosen time joins the date in the heading.
 		await expect(page.locator('.planner__date')).toContainText(':');
 
-		await expect(page.getByRole('button', { name: 'Kies tijd' })).toBeVisible();
-		await expect(page.getByRole('button', { name: 'Boek een gesprek' })).toBeDisabled();
+		await expect(page.getByRole('button', { name: 'Terug naar kies tijd' })).toBeVisible();
+		await expect(page.getByRole('button', { name: 'Verzenden' })).toBeDisabled();
 	});
 
 	test('filling name and e-mail enables the booking button', async ({ page }) => {
@@ -267,18 +274,20 @@ test.describe('Contact — date planner', () => {
 		await page.getByLabel('Achternaam').fill('Williams');
 		await page.getByLabel('Email', { exact: true }).fill('john@example.com');
 
-		await expect(page.getByRole('button', { name: 'Boek een gesprek' })).toBeEnabled();
+		await expect(page.getByRole('button', { name: 'Verzenden' })).toBeEnabled();
 	});
 
 	test('back steps one at a time — details to times to calendar', async ({ page }) => {
 		await toDetailStep(page);
 
-		await page.getByRole('button', { name: 'Kies tijd' }).click();
+		await page.getByRole('button', { name: 'Terug naar kies tijd' }).click();
+		await settled(page);
 		expect(await times(page).count(), 'first press lands on the times').toBeGreaterThan(0);
 		await expect(page.getByRole('button', { name: 'Kies datum' })).toBeVisible();
 
-		await page.getByRole('button', { name: 'Kies datum' }).click();
-		await expect(page.getByText('Beschikbaar'), 'second press lands on the calendar').toBeVisible();
+		await page.getByRole('button', { name: 'Terug naar kies datum' }).click();
+		await settled(page);
+		await expect(page.getByRole('grid'), 'second press lands on the calendar').toBeVisible();
 	});
 
 	test('a successful booking turns the card into a confirmation', async ({ page }) => {
@@ -294,7 +303,7 @@ test.describe('Contact — date planner', () => {
 		await page.getByLabel('Voornaam').fill('John');
 		await page.getByLabel('Achternaam').fill('Williams');
 		await page.getByLabel('Email', { exact: true }).fill('john@example.com');
-		await page.getByRole('button', { name: 'Boek een gesprek' }).click();
+		await page.getByRole('button', { name: 'Verzenden' }).click();
 
 		await expect(page.getByText('Je aanvraag is verstuurd.')).toBeVisible();
 		await expect(page.getByRole('button', { name: 'Nog een moment plannen' })).toBeVisible();
@@ -313,19 +322,51 @@ test.describe('Contact — date planner', () => {
 		await page.getByLabel('Voornaam').fill('John');
 		await page.getByLabel('Achternaam').fill('Williams');
 		await page.getByLabel('Email', { exact: true }).fill('john@example.com');
-		await page.getByRole('button', { name: 'Boek een gesprek' }).click();
+		await page.getByRole('button', { name: 'Verzenden' }).click();
 
 		await expect(page.getByText('Dit moment is niet meer beschikbaar.')).toBeVisible();
 		await expect(page.getByLabel('Voornaam')).toHaveValue('John');
 	});
 
+	test('the card never scrolls, on any step', async ({ page }) => {
+		const overflow = () =>
+			page.locator('.planner').evaluate((n) => n.scrollHeight - n.clientHeight);
+
+		expect(await overflow(), 'step 1 overflows').toBeLessThanOrEqual(1);
+
+		await openDay(page).click();
+		await settled(page);
+		await times(page).first().click();
+		expect(await overflow(), 'step 2 overflows').toBeLessThanOrEqual(1);
+
+		await page.getByRole('button', { name: 'Verder' }).click();
+		await settled(page);
+		await expect(page.getByLabel('Voornaam')).toBeVisible();
+		expect(await overflow(), 'step 3 overflows').toBeLessThanOrEqual(1);
+	});
+
+	test('the month grid keeps its height when paging between months', async ({ page }) => {
+		const grid = page.getByRole('grid');
+		const before = (await grid.boundingBox())!.height;
+
+		for (let i = 0; i < 3; i++) {
+			await page.getByRole('button', { name: 'Volgende maand' }).click();
+			const after = (await grid.boundingBox())!.height;
+			expect(Math.abs(after - before), 'a shorter month shifted the layout').toBeLessThan(2);
+		}
+	});
+
 	test('arrow keys move focus within the grid, across unavailable days', async ({ page }) => {
 		const day = openDay(page);
-		await day.click();
 		const start = Number((await day.textContent())?.trim());
+		// Focus rather than click: clicking picks the date and leaves the grid.
+		await day.focus();
 
 		await page.keyboard.press('ArrowRight');
 		await expect(page.locator(`[data-day="${start + 1}"]`)).toBeFocused();
+
+		await page.keyboard.press('ArrowDown');
+		await expect(page.locator(`[data-day="${start + 8}"]`)).toBeFocused();
 	});
 });
 

@@ -1,11 +1,12 @@
 <script lang="ts">
 	/**
-	 * Online-meeting planner — the two states of Figma frame 441-48.
+	 * Online-meeting planner — datum, tijd, gegevens, klaar.
 	 *
-	 *   1. Default: the month grid plus the Beschikbaar/Geselecteerd legend.
-	 *   2. Date picked: the calendar compresses and fades out under a mask, the
-	 *      chosen date and its time slots appear, and the confirm button shows up
-	 *      disabled until a time is picked.
+	 * The card is a fixed frame: a stage in the middle that swaps one step for
+	 * the next, and a footer under it that never moves. Steps do not stack or
+	 * push each other — the outgoing one slides left and fades, the incoming one
+	 * arrives from the right once it has gone, so nothing is ever obscured and
+	 * the footer controls stay exactly where the pointer left them.
 	 *
 	 * Availability comes from $lib/booking/schedule — never from this component.
 	 * That is deliberate: when the CMS lands, a load() hands a Schedule in through
@@ -17,6 +18,8 @@
 	 * size inside it is a clamp anchored to the Figma value at that reference.
 	 */
 	import { onMount, tick } from 'svelte';
+	import { fly } from 'svelte/transition';
+	import { cubicOut } from 'svelte/easing';
 	import { BRAND } from '$lib/constants/brand';
 	import {
 		bookingSchema,
@@ -89,6 +92,9 @@
 	const PREVIOUS: Partial<Record<Step, Step>> = { tijd: 'datum', gegevens: 'tijd' };
 
 	let step = $state<Step>('datum');
+	/** 1 = moving forward through the flow, -1 = going back. Drives which way
+	 *  the steps slide, so back genuinely looks like back. */
+	let direction = $state(1);
 	let selectedDate = $state<string | null>(null);
 	let selectedSlot = $state<TimeSlot | null>(null);
 	let focusedDay = $state(0); // day number holding the roving tabindex; 0 = none yet
@@ -118,14 +124,20 @@
 		return toIso(new Date(viewYear, viewMonth, day));
 	}
 
+	/**
+	 * Always six rows, padded with blanks. A month that needs five would
+	 * otherwise render a shorter grid, and every month change would jolt the
+	 * header and footer up and down by a row.
+	 */
+	const WEEK_ROWS = 6;
 	const weeks = $derived.by(() => {
 		const leading = isoWeekday(new Date(viewYear, viewMonth, 1)) - 1;
 		const cells: (number | null)[] = [
 			...Array.from({ length: leading }, () => null),
 			...Array.from({ length: daysInMonth }, (_, i) => i + 1)
 		];
-		while (cells.length % 7 !== 0) cells.push(null);
-		return Array.from({ length: cells.length / 7 }, (_, w) => cells.slice(w * 7, w * 7 + 7));
+		while (cells.length < WEEK_ROWS * 7) cells.push(null);
+		return Array.from({ length: WEEK_ROWS }, (_, w) => cells.slice(w * 7, w * 7 + 7));
 	});
 
 	/**
@@ -171,18 +183,13 @@
 		focusedDay = 0;
 	}
 
-	async function selectDay(day: number) {
+	function selectDay(day: number) {
 		if (!bookableDays[day]) return;
 		selectedDate = isoFor(day);
 		selectedSlot = null;
 		focusedDay = day;
+		direction = 1;
 		step = 'tijd';
-		// The calendar shrinks under the mask when the slots appear; keep the day
-		// the visitor just chose in view instead of letting it scroll off.
-		await tick();
-		document
-			.querySelector(`[data-day="${day}"]`)
-			?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
 	}
 
 	/** The back control: one step at a time, dropping what that step chose. */
@@ -193,6 +200,7 @@
 			selectedDate = null;
 			selectedSlot = null;
 		}
+		direction = -1;
 		step = previous;
 	}
 
@@ -200,6 +208,7 @@
 		if (!selectedSlot) return;
 		errors = {};
 		sendError = '';
+		direction = 1;
 		step = 'gegevens';
 	}
 
@@ -243,6 +252,7 @@
 
 			if (response.ok && body.ok) {
 				confirmation = body.message ?? 'Je aanvraag is verstuurd.';
+				direction = 1;
 				step = 'klaar';
 				return;
 			}
@@ -257,6 +267,7 @@
 	}
 
 	function restart() {
+		direction = -1;
 		step = 'datum';
 		selectedDate = null;
 		selectedSlot = null;
@@ -290,231 +301,273 @@
 		event.preventDefault();
 		focusDay(Math.min(Math.max(target, 1), daysInMonth));
 	}
+
+	/**
+	 * Sequential crossfade: the outgoing step leaves first, the incoming one
+	 * waits for it. Overlapping them would put two panels on top of each other,
+	 * which is the thing this replaced.
+	 */
+	const OUT_MS = 160;
+	const IN_MS = 300;
+	const SLIDE = 40;
+
+	function motionless(): boolean {
+		return (
+			typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches
+		);
+	}
+
+	function stepIn(node: Element) {
+		const still = motionless();
+		return fly(node, {
+			x: still ? 0 : direction * SLIDE,
+			duration: still ? 0 : IN_MS,
+			delay: still ? 0 : OUT_MS,
+			easing: cubicOut
+		});
+	}
+
+	function stepOut(node: Element) {
+		const still = motionless();
+		return fly(node, {
+			x: still ? 0 : direction * -SLIDE,
+			duration: still ? 0 : OUT_MS,
+			easing: cubicOut
+		});
+	}
 </script>
 
 <div class="planner">
-	<div class="planner__head">
-		<button
-			class="planner__nav"
-			type="button"
-			onclick={() => shiftMonth(-1)}
-			disabled={atFirstMonth}
-			aria-label="Vorige maand"
-		>
-			<svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
-				<path
-					d="M32 20H8M8 20L18 10M8 20L18 30"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				/>
-			</svg>
-		</button>
-		<p class="planner__month" id="planner-month" aria-live="polite">{monthLabel}</p>
-		<button
-			class="planner__nav"
-			type="button"
-			onclick={() => shiftMonth(1)}
-			aria-label="Volgende maand"
-		>
-			<svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
-				<path
-					d="M8 20H32M32 20L22 10M32 20L22 30"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				/>
-			</svg>
-		</button>
-	</div>
+	<div class="planner__stage">
+		{#key step}
+			<div class="planner__step" in:stepIn out:stepOut>
+				{#if step === 'datum'}
+					<div class="planner__head">
+						<button
+							class="planner__nav"
+							type="button"
+							onclick={() => shiftMonth(-1)}
+							disabled={atFirstMonth}
+							aria-label="Vorige maand"
+						>
+							<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+								<path
+									d="M15 5L8 12L15 19"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+								/>
+							</svg>
+						</button>
+						<p class="planner__month" id="planner-month" aria-live="polite">{monthLabel}</p>
+						<button
+							class="planner__nav"
+							type="button"
+							onclick={() => shiftMonth(1)}
+							aria-label="Volgende maand"
+						>
+							<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+								<path
+									d="M9 5L16 12L9 19"
+									stroke="currentColor"
+									stroke-width="2"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+								/>
+							</svg>
+						</button>
+					</div>
 
-	{#if step !== 'gegevens'}
-		<div class="planner__calendar">
-			<div class="planner__grid" role="grid" aria-labelledby="planner-month">
-				<div class="planner__row planner__row--head" role="row">
-					{#each WEEKDAYS as weekday (weekday.long)}
-						<span class="planner__weekday" role="columnheader" aria-label={weekday.long}>
-							{weekday.short}
-						</span>
-					{/each}
-				</div>
+					<div class="planner__grid" role="grid" aria-labelledby="planner-month">
+						<div class="planner__row planner__row--head" role="row">
+							{#each WEEKDAYS as weekday (weekday.long)}
+								<span class="planner__weekday" role="columnheader" aria-label={weekday.long}>
+									{weekday.short}
+								</span>
+							{/each}
+						</div>
 
-				{#each weeks as week, weekIndex (weekIndex)}
-					<div class="planner__row" role="row">
-						{#each week as day, dayIndex (dayIndex)}
-							{#if day === null}
-								<span class="planner__cell planner__cell--empty" role="gridcell"></span>
-							{:else}
-								<button
-									class="planner__cell planner__day"
-									class:planner__day--open={bookableDays[day]}
-									class:planner__day--selected={selectedDate === isoFor(day)}
-									role="gridcell"
-									type="button"
-									data-day={day}
-									aria-disabled={bookableDays[day] ? undefined : 'true'}
-									aria-label={labelFor(day)}
-									aria-selected={selectedDate === isoFor(day)}
-									tabindex={(focusedDay || firstBookableDay) === day ? 0 : -1}
-									onclick={() => selectDay(day)}
-									onkeydown={(event) => onKeydown(event, day)}
-								>
-									{day}
-								</button>
-							{/if}
+						{#each weeks as week, weekIndex (weekIndex)}
+							<div class="planner__row" role="row">
+								{#each week as day, dayIndex (dayIndex)}
+									{#if day === null}
+										<span class="planner__cell planner__cell--empty" role="gridcell"></span>
+									{:else}
+										<button
+											class="planner__cell planner__day"
+											class:planner__day--open={bookableDays[day]}
+											class:planner__day--selected={selectedDate === isoFor(day)}
+											role="gridcell"
+											type="button"
+											data-day={day}
+											aria-disabled={bookableDays[day] ? undefined : 'true'}
+											aria-label={labelFor(day)}
+											aria-selected={selectedDate === isoFor(day)}
+											tabindex={(focusedDay || firstBookableDay) === day ? 0 : -1}
+											onclick={() => selectDay(day)}
+											onkeydown={(event) => onKeydown(event, day)}
+										>
+											{day}
+										</button>
+									{/if}
+								{/each}
+							</div>
 						{/each}
 					</div>
-				{/each}
+				{:else if step === 'klaar'}
+					<div class="planner__done" role="status">
+						<p class="planner__date">
+							{selectedLabel}{selectedSlot ? `, ${selectedSlot.start}` : ''}
+						</p>
+						<p class="planner__done-text">{confirmation}</p>
+					</div>
+				{:else if step === 'tijd'}
+					<p class="planner__date">{selectedLabel}</p>
+					{#if slots.length > 0}
+						<div
+							class="planner__times"
+							role="group"
+							aria-label="Tijden op {selectedDate ? spokenDate(selectedDate) : ''}"
+						>
+							{#each slots as slot (slot.start)}
+								<button
+									class="planner__time"
+									class:planner__time--selected={selectedSlot?.start === slot.start}
+									type="button"
+									aria-pressed={selectedSlot?.start === slot.start}
+									onclick={() => (selectedSlot = slot)}
+								>
+									{slot.label}
+								</button>
+							{/each}
+						</div>
+					{:else}
+						<p class="planner__empty">
+							Op deze dag zijn geen tijden meer vrij. Kies een andere dag.
+						</p>
+					{/if}
+				{:else}
+					<p class="planner__date">
+						{selectedLabel}{selectedSlot ? `, ${selectedSlot.start}` : ''}
+					</p>
+					<div class="planner__fields">
+						<div class="planner__field-row">
+							<div class="planner__field">
+								<label class="planner__label" for="booking-voornaam">Voornaam</label>
+								<input
+									class="planner__input"
+									id="booking-voornaam"
+									type="text"
+									autocomplete="given-name"
+									placeholder="John"
+									bind:value={details.voornaam}
+									aria-invalid={errors.voornaam ? 'true' : undefined}
+									aria-describedby={errors.voornaam ? 'booking-voornaam-error' : undefined}
+								/>
+								{#if errors.voornaam}
+									<p class="planner__error" id="booking-voornaam-error">{errors.voornaam}</p>
+								{/if}
+							</div>
+
+							<div class="planner__field">
+								<label class="planner__label" for="booking-achternaam">Achternaam</label>
+								<input
+									class="planner__input"
+									id="booking-achternaam"
+									type="text"
+									autocomplete="family-name"
+									placeholder="Williams"
+									bind:value={details.achternaam}
+									aria-invalid={errors.achternaam ? 'true' : undefined}
+									aria-describedby={errors.achternaam ? 'booking-achternaam-error' : undefined}
+								/>
+								{#if errors.achternaam}
+									<p class="planner__error" id="booking-achternaam-error">{errors.achternaam}</p>
+								{/if}
+							</div>
+						</div>
+
+						<div class="planner__field">
+							<label class="planner__label" for="booking-email">Email</label>
+							<input
+								class="planner__input"
+								id="booking-email"
+								type="email"
+								inputmode="email"
+								autocomplete="email"
+								placeholder="voorbeeld@email.com"
+								bind:value={details.email}
+								aria-invalid={errors.email ? 'true' : undefined}
+								aria-describedby={errors.email ? 'booking-email-error' : undefined}
+							/>
+							{#if errors.email}
+								<p class="planner__error" id="booking-email-error">{errors.email}</p>
+							{/if}
+						</div>
+
+						<div class="planner__field planner__field--grow">
+							<label class="planner__label" for="booking-klachten">
+								Waar loop je tegenaan? <span class="planner__optional">(optioneel)</span>
+							</label>
+							<textarea
+								class="planner__input planner__input--area"
+								id="booking-klachten"
+								placeholder="Kort in je eigen woorden"
+								bind:value={details.klachten}
+								aria-invalid={errors.klachten ? 'true' : undefined}
+								aria-describedby={errors.klachten ? 'booking-klachten-error' : undefined}
+							></textarea>
+							{#if errors.klachten}
+								<p class="planner__error" id="booking-klachten-error">{errors.klachten}</p>
+							{/if}
+						</div>
+
+						<!-- Honeypot: off-screen, never announced, never tabbed into. -->
+						<div class="planner__honeypot" aria-hidden="true">
+							<label for="booking-website">Laat dit veld leeg</label>
+							<input
+								id="booking-website"
+								type="text"
+								tabindex="-1"
+								autocomplete="off"
+								bind:value={details.website}
+							/>
+						</div>
+					</div>
+
+					{#if sendError}
+						<p class="planner__error planner__error--form" role="alert">{sendError}</p>
+					{/if}
+				{/if}
 			</div>
-		</div>
-	{/if}
+		{/key}
+	</div>
 
-	{#if step === 'datum'}
-		<div class="planner__legend">
-			<span class="planner__legend-item">
-				<span class="planner__swatch" aria-hidden="true"></span>
-				Beschikbaar
-			</span>
-			<span class="planner__legend-item">
-				<span class="planner__swatch planner__swatch--selected" aria-hidden="true"></span>
-				Geselecteerd
-			</span>
-		</div>
-	{:else if step === 'klaar'}
-		<div class="planner__done" role="status">
-			<p class="planner__date">{selectedLabel}{selectedSlot ? `, ${selectedSlot.start}` : ''}</p>
-			<p class="planner__done-text">{confirmation}</p>
-		</div>
-
-		<div class="planner__actions">
+	<!-- The footer never moves between steps: only what sits in it changes. -->
+	<div class="planner__footer">
+		{#if step === 'datum'}
+			<div class="planner__legend">
+				<span class="planner__legend-item">
+					<span class="planner__swatch" aria-hidden="true"></span>
+					Beschikbaar
+				</span>
+				<span class="planner__legend-item">
+					<span class="planner__swatch planner__swatch--closed" aria-hidden="true"></span>
+					Niet beschikbaar
+				</span>
+			</div>
+		{:else if step === 'klaar'}
 			<button class="planner__proceed" type="button" onclick={restart}>
 				Nog een moment plannen
 			</button>
-		</div>
-	{:else}
-		<div class="planner__slots">
-			<p class="planner__date">
-				{selectedLabel}{step === 'gegevens' && selectedSlot ? `, ${selectedSlot.start}` : ''}
-			</p>
-
-			{#if step === 'tijd'}
-				{#if slots.length > 0}
-					<div
-						class="planner__times"
-						role="group"
-						aria-label="Tijden op {selectedDate ? spokenDate(selectedDate) : ''}"
-					>
-						{#each slots as slot (slot.start)}
-							<button
-								class="planner__time"
-								class:planner__time--selected={selectedSlot?.start === slot.start}
-								type="button"
-								aria-pressed={selectedSlot?.start === slot.start}
-								onclick={() => (selectedSlot = slot)}
-							>
-								{slot.label}
-							</button>
-						{/each}
-					</div>
-				{:else}
-					<p class="planner__empty">Op deze dag zijn geen tijden meer vrij. Kies een andere dag.</p>
-				{/if}
-			{:else}
-				<div class="planner__fields">
-					<div class="planner__field-row">
-						<div class="planner__field">
-							<label class="planner__label" for="booking-voornaam">Voornaam</label>
-							<input
-								class="planner__input"
-								id="booking-voornaam"
-								type="text"
-								autocomplete="given-name"
-								placeholder="John"
-								bind:value={details.voornaam}
-								aria-invalid={errors.voornaam ? 'true' : undefined}
-								aria-describedby={errors.voornaam ? 'booking-voornaam-error' : undefined}
-							/>
-							{#if errors.voornaam}
-								<p class="planner__error" id="booking-voornaam-error">{errors.voornaam}</p>
-							{/if}
-						</div>
-
-						<div class="planner__field">
-							<label class="planner__label" for="booking-achternaam">Achternaam</label>
-							<input
-								class="planner__input"
-								id="booking-achternaam"
-								type="text"
-								autocomplete="family-name"
-								placeholder="Williams"
-								bind:value={details.achternaam}
-								aria-invalid={errors.achternaam ? 'true' : undefined}
-								aria-describedby={errors.achternaam ? 'booking-achternaam-error' : undefined}
-							/>
-							{#if errors.achternaam}
-								<p class="planner__error" id="booking-achternaam-error">{errors.achternaam}</p>
-							{/if}
-						</div>
-					</div>
-
-					<div class="planner__field">
-						<label class="planner__label" for="booking-email">Email</label>
-						<input
-							class="planner__input"
-							id="booking-email"
-							type="email"
-							inputmode="email"
-							autocomplete="email"
-							placeholder="voorbeeld@email.com"
-							bind:value={details.email}
-							aria-invalid={errors.email ? 'true' : undefined}
-							aria-describedby={errors.email ? 'booking-email-error' : undefined}
-						/>
-						{#if errors.email}
-							<p class="planner__error" id="booking-email-error">{errors.email}</p>
-						{/if}
-					</div>
-
-					<div class="planner__field">
-						<label class="planner__label" for="booking-klachten">
-							Waar loop je tegenaan? <span class="planner__optional">(optioneel)</span>
-						</label>
-						<textarea
-							class="planner__input planner__input--area"
-							id="booking-klachten"
-							rows="2"
-							placeholder="Kort in je eigen woorden"
-							bind:value={details.klachten}
-							aria-invalid={errors.klachten ? 'true' : undefined}
-							aria-describedby={errors.klachten ? 'booking-klachten-error' : undefined}></textarea>
-						{#if errors.klachten}
-							<p class="planner__error" id="booking-klachten-error">{errors.klachten}</p>
-						{/if}
-					</div>
-
-					<!-- Honeypot: off-screen, never announced, never tabbed into. -->
-					<div class="planner__honeypot" aria-hidden="true">
-						<label for="booking-website">Laat dit veld leeg</label>
-						<input
-							id="booking-website"
-							type="text"
-							tabindex="-1"
-							autocomplete="off"
-							bind:value={details.website}
-						/>
-					</div>
-				</div>
-			{/if}
-
-			{#if sendError}
-				<p class="planner__error planner__error--form" role="alert">{sendError}</p>
-			{/if}
-		</div>
-
-		<div class="planner__actions">
-			<button class="planner__back" type="button" onclick={goBack}>
+		{:else}
+			<button
+				class="planner__back"
+				type="button"
+				onclick={goBack}
+				aria-label="Terug naar {STEP_LABEL[PREVIOUS[step]!].toLowerCase()}"
+			>
 				<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
 					<path
 						d="M15 5L8 12L15 19"
@@ -524,12 +577,11 @@
 						stroke-linejoin="round"
 					/>
 				</svg>
-				{STEP_LABEL[PREVIOUS[step]!]}
 			</button>
 
 			{#if step === 'tijd'}
 				<button class="planner__proceed" type="button" disabled={!selectedSlot} onclick={toDetails}>
-					Gegevens invullen
+					Verder
 				</button>
 			{:else}
 				<button
@@ -538,43 +590,56 @@
 					disabled={!detailsReady || sending}
 					onclick={book}
 				>
-					{sending ? 'Versturen…' : 'Boek een gesprek'}
+					{sending ? 'Versturen…' : 'Verzenden'}
 				</button>
 			{/if}
-		</div>
-	{/if}
+		{/if}
+	</div>
 </div>
 
 <style>
 	.planner {
 		/* Figma 441-48 fills: the tile green is rgb(122 140 110) at three alphas —
-		   0.1 unavailable, 0.6 available, 0.75 selected. It is kept as a local
-		   token rather than --brand-muted, which was darkened for WCAG contrast
-		   and no longer matches the design's green. */
+		   unavailable, available, selected. Kept local rather than --brand-muted,
+		   which was darkened for WCAG and no longer matches the design's green. */
 		--pl-tile: 122 140 110;
 		--pl-ink: #faf0e6;
 		--pl-radius: 0.625rem; /* 10px */
-		--pl-gap-y: clamp(0.25rem, 0.7vh, 0.375rem);
-		/* One column for everything in the card. Without it the seven day columns
-		   stretch to the card's full width, so the tiles come out far bigger than
-		   the calendar needs and the gaps grow to match. */
+		--pl-gap: 0.375rem;
 		--pl-measure: min(100%, 23rem);
 
 		display: flex;
 		flex-direction: column;
-		justify-content: center;
 		gap: clamp(0.5rem, 1.3vh, 1rem);
 		width: 100%;
 		min-height: 26.25rem; /* 420px — matches the form so toggling never shifts layout */
 		max-height: 85vh;
-		/* Nothing here scrolls. Every step is sized to fit the card; content that
-		   exceeds it is a sizing bug to fix, never a scrollbar to add. */
-		overflow: hidden;
-		padding: clamp(1rem, 4.8%, 1.75rem); /* 28px at 588px wide */
+		padding: clamp(1rem, 4.5%, 1.75rem);
 		background: var(--color-fg-forest);
 		border-radius: 1.5625rem; /* 25px */
 		color: var(--pl-ink);
 		font-family: var(--font-body);
+		/* Nothing here scrolls. Every step is sized to fit the card; content that
+		   exceeds it is a sizing bug to fix, never a scrollbar to add. */
+		overflow: hidden;
+	}
+
+	/* ─── Stage: one step at a time, in a box that never changes size ─── */
+	.planner__stage {
+		position: relative;
+		flex: 1 1 auto;
+		min-height: 0;
+	}
+
+	.planner__step {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
+		gap: clamp(0.375rem, 1.1vh, 0.75rem);
+		width: var(--pl-measure);
+		margin-inline: auto;
 	}
 
 	/* ─── Month header ─── */
@@ -583,13 +648,11 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 0.5rem;
-		width: var(--pl-measure);
-		margin-inline: auto;
 		flex-shrink: 0;
 	}
 
 	.planner__month {
-		font-size: clamp(1.125rem, 3.1vh, 1.875rem); /* was 40px — slimmed to 30px */
+		font-size: clamp(1.125rem, 3.1vh, 1.875rem);
 		font-weight: var(--font-weight-medium);
 		line-height: 1.2;
 		text-align: center;
@@ -599,7 +662,7 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		width: clamp(1.5rem, 3.1vh, 1.875rem); /* tracks the month type */
+		width: clamp(1.5rem, 3.1vh, 1.875rem);
 		height: clamp(1.5rem, 3.1vh, 1.875rem);
 		padding: 0;
 		border: none;
@@ -633,36 +696,38 @@
 	}
 
 	/* ─── Calendar ─── */
-	.planner__calendar {
-		flex: 0 0 auto;
-	}
-
 	.planner__grid {
 		display: flex;
 		flex-direction: column;
-		gap: var(--pl-gap-y);
-		/* Capped by height as well as width: on a short viewport the grid narrows,
-		   the tiles shrink with it, and the card still fits without scrolling. */
-		width: min(var(--pl-measure), 42vh);
+		flex: 1 1 auto;
+		min-height: 0;
+		gap: var(--pl-gap);
+		width: min(100%, 44vh);
 		margin-inline: auto;
 	}
 
 	.planner__row {
 		display: grid;
 		grid-template-columns: repeat(7, 1fr);
-		column-gap: 1.6%;
+		column-gap: var(--pl-gap);
+	}
+
+	/* Six rows are always rendered, so a five-row month cannot pull the header
+	   and footer upward when the visitor pages through the calendar. */
+	.planner__grid .planner__row:not(.planner__row--head) {
+		flex: 0 0 auto;
 	}
 
 	.planner__row--head {
+		flex: 0 0 auto;
 		padding-bottom: clamp(0.25rem, 0.9vh, 0.5rem);
-		flex-shrink: 0;
 	}
 
 	.planner__weekday {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: clamp(0.75rem, 1.7vh, 1rem); /* was 24px */
+		font-size: clamp(0.75rem, 1.7vh, 1rem);
 		font-weight: var(--font-weight-regular);
 		color: rgb(250 240 230 / 0.7);
 	}
@@ -676,16 +741,12 @@
 		border: 2px solid transparent;
 		border-radius: var(--pl-radius);
 		font-family: inherit;
-		font-size: clamp(0.6875rem, 1.5vh, 1rem); /* was 20px — slimmed to 16px */
+		font-size: clamp(0.6875rem, 1.5vh, 1rem);
 		line-height: 1;
 	}
 
 	.planner__cell--empty {
 		background: transparent;
-	}
-
-	.planner__grid .planner__row:not(.planner__row--head) {
-		flex: 0 0 auto;
 	}
 
 	/* Unavailable takes the fill that used to mean "available": the old 0.1 alpha
@@ -701,8 +762,12 @@
 			opacity var(--motion-hover) var(--ease-hover);
 	}
 
-	/* Available is no longer dimmed at all — a control you can press should not
-	   look like one you cannot, and at 35% the numbers were barely legible. */
+	.planner__day[aria-disabled='true'] {
+		cursor: default;
+	}
+
+	/* Available is not dimmed at all — a control you can press should not look
+	   like one you cannot, and at 35% the numbers were barely legible. */
 	.planner__day--open {
 		background: rgb(var(--pl-tile) / 0.65);
 		opacity: 1;
@@ -712,10 +777,6 @@
 	.planner__day--open:hover {
 		background: rgb(var(--pl-tile) / 0.8);
 		transform: translateY(var(--lift-hover));
-	}
-
-	.planner__day[aria-disabled='true'] {
-		cursor: default;
 	}
 
 	.planner__day:focus-visible {
@@ -731,83 +792,82 @@
 		opacity: 1;
 	}
 
-	/* ─── Legend (state 1 only) ─── */
+	/* ─── Footer: fixed height, so its controls never move between steps ─── */
+	.planner__footer {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		flex-shrink: 0;
+		min-height: clamp(1.875rem, 3.3vh, 2.25rem);
+		width: var(--pl-measure);
+		margin-inline: auto;
+	}
+
 	.planner__legend {
 		display: flex;
 		flex-wrap: wrap;
 		justify-content: center;
+		width: 100%;
 		gap: clamp(0.75rem, 2.2vh, 1.5rem);
-		flex-shrink: 0;
-		font-size: clamp(0.75rem, 1.5vh, 0.9375rem); /* was 20px */
+		font-size: clamp(0.75rem, 1.5vh, 0.9375rem);
 	}
 
 	.planner__legend-item {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.5rem; /* 8px */
-		padding: 0.5rem;
+		gap: 0.5rem;
 	}
 
 	.planner__swatch {
 		width: 1rem;
 		height: 1rem;
-		border-radius: 0.3125rem; /* 5px */
+		border-radius: 0.3125rem;
 		background: rgb(var(--pl-tile) / 0.65);
-		border: 2px solid transparent;
 	}
 
-	.planner__swatch--selected {
-		background: rgb(var(--pl-tile) / 0.75);
-		border-color: var(--pl-ink);
-		opacity: 1;
+	/* Reads exactly as an unavailable tile does, because that is what it labels. */
+	.planner__swatch--closed {
+		background: rgb(var(--pl-tile) / 0.6);
+		opacity: 0.35;
 	}
 
-	/* ─── Slots (state 2) ─── */
-	.planner__slots {
-		display: flex;
-		flex-direction: column;
-		gap: clamp(0.375rem, 1.2vh, 0.875rem);
-		width: var(--pl-measure);
-		margin-inline: auto;
-		flex-shrink: 0;
-	}
-
+	/* ─── Slots ─── */
 	.planner__date {
-		font-size: clamp(0.8125rem, 1.6vh, 1rem); /* was 20px */
+		font-size: clamp(0.8125rem, 1.6vh, 1rem);
 		font-weight: 600; /* DM Sans SemiBold */
 		line-height: 1.2;
+		flex-shrink: 0;
 	}
 
 	.planner__times {
 		display: grid;
-		/* Figma draws four columns on desktop, and has no mobile frame for this
-		   state. auto-fit keeps the tile's own width as the unit, so the grid
-		   lands on four columns at the reference width and drops to three or two
-		   on a phone instead of pushing the last column out of the card. */
 		grid-template-columns: repeat(auto-fit, minmax(min(100%, 4.75rem), 1fr));
-		column-gap: 1.6%;
-		row-gap: clamp(0.25rem, 0.8vh, 0.5rem);
+		gap: var(--pl-gap);
+		flex: 0 1 auto;
+		min-height: 0;
+		align-content: start;
 	}
 
 	.planner__time {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		min-height: clamp(1.5rem, 2.9vh, 1.875rem); /* was 37px */
+		min-height: clamp(1.5rem, 2.9vh, 1.875rem);
 		padding: 0.375rem 0.25rem;
 		border: 2px solid transparent;
 		border-radius: var(--pl-radius);
 		background: rgb(var(--pl-tile) / 0.65);
 		color: var(--pl-ink);
 		font-family: inherit;
-		font-size: clamp(0.625rem, 1.35vh, 0.875rem); /* was 16px */
+		font-size: clamp(0.625rem, 1.35vh, 0.875rem);
 		font-weight: var(--font-weight-medium);
 		line-height: 1;
 		white-space: nowrap;
 		cursor: pointer;
 		transition:
 			transform var(--motion-hover) var(--ease-hover),
-			opacity var(--motion-hover) var(--ease-hover);
+			background-color var(--motion-hover) var(--ease-hover);
 	}
 
 	.planner__time:hover {
@@ -831,117 +891,19 @@
 		color: rgb(250 240 230 / 0.75);
 	}
 
-	/* ─── Actions (state 2) ─── */
-	.planner__actions {
-		flex-wrap: wrap;
-		width: var(--pl-measure);
-		margin-inline: auto;
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 1rem;
-		flex-shrink: 0;
-	}
-
-	.planner__proceed {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		min-height: clamp(1.875rem, 3.3vh, 2.25rem);
-		padding: 0.5rem 1.25rem;
-		border: none;
-		border-radius: 2.8125rem; /* 45px */
-		background: var(--color-accent-gold-soft); /* #c7a27a */
-		color: var(--pl-ink);
-		font-family: inherit;
-		font-size: clamp(0.75rem, 1.5vh, 0.9375rem);
-		font-weight: var(--font-weight-medium);
-		line-height: 1;
-		white-space: nowrap;
-		cursor: pointer;
-		transition:
-			transform var(--motion-hover) var(--ease-hover),
-			box-shadow var(--motion-hover) var(--ease-hover),
-			opacity var(--motion-hover) var(--ease-hover);
-	}
-
-	.planner__proceed:hover:not(:disabled) {
-		transform: translateY(var(--lift-hover));
-		box-shadow: var(--shadow-hover);
-	}
-
-	.planner__proceed:active:not(:disabled) {
-		transform: translateY(0);
-		box-shadow: none;
-	}
-
-	.planner__proceed:focus-visible {
-		outline: 2px solid var(--color-card-warm);
-		outline-offset: 2px;
-	}
-
-	/* Figma draws only the enabled pill. Disabled reuses it at the same opacity
-	   the design uses for "not your turn yet" tiles, so the two read as one
-	   system — flagged as a design decision, not an invention. */
-	.planner__proceed:disabled {
-		opacity: 0.35;
-		cursor: not-allowed;
-	}
-
-	/* Back: a chevron plus the name of the step it returns to, so "where does
-	   this take me" never has to be guessed. The label changes with the step. */
-	.planner__back {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.375rem;
-		min-height: clamp(1.875rem, 3.3vh, 2.25rem);
-		padding: 0.5rem 0.75rem 0.5rem 0.5rem;
-		border: none;
-		border-radius: var(--radius-full);
-		background: transparent;
-		color: var(--pl-ink);
-		font-family: inherit;
-		font-size: clamp(0.75rem, 1.5vh, 0.9375rem);
-		font-weight: var(--font-weight-medium);
-		line-height: 1;
-		white-space: nowrap;
-		cursor: pointer;
-		transition:
-			transform var(--motion-hover) var(--ease-hover),
-			background-color var(--motion-hover) var(--ease-hover);
-	}
-
-	.planner__back svg {
-		width: 1.25em;
-		height: 1.25em;
-		flex-shrink: 0;
-	}
-
-	.planner__back:hover {
-		background: rgb(var(--pl-tile) / 0.35);
-		transform: translateY(var(--lift-hover));
-	}
-
-	.planner__back:active {
-		transform: translateY(0);
-	}
-
-	.planner__back:focus-visible {
-		outline: 2px solid var(--color-accent-gold-soft);
-		outline-offset: 2px;
-	}
-
-	/* ─── Details (step 3) ─── */
+	/* ─── Details ─── */
 	.planner__fields {
 		display: flex;
 		flex-direction: column;
+		flex: 1 1 auto;
+		min-height: 0;
 		gap: clamp(0.375rem, 1.1vh, 0.75rem);
 	}
 
 	.planner__field-row {
 		display: grid;
 		grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr));
-		gap: clamp(0.5rem, 1.4vh, 1rem);
+		gap: clamp(0.375rem, 1.1vh, 0.75rem);
 	}
 
 	.planner__field {
@@ -951,8 +913,13 @@
 		min-width: 0;
 	}
 
+	.planner__field--grow {
+		flex: 1 1 auto;
+		min-height: 0;
+	}
+
 	.planner__label {
-		font-size: clamp(0.75rem, 1.6vh, 1rem);
+		font-size: clamp(0.75rem, 1.5vh, 0.9375rem);
 		line-height: 1.2;
 	}
 
@@ -969,7 +936,7 @@
 		border-radius: var(--pl-radius);
 		color: var(--pl-ink);
 		font-family: inherit;
-		font-size: clamp(0.75rem, 1.6vh, 1rem);
+		font-size: clamp(0.75rem, 1.5vh, 0.9375rem);
 		line-height: var(--line-height-normal);
 		transition:
 			background-color var(--motion-hover) var(--ease-hover),
@@ -994,8 +961,13 @@
 		border-color: var(--color-accent-gold);
 	}
 
+	/* No drag handle, for the same reason as the e-mail form: dragging it grew
+	   the field past the card and took the footer with it. */
 	.planner__input--area {
-		resize: vertical;
+		flex: 1 1 auto;
+		min-height: clamp(2.5rem, 6vh, 5rem);
+		resize: none;
+		overflow-y: auto;
 	}
 
 	.planner__error {
@@ -1005,7 +977,7 @@
 	}
 
 	.planner__error--form {
-		margin-top: 0.25rem;
+		flex-shrink: 0;
 	}
 
 	.planner__honeypot {
@@ -1024,15 +996,86 @@
 	.planner__done {
 		display: flex;
 		flex-direction: column;
+		justify-content: center;
+		flex: 1 1 auto;
 		gap: 0.5rem;
-		width: var(--pl-measure);
-		margin-inline: auto;
 	}
 
 	.planner__done-text {
 		font-size: clamp(0.8125rem, 1.7vh, 1rem);
 		line-height: var(--line-height-normal);
 		color: rgb(250 240 230 / 0.85);
+	}
+
+	/* ─── Footer controls: one height, one radius, one type size ─── */
+	.planner__back,
+	.planner__proceed {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-height: clamp(1.875rem, 3.3vh, 2.25rem);
+		border: none;
+		border-radius: var(--radius-full);
+		font-family: inherit;
+		font-size: clamp(0.75rem, 1.5vh, 0.9375rem);
+		font-weight: var(--font-weight-medium);
+		line-height: 1;
+		white-space: nowrap;
+		cursor: pointer;
+		transition:
+			transform var(--motion-hover) var(--ease-hover),
+			box-shadow var(--motion-hover) var(--ease-hover),
+			background-color var(--motion-hover) var(--ease-hover),
+			opacity var(--motion-hover) var(--ease-hover);
+	}
+
+	.planner__back {
+		width: clamp(1.875rem, 3.3vh, 2.25rem);
+		padding: 0;
+		background: rgb(var(--pl-tile) / 0.5);
+		color: var(--pl-ink);
+		flex-shrink: 0;
+	}
+
+	.planner__back svg {
+		width: 60%;
+		height: 60%;
+	}
+
+	.planner__back:hover {
+		background: rgb(var(--pl-tile) / 0.75);
+		transform: translateY(var(--lift-hover));
+	}
+
+	.planner__proceed {
+		padding: 0.5rem 1.25rem;
+		background: var(--color-accent-gold-soft); /* #c7a27a */
+		color: var(--pl-ink);
+		margin-left: auto;
+	}
+
+	.planner__proceed:hover:not(:disabled) {
+		transform: translateY(var(--lift-hover));
+		box-shadow: var(--shadow-hover);
+	}
+
+	.planner__back:active,
+	.planner__proceed:active:not(:disabled) {
+		transform: translateY(0);
+		box-shadow: none;
+	}
+
+	.planner__back:focus-visible,
+	.planner__proceed:focus-visible {
+		outline: 2px solid var(--color-card-warm);
+		outline-offset: 2px;
+	}
+
+	/* Figma draws only the enabled pill. Disabled reuses it at the opacity the
+	   design already gives inactive tiles, so the two read as one system. */
+	.planner__proceed:disabled {
+		opacity: 0.35;
+		cursor: not-allowed;
 	}
 
 	/* Below the desktop breakpoint the card is narrow, so the month title has to
@@ -1049,6 +1092,49 @@
 		.planner {
 			height: min(80vh, 50rem);
 			min-height: 0;
+			--pl-gap: 0.5rem;
+			/* Desktop fills the card rather than sitting in a narrow column: the
+			   e-mail form beside it does, and the two are the same panel. */
+			--pl-measure: 100%;
+		}
+
+		.planner__grid {
+			width: 100%;
+			justify-content: stretch;
+		}
+
+		.planner__grid .planner__row:not(.planner__row--head) {
+			flex: 1 1 0;
+			min-height: 0;
+		}
+
+		/* A square tile sized by row height would be wider than its column and
+		   push the seventh day out of the card; filling the cell keeps the grid
+		   inside its width and the card fully used. */
+		.planner__cell {
+			aspect-ratio: auto;
+			height: 100%;
+		}
+
+		.planner__time {
+			min-height: clamp(2.75rem, 6.5vh, 4rem);
+			font-size: 0.9375rem;
+		}
+	}
+
+	/* Four columns, as the design draws them — auto-fit lands on six at the full
+	   card width and makes the slots look like tags rather than choices. Held
+	   back until 1200px, below which the card is too narrow for four labels and
+	   forcing them pushes "15:30 - 16:00" out through the side. */
+	@media (min-width: 1200px) {
+		.planner__times {
+			grid-template-columns: repeat(4, 1fr);
+		}
+
+		/* 1rem flat, per review — no vh scaling on the desktop calendar. */
+		.planner__weekday,
+		.planner__cell {
+			font-size: 1rem;
 		}
 	}
 </style>

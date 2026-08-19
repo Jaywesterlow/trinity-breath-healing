@@ -99,6 +99,46 @@ harmless.** Details under "Open risk: LCP" further down.
 
 ---
 
+## Session 2026-08-19 — second review pass: the planner is a framed wizard
+
+The card is now a fixed frame — a header/footer that never move, and a stage
+between them that swaps one step for the next. This replaced the previous model,
+where picking a date appended the slots underneath and everything below shifted.
+
+- **Steps slide, they do not stack.** The outgoing panel leaves to one side and
+  fades; the incoming one arrives from the other **after** it has gone (`out`
+  160ms, `in` 300ms delayed by 160ms). Nothing is ever obscured. `direction`
+  flips the axis so going back genuinely looks like going back, and
+  `prefers-reduced-motion` collapses both to zero.
+- **The footer never moves.** Step 1 puts the legend there, steps 2-3 put a bare
+  chevron and one pill. Both controls share a height, a radius and a type size —
+  the labelled back link was the odd one out.
+- **Six week rows are always rendered.** A five-row month used to pull the header
+  and footer up by a row on every page. Pinned by a test.
+- **Labels:** `Verder` on the times step, `Verzenden` on the details step.
+  Not "Volgende" — the carousel already owns that accessible name, and two
+  buttons called the same thing is a genuine ambiguity, not just a test problem.
+- **Legend is Beschikbaar / Niet beschikbaar**, the second swatch drawn exactly
+  as an unavailable tile.
+- **Desktop fills the card:** `--pl-measure` becomes 100%, day type is a flat
+  1rem, and tiles fill their cell (70x84 at 1440x900) rather than being squares
+  sized by row height — a square at that row height is wider than its column and
+  pushes the seventh day out through the side, which is the bug that produced the
+  clipped grid twice.
+- **Times are four columns only above 1200px.** Below that the card is too narrow
+  for four labels and forcing them overflows sideways.
+
+Nothing scrolls, verified at ten viewports from 1920x1080 to 360x640 across all
+three steps, both axes.
+
+**Still open, and deliberately not guessed at:** the times and details steps hold
+much less than the calendar, so they centre in a card sized for the calendar and
+leave visible room. Filling it either means inflating twelve slots into
+billboards or letting the card change height between steps. The owner asked for
+neither, so it stands as-is pending a decision.
+
+---
+
 ## Session 2026-08-19 — first review pass on the contact section
 
 Owner review of the built section. What changed, and the reasoning worth keeping:
