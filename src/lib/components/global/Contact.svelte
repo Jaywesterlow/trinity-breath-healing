@@ -313,8 +313,9 @@
 			flex: 0 0 auto;
 			align-self: flex-start;
 			padding: 0.5rem 1rem; /* 8px vertical / 16px horizontal */
-			font-size: 1.25rem; /* 20px */
-			/* 8 + 26 + 8 = the 42px tall button Figma draws (454:424). */
+			/* Was 20px. Every control on the site now speaks at 16px — the toggle
+			   is a choice between two panels, not a headline. */
+			font-size: 1rem;
 			line-height: 1.3;
 		}
 	}

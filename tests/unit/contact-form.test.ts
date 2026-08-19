@@ -10,6 +10,7 @@ const valid = {
 	voornaam: 'John',
 	achternaam: 'Williams',
 	email: 'john@example.com',
+	landcode: '+31',
 	telefoon: '6 123 456 78',
 	bericht: 'Ik wil graag meer weten over een eerste sessie.',
 	website: ''
@@ -24,6 +25,15 @@ describe('contactSchema', () => {
 	it('treats telefoon as optional', () => {
 		const result = contactSchema.safeParse({ ...valid, telefoon: '' });
 		expect(result.success).toBe(true);
+	});
+
+	it('accepts a non-Dutch landcode from the picker', () => {
+		const result = contactSchema.safeParse({ ...valid, landcode: '+212', telefoon: '612345678' });
+		expect(result.success).toBe(true);
+	});
+
+	it('rejects a landcode that is not a dial prefix', () => {
+		expect(contactSchema.safeParse({ ...valid, landcode: '31' }).success).toBe(false);
 	});
 
 	it('rejects a malformed telefoon with a Dutch message', () => {

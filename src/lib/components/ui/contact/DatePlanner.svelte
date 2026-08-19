@@ -330,44 +330,46 @@
 		</button>
 	</div>
 
-	<div class="planner__calendar" class:planner__calendar--compact={step !== 'datum'}>
-		<div class="planner__grid" role="grid" aria-labelledby="planner-month">
-			<div class="planner__row planner__row--head" role="row">
-				{#each WEEKDAYS as weekday (weekday.long)}
-					<span class="planner__weekday" role="columnheader" aria-label={weekday.long}>
-						{weekday.short}
-					</span>
-				{/each}
-			</div>
-
-			{#each weeks as week, weekIndex (weekIndex)}
-				<div class="planner__row" role="row">
-					{#each week as day, dayIndex (dayIndex)}
-						{#if day === null}
-							<span class="planner__cell planner__cell--empty" role="gridcell"></span>
-						{:else}
-							<button
-								class="planner__cell planner__day"
-								class:planner__day--open={bookableDays[day]}
-								class:planner__day--selected={selectedDate === isoFor(day)}
-								role="gridcell"
-								type="button"
-								data-day={day}
-								aria-disabled={bookableDays[day] ? undefined : 'true'}
-								aria-label={labelFor(day)}
-								aria-selected={selectedDate === isoFor(day)}
-								tabindex={(focusedDay || firstBookableDay) === day ? 0 : -1}
-								onclick={() => selectDay(day)}
-								onkeydown={(event) => onKeydown(event, day)}
-							>
-								{day}
-							</button>
-						{/if}
+	{#if step !== 'gegevens'}
+		<div class="planner__calendar">
+			<div class="planner__grid" role="grid" aria-labelledby="planner-month">
+				<div class="planner__row planner__row--head" role="row">
+					{#each WEEKDAYS as weekday (weekday.long)}
+						<span class="planner__weekday" role="columnheader" aria-label={weekday.long}>
+							{weekday.short}
+						</span>
 					{/each}
 				</div>
-			{/each}
+
+				{#each weeks as week, weekIndex (weekIndex)}
+					<div class="planner__row" role="row">
+						{#each week as day, dayIndex (dayIndex)}
+							{#if day === null}
+								<span class="planner__cell planner__cell--empty" role="gridcell"></span>
+							{:else}
+								<button
+									class="planner__cell planner__day"
+									class:planner__day--open={bookableDays[day]}
+									class:planner__day--selected={selectedDate === isoFor(day)}
+									role="gridcell"
+									type="button"
+									data-day={day}
+									aria-disabled={bookableDays[day] ? undefined : 'true'}
+									aria-label={labelFor(day)}
+									aria-selected={selectedDate === isoFor(day)}
+									tabindex={(focusedDay || firstBookableDay) === day ? 0 : -1}
+									onclick={() => selectDay(day)}
+									onkeydown={(event) => onKeydown(event, day)}
+								>
+									{day}
+								</button>
+							{/if}
+						{/each}
+					</div>
+				{/each}
+			</div>
 		</div>
-	</div>
+	{/if}
 
 	{#if step === 'datum'}
 		<div class="planner__legend">
@@ -552,16 +554,22 @@
 		--pl-tile: 122 140 110;
 		--pl-ink: #faf0e6;
 		--pl-radius: 0.625rem; /* 10px */
-		--pl-gap-y: clamp(0.375rem, 1.1vh, 0.6875rem); /* 11px at the reference frame */
+		--pl-gap-y: clamp(0.25rem, 0.7vh, 0.375rem);
+		/* One column for everything in the card. Without it the seven day columns
+		   stretch to the card's full width, so the tiles come out far bigger than
+		   the calendar needs and the gaps grow to match. */
+		--pl-measure: min(100%, 23rem);
 
 		display: flex;
 		flex-direction: column;
-		gap: clamp(0.75rem, 2vh, 1.75rem);
+		justify-content: center;
+		gap: clamp(0.5rem, 1.3vh, 1rem);
 		width: 100%;
 		min-height: 26.25rem; /* 420px — matches the form so toggling never shifts layout */
-		/* Both ends stay on screen: the calendar gives up height (and fades under
-		   its mask) rather than letting the card run past the viewport. */
 		max-height: 85vh;
+		/* Nothing here scrolls. Every step is sized to fit the card; content that
+		   exceeds it is a sizing bug to fix, never a scrollbar to add. */
+		overflow: hidden;
 		padding: clamp(1rem, 4.8%, 1.75rem); /* 28px at 588px wide */
 		background: var(--color-fg-forest);
 		border-radius: 1.5625rem; /* 25px */
@@ -575,12 +583,13 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 0.5rem;
-		padding: 0 0.75rem; /* 12px, per Figma 441:153 */
+		width: var(--pl-measure);
+		margin-inline: auto;
 		flex-shrink: 0;
 	}
 
 	.planner__month {
-		font-size: clamp(1.25rem, 4.4vh, 2.5rem); /* 40px */
+		font-size: clamp(1.125rem, 3.1vh, 1.875rem); /* was 40px — slimmed to 30px */
 		font-weight: var(--font-weight-medium);
 		line-height: 1.2;
 		text-align: center;
@@ -590,8 +599,8 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		width: clamp(1.75rem, 4.4vh, 2.5rem); /* 40px */
-		height: clamp(1.75rem, 4.4vh, 2.5rem);
+		width: clamp(1.5rem, 3.1vh, 1.875rem); /* tracks the month type */
+		height: clamp(1.5rem, 3.1vh, 1.875rem);
 		padding: 0;
 		border: none;
 		border-radius: var(--radius-full);
@@ -625,42 +634,27 @@
 
 	/* ─── Calendar ─── */
 	.planner__calendar {
-		/* Takes its natural height and gives room back when the card is short —
-		   the overflow then scrolls inside rather than pushing the button off. */
-		flex: 0 1 auto;
-		min-height: 0;
-		overflow-y: auto;
-		scrollbar-width: none;
-	}
-
-	.planner__calendar::-webkit-scrollbar {
-		display: none;
-	}
-
-	/* State 2: the grid gives up its room to the slots and fades out under them,
-	   exactly as the design draws it. Still scrollable, so a date further down
-	   the month stays reachable without leaving the state. */
-	.planner__calendar--compact {
-		-webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
-		mask-image: linear-gradient(to bottom, #000 55%, transparent 100%);
+		flex: 0 0 auto;
 	}
 
 	.planner__grid {
 		display: flex;
 		flex-direction: column;
 		gap: var(--pl-gap-y);
+		/* Capped by height as well as width: on a short viewport the grid narrows,
+		   the tiles shrink with it, and the card still fits without scrolling. */
+		width: min(var(--pl-measure), 42vh);
+		margin-inline: auto;
 	}
 
 	.planner__row {
 		display: grid;
 		grid-template-columns: repeat(7, 1fr);
-		/* 11px across a 486px grid — a ratio, so the columns keep Figma's rhythm
-		   at any card width. */
-		column-gap: 2.26%;
+		column-gap: 1.6%;
 	}
 
 	.planner__row--head {
-		padding-bottom: clamp(0.5rem, 1.8vh, 1.5625rem); /* 25px */
+		padding-bottom: clamp(0.25rem, 0.9vh, 0.5rem);
 		flex-shrink: 0;
 	}
 
@@ -668,7 +662,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		font-size: clamp(0.875rem, 2.4vh, 1.5rem); /* 24px */
+		font-size: clamp(0.75rem, 1.7vh, 1rem); /* was 24px */
 		font-weight: var(--font-weight-regular);
 		color: rgb(250 240 230 / 0.7);
 	}
@@ -678,15 +672,11 @@
 		align-items: center;
 		justify-content: center;
 		aspect-ratio: 1;
-		/* Column width reproduces Figma's 60px-in-486px tile exactly, because the
-		   2.26% column gap is that same ratio. The vh cap only bites on a short
-		   viewport, where a square-by-width tile would be taller than the card. */
-		width: min(100%, 8vh);
-		justify-self: center;
+		width: 100%;
 		border: 2px solid transparent;
 		border-radius: var(--pl-radius);
 		font-family: inherit;
-		font-size: clamp(0.8125rem, 2vh, 1.25rem); /* 20px */
+		font-size: clamp(0.6875rem, 1.5vh, 1rem); /* was 20px — slimmed to 16px */
 		line-height: 1;
 	}
 
@@ -698,8 +688,10 @@
 		flex: 0 0 auto;
 	}
 
+	/* Unavailable takes the fill that used to mean "available": the old 0.1 alpha
+	   was so dark against the card it read as a hole rather than a day. */
 	.planner__day {
-		background: rgb(var(--pl-tile) / 0.1);
+		background: rgb(var(--pl-tile) / 0.6);
 		color: #fff;
 		opacity: 0.35;
 		cursor: default;
@@ -709,13 +701,16 @@
 			opacity var(--motion-hover) var(--ease-hover);
 	}
 
+	/* Available is no longer dimmed at all — a control you can press should not
+	   look like one you cannot, and at 35% the numbers were barely legible. */
 	.planner__day--open {
-		background: rgb(var(--pl-tile) / 0.6);
+		background: rgb(var(--pl-tile) / 0.65);
+		opacity: 1;
 		cursor: pointer;
 	}
 
 	.planner__day--open:hover {
-		opacity: 0.6;
+		background: rgb(var(--pl-tile) / 0.8);
 		transform: translateY(var(--lift-hover));
 	}
 
@@ -738,13 +733,12 @@
 
 	/* ─── Legend (state 1 only) ─── */
 	.planner__legend {
-		margin-top: auto;
 		display: flex;
 		flex-wrap: wrap;
 		justify-content: center;
-		gap: clamp(1rem, 2.9vh, 1.8125rem); /* 29px */
+		gap: clamp(0.75rem, 2.2vh, 1.5rem);
 		flex-shrink: 0;
-		font-size: clamp(0.875rem, 2vh, 1.25rem); /* 20px */
+		font-size: clamp(0.75rem, 1.5vh, 0.9375rem); /* was 20px */
 	}
 
 	.planner__legend-item {
@@ -755,12 +749,11 @@
 	}
 
 	.planner__swatch {
-		width: 1.25rem; /* 20px */
-		height: 1.25rem;
+		width: 1rem;
+		height: 1rem;
 		border-radius: 0.3125rem; /* 5px */
-		background: rgb(var(--pl-tile) / 0.6);
+		background: rgb(var(--pl-tile) / 0.65);
 		border: 2px solid transparent;
-		opacity: 0.35;
 	}
 
 	.planner__swatch--selected {
@@ -773,12 +766,14 @@
 	.planner__slots {
 		display: flex;
 		flex-direction: column;
-		gap: clamp(0.5rem, 1.6vh, 1.25rem);
+		gap: clamp(0.375rem, 1.2vh, 0.875rem);
+		width: var(--pl-measure);
+		margin-inline: auto;
 		flex-shrink: 0;
 	}
 
 	.planner__date {
-		font-size: clamp(0.9375rem, 2vh, 1.25rem); /* 20px */
+		font-size: clamp(0.8125rem, 1.6vh, 1rem); /* was 20px */
 		font-weight: 600; /* DM Sans SemiBold */
 		line-height: 1.2;
 	}
@@ -789,27 +784,26 @@
 		   state. auto-fit keeps the tile's own width as the unit, so the grid
 		   lands on four columns at the reference width and drops to three or two
 		   on a phone instead of pushing the last column out of the card. */
-		grid-template-columns: repeat(auto-fit, minmax(min(100%, 6.5rem), 1fr));
-		column-gap: 1.64%; /* 8px across the 488px grid */
-		row-gap: clamp(0.375rem, 1.2vh, 0.75rem); /* 12px */
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 4.75rem), 1fr));
+		column-gap: 1.6%;
+		row-gap: clamp(0.25rem, 0.8vh, 0.5rem);
 	}
 
 	.planner__time {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		min-height: clamp(1.75rem, 3.7vh, 2.3125rem); /* 37px */
-		padding: 0.5rem; /* 8px */
+		min-height: clamp(1.5rem, 2.9vh, 1.875rem); /* was 37px */
+		padding: 0.375rem 0.25rem;
 		border: 2px solid transparent;
 		border-radius: var(--pl-radius);
-		background: rgb(var(--pl-tile) / 0.6);
+		background: rgb(var(--pl-tile) / 0.65);
 		color: var(--pl-ink);
 		font-family: inherit;
-		font-size: clamp(0.6875rem, 1.6vh, 1rem); /* 16px */
+		font-size: clamp(0.625rem, 1.35vh, 0.875rem); /* was 16px */
 		font-weight: var(--font-weight-medium);
 		line-height: 1;
 		white-space: nowrap;
-		opacity: 0.35;
 		cursor: pointer;
 		transition:
 			transform var(--motion-hover) var(--ease-hover),
@@ -817,7 +811,7 @@
 	}
 
 	.planner__time:hover {
-		opacity: 0.6;
+		background: rgb(var(--pl-tile) / 0.8);
 		transform: translateY(var(--lift-hover));
 	}
 
@@ -829,7 +823,6 @@
 	.planner__time--selected {
 		background: rgb(var(--pl-tile) / 0.75);
 		border-color: var(--pl-ink);
-		opacity: 1;
 	}
 
 	.planner__empty {
@@ -840,8 +833,9 @@
 
 	/* ─── Actions (state 2) ─── */
 	.planner__actions {
-		margin-top: auto;
 		flex-wrap: wrap;
+		width: var(--pl-measure);
+		margin-inline: auto;
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
@@ -853,14 +847,14 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		min-height: clamp(2.125rem, 4vh, 2.5rem); /* 40px */
-		padding: 0.5rem 1.5rem; /* 8px / 24px */
+		min-height: clamp(1.875rem, 3.3vh, 2.25rem);
+		padding: 0.5rem 1.25rem;
 		border: none;
 		border-radius: 2.8125rem; /* 45px */
 		background: var(--color-accent-gold-soft); /* #c7a27a */
 		color: var(--pl-ink);
 		font-family: inherit;
-		font-size: clamp(0.8125rem, 1.6vh, 1rem); /* 16px */
+		font-size: clamp(0.75rem, 1.5vh, 0.9375rem);
 		font-weight: var(--font-weight-medium);
 		line-height: 1;
 		white-space: nowrap;
@@ -900,14 +894,14 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.375rem;
-		min-height: clamp(2.125rem, 4vh, 2.5rem);
+		min-height: clamp(1.875rem, 3.3vh, 2.25rem);
 		padding: 0.5rem 0.75rem 0.5rem 0.5rem;
 		border: none;
 		border-radius: var(--radius-full);
 		background: transparent;
 		color: var(--pl-ink);
 		font-family: inherit;
-		font-size: clamp(0.75rem, 1.6vh, 1rem);
+		font-size: clamp(0.75rem, 1.5vh, 0.9375rem);
 		font-weight: var(--font-weight-medium);
 		line-height: 1;
 		white-space: nowrap;
@@ -941,7 +935,7 @@
 	.planner__fields {
 		display: flex;
 		flex-direction: column;
-		gap: clamp(0.5rem, 1.4vh, 1rem);
+		gap: clamp(0.375rem, 1.1vh, 0.75rem);
 	}
 
 	.planner__field-row {
@@ -1031,6 +1025,8 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
+		width: var(--pl-measure);
+		margin-inline: auto;
 	}
 
 	.planner__done-text {

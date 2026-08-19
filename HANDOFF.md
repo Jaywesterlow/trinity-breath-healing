@@ -99,6 +99,45 @@ harmless.** Details under "Open risk: LCP" further down.
 
 ---
 
+## Session 2026-08-19 — first review pass on the contact section
+
+Owner review of the built section. What changed, and the reasoning worth keeping:
+
+- **The planner never scrolls.** It used to give the calendar a scroll container
+  with a fade mask; the real problem was that everything inside was drawn at
+  Figma's absolute sizes. Month type 40→30, day numbers 20→16, weekday letters
+  24→16, tiles, gaps and buttons all down to match. Verified at nine viewports
+  from 1920x1080 to 360x640, all three steps: nothing overflows. `overflow: hidden`
+  on the card is a guard, not the mechanism — if content ever exceeds it, that is
+  a sizing bug to fix rather than a scrollbar to add.
+- **`--pl-measure` caps the inner column at 23rem.** Without it the seven day
+  columns stretch across the whole card, which is what made the tiles large and
+  the gaps wide at the same time. The grid is additionally capped at `42vh`, so on
+  a short viewport it narrows and the tiles shrink with it.
+- **The details step hides the calendar** rather than fading it. Nothing is being
+  picked from it any more, and it was the only thing that could not be made to fit.
+- **Tile fills were re-ranked.** Unavailable now uses the fill that used to mean
+  available (`0.6` alpha at 35%); available is undimmed at `0.65`; selected is
+  unchanged. The old available state was a 35%-opacity control that read as
+  disabled and failed contrast twice over.
+- **The phone prefix is a country picker** (`PhonePrefix.svelte`, list in
+  `src/lib/forms/countries.ts`). Not a native `<select>`: browsers draw the open
+  option list with OS chrome, which would put a white menu in a dark green card.
+  Flags are inline SVG, not emoji, because Windows ships no flag glyphs and would
+  render 🇳🇱 as the letters "NL". `landcode` now travels with the submission.
+- **The message field cannot be dragged.** `resize: none` plus internal scroll —
+  dragging it grew the textarea past the card and took the send button with it.
+- **Toggle type is 16px**, down from 20px, in line with every other control.
+
+**Open, for the owner:** a site-wide button pass. The contact section is now
+internally consistent, but the nav and hero CTAs still speak at 20px in the display
+face while form controls speak at 16px in the body face. Proposal recorded in the
+session: tan pill = primary action only, dark green = surfaces not buttons,
+everything else a quiet text control; one 16px control scale throughout. That
+touches nav, hero and carousel, so it was not done unasked.
+
+---
+
 ## Session 2026-08-19 (later still) — the three-step booking flow
 
 Cal.com is gone. It could not meet the owner's condition — using it means an account,

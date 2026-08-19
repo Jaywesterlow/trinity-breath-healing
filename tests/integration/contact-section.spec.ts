@@ -17,6 +17,7 @@ const VALID = {
 	voornaam: 'John',
 	achternaam: 'Williams',
 	email: 'john@example.com',
+	landcode: '+31',
 	telefoon: '6 123 456 78',
 	bericht: 'Ik wil graag meer weten over een eerste sessie.',
 	website: ''
@@ -94,6 +95,42 @@ test.describe('Contact — e-mail form', () => {
 		await expect(page.locator('#contact-form-status')).toContainText('Bedankt voor je bericht.');
 		await expect(page.getByLabel('Voornaam')).toHaveValue('');
 		await expect(page.getByLabel('Bericht')).toHaveValue('');
+	});
+
+	test('the country prefix is a picker, and choosing one changes the dial code', async ({
+		page
+	}) => {
+		const trigger = page.getByRole('button', { name: /Landcode/ });
+		await expect(trigger).toContainText('+31');
+		await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+
+		await trigger.click();
+		const list = page.getByRole('listbox', { name: 'Kies een landcode' });
+		await expect(list).toBeVisible();
+
+		await list.getByRole('option', { name: /Duitsland/ }).click();
+		await expect(trigger).toContainText('+49');
+		await expect(list).toHaveCount(0);
+	});
+
+	test('the country picker closes on Escape and is keyboard operable', async ({ page }) => {
+		const trigger = page.getByRole('button', { name: /Landcode/ });
+		await trigger.click();
+		await expect(page.getByRole('listbox')).toBeVisible();
+
+		await page.keyboard.press('Escape');
+		await expect(page.getByRole('listbox')).toHaveCount(0);
+		await expect(trigger).toBeFocused();
+
+		await page.keyboard.press('ArrowDown');
+		await page.keyboard.press('ArrowDown');
+		await page.keyboard.press('Enter');
+		await expect(trigger).toContainText('+32');
+	});
+
+	test('the message field cannot be dragged bigger than its card', async ({ page }) => {
+		const resize = await page.getByLabel('Bericht').evaluate((el) => getComputedStyle(el).resize);
+		expect(resize, 'a drag handle let the textarea grow past the card').toBe('none');
 	});
 
 	test('a rejected send surfaces the endpoint’s message instead of failing silently', async ({

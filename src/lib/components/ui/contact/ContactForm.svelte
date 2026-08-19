@@ -8,6 +8,7 @@
 	 * browser navigates to /api/contact, which answers with an HTML page.
 	 */
 	import { tick } from 'svelte';
+	import PhonePrefix from './PhonePrefix.svelte';
 	import { contactSchema, emptyContact, toFieldErrors } from '$lib/forms/contact';
 	import type { ContactInput, FieldErrors } from '$lib/forms/contact';
 	import { BRAND } from '$lib/constants/brand';
@@ -140,7 +141,8 @@
 		<div class="field">
 			<label class="field__label" for="contact-telefoon">Telefoon</label>
 			<div class="phone" class:phone--invalid={Boolean(errors.telefoon)}>
-				<span class="phone__prefix" aria-hidden="true">+31</span>
+				<PhonePrefix bind:value={values.landcode} />
+				<span class="phone__divider" aria-hidden="true"></span>
 				<input
 					class="field__input phone__input"
 					id="contact-telefoon"
@@ -151,14 +153,9 @@
 					placeholder="6 123 456 78"
 					bind:value={values.telefoon}
 					aria-invalid={errors.telefoon ? 'true' : undefined}
-					aria-describedby={errors.telefoon
-						? 'contact-telefoon-hint contact-telefoon-error'
-						: 'contact-telefoon-hint'}
+					aria-describedby={errors.telefoon ? 'contact-telefoon-error' : undefined}
 				/>
 			</div>
-			<p class="field__hint" id="contact-telefoon-hint">
-				Nederlands nummer zonder landcode — de +31 staat er al voor. Optioneel.
-			</p>
 			{#if errors.telefoon}
 				<p class="field__error" id="contact-telefoon-error">{errors.telefoon}</p>
 			{/if}
@@ -230,7 +227,7 @@
 		flex-direction: column;
 		width: 100%;
 		min-height: 26.25rem; /* 420px — matches the planner so toggling never shifts layout */
-		padding: 1.5rem; /* 24px */
+		padding: 2rem 1.75rem; /* was 24px all round — the copy sat too close to the edge */
 		background: var(--color-fg-forest);
 		border-radius: 1.5625rem; /* 25px */
 		color: var(--color-bg-sand);
@@ -308,7 +305,10 @@
 		   pinned just under it on the tall desktop card (Figma). */
 		flex: 1 1 auto;
 		min-height: 8.75rem; /* 140px */
-		resize: vertical;
+		/* No drag handle: dragging it grew the textarea past the card and took
+		   the send button with it. Long messages scroll inside instead. */
+		resize: none;
+		overflow-y: auto;
 	}
 
 	/* --- Telefoon: static +31 segment fused to the number input --- */
@@ -318,10 +318,14 @@
 		background: var(--field-bg);
 		border: 1px solid transparent;
 		border-radius: 0.625rem;
-		overflow: hidden;
+		/* Not overflow:hidden — the country popup has to escape this box. */
 		transition:
 			background-color var(--motion-hover) var(--ease-hover),
 			border-color var(--motion-hover) var(--ease-hover);
+	}
+
+	.phone {
+		min-height: 3rem; /* matches the other inputs */
 	}
 
 	.phone:hover {
@@ -337,13 +341,12 @@
 		border-color: var(--color-accent-gold);
 	}
 
-	.phone__prefix {
-		display: flex;
-		align-items: center;
-		padding: 0 1rem;
-		border-right: 1px solid color-mix(in srgb, var(--color-bg-sand) 25%, transparent);
-		color: var(--field-placeholder);
-		font-size: 1rem;
+	.phone__divider {
+		width: 1px;
+		align-self: stretch;
+		margin: 0.5rem 0;
+		background: color-mix(in srgb, var(--color-bg-sand) 25%, transparent);
+		flex-shrink: 0;
 	}
 
 	.phone__input {
@@ -358,12 +361,6 @@
 		background: transparent;
 		box-shadow: none;
 		border-color: transparent;
-	}
-
-	.field__hint {
-		font-size: 0.75rem; /* 12px */
-		line-height: var(--line-height-normal);
-		color: color-mix(in srgb, var(--color-bg-sand) 65%, transparent);
 	}
 
 	.field__error {
@@ -471,7 +468,7 @@
 		.contact-panel {
 			height: min(80vh, 50rem); /* 50rem = 800px, the Figma height */
 			min-height: 0;
-			padding: clamp(1.25rem, 3.2vh, 2.5rem); /* 40px at the reference frame */
+			padding: clamp(1.75rem, 3.6vh, 2.75rem); /* 40px at the reference frame, floor raised */
 		}
 
 		.form {
@@ -490,7 +487,7 @@
 			font-size: clamp(0.875rem, 1.8vh, 1rem);
 		}
 
-		.field__input {
+		.field__input:not(.phone__input) {
 			min-height: clamp(2.25rem, 5vh, 3rem);
 			padding: clamp(0.375rem, 1.2vh, 0.75rem) 1rem;
 			font-size: clamp(0.875rem, 1.8vh, 1rem);
@@ -498,10 +495,6 @@
 
 		.field__input--area {
 			min-height: clamp(3.5rem, 9vh, 8.75rem);
-		}
-
-		.phone__prefix {
-			font-size: clamp(0.875rem, 1.8vh, 1rem);
 		}
 
 		.form__actions {

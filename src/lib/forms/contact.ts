@@ -6,8 +6,12 @@
  */
 import { z } from 'zod';
 
-/** Dutch mobile/landline digits as typed after the +31 prefix: 9 digits, spaces allowed. */
-const PHONE_RE = /^[0-9][0-9\s]{7,14}$/;
+/**
+ * Digits as typed after the dial code. Deliberately loose on length: the
+ * prefix is now a country picker, and national number lengths vary from 7 to
+ * 14 digits across the list.
+ */
+const PHONE_RE = /^[0-9][0-9\s]{5,15}$/;
 
 export const contactSchema = z.object({
 	voornaam: z.string().trim().min(2, 'Vul je voornaam in.').max(80, 'Deze voornaam is te lang.'),
@@ -22,6 +26,12 @@ export const contactSchema = z.object({
 		.min(1, 'Vul je e-mailadres in.')
 		.max(254, 'Dit e-mailadres is te lang.')
 		.email('Dit lijkt geen geldig e-mailadres.'),
+	/** E.164 dial prefix chosen in the picker, e.g. "+31". */
+	landcode: z
+		.string()
+		.trim()
+		.regex(/^\+\d{1,4}$/, 'Kies een geldige landcode.')
+		.default('+31'),
 	/** Optional — Figma marks only naam/email/bericht as load-bearing. */
 	telefoon: z
 		.string()
@@ -55,6 +65,7 @@ export const emptyContact: ContactInput = {
 	voornaam: '',
 	achternaam: '',
 	email: '',
+	landcode: '+31',
 	telefoon: '',
 	bericht: '',
 	website: ''
@@ -65,7 +76,7 @@ export function isHoneypotTripped(values: ContactValues): boolean {
 	return values.website.trim().length > 0;
 }
 
-export type FieldName = Exclude<keyof ContactValues, 'website'>;
+export type FieldName = Exclude<keyof ContactValues, 'website' | 'landcode'>;
 export type FieldErrors = Partial<Record<FieldName, string>>;
 
 /** Flatten a zod failure into `{ field: firstMessage }` for direct render. */

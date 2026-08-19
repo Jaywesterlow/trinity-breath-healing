@@ -40,7 +40,7 @@ function escapeHtml(value: string): string {
 
 function buildBodies(values: ContactValues) {
 	const naam = `${values.voornaam} ${values.achternaam}`;
-	const telefoon = values.telefoon ? `+31 ${values.telefoon}` : '—';
+	const telefoon = values.telefoon ? `${values.landcode} ${values.telefoon}` : '—';
 
 	const text = [
 		`Naam: ${naam}`,
