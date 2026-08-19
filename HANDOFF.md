@@ -1,40 +1,53 @@
 # HANDOFF — Trinity Breath & Healing (Active Development)
 
-_Updated 2026-08-18 (session continues from prior context). Carousel (Behandelingen) is complete. Contact section (Email + Google Meets forms) is next, on separate branch._
+_Updated 2026-08-19. Carousel (Behandelingen) complete. Contact section (e-mail form + date planner + hover animations) complete on `claude/trinity-contact-hover-t7xsrf`._
 
 ---
 
 ## 🔴 READ THIS FIRST — Current Status & Next Steps
 
-**Current session focus:** Contact section (feat/contact-section branch)
+**Current session focus:** Contact section — SHIPPED (branch `claude/trinity-contact-hover-t7xsrf`)
 
 ### ✅ Completed
-- **Carousel (Behandelingen)** — All 5 cards with SVG-based rotated fan, edge fade on ultra-wide (1776px+), bold titles
+- **Carousel (Behandelingen)** — 5 cards, SVG rotated fan, edge fade ≥1776px, bold titles
 - **Hero section** — SVG draw-on animation, responsive sizing
-- **Global nav & footer** — Semantic tokens, design alignment
-- **SEO/AEO** — Meta tags per page, JSON-LD core structures
+- **Global nav & footer** — semantic tokens, design alignment
+- **SEO/AEO** — meta tags per page, JSON-LD core structures
+- **Contact section (this session)** — both panels are real, no placeholders left:
+  - `ContactForm.svelte` — Voornaam/Achternaam/Email/Telefoon(+31)/Bericht per Figma
+    `Desktop _ Home 5`, zod validation shared with the endpoint, Dutch inline errors,
+    honeypot, aria-live status region, `<noscript>` mailto fallback
+  - `POST /api/contact` — the one non-prerendered route (Vercel Function, fra1);
+    re-validates independently, per-IP throttle, Resend over `fetch`, answers HTML
+    to a native form post and JSON to `fetch`
+  - `DatePlanner.svelte` — the Figma `Mobile _ Home 5` calendar (Dutch month/weekday
+    labels, past days disabled, roving-tabindex arrow keys, Beschikbaar/Geselecteerd
+    legend). Picking a day hands off to Cal.com; no iframe on the landing page
+  - Hover vocabulary sitewide — lift + shadow on buttons/cards, underline reveal on
+    text links, driven by `--motion-hover / --ease-hover / --lift-hover / --shadow-hover`
+    in `app.css`; the reduced-motion block flattens the lift to zero
 
-### 🚀 In Progress
-1. **Contact section forms** (this session)
-   - Planning complete (see architecture doc)
-   - Email form (ContactForm.svelte) — placeholder → real
-   - Google Meets booking (DatePlanner.svelte) — placeholder → Cal.com embed
-   - `/api/contact` handler — Resend EU integration
-   - **Action item:** Sonnet model (via SAP Agent) will implement; awaiting user approval
+### ⚙️ Config still needed before the form can actually deliver
+Set in the Vercel dashboard (all optional — the UI degrades honestly without them):
 
-2. **Hover animations** (parallel research)
-   - Underline/border reveals, scale + shadow, color transitions
-   - Research doc complete (hover-animation-research.md)
-   - **Action item:** User to choose patterns; then implement across buttons, links, form inputs
+| Var | Effect when unset |
+|---|---|
+| `RESEND_API_KEY` | endpoint answers 503 + "mail gerust rechtstreeks naar info@trinitybnh.nl" |
+| `CONTACT_FROM_EMAIL` | same as above (verified sender on the Resend EU domain) |
+| `CONTACT_TO_EMAIL` | falls back to `BRAND.email` |
+| `PUBLIC_CALCOM_LINK` | date planner hands off by e-mail with the chosen date instead of Cal.com |
 
 ### ⏳ Pending
-- Contact forms implementation (delegated to Sonnet)
-- Hover animation design choice + rollout
-- Full-page integration testing (Playwright 277-test suite)
-- Visual fidelity check vs Figma
-- Accessibility audit (pa11y-ci, WCAG 2.2 AA)
+- Visual-regression baselines are **win32-only** — regenerate on Windows
+  (`npm run test:visual -- --update-snapshots`) now that `/` renders the real form
+- Sitewide colour-contrast: pa11y reports 25 WCAG AA contrast errors on `/`, nearly all
+  pre-existing (`--color-text-subtle` eyebrows/body on sand, tan CTA pills). The new
+  submit button inherits the same treatment at 2.1:1. This is a palette decision, not a
+  component one — needs a call from the practitioner/designer before anyone "fixes" it
+- `autocomplete="tel-national"` is flagged by HTML_CodeSniffer (H98). The token is valid
+  per the HTML spec for `type="tel"`; kept deliberately because the field holds the
+  national part only, next to the static `+31`
 
----
 
 ## Git Branches (2026-08-18)
 

@@ -49,7 +49,7 @@
 		border-bottom: 1px solid var(--color-fg-forest);
 		text-decoration: none;
 		color: var(--color-fg-forest);
-		transition: opacity var(--motion-fast);
+		transition: transform var(--motion-hover) var(--ease-hover);
 	}
 
 	.text-link__label {
@@ -69,7 +69,11 @@
 	}
 
 	.text-link:hover {
-		opacity: 0.8;
+		transform: translateY(var(--lift-hover));
+	}
+
+	.text-link:active {
+		transform: translateY(0);
 	}
 
 	.text-link--inverted {

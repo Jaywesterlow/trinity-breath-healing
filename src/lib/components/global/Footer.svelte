@@ -225,8 +225,28 @@
 		line-height: var(--line-height-normal);
 	}
 
-	.footer__legal a:hover {
-		opacity: 0.7;
+	/* Plain text links get the underline reveal rather than the lift: moving a
+	   line of running text is noisy, an underline arriving is not. */
+	.footer__legal a {
+		position: relative;
+	}
+
+	.footer__legal a::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: -0.125rem;
+		height: 1px;
+		background: currentColor;
+		transform: scaleX(0);
+		transform-origin: left center;
+		transition: transform var(--motion-hover) var(--ease-hover);
+	}
+
+	.footer__legal a:hover::after,
+	.footer__legal a:focus-visible::after {
+		transform: scaleX(1);
 	}
 
 	/* ─── Desktop (≥ 1024px) ─── */

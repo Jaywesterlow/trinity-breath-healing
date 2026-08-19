@@ -19,7 +19,11 @@
 		border: none;
 		cursor: pointer;
 		padding: 0;
-		transition: opacity var(--motion-fast);
+		background: transparent;
+		transition:
+			transform var(--motion-hover) var(--ease-hover),
+			box-shadow var(--motion-hover) var(--ease-hover);
+		border-radius: var(--radius-full);
 	}
 
 	.btn__label {
@@ -38,6 +42,13 @@
 	}
 
 	.btn:hover {
-		opacity: 0.88;
+		transform: translateY(var(--lift-hover));
+		box-shadow: var(--shadow-hover);
+	}
+
+	/* Press cancels the lift — the button meets the finger instead of dodging it. */
+	.btn:active {
+		transform: translateY(0);
+		box-shadow: none;
 	}
 </style>

@@ -42,12 +42,27 @@
 		font-weight: var(--font-weight-regular);
 		color: var(--color-bg-sand);
 		text-decoration: none;
-		transition: opacity var(--motion-fast);
 		line-height: var(--line-height-normal);
+		position: relative;
 	}
 
-	.col__links a:hover {
-		opacity: 0.7;
+	/* Underline reveal — same vocabulary as the footer's legal links. */
+	.col__links a::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: -0.125rem;
+		height: 1px;
+		background: currentColor;
+		transform: scaleX(0);
+		transform-origin: left center;
+		transition: transform var(--motion-hover) var(--ease-hover);
+	}
+
+	.col__links a:hover::after,
+	.col__links a:focus-visible::after {
+		transform: scaleX(1);
 	}
 
 	@media (min-width: 1024px) {

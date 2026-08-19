@@ -194,6 +194,17 @@
 	--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 	--ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 
+	/* --- Hover interaction (one vocabulary, used by every interactive surface) ---
+	   Buttons and cards lift by --lift-hover and pick up --shadow-hover; plain
+	   text links wipe an underline in. Both are driven from these four tokens so
+	   the feel can be retuned in one place — and so the reduced-motion block at
+	   the bottom of this file can flatten the movement to nothing without every
+	   component needing its own media query. */
+	--motion-hover: 180ms;
+	--ease-hover: cubic-bezier(0.22, 1, 0.36, 1);
+	--lift-hover: -2px;
+	--shadow-hover: 0 6px 18px color-mix(in srgb, var(--color-fg-forest) 22%, transparent);
+
 	/* --- Layout --- */
 	--container-max: 1200px;
 	--nav-height: 80px; /* mobile: 20px padding × 2 + 40px logo */
@@ -343,5 +354,12 @@ h6 {
 		animation-duration: 0.01ms !important;
 		transition-duration: 0.01ms !important;
 		scroll-behavior: auto !important;
+	}
+
+	/* Killing the transition alone would still teleport the element on hover.
+	   Flattening the tokens removes the movement itself — the colour and shadow
+	   feedback that carry the affordance stay. */
+	:root {
+		--lift-hover: 0px;
 	}
 }

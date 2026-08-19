@@ -46,7 +46,9 @@
 		align-items: center;
 		justify-content: center;
 		border-radius: 50%; /* an optional background renders as a circle behind the icon */
-		transition: opacity var(--motion-fast);
+		transition:
+			transform var(--motion-hover) var(--ease-hover),
+			opacity var(--motion-hover) var(--ease-hover);
 	}
 
 	.social-icon svg {
@@ -55,7 +57,8 @@
 	}
 
 	.social-icon:hover {
-		opacity: 0.7;
+		transform: translateY(var(--lift-hover));
+		opacity: 0.85;
 	}
 
 	@media (min-width: 1024px) {

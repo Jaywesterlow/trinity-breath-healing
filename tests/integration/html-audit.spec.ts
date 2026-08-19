@@ -215,9 +215,9 @@ test.describe('Phase 1 landing-page assertions', () => {
 		).toBeGreaterThanOrEqual(5);
 	});
 
-	// A11Y-02 deferred: the Contact section and its form are not built yet (next on the roadmap).
-	// Re-enable when the Contact form ships so every control's label is enforced.
-	test.skip('A11Y-02: every <input> has an associated <label> (input+textarea count === label count)', () => {
+	// A11Y-02: enabled now that the Contact form ships — every control it renders
+	// (including the honeypot and the two mode radios) carries its own label.
+	test('A11Y-02: every <input> has an associated <label> (input+textarea count === label count)', () => {
 		expect(indexHtml.length).toBeGreaterThan(0);
 		const inputs = root.querySelectorAll(
 			'input:not([type="hidden"]):not([type="submit"]):not([type="button"])'

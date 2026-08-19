@@ -47,11 +47,19 @@
 		width: 8.125rem; /* 130px — Figma spec; no spacing token for fixed card sizes */
 		height: 8.125rem;
 		text-decoration: none;
-		transition: opacity var(--motion-fast);
+		transition:
+			transform var(--motion-hover) var(--ease-hover),
+			box-shadow var(--motion-hover) var(--ease-hover);
 	}
 
 	.card:hover {
-		opacity: 0.88;
+		transform: translateY(var(--lift-hover));
+		box-shadow: var(--shadow-hover);
+	}
+
+	.card:active {
+		transform: translateY(0);
+		box-shadow: none;
 	}
 
 	.card--forest {

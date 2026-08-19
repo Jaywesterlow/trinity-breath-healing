@@ -5,7 +5,7 @@
 	let active = $state<'form' | 'meeting'>('form');
 </script>
 
-<section class="contact" aria-labelledby="contact-heading">
+<section id="contact" class="contact" aria-labelledby="contact-heading">
 	<div class="contact__inner">
 		<div class="contact__text">
 			<p class="contact__eyebrow">Contact</p>
@@ -25,28 +25,35 @@
 				</p>
 			</div>
 
-			<div class="contact__toggle">
-				<button
-					type="button"
-					class="contact__toggle-btn"
-					class:contact__toggle-btn--active={active === 'form'}
-					aria-pressed={active === 'form'}
-					onclick={() => (active = 'form')}
-				>
+			<!-- Figma draws these as radio dots, and that is what they are: one
+			     choice out of two. Native radios come with arrow-key navigation
+			     and the right announcement for free — a pair of aria-pressed
+			     buttons would have to fake both. -->
+			<fieldset class="contact__toggle">
+				<legend class="visually-hidden">Hoe wil je contact opnemen?</legend>
+				<label class="contact__toggle-btn" class:contact__toggle-btn--active={active === 'form'}>
+					<input
+						class="contact__toggle-input visually-hidden"
+						type="radio"
+						name="contact-mode"
+						value="form"
+						bind:group={active}
+					/>
 					<span class="contact__toggle-dot" aria-hidden="true"></span>
 					<span class="contact__toggle-label">Email formulier</span>
-				</button>
-				<button
-					type="button"
-					class="contact__toggle-btn"
-					class:contact__toggle-btn--active={active === 'meeting'}
-					aria-pressed={active === 'meeting'}
-					onclick={() => (active = 'meeting')}
-				>
+				</label>
+				<label class="contact__toggle-btn" class:contact__toggle-btn--active={active === 'meeting'}>
+					<input
+						class="contact__toggle-input visually-hidden"
+						type="radio"
+						name="contact-mode"
+						value="meeting"
+						bind:group={active}
+					/>
 					<span class="contact__toggle-dot" aria-hidden="true"></span>
 					<span class="contact__toggle-label">Online meeting</span>
-				</button>
-			</div>
+				</label>
+			</fieldset>
 		</div>
 
 		<div class="contact__panel">
@@ -117,16 +124,43 @@
 	}
 
 	.contact__description a {
+		position: relative;
 		color: inherit;
-		text-decoration: underline;
+		text-decoration: none;
+	}
+
+	/* Sits permanently (the link must read as a link in body copy) and thickens
+	   on hover — the reveal vocabulary, adapted to an always-underlined link. */
+	.contact__description a::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: -0.0625rem;
+		height: 1px;
+		background: currentColor;
+		transform-origin: left center;
+		transition:
+			height var(--motion-hover) var(--ease-hover),
+			transform var(--motion-hover) var(--ease-hover);
+	}
+
+	.contact__description a:hover::after,
+	.contact__description a:focus-visible::after {
+		height: 2px;
 	}
 
 	.contact__toggle {
 		display: flex;
 		gap: 0.5rem; /* 8px */
+		border: 0;
+		padding: 0;
+		margin: 0;
+		min-width: 0; /* fieldset defaults to min-content — would blow out the grid column */
 	}
 
 	.contact__toggle-btn {
+		position: relative; /* containing block for the visually-hidden radio inside */
 		display: inline-flex;
 		flex: 1 1 0;
 		align-items: center;
@@ -140,7 +174,27 @@
 		font-family: var(--font-body);
 		font-size: 1rem; /* 16px */
 		color: var(--color-fg-forest);
-		transition: background-color var(--motion-fast);
+		transition:
+			background-color var(--motion-hover) var(--ease-hover),
+			transform var(--motion-hover) var(--ease-hover);
+	}
+
+	.contact__toggle-btn:has(.contact__toggle-input:focus-visible) {
+		outline: 2px solid var(--color-accent-gold);
+		outline-offset: 2px;
+	}
+
+	.contact__toggle-btn:hover {
+		background: color-mix(in srgb, var(--color-card-warm) 55%, transparent);
+		transform: translateY(var(--lift-hover));
+	}
+
+	.contact__toggle-btn:active {
+		transform: translateY(0);
+	}
+
+	.contact__toggle-btn--active:hover {
+		background: var(--color-card-warm);
 	}
 
 	.contact__toggle-btn--active {
