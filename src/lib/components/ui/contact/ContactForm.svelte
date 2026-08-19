@@ -463,17 +463,45 @@
 	}
 
 	@media (min-width: 1024px) {
+		/* Figma draws this card 800px tall inside a 1440x1024 frame. Taken
+		   literally it overflows every real laptop, so the card is capped at
+		   80vh and only reaches its Figma height on a screen tall enough to
+		   hold it. Everything inside is sized off vh with the same floor/ceiling
+		   shape, so the card scales down as a whole instead of overflowing. */
 		.contact-panel {
-			min-height: 50rem; /* 800px */
-			padding: 2.5rem; /* 40px */
+			height: min(80vh, 50rem); /* 50rem = 800px, the Figma height */
+			min-height: 0;
+			padding: clamp(1.25rem, 3.2vh, 2.5rem); /* 40px at the reference frame */
 		}
 
 		.form {
-			gap: 1.5rem;
+			gap: clamp(0.625rem, 1.6vh, 1.5rem);
 		}
 
 		.form__row {
 			gap: 2rem; /* 32px column gap, per Figma */
+		}
+
+		.field {
+			gap: clamp(0.25rem, 0.8vh, 0.5rem);
+		}
+
+		.field__label {
+			font-size: clamp(0.875rem, 1.8vh, 1rem);
+		}
+
+		.field__input {
+			min-height: clamp(2.25rem, 5vh, 3rem);
+			padding: clamp(0.375rem, 1.2vh, 0.75rem) 1rem;
+			font-size: clamp(0.875rem, 1.8vh, 1rem);
+		}
+
+		.field__input--area {
+			min-height: clamp(3.5rem, 9vh, 8.75rem);
+		}
+
+		.phone__prefix {
+			font-size: clamp(0.875rem, 1.8vh, 1rem);
 		}
 
 		.form__actions {

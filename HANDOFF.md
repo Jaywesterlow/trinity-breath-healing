@@ -41,14 +41,17 @@ Nothing in this list can be done from inside a session. Two of them are actively
 
 | # | What | Why it needs you | Blocking? |
 |---|---|---|---|
-| 1 | **Enable the Figma connector for the chat** (not just on the account — it has to be toggled on for the specific conversation). | `www.figma.com` is blocked by the container's network egress proxy, so Figma can only be read through the connector. Without it the Contact-section work cannot use the real design values, only guesses. | **Yes** — blocks the Contact section being made accurate to Frames `424-113` (desktop) and `519-15` (mobile). |
+| 1 | ~~Enable the Figma connector for the chat.~~ **Resolved 2026-08-19** — the exported frames in `Figma/Landingpage/` carry the design; `Desktop _ Home 5.png` and `Mobile _ Home 5.png` were enough to build the Contact form and the date planner without the connector. | — | No longer blocking. |
 | 2 | **Sort the treatment images**, then say so. | The owner asked to animate the images as they load into the modal, and deliberately deferred it until the real art exists. | **Yes** — blocks the modal image animation. |
-| 3 | **Review / merge PR #14** (or say to keep stacking on it). It is ~95 commits ahead of `main` and carries everything below. | Merge decisions are the owner's. | No, but it is a large unmerged surface. |
+| 3 | **Review / merge PR #14** (or say to keep stacking on it). It is ~95 commits ahead of `main` and carries everything below. **`claude/trinity-contact-hover-t7xsrf` now contains all of it** — merging that branch merges PR #14's work too. | Merge decisions are the owner's. | No, but it is a large unmerged surface. |
 | 4 | **Decide on PR #13** (`docs/consolidate`), open since 2026-08-10. | Same. | No. |
 | 5 | **Check LCP in Search Console** once the site is live and has a few weeks of traffic. | Cannot be measured in the container. Full detail in the section further down — the fix, if needed, is to shorten the hero draw, not to remove the wait. | No — post-launch. |
-| 6 | **Provide the real phone number.** `brand.ts` still ships `TODO_PHONE`, and the Phase 5 launch gate blocks on residual `TODO_` values in that file. | Only the practitioner has it. | Blocks launch, not current work. |
+| 6 | **Set the contact-form env vars in Vercel**: `RESEND_API_KEY`, `CONTACT_FROM_EMAIL` (verified sender on the Resend EU domain), optionally `CONTACT_TO_EMAIL` and `PUBLIC_CALCOM_LINK`. | Only the owner has the accounts. Unset, the form still renders and tells the visitor to mail `info@trinitybnh.nl`; the date planner hands off by e-mail instead of Cal.com. | **Yes** — the form cannot deliver until these exist. |
+| 7 | **Regenerate the visual-regression baselines on Windows** (`npm run test:visual -- --update-snapshots`). The committed baselines are `*-win32.png` and the landing page now renders a real contact form where a placeholder used to be. | The spec skips on Linux, so CI cannot do it. | No. |
+| 8 | **Decide on the sitewide colour contrast.** pa11y reports contrast errors on `/`; `--brand-muted` and `--brand-border` were already darkened for AA, but the tan CTA pills (nav "Maak een afspraak", the form's "Verstuur email") still fail at ~2.1-2.7:1. Fixing them changes the brand look. | A design decision, not a component one. | No. |
+| 9 | **Provide the real phone number.** `brand.ts` still ships `TODO_PHONE`, and the Phase 5 launch gate blocks on residual `TODO_` values in that file. | Only the practitioner has it. | Blocks launch, not current work. |
 
-Item 1 is the one to do first if you want the next session to be productive.
+Item 6 is the one to do first — everything else about the contact form is finished and waiting on it.
 
 **Read these first — they are maintained, this one is background:**
 
@@ -95,6 +98,54 @@ harmless.** Details under "Open risk: LCP" further down.
 
 ---
 
+## Session 2026-08-19 — the Contact section is real
+
+Both panels were dark-green placeholders reading "contact form" and "date planner". They now
+render what Figma specifies, and the section is finished apart from the env vars in item 6.
+
+**`ContactForm.svelte`** — Figma `Desktop _ Home 5`: Voornaam/Achternaam, Email, Telefoon with
+the static `+31` segment fused to the input, Bericht, tan "Verstuur email" pill. One zod schema
+(`src/lib/forms/contact.ts`) backs both the browser and the endpoint, so a Dutch message can
+only be wrong in one place. Errors bind to their field with `aria-describedby`, the result goes
+to an `aria-live` region, and the `<form>` keeps a real method/action pair so a no-JS submit
+still reaches the endpoint.
+
+**`POST /api/contact`** — the only route that opts out of prerendering, so the marketing pages
+keep their static HTML for crawlers while the form has somewhere to post. Re-validates
+independently, throttles per IP, sends through Resend over `fetch` (no SDK in the bundle), and
+answers HTML to a browser navigation but JSON to `fetch`. Every env var is optional.
+
+**`DatePlanner.svelte`** — Figma spells the planner out as a custom calendar (`Mobile _ Home 5`),
+not a Cal.com embed, so that is what it is: Dutch month/weekday labels, past days disabled,
+roving-tabindex arrow keys, Beschikbaar/Geselecteerd legend. Cal.com owns the slots — picking a
+day hands off to the booking link rather than putting an iframe on the landing page, which the
+LCP budget could not absorb.
+
+**The mode toggle is a radio group.** Figma draws radio dots; native radios bring the keyboard
+behaviour a pair of `aria-pressed` buttons would have to fake.
+
+**Hover, sitewide.** Four tokens in `app.css` — `--motion-hover`, `--ease-hover`,
+`--lift-hover`, `--shadow-hover`. Buttons and cards lift with a shadow; plain text links wipe an
+underline in. The reduced-motion block flattens `--lift-hover` to zero rather than merely making
+the teleport instant.
+
+**Desktop height.** Figma draws the card 800px tall inside a 1440x1024 frame. Taken literally it
+overflows every real laptop, so the card is capped at `min(80vh, 50rem)` and everything inside
+it is sized off `vh` with the same clamp shape — the card scales as a whole instead of
+overflowing. The section's block padding scales the same way, so the whole section clears the
+viewport (94vh at 1440x800). Both panels share the cap, or the page would jump on toggle.
+
+**Tests.** `tests/unit/contact-form.test.ts` (schema boundaries) and
+`tests/integration/contact-section.spec.ts` (validation, the endpoint contract, the planner's
+keyboard and hand-off). `html-audit.spec.ts`'s A11Y-02 label test, skipped since Phase 0 waiting
+on this form, is enabled.
+
+**One deliberate a11y report entry.** HTML_CodeSniffer flags `autocomplete="tel-national"` (H98).
+The token is valid per the HTML spec for `type="tel"`; it is kept because the field holds the
+national part only, next to the static `+31`.
+
+---
+
 ## Branches
 
 As of **2026-08-09** the repo has exactly **two** branches. Ten were deleted on 2026-08-08 —
@@ -113,6 +164,12 @@ work. There is no unmerged work anywhere.
 | `feat/behandelingen-service-modal` | **The live branch. PR #14, open, ~95 commits ahead of `main`.** Everything in the "Session 2026-08-10/17" section below. Push here. |
 | `claude/accessible-work-repos-kb67gy` | Merged via PR #10. Still present on `origin` despite the deletion note above, and it is also the branch name some tooling defaults to — **do not develop on it**, it is 76 commits behind the live branch. |
 | `feat/contact-section`, `polish/site-polish`, `preview/mobile-view` | Merged long ago; still listed on `origin`. Nobody has cleaned them up. |
+
+> **Superseded again 2026-08-19.** `claude/trinity-contact-hover-t7xsrf` is now the live
+> branch. It carries the contact-section work below **and** all of PR #14, merged in on
+> 2026-08-19. `feat/behandelingen-service-modal` is no longer ahead of it. Push here.
+> `docs/consolidate` (PR #13) is still open and deliberately **not** merged — it is a
+> docs-only reorganisation, unrelated to this feature work.
 
 The SHAs cited throughout this file remain valid — PR #10 was merged with a merge commit
 rather than squashed, on purpose.

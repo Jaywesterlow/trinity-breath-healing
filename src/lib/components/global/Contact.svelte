@@ -240,8 +240,10 @@
 	@media (min-width: 1024px) {
 		.contact {
 			/* 112px block padding, not --space-16: Figma's 1440x1024 frame
-			   centres an 800px card in it (112 + 800 + 112 = 1024). */
-			padding: 7rem var(--space-8);
+			   centres an 800px card in it (112 + 800 + 112 = 1024). Scaled by
+			   vh below that height so the section still clears the viewport
+			   once the card itself is capped at 80vh. */
+			padding: clamp(3rem, 7vh, 7rem) var(--space-8);
 		}
 
 		.contact__inner {

@@ -464,19 +464,43 @@
 	}
 
 	@media (min-width: 1024px) {
+		/* Same cap as the form panel — the two must stay the same height or the
+		   page jumps when the toggle switches between them. */
 		.planner {
-			min-height: 50rem; /* 800px */
-			padding: 2.5rem;
-			gap: 1.75rem;
+			height: min(80vh, 50rem); /* 50rem = 800px, the Figma height */
+			min-height: 0;
+			padding: clamp(1.25rem, 3.2vh, 2.5rem);
+			gap: clamp(0.75rem, 2vh, 1.75rem);
 		}
 
 		.planner__month {
-			font-size: 2rem;
+			font-size: clamp(1.5rem, 3.6vh, 2rem);
+		}
+
+		/* The grid takes whatever height the card has left and hands it to the
+		   six week rows; each day tile stays square at that row height rather
+		   than being sized by the column width, which on a 588px card would
+		   make the calendar alone taller than the card. */
+		.planner__grid {
+			flex: 1 1 auto;
+			min-height: 0;
+		}
+
+		.planner__row:not(.planner__row--head) {
+			flex: 1 1 0;
+			min-height: 0;
 		}
 
 		.planner__cell {
-			min-height: 3rem;
-			font-size: 1.125rem;
+			height: 100%;
+			width: auto;
+			min-height: 0;
+			justify-self: center;
+			font-size: clamp(0.875rem, 1.9vh, 1.125rem);
+		}
+
+		.planner__weekday {
+			font-size: clamp(0.875rem, 2vh, 1.125rem);
 		}
 
 		.planner__book {
