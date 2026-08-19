@@ -153,40 +153,71 @@ test.describe('Contact — date planner', () => {
 		await chooseMode(page, 'Online meeting');
 	});
 
-	test('swaps the panel and shows a labelled month grid', async ({ page }) => {
+	/** The first day the schedule actually offers — weekends and past days are not it. */
+	const openDay = (page: Page) =>
+		page.getByRole('gridcell').and(page.locator('button:not([aria-disabled="true"])')).first();
+
+	test('state 1: month grid and the legend, no slots or confirm button yet', async ({ page }) => {
 		await expect(page.getByRole('grid')).toBeVisible();
 		await expect(page.locator('#planner-month')).not.toBeEmpty();
 		await expect(page.getByRole('columnheader', { name: 'maandag' })).toBeVisible();
 		await expect(page.getByText('Beschikbaar')).toBeVisible();
+		await expect(page.getByText('Geselecteerd')).toBeVisible();
+		await expect(page.getByRole('button', { name: 'Boek een gesprek' })).toHaveCount(0);
 	});
 
-	test('cannot leave the current month backwards, and days before today are disabled', async ({
+	test('cannot leave the current month backwards, and unavailable days are marked', async ({
 		page
 	}) => {
 		await expect(page.getByRole('button', { name: 'Vorige maand' })).toBeDisabled();
-
-		const disabled = page.getByRole('gridcell').and(page.locator('button:disabled'));
-		const enabled = page.getByRole('gridcell').and(page.locator('button:not(:disabled)'));
-		expect(await enabled.count(), 'today onward must remain bookable').toBeGreaterThan(0);
-		// Only meaningful mid-month; on the 1st there is nothing behind us.
-		expect(await disabled.count()).toBeGreaterThanOrEqual(0);
+		expect(await openDay(page).count(), 'the month must offer at least one day').toBeGreaterThan(0);
 	});
 
-	test('choosing a day reveals the booking hand-off for that day', async ({ page }) => {
-		await expect(page.getByText('Kies een dag om je online meeting')).toBeVisible();
-
-		const day = page.getByRole('gridcell').and(page.locator('button:not(:disabled)')).first();
+	test('state 2: picking a date reveals its times and a DISABLED confirm button', async ({
+		page
+	}) => {
+		const day = openDay(page);
 		const dayNumber = (await day.textContent())?.trim();
 		await day.click();
 
-		const cta = page.getByRole('link', { name: /Plan 30 minuten op/ });
-		await expect(cta).toBeVisible();
-		await expect(cta).toContainText(`${dayNumber} `);
-		await expect(cta).toHaveAttribute('href', /.+/);
+		// The legend gives way to the chosen date and its slots.
+		await expect(page.getByText('Beschikbaar')).toHaveCount(0);
+		await expect(page.locator('.planner__date')).toContainText(`${dayNumber} `);
+
+		const times = page.getByRole('group', { name: /Tijden op/ }).getByRole('button');
+		expect(await times.count(), 'the schedule must offer slots on an open day').toBeGreaterThan(0);
+		await expect(times.first()).toContainText(':');
+
+		const confirm = page.getByRole('button', { name: 'Boek een gesprek' });
+		await expect(confirm).toBeVisible();
+		await expect(confirm, 'no time chosen yet — the button must be disabled').toBeDisabled();
 	});
 
-	test('arrow keys move focus within the grid', async ({ page }) => {
-		const day = page.getByRole('gridcell').and(page.locator('button:not(:disabled)')).first();
+	test('picking a time enables the confirm button and marks the time chosen', async ({ page }) => {
+		await openDay(page).click();
+
+		const time = page
+			.getByRole('group', { name: /Tijden op/ })
+			.getByRole('button')
+			.first();
+		await time.click();
+
+		await expect(time).toHaveAttribute('aria-pressed', 'true');
+		await expect(page.getByRole('button', { name: 'Boek een gesprek' })).toBeEnabled();
+	});
+
+	test('the back control returns to state 1 and drops the selection', async ({ page }) => {
+		await openDay(page).click();
+		await expect(page.getByRole('button', { name: 'Boek een gesprek' })).toBeVisible();
+
+		await page.getByRole('button', { name: 'Terug naar de kalender' }).click();
+
+		await expect(page.getByText('Beschikbaar')).toBeVisible();
+		await expect(page.getByRole('button', { name: 'Boek een gesprek' })).toHaveCount(0);
+	});
+
+	test('arrow keys move focus within the grid, across unavailable days', async ({ page }) => {
+		const day = openDay(page);
 		await day.click();
 		const start = Number((await day.textContent())?.trim());
 

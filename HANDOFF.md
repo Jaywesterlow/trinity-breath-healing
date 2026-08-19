@@ -98,6 +98,51 @@ harmless.** Details under "Open risk: LCP" further down.
 
 ---
 
+## Session 2026-08-19 (later) — the planner's two booking states
+
+Figma frame `441-48` draws the planner in two states; both are built.
+
+**State 1** is the month grid plus the Beschikbaar/Geselecteerd legend.
+**State 2** — a date is picked — compresses the calendar under a bottom fade mask
+(the design draws that fade; it is what makes the state fit), and reveals the chosen
+date, its time slots, a back control, and the confirm button **disabled**. Picking a
+time enables it. That flow is the one the owner described, and it is what the tests
+in `contact-section.spec.ts` pin.
+
+**Availability lives in `src/lib/booking/schedule.ts`, not in the component.** This is
+deliberate and it matters: a CMS is the end goal — the practitioner logging in at some
+URL to set the hours she is free. That module is the seam. It exports a `Schedule`
+shape, a `DEFAULT_SCHEDULE` (weekdays 10:00-16:00, 30-minute slots — the twelve slots
+Figma draws), and pure functions `slotsFor()` / `isBookable()`. `<DatePlanner>` takes
+`schedule` as a prop defaulting to `DEFAULT_SCHEDULE`. When the CMS exists, a `load()`
+fetches the same shape and passes it in; the component does not change. Do **not**
+reintroduce hardcoded times in the component — that is the thing this design avoids.
+
+**Sizing follows Figma's proportions, not its pixels.** Reference frame `424-113` puts
+an 800px card in 1024px of viewport — 78% — so the 80vh cap *is* the design's own
+proportion rather than a limit imposed on it. Tile size comes from the column width,
+and the 2.26% column gap reproduces Figma's 60px-tile-in-486px-grid exactly at any
+card width. The 542px card on the states board is an artefact of laying two panels
+side by side; the real section is 588.
+
+**Known gaps, deliberately not invented:**
+
+- Figma draws no disabled state for "Boek een gesprek". It reuses the enabled pill at
+  the 0.35 opacity the design already uses for not-yet-active tiles.
+- Confirming hands off to Cal.com with the date and time prefilled, because **nothing
+  in the design captures who is booking**. An own-endpoint booking (the owner's
+  preference) needs a name and e-mail somewhere — a third state, or a step after
+  confirm. That decision is open; `/api/booking` was deliberately not written until
+  it is made, rather than shipping an endpoint nothing can call.
+- The design shows every day as available, including weekends. `DEFAULT_SCHEDULE` is
+  weekdays only, so Saturdays and Sundays render unavailable. Give them opening hours
+  if she works them.
+- The available-day and time tiles carry Figma's `opacity: 0.35`, which makes
+  interactive controls look disabled and fails contrast. Kept as drawn; it belongs
+  with the palette decision in owner action item 8.
+
+---
+
 ## Session 2026-08-19 — the Contact section is real
 
 Both panels were dark-green placeholders reading "contact form" and "date planner". They now
