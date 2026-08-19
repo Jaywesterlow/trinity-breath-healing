@@ -1,12 +1,15 @@
 <script lang="ts">
 	import ButtonLink from '$lib/components/ui/interactions/ButtonLink.svelte';
 	import DrawOn from '$lib/components/ui/DrawOn.svelte';
+	import { reveal } from '$lib/actions/reveal';
 
 	let {
 		variant,
 		title,
 		body,
 		imgSrc,
+		imgWidth,
+		imgHeight,
 		artSvg,
 		ctaHref,
 		ctaLabel
@@ -15,6 +18,12 @@
 		title: string;
 		body: string;
 		imgSrc?: string;
+		/** Intrinsic pixel dimensions of `imgSrc`. Present so the box is reserved before the
+		 *  image arrives — the CSS below fixes the rendered size either way, so these never
+		 *  change the layout, they only stop it from being unknown for a frame. Both are
+		 *  required together; one alone would hand the UA a bogus aspect ratio. */
+		imgWidth?: number;
+		imgHeight?: number;
 		/** Raw inline SVG for the card art — draws itself on scroll-in. Outline: backdrop art
 		 *  bleeding behind the text. Filled: the `.wcard__img` slot. `imgSrc` stays as a fallback
 		 *  for art that hasn't been traced yet (or never will be, e.g. raster-only assets). */
@@ -31,25 +40,47 @@
 >
 	{#if variant === 'outline'}
 		{#if artSvg}
+			<!-- Draws itself. The art is deliberately NOT faded in: a fade would cross-dissolve
+			     the very strokes that are meant to appear one at a time. -->
 			<DrawOn svg={artSvg} class="wcard__art-draw" />
 		{:else if imgSrc}
-			<img src={imgSrc} alt="" aria-hidden="true" class="wcard__art" />
+			<img
+				src={imgSrc}
+				alt=""
+				aria-hidden="true"
+				class="wcard__art"
+				width={imgWidth}
+				height={imgHeight}
+				decoding="async"
+			/>
 		{/if}
 	{/if}
 
-	<h3 class="wcard__title">{title}</h3>
-	<p class="wcard__body">{body}</p>
+	<!-- Text fades; the art draws. Cards 2 and 3 sit horizontally outside the viewport until
+	     the pan brings them in, and the observer only fires on intersection — so each card's
+	     text arrives as that card does, rather than all three firing when the section opens. -->
+	<h3 class="wcard__title" use:reveal={{ delay: 0 }}>{title}</h3>
+	<p class="wcard__body" use:reveal={{ delay: 110 }}>{body}</p>
 
 	{#if variant === 'filled'}
 		{#if artSvg}
+			<!-- Draws itself; see the outline variant above. -->
 			<DrawOn svg={artSvg} class="wcard__img-draw" />
 		{:else if imgSrc}
-			<img src={imgSrc} alt="" aria-hidden="true" class="wcard__img" />
+			<img
+				src={imgSrc}
+				alt=""
+				aria-hidden="true"
+				class="wcard__img"
+				width={imgWidth}
+				height={imgHeight}
+				decoding="async"
+			/>
 		{/if}
 	{/if}
 
 	{#if ctaHref && ctaLabel}
-		<div class="wcard__cta">
+		<div class="wcard__cta" use:reveal={{ delay: 220 }}>
 			<ButtonLink href={ctaHref} label={ctaLabel} withArrow />
 		</div>
 	{/if}
@@ -125,8 +156,12 @@
 	   markup, a different component, so selecting on it here would be an always-unused selector
 	   as far as svelte-check's static analysis of this file can tell. Same precedent as the
 	   outline variant's .wcard--outline :global(svg.lt) below. */
+	/* `.drawon--layers` is the wrapper DrawOn uses when the art ships as stacked layers: it takes
+	   the slot the single <svg> would have, and the layers position against it. Same geometry
+	   either way. */
 	.wcard__img,
-	.wcard--filled :global(svg.lt) {
+	.wcard--filled :global(svg.lt),
+	.wcard--filled :global(.drawon--layers) {
 		display: block;
 		width: 100%;
 		flex: 1 1 0%; /* fills whatever vertical space the title+body don't use — never overflows the fixed card height */

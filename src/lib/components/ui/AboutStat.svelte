@@ -24,8 +24,12 @@
 	let displayValue = $state(value ?? '');
 	let badgeEl: HTMLDivElement | null = $state(null);
 
-	function easeOutQuint(t: number) {
-		return 1 - Math.pow(1 - t, 5); // was cubic (power 3) — higher power = stronger deceleration near the end
+	// Cubic, not quint. Quint front-loads so hard that ~95% of the count lands in the first
+	// third of the run: the number appears to snap to its target and then sit there, which
+	// reads as an abrupt stop rather than a deceleration. Cubic keeps digits visibly ticking
+	// across most of the duration and spends the tail actually slowing into the final value.
+	function easeOutCubic(t: number) {
+		return 1 - Math.pow(1 - t, 3);
 	}
 
 	onMount(() => {
@@ -40,7 +44,10 @@
 		// delay below.
 		displayValue = `0${suffix}`;
 
-		const duration = 700; // same for every stat — see comment below on why this alone produces the "8 slows down, 65 flies then slows right at the end" feel
+		// Same for every stat — see the comment below on why one shared duration is enough.
+		// 700ms was too short for the ease to be legible at all; the count was over before
+		// the eye caught it moving.
+		const duration = 1800;
 
 		function animate() {
 			const start = performance.now();
@@ -52,7 +59,7 @@
 				// an odd power (any ease-out-cubic/quint curve) yields a negative eased
 				// value — visible as "-1+"/"-4+" for a frame, worse the steeper the curve.
 				const progress = Math.min(Math.max((now - start) / duration, 0), 1);
-				const current = Math.round(easeOutQuint(progress) * (target as number));
+				const current = Math.round(easeOutCubic(progress) * (target as number));
 				displayValue = `${current}${suffix}`;
 				if (progress < 1) requestAnimationFrame(tick);
 			}
@@ -60,14 +67,11 @@
 			requestAnimationFrame(tick);
 		}
 
-		/* One shared duration + ease-out-quint applied to normalized time (not to the
-		   integer count) is what makes both speeds happen automatically, no per-target
-		   tuning needed: eased progress rockets toward 1 early then crawls the rest of
-		   the way, regardless of target. For "8", that crawl covers only a handful of
-		   integers, so the tail reads as sitting/settling on 8 ("slowing down"). For
-		   "65", the same time-shaped crawl has to cover far more integers, so it keeps
-		   visibly ticking through numbers for most of the duration and only resolves
-		   to 65 right at the end ("a lot faster... slows down right before 65"). */
+		/* One shared duration + ease-out applied to normalized time (not to the integer
+		   count) is what makes both speeds happen automatically, no per-target tuning
+		   needed: eased progress decelerates on the same time curve regardless of target,
+		   so a small target like "8" steps through few integers and a large one like "65"
+		   steps through many — both landing together, both easing into their final value. */
 		let delayId: ReturnType<typeof setTimeout> | null = null;
 
 		const observer = new IntersectionObserver(

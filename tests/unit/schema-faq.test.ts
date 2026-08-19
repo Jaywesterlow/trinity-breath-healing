@@ -3,9 +3,9 @@
  * Tests: buildFaqPage() builder + buildWebPage() helper + buildGraph() composer
  * Requirements: SCH-07, SCH-01, SEO-09
  *
- * WARNING-2: buildFaqPage([]) returns structurally-valid FAQPage with mainEntity=[].
- * Plan 08 validate-json-ld.ts MUST NOT assert mainEntity.length > 0 in Phase 0.
- * That gate flips on in Phase 1 LND-07 when real FAQ entries land.
+ * WARNING-2: buildFaqPage([]) still returns a structurally-valid FAQPage with
+ * mainEntity=[] — the builder does not police content. validate-json-ld.ts does, and
+ * since Phase 1 (LND-07) it rejects an empty mainEntity outright.
  *
  * SEO-09: buildWebPage omits dateModified key when absent (never emits undefined).
  *
@@ -135,22 +135,22 @@ describe('buildGraph.ts — @graph composer', () => {
 		return import('$lib/schema/buildGraph');
 	}
 
-	it('Test 1: buildGraph with empty pageSpecific returns 8 shared nodes (Org + ProfService + Person + WebSite + 4 Service)', async () => {
+	it('Test 1: buildGraph with empty pageSpecific returns 11 shared nodes (Org + ProfService + Person + WebSite + 7 Service, 260810-mdl)', async () => {
 		const { buildGraph } = await loadBuildGraph();
 		const result = buildGraph({ pageSpecific: [], path: '/' });
-		// Organization, ProfessionalService, Person, WebSite, 4 x Service = 8
-		expect(result).toHaveLength(8);
+		// Organization, ProfessionalService, Person, WebSite, 7 x Service = 11 (was 4 Service = 8)
+		expect(result).toHaveLength(11);
 	});
 
 	it('Test 2: buildGraph called twice consecutively returns same count (dedup by @id)', async () => {
 		const { buildGraph } = await loadBuildGraph();
 		const r1 = buildGraph({ pageSpecific: [], path: '/' });
 		const r2 = buildGraph({ pageSpecific: [], path: '/' });
-		expect(r1).toHaveLength(8);
-		expect(r2).toHaveLength(8);
+		expect(r1).toHaveLength(11);
+		expect(r2).toHaveLength(11);
 	});
 
-	it('Test 3: buildGraph with pageSpecific WebPage returns 9 nodes', async () => {
+	it('Test 3: buildGraph with pageSpecific WebPage returns 12 nodes', async () => {
 		const { buildGraph } = await loadBuildGraph();
 		const webPage = {
 			'@type': 'WebPage' as const,
@@ -158,10 +158,10 @@ describe('buildGraph.ts — @graph composer', () => {
 			url: 'https://trinity-breath-healing.vercel.app/'
 		};
 		const result = buildGraph({ pageSpecific: [webPage], path: '/' });
-		expect(result).toHaveLength(9);
+		expect(result).toHaveLength(12);
 	});
 
-	it('Test 4: pageSpecific node with @id matching a shared node deduplicates (stays at 8)', async () => {
+	it('Test 4: pageSpecific node with @id matching a shared node deduplicates (stays at 11)', async () => {
 		const { buildGraph } = await loadBuildGraph();
 		// Organization @id matches a shared node — should deduplicate
 		const duplicate = {
@@ -170,8 +170,8 @@ describe('buildGraph.ts — @graph composer', () => {
 			name: 'Duplicate'
 		};
 		const result = buildGraph({ pageSpecific: [duplicate], path: '/' });
-		// The duplicate @id replaces the shared one — still 8 nodes
-		expect(result).toHaveLength(8);
+		// The duplicate @id replaces the shared one — still 11 nodes
+		expect(result).toHaveLength(11);
 	});
 
 	it('Test 5: shared nodes contain Organization, ProfessionalService, Person, WebSite types', async () => {

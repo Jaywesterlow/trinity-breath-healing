@@ -15,7 +15,19 @@
 	 * blank box. Arming from JS means the failure mode is "no animation", not "no image".
 	 * The element is below the fold when armed, so hiding it is never visible to the reader.
 	 */
-	let { svg, class: klass = '' }: { svg: string; class?: string } = $props();
+	let {
+		svg,
+		class: klass = '',
+		animate = true
+	}: {
+		svg: string;
+		class?: string;
+		/** Set false to inline the art fully drawn, with no scroll trigger and no stroke
+		 *  animation. The markup and geometry are identical either way — only the reveal is
+		 *  skipped — so this is safe to flip per call site while the draw order is being
+		 *  reworked. */
+		animate?: boolean;
+	} = $props();
 
 	// The same traced SVG can be inlined more than once in one document (e.g. the About
 	// portraits render both a mobile and a desktop copy, shown/hidden by CSS media query,
@@ -42,12 +54,25 @@
 
 	let uniqueSvg = $derived(uniquifyIds(svg, uid));
 
+	// Some art ships as several stacked <svg> layers rather than one (see layerize.mjs). A mask
+	// stroke reveals whatever artwork lies under it, and these strokes are three to four times
+	// wider than the lines they uncover, so on art where lines cross — the steam over the cup rim
+	// — one mask over one bitmap always uncovered the neighbour too. Splitting the bitmap so each
+	// mask has only its own ink underneath is the only thing that fixes it; no draw order can.
+	//
+	// Kept as sibling roots in one file, not one <svg> with several masks: a mask change
+	// invalidates the whole element it lives in, so three masks in one <svg> re-rasterise all
+	// three layers every frame (1222ms of raster over a 2.4s draw, against 506ms for the single
+	// mask it replaced). As separate elements only the layer currently animating is dirty — 327ms,
+	// cheaper than the version that had the bug.
+	let layered = $derived((uniqueSvg.match(/<svg[\s>]/g) ?? []).length > 1);
+
 	let el: HTMLElement | null = $state(null);
 	let armed = $state(false);
 	let drawn = $state(false);
 
 	onMount(() => {
-		if (!el) return;
+		if (!el || !animate) return;
 		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
 		armed = true;
@@ -73,7 +98,13 @@
 	});
 </script>
 
-<div bind:this={el} class="drawon {klass}" class:drawon--armed={armed} class:drawon--drawn={drawn}>
+<div
+	bind:this={el}
+	class="drawon {klass}"
+	class:drawon--armed={armed}
+	class:drawon--drawn={drawn}
+	class:drawon--layers={layered}
+>
 	<!-- eslint-disable-next-line svelte/no-at-html-tags -- build-time asset, not user input -->
 	{@html uniqueSvg}
 </div>
@@ -83,17 +114,56 @@
 		display: contents; /* the SVG inherits the slot the <img> used to occupy */
 	}
 
-	/* {@html} content carries no scoping class, so :global() under the scoped parent. */
+	/* Layered art cannot use display:contents — the layers have to overlay each other, so the
+	   wrapper has to be a real box for them to be positioned against. It therefore takes the slot
+	   the single <svg> used to hold, and the call site styles it the same way (see
+	   WerkwijzeCard). The layers keep their own preserveAspectRatio="slice", so each fills the
+	   wrapper identically and they cannot drift out of register. */
+	.drawon--layers {
+		display: block;
+		position: relative;
+	}
+
+	.drawon--layers :global(> svg) {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+	}
+
+	/* {@html} content carries no scoping class, so :global() under the scoped parent.
+
+	   The gap is 1.1, not 1. `stroke-dasharray: 1` (one value = dash 1, gap 1) with offset 1
+	   parks the gap *exactly* over the path — zero margin for error. Browsers scale the dash
+	   pattern from pathLength="1" back to the path's real length in user units, and WebKit's
+	   rounding there leaves a sub-pixel sliver of dash on the path. A sliver would be invisible
+	   on its own, but these strokes carry stroke-linecap="round" at widths up to 22px, and a
+	   round cap paints a full-width dot at each end of *any* dash however short. That is the
+	   scatter of specks visible on iOS before the draw starts (Chromium's rounding happens to
+	   land the other way, so it never reproduced there). Widening the gap to 1.1 puts a 10%
+	   margin on both sides of the path — orders of magnitude more than the rounding error —
+	   so nothing is on the path until the offset animates. At offset 0 the dash [0,1] covers
+	   the path exactly, unchanged from before. */
 	.drawon--armed :global(.lt-draw path) {
-		stroke-dasharray: 1; /* pathLength="1" — one dash spans any path, whatever its length */
+		stroke-dasharray: 1 1.1; /* pathLength="1" — one dash spans any path, whatever its length */
 		stroke-dashoffset: 1;
+		/* Belt and braces for the pre-draw frame specifically: even if some engine's dash maths
+		   still leaks, an armed-but-not-yet-drawn stroke paints nothing. Released below the
+		   moment the element is drawn, so it can't suppress the animation itself. */
+		stroke-opacity: 0;
 	}
 
 	/* NB: the keyframes are declared `-global-drawon`, but the animation property references
 	   them WITHOUT the prefix — Svelte strips it when emitting the global @keyframes rule.
 	   Writing `animation: -global-drawon` names a keyframe that does not exist, so the strokes
-	   stay hidden at dashoffset 1 and nothing ever draws. */
+	   stay hidden at dashoffset 1 and nothing ever draws.
+
+	   `stroke-opacity` is restored here rather than in the keyframes: both classes are on the
+	   element at once once it draws, and this rule comes second at equal specificity, so it
+	   wins. Every stroke becomes paintable the instant the element is released; what staggers
+	   them is the dash offset, which is what should be doing the staggering. */
 	.drawon--drawn :global(.lt-draw path) {
+		stroke-opacity: 1;
 		animation: drawon var(--d, 0.6s) ease-out var(--t, 0s) forwards;
 	}
 
@@ -108,6 +178,7 @@
 		.drawon :global(.lt-draw path) {
 			stroke-dasharray: none;
 			stroke-dashoffset: 0;
+			stroke-opacity: 1;
 			animation: none;
 		}
 	}

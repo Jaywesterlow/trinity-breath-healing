@@ -85,21 +85,29 @@
 		text-align: center;
 	}
 
+	/* Line heights below are Figma's own, derived from measured text-box
+	   heights rather than eyeballed: 21/16 body, 26/20 eyebrow, 96/(2*40)
+	   heading. They are deliberately tighter than --line-height-normal —
+	   using the token here pushed every element under it progressively
+	   lower and put the toggle 78px below where the design has it. */
 	.contact__eyebrow {
 		font-family: var(--font-body);
 		font-size: 1rem; /* 16px */
 		font-weight: var(--font-weight-light);
+		line-height: 1.3125; /* 21/16 — Figma 519:53 is 21px tall */
 		color: var(--brand-muted);
-		margin-bottom: 1.3125rem; /* 21px */
+		/* No gap: Figma stacks the heading directly on the eyebrow's line
+		   box (mobile 519:53 ends at 21, 519:54 starts at 21). */
+		margin-bottom: 0;
 	}
 
 	.contact__heading {
 		font-family: var(--font-display);
 		font-size: 2rem; /* 32px */
 		font-weight: var(--font-weight-medium);
-		line-height: 1.1;
+		line-height: 1.21875; /* 78/(2*32) — Figma 519:54 */
 		color: var(--color-fg-forest);
-		margin-bottom: 1rem; /* 16px */
+		margin-bottom: 1rem; /* 16px — Figma 519:52 -> 519:67 */
 	}
 
 	.contact__description {
@@ -107,9 +115,9 @@
 		flex-direction: column;
 		font-family: var(--font-body);
 		font-size: 0.75rem; /* 12px */
-		line-height: var(--line-height-normal);
+		line-height: 1.3333; /* 16/12 — Figma 519:56 is 64px over 4 lines */
 		color: var(--color-text-subtle);
-		margin-bottom: 1.5rem; /* 24px */
+		margin-bottom: 1rem; /* 16px — copy block -> toggle row (519:66 at y=355) */
 	}
 
 	/* Intro paragraph is desktop-only per Figma — mobile shows only the
@@ -231,15 +239,25 @@
 
 	@media (min-width: 1024px) {
 		.contact {
-			padding: var(--space-16) var(--space-8);
+			/* 112px block padding, not --space-16: Figma's 1440x1024 frame
+			   centres an 800px card in it (112 + 800 + 112 = 1024). */
+			padding: 7rem var(--space-8);
 		}
 
 		.contact__inner {
 			max-width: none;
 			display: grid;
 			grid-template-columns: minmax(0, 36.75rem) minmax(0, 30.375rem); /* 588px / 486px */
-			column-gap: 3.5rem; /* 56px */
-			align-items: center;
+			/* 126px at the 1440px reference frame: Figma's card ends at x=708
+			   and the copy starts at x=834, which also lands the whole
+			   1200px composition on symmetric 120px side margins. Expressed
+			   in vw so narrower desktops close the gap proportionally
+			   instead of forcing the two columns to shrink. */
+			column-gap: clamp(3.5rem, 8.75vw, 7.875rem);
+			/* NOT centre: the copy is deliberately high against the card —
+			   Figma puts the card at y=112 and the copy at y=212, so it sits
+			   100px below the card's top, not on its centre line. */
+			align-items: start;
 			justify-content: center;
 		}
 
@@ -255,34 +273,38 @@
 			grid-row: 1;
 			align-items: flex-start;
 			text-align: left;
+			padding-top: 6.25rem; /* 100px — card y=112 -> copy y=212 */
 		}
 
 		.contact__eyebrow {
 			font-size: 1.25rem; /* 20px */
-			margin-bottom: 1.625rem; /* 26px */
+			line-height: 1.3; /* 26/20 — Figma 449:6 */
+			margin-bottom: 0;
 		}
 
 		.contact__heading {
 			font-size: 2.5rem; /* 40px */
+			line-height: 1.2; /* 96/(2*40) — Figma 449:7 */
 			max-width: 30.375rem; /* 486px */
-			margin-bottom: 1.75rem; /* 28px, title -> paragraph 1 gap */
+			margin-bottom: 1rem; /* 16px — 449:7 ends 122, 449:8 starts 138 */
 		}
 
 		.contact__description {
 			font-size: 1rem; /* 16px */
+			line-height: 1.3125; /* 21/16 — Figma 449:8 is 63px over 3 lines */
 			text-align: left;
-			margin-bottom: 1.75rem; /* 28px, paragraph 2 -> buttons gap */
+			margin-bottom: 0.5625rem; /* 9px — 452:65 ends 301, toggle starts 310 */
 		}
 
 		.contact__description-intro {
 			display: block;
-			margin-bottom: 1.25rem; /* 20px, paragraph 1 -> paragraph 2 gap */
+			margin-bottom: 1rem; /* 16px — 449:8 ends 201, 452:65 starts 217 */
 		}
 
 		.contact__toggle {
 			flex-direction: column;
 			align-items: flex-start;
-			gap: 0.75rem; /* 12px */
+			gap: 0.34375rem; /* 5.5px — 454:424 ends 352, 454:436 starts 357.5 */
 		}
 
 		.contact__toggle-btn {
@@ -290,6 +312,8 @@
 			align-self: flex-start;
 			padding: 0.5rem 1rem; /* 8px vertical / 16px horizontal */
 			font-size: 1.25rem; /* 20px */
+			/* 8 + 26 + 8 = the 42px tall button Figma draws (454:424). */
+			line-height: 1.3;
 		}
 	}
 </style>

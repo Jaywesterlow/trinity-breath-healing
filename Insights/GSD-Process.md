@@ -101,11 +101,67 @@ AI crawlers and Google do NOT execute JavaScript by default. Every piece of cont
 | Phase | Status | What | Visible? |
 |-------|--------|------|----------|
 | 0 | ✓ COMPLETE | Foundation & SEO Scaffolding — scaffold, primitives, routes, CI, deploy bind | No |
-| 1 | Next | Landing page — hero, nav, Werkwijze, About, Behandelingen, Contact+booking, FAQ, footer | **Yes — first visible UI** |
+| 1 | **Mostly shipped, Contact deferred** | Hero, nav, Werkwijze, About, Behandelingen, FAQ, footer all built and polished; Contact section is still placeholders on unmerged branch `feat/contact-section`. See "Phase 1 — what actually shipped" below; this table undersold it for months. | **Yes — live** |
 | 2 | Pending | Real content for `/privacyverklaring`, `/algemene-voorwaarden`, `/contact` | Yes |
 | 3 | Pending | Vercel Function `/api/contact` → Resend EU; Cal.com inline embed; Plausible analytics | Partial |
 | 4 | Pending | Dutch counsel review, hedge-language grep, AVG flow, NAP audit | No |
 | 5 | Pending | Production deploy, Search Console, AI-crawler verification, 28-day CWV monitoring | No |
+
+---
+
+## Phase 1 — what actually shipped (this table undersold it)
+
+This log stopped tracking Phase 1 plan-by-plan after Plan 01 (Hero). Everything past that point
+happened on branch `polish/site-polish`, merged to `main` 2026-07-31, and was never written back
+here. Filling the gap at a summary level; `breadcrumbs.md` and `HANDOFF.md` have the full detail.
+
+**Built and polished:** Hero (staggered CSS entrance cascade, self-drawing SVG illustration),
+site nav + mobile menu, Werkwijze (CSS `view-timeline` scroll-pin, replacing a JS scroll listener
+that stuttered), About + stats (count-up animation), Behandelingen carousel — rebuilt from
+scratch 2026-08-07 on `claude/accessible-work-repos-kb67gy` (PR #10, open, not yet merged into
+`main`); the old Embla-based version and its jank are gone, see root `HANDOFF.md` for the
+current curved-fan mechanism — inline FAQ + standalone `/faq` route, footer.
+
+**Not built:** the Contact section. `ContactForm.svelte`/`DatePlanner.svelte` are placeholder
+boxes on unmerged branch `feat/contact-section` — no fields, no validation, no Resend endpoint,
+no Cal.com embed. `/contact` is still the Phase 0 `StubLayout` stub. This is the single largest
+gap between this doc's Phase table and the live site, and it blocks the "book a session" CTA
+sitewide (every nav/footer link to `/contact` is currently a dead end).
+
+**Also shipped outside any phase's original scope:** Tailwind v4 + shadcn-svelte migration
+(Slice 1, 2026-07-12 — see "Key Locked Decisions" below), a favicon pipeline, WCAG AA contrast
+fixes across all 15 routes, and the practitioner's real name/Instagram (see Session Log below).
+
+---
+
+## Session Log (2026-08-01 onward)
+
+Kept going forward at a lighter weight than the Plan-by-Plan Phase 0 log above — one entry per
+session, only the decisions and changes that matter to future work.
+
+### 2026-08-01
+
+- Filled `BRAND.practitionerFullName` ("Brigitte Grohe") and `BRAND.socials.instagram`
+  (`@trinitybreath.and.healing`), replacing `TODO_` placeholders that were shipping into
+  JSON-LD on every route. `TODO_PHONE` still open — still needed from the owner.
+- Found `Hero.svelte`/`Footer.svelte` hardcoded the Instagram link to a different, wrong handle
+  instead of reading `BRAND` (a real, already-live bug, not just untidiness) — wired both to
+  derive the URL from `BRAND.socials.instagram` instead.
+- Fixed all 128 WCAG 2.2 AA contrast failures from `AUDIT-2026-07-27.md` item 4: two design
+  tokens (`--brand-muted`, `--brand-border` in `src/app.css`) drove nearly all of them because
+  every component reads the token, not a hardcoded color — darkened both in one place instead of
+  patching each component. Two more hardcoded hex values in `NavLogo.svelte` had the same defect
+  and got the same fix. All four now sit at ≥4.9:1, comfortably past the 4.5:1 bar.
+- Checked `.claude/worktrees/` (KNOWN-ISSUES item 10, "2 GB of stale agent worktrees") — doesn't
+  exist in this checkout. Moot, not fixed.
+- Investigated KNOWN-ISSUES item 12 (teacup `--section` draw-order invocation "recoverable from
+  the commit that introduced it"). Searched the full history of every commit touching the
+  tracer directory for the literal flag values — they were never written down anywhere, only
+  described in prose. Corrected that item's framing and added
+  `trace/regen.sh`: a guarded per-asset script so future `regroup.py` invocations get saved
+  instead of lost in a terminal.
+- Brought `KNOWN-ISSUES.md` current: struck the three items above, corrected item 12's claim,
+  bumped the file's date.
 
 ---
 
@@ -130,7 +186,8 @@ AI crawlers and Google do NOT execute JavaScript by default. Every piece of cont
 |----------|-----------|
 | SvelteKit not Astro | Vercel-native, Svelte 5 runes reactivity, simpler hydration model |
 | Vercel not Cloudflare Pages | EU regions, native SvelteKit adapter, preview deploys per PR |
-| Plain CSS not Tailwind | Zero build-tool churn; Svelte scoped styles sufficient |
+| ~~Plain CSS not Tailwind~~ **SUPERSEDED 2026-07-12** | Reversed to Tailwind v4 + shadcn-svelte (Slice 1) to get shadcn's component model instead of hand-rolling it; original zero-build-tool-churn rationale is in `.planning/STATE.md`/`REQUIREMENTS.md` (FND-02), unedited |
+| CSS scroll-driven `view-timeline`, not a JS scroll listener | JS `scroll` events reach the main thread a frame late, so anything positioned from one drifts against compositor-driven elements — reads as stutter. `view-timeline` runs on the compositor and cannot drift. See `breadcrumbs.md` "Never drive a scroll-linked effect from a JS scroll listener" |
 | Cal.com not Calendly | Open source, Dutch locale, Google Meet auto-create, GDPR posture |
 | Resend EU (`eu-west-1`) | EU data residency, React Email DX |
 | Plausible EU (cookieless) | No cookie banner = no CLS/conversion hit |

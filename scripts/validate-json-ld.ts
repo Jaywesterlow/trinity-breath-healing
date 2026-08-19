@@ -10,7 +10,8 @@
  *     WebPage.dateModified is YYYY-MM-DD; dateModified matches <time datetime> in the same HTML (cross-check)
  *   - Stub pages: BreadcrumbList + WebPage types present
  *   - Service stubs (diensten/<modality>.html): Service with @id "#service-<modality>" present
- *   - FAQPage with mainEntity=[] is VALID in Phase 0 (WARNING-2 / Phase 1 LND-07 raises this gate)
+ *   - FAQPage.mainEntity must be a non-empty array. This gate was raised by Phase 1 (LND-07)
+ *     when the real FAQ landed; an empty FAQPage was only ever valid in Phase 0.
  *
  * Env:
  *   HTML_AUDIT_ROOT  — override default .svelte-kit/output/prerendered/pages

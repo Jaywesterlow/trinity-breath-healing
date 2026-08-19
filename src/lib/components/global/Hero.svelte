@@ -3,6 +3,9 @@
 	import ButtonLink from '$lib/components/ui/interactions/ButtonLink.svelte';
 	import SocialIcon from '$lib/components/ui/SocialIcon.svelte';
 	import HeroServiceCard from '$lib/components/ui/HeroServiceCard.svelte';
+	import { BRAND } from '$lib/constants/brand';
+
+	const instagramUrl = `https://www.instagram.com/${BRAND.socials.instagram.replace('@', '')}/`;
 
 	// The hero illustration is a centerline trace of the original line art, inlined as SVG so
 	// its strokes can draw themselves on load (stroke-dashoffset, see .hero__draw below).
@@ -74,7 +77,7 @@
 					<li>
 						<SocialIcon
 							icon="instagram"
-							href="https://instagram.com/trinitybnh"
+							href={instagramUrl}
 							label="Volg ons op Instagram"
 							color="var(--brand-border)"
 							background="var(--color-bg-sand)"
@@ -97,7 +100,9 @@
 					lichaamsgerichte therapie, ademwerk en energetische behandelingen help ik jou terug naar
 					rust, herstel en jezelf.
 				</p>
-				<ButtonLink href="/contact" label="Maak een afspraak" />
+				<div class="hero__cta">
+					<ButtonLink href="/contact" label="Maak een afspraak" />
+				</div>
 			</div>
 
 			<ul class="hero__cards" aria-label="Behandelingen">
@@ -145,6 +150,112 @@
 </section>
 
 <style>
+	/* ─── Entrance cascade ──────────────────────────────────────────────────────────
+	   The hero arrives a piece at a time, top to bottom, rather than all at once.
+
+	   Pure CSS, and deliberately not the scroll-reveal pattern used further down the page.
+	   That one arms the hidden state from JavaScript so the server-rendered HTML always shows
+	   finished content — safe for a section nobody has scrolled to yet, but wrong here: the
+	   hero is painted long before hydration on a phone, so arming it after the fact would show
+	   the hero, blank it, and fade it back in. A CSS animation is in force from the very first
+	   frame, needs no JavaScript at all, and cannot flash.
+
+	   `backwards` is what does that: it applies the keyframe's starting state during the delay,
+	   so an element with a 410ms delay is hidden from frame zero rather than visible until its
+	   turn comes.
+
+	   Ordered by where things sit on screen, not by DOM order — the two columns swap sides at
+	   1024px. The illustration is left out on purpose: its draw-on stroke animation is already
+	   its entrance, and fading it in on top of that would be two entrances for one element.
+
+	   The whole cascade waits for the illustration to finish drawing itself, so the two
+	   entrances read as one sequence rather than talking over each other.
+
+	   KNOWN COST, accepted deliberately: the heading is the LCP element, and an element at
+	   opacity 0 does not count as painted, so this delay lands directly on Largest Contentful
+	   Paint. It was 1ms before this wait was added. The project's budget is LCP < 2.5s, and
+	   the wait alone is 2.86s — so LCP is over budget by roughly the length of the draw. The
+	   fix, if that budget starts to bite, is to shorten the draw rather than to unpick the
+	   sequencing: the trace's stagger is generated, and regenerating it with a shorter total
+	   pulls this number down with it. */
+	.hero {
+		/* Longest --t + --d baked into hero-illustration.svg, i.e. the frame the last stroke
+		   finishes. Regenerating the trace changes this — the generator's stagger and duration
+		   are what set it, so re-measure rather than assuming it held. */
+		--hero-draw-total: 2.86s;
+
+		/* The text starts arriving at the drawing's halfway point, not its end. Waiting for the
+		   full draw put the heading's first visible frame at 2.86s, and since the heading is the
+		   LCP element and an element at opacity 0 does not count as painted, that landed whole on
+		   Largest Contentful Paint — against a 2.5s budget.
+
+		   Halving it halves the cost almost exactly, because LCP is marked when opacity leaves 0
+		   (the end of this delay), not when the fade completes. The sequencing survives: the
+		   drawing is still visibly going when the text begins, so the two still read in order
+		   rather than together. Expressed as a fraction of the total so that regenerating the
+		   trace moves both in step. */
+		--hero-in-start: calc(var(--hero-draw-total) / 2);
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		/* Two animations, not one, because the fade and the movement want opposite curves.
+		   Running both off a single 620ms expo keyframe made this read as a fly-in: an expo
+		   ease-out is ~80% done in its first quarter, so the element arrived almost at once and
+		   the movement — not the fade — was the thing you noticed.
+
+		   The fade is now the long, dominant half: 1300ms on a gentle curve, so it is visibly
+		   still fading most of the way through. The movement is the short, subordinate half:
+		   10px rather than 16, on a hard expo ease-out that settles early and gets out of the
+		   way. What is left is a slow fade with a hint of rise under it.
+
+		   A single animation-delay value applies to both entries in the list. */
+		.hero__heading,
+		.hero__body,
+		.hero__cta,
+		.hero__social,
+		.hero__cards > li {
+			animation:
+				hero-fade 1300ms cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards,
+				hero-rise 1100ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+		}
+
+		.hero__heading {
+			animation-delay: var(--hero-in-start);
+		}
+		.hero__body {
+			animation-delay: calc(var(--hero-in-start) + 140ms);
+		}
+		.hero__cta {
+			animation-delay: calc(var(--hero-in-start) + 280ms);
+		}
+		/* Sits under the illustration on mobile and bottom-right on desktop — early enough not
+		   to lag behind the image it belongs to, late enough not to precede the heading. */
+		.hero__social {
+			animation-delay: calc(var(--hero-in-start) + 340ms);
+		}
+		.hero__cards > li:nth-child(1) {
+			animation-delay: calc(var(--hero-in-start) + 420ms);
+		}
+		.hero__cards > li:nth-child(2) {
+			animation-delay: calc(var(--hero-in-start) + 530ms);
+		}
+		.hero__cards > li:nth-child(3) {
+			animation-delay: calc(var(--hero-in-start) + 640ms);
+		}
+	}
+
+	@keyframes hero-fade {
+		from {
+			opacity: 0;
+		}
+	}
+
+	@keyframes hero-rise {
+		from {
+			transform: translate3d(0, 10px, 0);
+		}
+	}
+
 	/* ─── Section ─── */
 	.hero {
 		background: var(--color-bg-sand);
@@ -221,7 +332,12 @@
 	   --d (duration) are baked into the SVG, staggered ridges → tree → river → waterfall.
 	   Composited on the GPU; no JS, no layout, no scroll coupling. */
 	.hero__image-col :global(.hero__draw path) {
-		stroke-dasharray: 1;
+		/* Gap 1.1, not 1 — see DrawOn.svelte for the full reasoning. `stroke-dasharray: 1`
+		   parks the gap exactly over the path with no margin, and WebKit's rounding when it
+		   scales the pattern back from pathLength="1" leaves a sub-pixel dash that a round
+		   linecap paints as a full-width dot. The wider gap keeps the path clear until the
+		   offset animates; at offset 0 the dash covers it exactly, as before. */
+		stroke-dasharray: 1 1.1;
 		stroke-dashoffset: 1;
 		animation: hero-draw var(--d, 0.6s) ease-out var(--t, 0s) forwards;
 	}

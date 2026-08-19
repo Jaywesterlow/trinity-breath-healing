@@ -182,17 +182,52 @@ test.describe('Phase 1 landing-page assertions', () => {
 		).toBe(true);
 	});
 
-	// PRF-03 superseded by the inline-SVG hero redesign: there is no raster hero <img> to mark
-	// loading="eager" for LCP anymore (the hero ships inline). The below-fold <img> loading strategy
-	// (currently the landing page's imgs carry no loading attribute) should be revisited as a
-	// dedicated follow-up before re-enabling an eager/lazy contract that fits the new design.
-	test.skip('PRF-03: loading="eager" appears exactly once (hero image only)', () => {
+	/**
+	 * PRF-03 — rewritten, and still skipped. Read this before unskipping.
+	 *
+	 * REQUIREMENTS.md states PRF-03 as "All non-hero images lazy-loaded", and marks it done.
+	 * It is not done: of the twelve <img> elements on the landing page, **none** carries a
+	 * `loading` attribute at all, so every one of them is eager. The check that would have
+	 * caught that counted `loading="eager"` occurrences — a proxy that reads zero whether the
+	 * requirement is perfectly met or completely unimplemented, which is how this went unnoticed.
+	 *
+	 * The old assertion is also unsatisfiable now: the hero is an inline <svg>, so there is no
+	 * hero <img> to be the single eager one.
+	 *
+	 * Blanket-lazying the rest is NOT the fix, which is why this is still skipped rather than
+	 * implemented. At least three groups must stay eager for reasons that are deliberate:
+	 *
+	 *   - the nav logo, which is above the fold;
+	 *   - the hero service cards, at or just below the fold;
+	 *   - the Werkwijze card art, which pans horizontally while pinned. Those images sit
+	 *     vertically inside the viewport but horizontally outside it, and lazy loading keys off
+	 *     viewport intersection — so they would very likely pop in mid-pan.
+	 *
+	 * Behandelingen's carousel icons have the same horizontal-motion problem and that section
+	 * is currently off limits.
+	 *
+	 * So the requirement needs rewording before it can be enforced, not just implementing. The
+	 * useful contract is "every image outside a named, justified allowlist is lazy". Write that
+	 * allowlist, apply `loading="lazy"` to everything else, then unskip and assert it here.
+	 * Verify the pan and the carousel on a real device afterwards — pop-in is the failure mode
+	 * and it will not show up in a static audit.
+	 */
+	/**
+	 * Deliberately unset until the allowlist above is actually written and applied. Whoever
+	 * does that work sets this to the size of their allowlist; leaving it at the current
+	 * twelve would assert nothing at all.
+	 */
+	const EAGER_ALLOWLIST_SIZE = 12;
+
+	test.skip('PRF-03: every image outside the eager allowlist is lazy-loaded', () => {
 		expect(indexHtml.length).toBeGreaterThan(0);
-		const matches = (indexHtml.match(/loading="eager"/g) ?? []).length;
+		const imgs = indexHtml.match(/<img[^>]*>/g) ?? [];
+		const eager = imgs.filter((tag) => !/loading="lazy"/.test(tag));
 		expect(
-			matches,
-			`loading="eager" found ${matches} time(s) — must appear exactly once (hero image only, PRF-03)`
-		).toBe(1);
+			eager.length,
+			`${eager.length} of ${imgs.length} images are not lazy-loaded. Only the documented ` +
+				`above-the-fold and horizontally-animated images may be eager (PRF-03).`
+		).toBeLessThanOrEqual(EAGER_ALLOWLIST_SIZE);
 	});
 
 	test('A11Y-01: role="dialog" present (overlay/modal)', () => {
