@@ -227,7 +227,9 @@
 		flex-direction: column;
 		width: 100%;
 		min-height: 26.25rem; /* 420px — matches the planner so toggling never shifts layout */
-		padding: 2rem 1.75rem; /* was 24px all round — the copy sat too close to the edge */
+		/* Mobile-first: 14px at 320px, opening up to the Figma 28px as the card
+		   widens. A flat 28/32 ate a sixth of a small phone's width. */
+		padding: clamp(0.875rem, 4.5vw, 1.75rem);
 		background: var(--color-fg-forest);
 		border-radius: 1.5625rem; /* 25px */
 		color: var(--color-bg-sand);
@@ -238,20 +240,20 @@
 		display: flex;
 		flex: 1 1 auto;
 		flex-direction: column;
-		gap: 1.25rem; /* 20px between field groups */
+		gap: clamp(0.625rem, 3vw, 1.25rem);
 		min-height: 0;
 	}
 
 	.form__row {
 		display: grid;
 		grid-template-columns: 1fr;
-		gap: 1.25rem;
+		gap: clamp(0.625rem, 3vw, 1.25rem);
 	}
 
 	.field {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem; /* 8px, label -> input */
+		gap: clamp(0.25rem, 1.5vw, 0.5rem);
 		min-width: 0;
 	}
 
@@ -260,7 +262,7 @@
 	}
 
 	.field__label {
-		font-size: 1rem; /* 16px */
+		font-size: clamp(0.8125rem, 3.6vw, 1rem);
 		font-weight: var(--font-weight-regular);
 		color: var(--color-bg-sand);
 		line-height: 1.2;
@@ -268,13 +270,15 @@
 
 	.field__input {
 		width: 100%;
-		min-height: 3rem; /* 48px */
-		padding: 0.75rem 1rem; /* 12px / 16px */
+		min-height: clamp(2.5rem, 11vw, 3rem);
+		padding: clamp(0.5rem, 2.5vw, 0.75rem) clamp(0.625rem, 3vw, 1rem);
 		background: var(--field-bg);
 		border: 1px solid transparent;
 		border-radius: 0.625rem; /* 10px */
 		color: var(--color-bg-sand);
 		font-family: inherit;
+		/* Deliberately not shrunk below 16px: iOS Safari zooms the whole page when
+		   a focused input's type is smaller than that. */
 		font-size: 1rem;
 		line-height: var(--line-height-normal);
 		transition:
@@ -304,7 +308,7 @@
 		/* Grows into whatever height the card has left, so the send button stays
 		   pinned just under it on the tall desktop card (Figma). */
 		flex: 1 1 auto;
-		min-height: 8.75rem; /* 140px */
+		min-height: clamp(5rem, 24vw, 8.75rem);
 		/* No drag handle: dragging it grew the textarea past the card and took
 		   the send button with it. Long messages scroll inside instead. */
 		resize: none;
@@ -325,7 +329,7 @@
 	}
 
 	.phone {
-		min-height: 3rem; /* matches the other inputs */
+		min-height: clamp(2.5rem, 11vw, 3rem); /* matches the other inputs */
 	}
 
 	.phone:hover {
@@ -390,7 +394,7 @@
 	}
 
 	.form__status {
-		font-size: 0.875rem; /* 14px */
+		font-size: clamp(0.75rem, 3.2vw, 0.875rem);
 		line-height: var(--line-height-normal);
 		min-height: 1.3125rem; /* reserve the line so a message never shifts the button (CLS) */
 	}
@@ -405,14 +409,14 @@
 
 	.form__submit {
 		align-self: stretch;
-		height: 2.5rem; /* 40px */
-		padding: 0 1.5rem; /* 24px */
+		height: clamp(2.25rem, 10vw, 2.5rem);
+		padding: 0 clamp(1rem, 5vw, 1.5rem);
 		border: none;
 		border-radius: var(--radius-full);
 		background: var(--color-accent-gold-soft);
 		color: var(--color-bg-sand);
 		font-family: inherit;
-		font-size: 1rem;
+		font-size: clamp(0.875rem, 3.6vw, 1rem);
 		line-height: 1;
 		cursor: pointer;
 		transition:

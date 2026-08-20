@@ -160,7 +160,7 @@
 
 	.contact__toggle {
 		display: flex;
-		gap: 0.5rem; /* 8px */
+		gap: clamp(0.25rem, 1.5vw, 0.5rem);
 		border: 0;
 		padding: 0;
 		margin: 0;
@@ -173,14 +173,14 @@
 		flex: 1 1 0;
 		align-items: center;
 		justify-content: center;
-		gap: 0.5rem; /* 8px */
-		padding: 0.5rem; /* 8px */
+		gap: clamp(0.25rem, 1.8vw, 0.5rem);
+		padding: clamp(0.375rem, 2vw, 0.5rem);
 		border: none;
 		background: transparent;
 		border-radius: 0.625rem; /* 10px */
 		cursor: pointer;
 		font-family: var(--font-body);
-		font-size: 1rem; /* 16px */
+		font-size: clamp(0.8125rem, 3.6vw, 1rem);
 		color: var(--color-fg-forest);
 		transition:
 			background-color var(--motion-hover) var(--ease-hover),
@@ -210,8 +210,8 @@
 	}
 
 	.contact__toggle-dot {
-		width: 0.875rem; /* 14px */
-		height: 0.875rem;
+		width: clamp(0.6875rem, 3vw, 0.875rem);
+		height: clamp(0.6875rem, 3vw, 0.875rem);
 		border-radius: var(--radius-full);
 		border: 2px solid var(--color-fg-forest);
 		flex-shrink: 0;
