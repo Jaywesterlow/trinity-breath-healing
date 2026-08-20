@@ -226,7 +226,7 @@
 		display: flex; /* gives the form a real box to stretch into, so the textarea can grow */
 		flex-direction: column;
 		width: 100%;
-		min-height: 26.25rem; /* 420px — matches the planner so toggling never shifts layout */
+		min-height: 0; /* the wrapper sets the height; this just fills its cell */
 		/* Mobile-first: 14px at 320px, opening up to the Figma 28px as the card
 		   widens. A flat 28/32 ate a sixth of a small phone's width. */
 		padding: clamp(0.875rem, 4.5vw, 1.75rem);
@@ -464,13 +464,10 @@
 	}
 
 	@media (min-width: 1024px) {
-		/* Figma draws this card 800px tall inside a 1440x1024 frame. Taken
-		   literally it overflows every real laptop, so the card is capped at
-		   80vh and only reaches its Figma height on a screen tall enough to
-		   hold it. Everything inside is sized off vh with the same floor/ceiling
-		   shape, so the card scales down as a whole instead of overflowing. */
+		/* The wrapper (.contact__panel in Contact.svelte) owns the height now, so
+		   this panel and the planner are the same size by construction and
+		   switching between them cannot resize the card. */
 		.contact-panel {
-			height: min(80vh, 50rem); /* 50rem = 800px, the Figma height */
 			min-height: 0;
 			padding: clamp(1.75rem, 3.6vh, 2.75rem); /* 40px at the reference frame, floor raised */
 		}

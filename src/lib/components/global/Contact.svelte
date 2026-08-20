@@ -232,9 +232,22 @@
 		white-space: nowrap;
 	}
 
+	/* The wrapper owns the card's size and its single child stretches to fill —
+	   that is what makes the e-mail form and the planner identical, so the
+	   toggle cannot resize anything. */
 	.contact__panel {
+		display: grid;
 		width: 100%;
 		margin-top: 1.5rem; /* 24px, buttons -> panel gap */
+	}
+
+	/* Below the desktop breakpoint the e-mail form is the taller panel, so its
+	   height sets the card. A number rather than a ratio: the form's height comes
+	   from its fields, which do not scale with the card's width. */
+	@media (max-width: 1023px) {
+		.contact__panel {
+			min-height: 42rem;
+		}
 	}
 
 	@media (min-width: 1024px) {
@@ -268,6 +281,13 @@
 			grid-column: 1;
 			grid-row: 1;
 			margin-top: 0;
+			/* Height follows width instead of the viewport, so the calendar's tiles
+			   stay square at every screen size. The ratio is the planner's own
+			   natural height at this width — the taller of the two panels — and
+			   the e-mail form stretches into it, so switching between them cannot
+			   change the card's size. */
+			aspect-ratio: 588 / 648;
+			max-height: 82vh;
 		}
 
 		.contact__text {

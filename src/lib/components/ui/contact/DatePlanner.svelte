@@ -612,8 +612,7 @@
 		flex-direction: column;
 		gap: clamp(0.5rem, 1.3vh, 1rem);
 		width: 100%;
-		min-height: 26.25rem; /* 420px — matches the form so toggling never shifts layout */
-		max-height: 85vh;
+		min-height: 0; /* the wrapper sets the height; this just fills its cell */
 		padding: clamp(1rem, 4.5%, 1.75rem);
 		background: var(--color-fg-forest);
 		border-radius: 1.5625rem; /* 25px */
@@ -699,8 +698,10 @@
 	.planner__grid {
 		display: flex;
 		flex-direction: column;
-		flex: 1 1 auto;
-		min-height: 0;
+		/* Never stretch: the tiles are square and sized by column width, so a
+		   stretched grid just holds the spare height inside itself as a hole
+		   under the last week. Let the step centre it instead. */
+		flex: 0 0 auto;
 		gap: var(--pl-gap);
 		width: min(100%, 44vh);
 		margin-inline: auto;
@@ -1090,7 +1091,6 @@
 		/* The reference frame puts an 800px card in 1024px of viewport — 78%.
 		   The cap is that proportion, not an arbitrary limit. */
 		.planner {
-			height: min(80vh, 50rem);
 			min-height: 0;
 			--pl-gap: 0.5rem;
 			/* Desktop fills the card rather than sitting in a narrow column: the
@@ -1098,22 +1098,11 @@
 			--pl-measure: 100%;
 		}
 
+		/* Square by column width — the same rule mobile uses, which is why mobile
+		   never had this problem. The vh cap only bites on a short viewport, where
+		   it shrinks the tiles rather than letting them stretch. */
 		.planner__grid {
-			width: 100%;
-			justify-content: stretch;
-		}
-
-		.planner__grid .planner__row:not(.planner__row--head) {
-			flex: 1 1 0;
-			min-height: 0;
-		}
-
-		/* A square tile sized by row height would be wider than its column and
-		   push the seventh day out of the card; filling the cell keeps the grid
-		   inside its width and the card fully used. */
-		.planner__cell {
-			aspect-ratio: auto;
-			height: 100%;
+			width: min(100%, 62vh);
 		}
 
 		.planner__time {
