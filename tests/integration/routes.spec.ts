@@ -43,9 +43,6 @@ const STUB_PATHS = [
 	'/diensten/trb-breathwork',
 	'/blog',
 	'/artikelen',
-	'/privacyverklaring',
-	'/algemene-voorwaarden',
-	'/disclaimer',
 	'/reviews'
 ] as const;
 

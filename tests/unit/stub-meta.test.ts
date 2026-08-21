@@ -6,7 +6,9 @@
  * Pitfall #7: no duplicate meta content across stub routes
  *
  * `/faq` graduated to real content (src/routes/faq/) and dropped out of STUB_META —
- * see src/routes/faq/+page.ts for its own title/description/crumbs.
+ * see src/routes/faq/+page.ts for its own title/description/crumbs. The three legal
+ * pages (/privacyverklaring, /algemene-voorwaarden, /disclaimer) graduated the same
+ * way and for the same reason.
  *
  * 260810-mdl added 3 more service-stub entries (13 -> 16) for the owner's 7-real-services
  * decision: cranio-fascia-unwinding, brtt-body, trb-breathwork.
@@ -29,9 +31,6 @@ const EXPECTED_PATHS = [
 	'/diensten/trb-breathwork',
 	'/blog',
 	'/artikelen',
-	'/privacyverklaring',
-	'/algemene-voorwaarden',
-	'/disclaimer',
 	'/reviews'
 ];
 

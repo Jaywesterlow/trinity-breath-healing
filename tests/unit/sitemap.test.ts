@@ -36,7 +36,18 @@ describe('sitemap.xml GET handler', () => {
 			(r) => r.kind !== 'stub' && r.kind !== 'service-stub'
 		).length;
 		expect(matches?.length).toBe(published);
-		expect(body).not.toContain('/privacyverklaring');
+
+		/* Derived, not a hardcoded example path: graduating a route to real
+		   content used to break this assertion because the one path it named had
+		   become published. Assert the property instead — no stub, whichever
+		   they happen to be today, reaches the sitemap. */
+		for (const route of ALL_ROUTES) {
+			if (route.kind === 'stub' || route.kind === 'service-stub') {
+				expect(body, `${route.path} is a stub and must not be in the sitemap`).not.toContain(
+					`<loc>${MOCK_SITE_URL}${route.path}</loc>`
+				);
+			}
+		}
 	});
 
 	it('every <loc> is absolute and starts with SITE_URL', async () => {

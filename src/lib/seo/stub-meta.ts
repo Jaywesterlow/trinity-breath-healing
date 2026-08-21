@@ -199,39 +199,9 @@ export const STUB_META: Record<string, StubMeta> = {
 		]
 	},
 
-	// ─── /privacyverklaring ─────────────────────────────────────────────────────
-	// title: 50 chars ✓  desc: 153 chars ✓
-	'/privacyverklaring': {
-		title: 'Privacyverklaring – AVG | Trinity Breath & Healing',
-		description:
-			'Lees de privacyverklaring van Trinity Breath & Healing: hoe persoonsgegevens worden verwerkt conform de AVG, welke gegevens worden bewaard en uw rechten.',
-		crumbs: [
-			{ name: 'Home', path: '/' },
-			{ name: 'Privacyverklaring', path: '/privacyverklaring' }
-		]
-	},
-
-	// ─── /algemene-voorwaarden ──────────────────────────────────────────────────
-	// title: 50 chars ✓  desc: 158 chars ✓
-	'/algemene-voorwaarden': {
-		title: 'Algemene voorwaarden – Afspraken | Trinity Healing',
-		description:
-			'Bekijk de algemene voorwaarden van Trinity Breath & Healing: afspraken over annulering, betaling, aansprakelijkheid en vertrouwelijkheid voor therapiesessies.',
-		crumbs: [
-			{ name: 'Home', path: '/' },
-			{ name: 'Algemene voorwaarden', path: '/algemene-voorwaarden' }
-		]
-	},
-
-	'/disclaimer': {
-		title: 'Disclaimer en medisch voorbehoud | TRINITY Healing',
-		description:
-			'Medisch voorbehoud van TRINITY Breath & Healing in Almere. Ademwerk en energetische behandeling zijn aanvullend en vervangen geen medische zorg of diagnose.',
-		crumbs: [
-			{ name: 'Home', path: '/' },
-			{ name: 'Disclaimer', path: '/disclaimer' }
-		]
-	},
+	// /privacyverklaring, /algemene-voorwaarden and /disclaimer used to live here.
+	// They now carry real content and own their own metadata — see each route's
+	// +page.ts.
 
 	'/reviews': {
 		title: 'Reviews en ervaringen | TRINITY Breath & Healing NL',

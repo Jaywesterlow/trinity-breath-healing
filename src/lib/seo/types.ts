@@ -20,7 +20,7 @@ export interface PageMeta {
 	};
 
 	/**
-	 * Set to true to emit <meta name="robots" content="noindex,nofollow">.
+	 * Set to true to emit <meta name="robots" content="noindex,follow">.
 	 * Used for Vercel preview environments (Plan 08 wires the env-conditional check).
 	 * Default: false.
 	 */

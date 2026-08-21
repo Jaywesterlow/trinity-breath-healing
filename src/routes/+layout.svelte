@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	import { Nav, Footer, Head, JsonLd } from '$lib/components';
+	import Analytics from '$lib/analytics/Analytics.svelte';
 	import { page } from '$app/stores';
 	import { onNavigate } from '$app/navigation';
 	import type { Snippet } from 'svelte';
@@ -62,6 +63,7 @@
 </svelte:head>
 
 <Head {meta} />
+<Analytics />
 <JsonLd {graph} />
 <Nav />
 <main class="page-content" style="view-transition-name: page-content">

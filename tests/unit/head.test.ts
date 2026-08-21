@@ -95,11 +95,11 @@ describe('Head component (src/lib/components/Head.svelte)', () => {
 		expect(ogType!.getAttribute('content')).toBe('website');
 	});
 
-	it('Test 5: emits <meta name="robots" content="noindex,nofollow"> when noindex=true', () => {
+	it('Test 5: emits <meta name="robots" content="noindex,follow"> when noindex=true', () => {
 		render(Head, { props: { meta: { ...baseMeta, noindex: true } } });
 		const robots = document.head.querySelector('meta[name="robots"]');
 		expect(robots).not.toBeNull();
-		expect(robots!.getAttribute('content')).toBe('noindex,nofollow');
+		expect(robots!.getAttribute('content')).toBe('noindex,follow');
 	});
 
 	it('Test 5b: does NOT emit robots noindex when noindex is false/unset', () => {
