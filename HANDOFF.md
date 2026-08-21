@@ -30,8 +30,10 @@ all on `feat/behandelingen-service-modal`, **open as PR #14 and not merged**. Re
 modal; it supersedes the geometry, the card markup and the item-count arithmetic described in
 the two older carousel sections.
 
-**Start here if you are picking this up cold:** the "Owner action items" block directly below
-is the only part that needs a human. Everything else in this file is background.
+**Start here if you are picking this up cold:** read **`TODO.md`** in the repo root. It is the
+single live backlog — open threads, what needs the owner, and where each thread was left —
+and it supersedes the "Owner action items" table below, which is kept here for its detail.
+Everything else in this file is background on how things were built and why.
 
 ---
 
