@@ -606,7 +606,9 @@
 		--pl-ink: #faf0e6;
 		--pl-radius: 0.625rem; /* 10px */
 		--pl-gap: 0.375rem;
-		--pl-measure: min(100%, 23rem);
+		/* The calendar follows the card's width at every size; only the height cap
+		   below narrows it, and only on a short viewport. */
+		--pl-measure: 100%;
 
 		display: flex;
 		flex-direction: column;
@@ -703,7 +705,7 @@
 		   under the last week. Let the step centre it instead. */
 		flex: 0 0 auto;
 		gap: var(--pl-gap);
-		width: min(100%, 44vh);
+		width: min(100%, 62vh);
 		margin-inline: auto;
 	}
 

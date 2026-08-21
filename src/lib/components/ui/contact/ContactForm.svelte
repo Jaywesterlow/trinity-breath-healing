@@ -308,7 +308,7 @@
 		/* Grows into whatever height the card has left, so the send button stays
 		   pinned just under it on the tall desktop card (Figma). */
 		flex: 1 1 auto;
-		min-height: clamp(5rem, 24vw, 8.75rem);
+		min-height: clamp(3.75rem, 18vw, 8.75rem);
 		/* No drag handle: dragging it grew the textarea past the card and took
 		   the send button with it. Long messages scroll inside instead. */
 		resize: none;
@@ -389,14 +389,15 @@
 		display: flex;
 		flex-direction: column;
 		align-items: stretch;
-		gap: 0.75rem;
+		gap: clamp(0.375rem, 2vw, 0.75rem);
 		margin-top: auto; /* pin to the bottom of the card, per Figma */
 	}
 
 	.form__status {
 		font-size: clamp(0.75rem, 3.2vw, 0.875rem);
 		line-height: var(--line-height-normal);
-		min-height: 1.3125rem; /* reserve the line so a message never shifts the button (CLS) */
+		/* Reserve the line so a message never shifts the button (CLS). */
+		min-height: 1em;
 	}
 
 	.form__status--sent {
@@ -456,8 +457,10 @@
 	}
 
 	/* Voornaam/Achternaam sit side by side as soon as there is room for two
-	   comfortable targets — Figma only specifies the desktop pairing. */
-	@media (min-width: 30rem) {
+	   comfortable targets — Figma only specifies the desktop pairing. Pairing
+	   them early is what keeps the form close to the calendar's height on a
+	   phone; stacked, they cost a whole extra field's worth of card. */
+	@media (min-width: 22rem) {
 		.form__row {
 			grid-template-columns: 1fr 1fr;
 		}

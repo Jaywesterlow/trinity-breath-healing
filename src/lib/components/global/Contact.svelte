@@ -79,6 +79,17 @@
 		flex-direction: column;
 	}
 
+	/* Between phone and desktop the card used to stay pinned at 354px while the
+	   viewport grew to 1023, which is what made the tablet case worst of all:
+	   the calendar could not grow, the e-mail form stayed tall, and the gap
+	   between the two panels was at its widest. Letting the card use the room
+	   closes it — wider card, bigger tiles, shorter form. */
+	@media (min-width: 30rem) {
+		.contact__inner {
+			max-width: min(100%, 36.75rem); /* 588px, the desktop card width */
+		}
+	}
+
 	.contact__text {
 		display: flex;
 		flex-direction: column;
@@ -241,12 +252,14 @@
 		margin-top: 1.5rem; /* 24px, buttons -> panel gap */
 	}
 
-	/* Below the desktop breakpoint the e-mail form is the taller panel, so its
-	   height sets the card. A number rather than a ratio: the form's height comes
-	   from its fields, which do not scale with the card's width. */
+	/* Below the desktop breakpoint the e-mail form is usually the taller panel,
+	   so the card needs a floor that clears it — otherwise the wrapper would be
+	   the height of whichever panel is showing and the toggle would resize it.
+	   The floor tracks the form's own height, which grows with the card's width
+	   until the fields stop widening, hence the fluid value and the cap. */
 	@media (max-width: 1023px) {
 		.contact__panel {
-			min-height: 42rem;
+			min-height: min(calc(15rem + 78vw), 41rem);
 		}
 	}
 
@@ -288,6 +301,10 @@
 			   change the card's size. */
 			aspect-ratio: 588 / 648;
 			max-height: 82vh;
+			/* At the narrow end of desktop the two-column grid squeezes the card,
+			   and the ratio alone makes it too short for the e-mail form's fields.
+			   The floor keeps the form inside; the calendar just gains slack. */
+			min-height: 35rem;
 		}
 
 		.contact__text {
