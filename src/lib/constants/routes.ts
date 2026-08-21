@@ -26,7 +26,13 @@ export const ALL_ROUTES = [
 	{ path: '/artikelen', title: 'Artikelen', kind: 'stub' },
 	{ path: '/faq', title: 'Veelgestelde vragen', kind: 'page' },
 	{ path: '/privacyverklaring', title: 'Privacyverklaring', kind: 'stub' },
-	{ path: '/algemene-voorwaarden', title: 'Algemene voorwaarden', kind: 'stub' }
+	{ path: '/algemene-voorwaarden', title: 'Algemene voorwaarden', kind: 'stub' },
+	/* Medisch voorbehoud. A health-adjacent site making any claim about what a
+	   treatment does needs one, and Google treats this category as YMYL. */
+	{ path: '/disclaimer', title: 'Disclaimer', kind: 'stub' },
+	/* Reserved for Review + AggregateRating structured data. The footer already
+	   links "Reviews", so the URL has to exist before launch either way. */
+	{ path: '/reviews', title: 'Reviews', kind: 'stub' }
 ] as const;
 
 export type RouteEntry = (typeof ALL_ROUTES)[number];

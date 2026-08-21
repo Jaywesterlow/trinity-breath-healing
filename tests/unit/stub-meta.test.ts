@@ -30,15 +30,20 @@ const EXPECTED_PATHS = [
 	'/blog',
 	'/artikelen',
 	'/privacyverklaring',
-	'/algemene-voorwaarden'
+	'/algemene-voorwaarden',
+	'/disclaimer',
+	'/reviews'
 ];
 
-describe('STUB_META — 16 stub route entries', () => {
-	it('Test 1: STUB_META has exactly 16 keys', () => {
-		expect(Object.keys(STUB_META).length).toBe(16);
+describe('STUB_META — one entry per non-landing route', () => {
+	it('Test 1: STUB_META has one key per non-landing route', () => {
+		/* Derived, not hardcoded: reserving another route should not mean editing
+		   a number here. STUB_META covers every route except the landing page and
+		   /faq, which carries its own metadata. */
+		expect(Object.keys(STUB_META).length).toBe(EXPECTED_PATHS.length);
 	});
 
-	it('Test 2: STUB_META keys match the 16 expected stub paths exactly', () => {
+	it('Test 2: STUB_META keys match the expected paths exactly', () => {
 		const keys = Object.keys(STUB_META).sort();
 		const expected = [...EXPECTED_PATHS].sort();
 		expect(keys).toEqual(expected);

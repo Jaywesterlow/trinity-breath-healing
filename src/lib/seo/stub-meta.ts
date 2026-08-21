@@ -221,5 +221,25 @@ export const STUB_META: Record<string, StubMeta> = {
 			{ name: 'Home', path: '/' },
 			{ name: 'Algemene voorwaarden', path: '/algemene-voorwaarden' }
 		]
+	},
+
+	'/disclaimer': {
+		title: 'Disclaimer en medisch voorbehoud | TRINITY Healing',
+		description:
+			'Medisch voorbehoud van TRINITY Breath & Healing in Almere. Ademwerk en energetische behandeling zijn aanvullend en vervangen geen medische zorg of diagnose.',
+		crumbs: [
+			{ name: 'Home', path: '/' },
+			{ name: 'Disclaimer', path: '/disclaimer' }
+		]
+	},
+
+	'/reviews': {
+		title: 'Reviews en ervaringen | TRINITY Breath & Healing NL',
+		description:
+			'Ervaringen van mensen die bij TRINITY Breath & Healing in Almere een sessie volgden. Lees wat ademwerk en energetische behandeling voor hen betekende.',
+		crumbs: [
+			{ name: 'Home', path: '/' },
+			{ name: 'Reviews', path: '/reviews' }
+		]
 	}
 };

@@ -3,10 +3,10 @@ import { ALL_ROUTES } from '$lib/constants/routes';
 
 describe('ALL_ROUTES manifest', () => {
 	it('contains exactly 18 entries (260810-mdl: +3 service stubs)', () => {
-		expect(ALL_ROUTES.length).toBe(18);
+		expect(ALL_ROUTES.length).toBe(20);
 	});
 
-	it('paths match exact 18-route list in order', () => {
+	it('paths match the reserved route list, in order', () => {
 		const paths = ALL_ROUTES.map((r) => r.path);
 		expect(paths).toEqual([
 			'/',
@@ -26,7 +26,9 @@ describe('ALL_ROUTES manifest', () => {
 			'/artikelen',
 			'/faq',
 			'/privacyverklaring',
-			'/algemene-voorwaarden'
+			'/algemene-voorwaarden',
+			'/disclaimer',
+			'/reviews'
 		]);
 	});
 

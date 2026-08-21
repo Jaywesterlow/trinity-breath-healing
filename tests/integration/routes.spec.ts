@@ -1,7 +1,7 @@
 /**
  * routes.spec.ts — Playwright integration test for Plan 05 Task 2.
  *
- * Verifies that all 16 remaining stub routes (13 + 3 more service stubs, 260810-mdl):
+ * Verifies that every reserved stub route:
  *   1. Return HTTP 200
  *   2. Each has exactly one <h1> matching the route's title text fragment
  *   3. <title> is 50-60 chars and matches STUB_META[path].title
@@ -44,7 +44,9 @@ const STUB_PATHS = [
 	'/blog',
 	'/artikelen',
 	'/privacyverklaring',
-	'/algemene-voorwaarden'
+	'/algemene-voorwaarden',
+	'/disclaimer',
+	'/reviews'
 ] as const;
 
 // 260810-mdl: 4 -> 7 real services (BRTT Body and Trauma Release Breathwork ship separate).
@@ -58,7 +60,7 @@ const SERVICE_SLUGS = [
 	'trb-breathwork'
 ] as const;
 
-test.describe.parallel('16 stub routes — SEO scaffolding', () => {
+test.describe.parallel('reserved stub routes — SEO scaffolding', () => {
 	for (const path of STUB_PATHS) {
 		test(`GET ${path} returns 200 with correct SEO scaffolding`, async ({ page }) => {
 			const response = await page.goto(path);
@@ -108,6 +110,16 @@ test.describe.parallel('16 stub routes — SEO scaffolding', () => {
 				descContent.length,
 				`${path}: meta description should be 150-160 chars`
 			).toBeLessThanOrEqual(160);
+
+			// 4b. Stubs are placeholders: they must carry noindex so Google never
+			// indexes an empty page under this domain. They stay `follow` so link
+			// equity still flows to the landing page.
+			const robots = root.querySelector('meta[name="robots"]');
+			expect(robots, `${path}: stub should have a robots meta tag`).not.toBeNull();
+			expect(
+				robots!.getAttribute('content') ?? '',
+				`${path}: stub robots meta should be noindex`
+			).toContain('noindex');
 
 			// 5. Canonical link href === SITE_URL + path
 			const canonical = root.querySelector('link[rel="canonical"]');

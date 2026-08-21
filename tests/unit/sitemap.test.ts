@@ -23,12 +23,20 @@ describe('sitemap.xml GET handler', () => {
 		expect(body).toContain('<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">');
 	});
 
-	it('response body contains exactly 18 <url> elements', async () => {
+	/* Only routes with real content are submitted — stubs stay reserved in
+	   ALL_ROUTES but out of the sitemap, so the count tracks published pages
+	   rather than the manifest's length. */
+	it('lists only published routes, never stubs', async () => {
 		const { GET } = await import('../../src/routes/sitemap.xml/+server');
 		const response = await GET({} as Parameters<typeof GET>[0]);
 		const body = await response.text();
 		const matches = body.match(/<url>/g);
-		expect(matches?.length).toBe(18);
+		const { ALL_ROUTES } = await import('../../src/lib/constants/routes');
+		const published = ALL_ROUTES.filter(
+			(r) => r.kind !== 'stub' && r.kind !== 'service-stub'
+		).length;
+		expect(matches?.length).toBe(published);
+		expect(body).not.toContain('/privacyverklaring');
 	});
 
 	it('every <loc> is absolute and starts with SITE_URL', async () => {
@@ -36,7 +44,10 @@ describe('sitemap.xml GET handler', () => {
 		const response = await GET({} as Parameters<typeof GET>[0]);
 		const body = await response.text();
 		const locs = [...body.matchAll(/<loc>(.+?)<\/loc>/g)].map((m) => m[1] ?? '');
-		expect(locs.length).toBe(18);
+		const { ALL_ROUTES } = await import('../../src/lib/constants/routes');
+		expect(locs.length).toBe(
+			ALL_ROUTES.filter((r) => r.kind !== 'stub' && r.kind !== 'service-stub').length
+		);
 		for (const loc of locs) {
 			expect(loc.startsWith('https://')).toBe(true);
 			expect(loc.startsWith(MOCK_SITE_URL)).toBe(true);
@@ -50,12 +61,16 @@ describe('sitemap.xml GET handler', () => {
 		expect(body).toContain('<priority>1.0</priority>');
 	});
 
-	it('exactly 17 entries have priority 0.5', async () => {
+	it('every entry but the landing page has priority 0.5', async () => {
 		const { GET } = await import('../../src/routes/sitemap.xml/+server');
 		const response = await GET({} as Parameters<typeof GET>[0]);
 		const body = await response.text();
 		const priorities = [...body.matchAll(/<priority>(.+?)<\/priority>/g)].map((m) => m[1]);
-		expect(priorities.filter((p) => p === '0.5').length).toBe(17);
+		const { ALL_ROUTES } = await import('../../src/lib/constants/routes');
+		const published = ALL_ROUTES.filter(
+			(r) => r.kind !== 'stub' && r.kind !== 'service-stub'
+		).length;
+		expect(priorities.filter((p) => p === '0.5').length).toBe(published - 1);
 	});
 
 	it('module exports prerender = true', async () => {
