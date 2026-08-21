@@ -357,16 +357,21 @@ test.describe('Contact — date planner', () => {
 	});
 
 	test('arrow keys move focus within the grid, across unavailable days', async ({ page }) => {
-		const day = openDay(page);
-		const start = Number((await day.textContent())?.trim());
-		// Focus rather than click: clicking picks the date and leaves the grid.
-		await day.focus();
+		// Start at the 1st, not at the first bookable day: near the end of a month
+		// ArrowDown clamps to the last day, and which day is first bookable moves
+		// with the calendar. The 1st is always present and always focusable —
+		// unavailable days carry aria-disabled, not disabled, precisely so the
+		// roving tabindex can cross them.
+		await page.locator('[data-day="1"]').focus();
 
 		await page.keyboard.press('ArrowRight');
-		await expect(page.locator(`[data-day="${start + 1}"]`)).toBeFocused();
+		await expect(page.locator('[data-day="2"]')).toBeFocused();
 
 		await page.keyboard.press('ArrowDown');
-		await expect(page.locator(`[data-day="${start + 8}"]`)).toBeFocused();
+		await expect(page.locator('[data-day="9"]')).toBeFocused();
+
+		await page.keyboard.press('End');
+		await expect(page.locator('.planner__day:focus')).toHaveCount(1);
 	});
 });
 
