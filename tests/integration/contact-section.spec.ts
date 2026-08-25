@@ -9,7 +9,7 @@
  *   3. The date planner never offers a day in the past and hands a chosen day
  *      off to the booking link.
  *
- * Run AFTER: PUBLIC_SITE_URL=https://trinity-breath-healing.vercel.app npm run build
+ * Run AFTER: PUBLIC_SITE_URL=https://trinitybreathhealing.nl npm run build
  */
 import { test, expect, type Page } from '@playwright/test';
 

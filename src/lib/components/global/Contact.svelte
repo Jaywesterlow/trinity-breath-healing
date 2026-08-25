@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ContactForm from '$lib/components/ui/contact/ContactForm.svelte';
 	import DatePlanner from '$lib/components/ui/contact/DatePlanner.svelte';
+	import { BRAND } from '$lib/constants/brand';
 
 	let active = $state<'form' | 'meeting'>('form');
 </script>
@@ -20,7 +21,7 @@
 				<p class="contact__description-main">
 					U kunt contact opnemen door <strong>het contactformulier in te vullen</strong>, direct te
 					mailen naar
-					<strong><a href="mailto:info@trinitybnh.nl">info@trinitybnh.nl</a></strong>, of door een
+					<strong><a href="mailto:{BRAND.email}">{BRAND.email}</a></strong>, of door een
 					<strong>30 minuten online meeting</strong> in te plannen. Kies wat voor jou prettig voelt.
 				</p>
 			</div>

@@ -17,7 +17,7 @@
  * that don't fit this generic stub-route contract. See src/routes/faq/+page.ts.
  *
  * Playwright config: tests/integration/ dir, webServer: pnpm preview on port 4173.
- * Run AFTER: PUBLIC_SITE_URL=https://trinity-breath-healing.vercel.app pnpm build
+ * Run AFTER: PUBLIC_SITE_URL=https://trinitybreathhealing.nl pnpm build
  *
  * Requirements: FND-08 (14 reserved stubs, 13 remaining, +3 service stubs 260810-mdl = 16),
  * Phase 0 success criterion #3
@@ -26,7 +26,9 @@ import { test, expect } from '@playwright/test';
 import { parse } from 'node-html-parser';
 import { STUB_META } from '../../src/lib/seo/stub-meta';
 
-const SITE_URL = 'https://trinity-breath-healing.vercel.app';
+/* Follows whatever the build used, so pointing PUBLIC_SITE_URL at the real
+   domain does not silently break every canonical assertion here. */
+const SITE_URL = process.env.PUBLIC_SITE_URL ?? 'https://trinitybreathhealing.nl';
 
 const STUB_PATHS = [
 	'/werkwijze',

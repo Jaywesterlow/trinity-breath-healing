@@ -20,11 +20,32 @@ export const BRAND = {
 	/** Practitioner's full legal name — required for Person schema + E-E-A-T */
 	practitionerFullName: 'Brigitte Grohe',
 
-	/** Primary contact email — locked per REQUIREMENTS LND-08 + 00-CONTEXT.md footer block */
-	email: 'info@trinitybnh.nl',
+	/** Primary contact email. Domain registered 2026-08-24; the mailbox itself
+	    still has to be created (or forwarded) before this address receives. */
+	email: 'info@trinitybreathhealing.nl',
 
-	/** E.164 formatted business phone — locked when practitioner provides it */
+	/** E.164 formatted business phone — locked when practitioner provides it.
+	    While it is TODO_, the footer omits the line entirely rather than
+	    printing a placeholder number to visitors. */
 	phone: 'TODO_PHONE',
+
+	/**
+	 * Practice address. Part of the NAP triplet and therefore a local-SEO
+	 * signal, so it must match KvK and Google Business Profile exactly.
+	 *
+	 * The footer used to hard-code "Stationsstraat 45 A, 1315 KS Almere" and a
+	 * phone number of "(+31) 6 123 456 78" — neither confirmed by the
+	 * practitioner, and the second obviously a placeholder. Publishing an
+	 * unverified street address for a real health practice is worse than
+	 * publishing none, so both now live here and the footer renders them only
+	 * once they stop being TODO_.
+	 */
+	address: {
+		street: 'TODO_STREET',
+		postalCode: 'TODO_POSTAL_CODE',
+		city: 'TODO_CITY',
+		country: 'Nederland'
+	},
 
 	/** Social media profiles */
 	socials: {
