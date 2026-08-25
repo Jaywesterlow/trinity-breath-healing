@@ -72,7 +72,7 @@ modal image animation.
 - [ ] Paste a permanent Google Meet room link for the confirmation e-mail
 - [ ] Verify the Resend sending domain (EU region)
 - [ ] Sign the Resend verwerkersovereenkomst (named in the privacy statement)
-- [ ] Google Search Console: verify, then submit `/sitemap.xml`
+- [ ] Google Search Console: add `trinitybreathhealing.nl` as a **new property**, then submit `/sitemap.xml`. It will issue a **new verification token** — the one in `src/app.html` belongs to the old vercel.app property and will not verify the real domain. Send me the token and I will swap it in. See `Insights/manual-steps.md` §2.
 - [ ] Create the Plausible account, then set `PUBLIC_PLAUSIBLE_DOMAIN` in Vercel
 - [ ] Google Business Profile
 - [ ] Regenerate the visual-regression baselines on Windows (`npm run test:visual -- --update-snapshots`) — the spec skips on Linux, so CI cannot

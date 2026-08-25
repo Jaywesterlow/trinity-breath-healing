@@ -54,8 +54,11 @@ check_string "Veelgestelde vragen"
 # covers its locked copy again.
 # check_string "Een eerste stap hoeft niet groot te zijn."
 # check_string "Verstuur email"
-# Footer (Plan 01-08)
-check_string "info@trinitybnh.nl"
+# Footer (Plan 01-08). The address was locked copy from Figma; it is not asserted
+# here any more because it was never confirmed by the practitioner and no longer
+# renders until it is. The e-mail follows BRAND.email, which now points at the
+# registered domain.
+check_string "info@trinitybreathhealing.nl"
 
 if [ "$FAILED" -ne 0 ]; then
   echo "" >&2

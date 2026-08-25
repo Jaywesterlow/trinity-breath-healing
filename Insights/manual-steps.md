@@ -35,9 +35,20 @@ automated and scriptable.
 **What you did:**
 1. Went to search.google.com/search-console
 2. Added property → URL prefix → `https://trinity-breath-healing.vercel.app`
+   **(superseded 2026-08-24 — see the note at the end of this section)**
 3. Chose "HTML tag" verification method
 4. Copied the `content` value from the `<meta name="google-site-verification" ...>` tag
 5. Pasted it into this conversation
+
+> **Superseded 2026-08-24.** `trinitybreathhealing.nl` was registered, so the property above
+> now covers a preview alias rather than the real site. Search Console properties are
+> per-origin: the `.nl` domain needs its **own new property**, and Google will issue a
+> **different verification token** for it. The one currently hard-coded in `src/app.html`
+> (`google-site-verification`) belongs to the old vercel.app property and will not verify the
+> new one — replace it with the token the new property gives you, then redeploy before
+> clicking Verify. Prefer the "Domain" property type over "URL prefix" this time: it covers
+> `www` and both protocols in one property, at the cost of needing a DNS TXT record instead
+> of a meta tag.
 
 **Why it required you:** Google Search Console has no public API for adding a new property or
 generating a verification token. The entire flow is gated behind a Google OAuth session. There

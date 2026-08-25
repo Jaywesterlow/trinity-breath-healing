@@ -1,3 +1,13 @@
+/**
+ * Deliberately NOT the production origin (trinitybreathhealing.nl).
+ *
+ * Every unit test injects this value as PUBLIC_SITE_URL and then asserts that
+ * canonicals, @id values and sitemap entries are built from it. If this were
+ * the real domain, a regression that hard-coded the domain somewhere would
+ * still make all of those assertions pass. Keeping the fixture origin distinct
+ * is what gives the tests their teeth, so it does not get updated when the
+ * real domain changes.
+ */
 export const MOCK_SITE_URL = 'https://trinity-breath-healing.vercel.app';
 
 /**
