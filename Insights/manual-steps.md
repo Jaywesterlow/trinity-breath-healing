@@ -40,7 +40,7 @@ automated and scriptable.
 4. Copied the `content` value from the `<meta name="google-site-verification" ...>` tag
 5. Pasted it into this conversation
 
-> **Superseded 2026-08-24.** `trinitybreathhealing.nl` was registered, so the property above
+> **Superseded 2026-08-24, and the meta tag is gone.** `trinitybreathhealing.nl` was registered, so the property above
 > now covers a preview alias rather than the real site. Search Console properties are
 > per-origin: the `.nl` domain needs its **own new property**, and Google will issue a
 > **different verification token** for it. The one currently hard-coded in `src/app.html`
@@ -48,7 +48,9 @@ automated and scriptable.
 > new one — replace it with the token the new property gives you, then redeploy before
 > clicking Verify. Prefer the "Domain" property type over "URL prefix" this time: it covers
 > `www` and both protocols in one property, at the cost of needing a DNS TXT record instead
-> of a meta tag.
+> of a meta tag. **That is the route chosen**, so the `google-site-verification` tag has been
+> removed from `src/app.html` rather than replaced — see the comment left in its place. The
+> TXT record goes in the TransIP DNS panel; nothing further is needed in the codebase.
 
 **Why it required you:** Google Search Console has no public API for adding a new property or
 generating a verification token. The entire flow is gated behind a Google OAuth session. There
