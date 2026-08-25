@@ -65,7 +65,9 @@ modal image animation.
 
 ## 3. Accounts and DNS — nobody else can do these
 
-- [ ] Buy the domain
+- [x] Buy the domain — **bought 2026-08-24**, under Jay's own TransIP account
+- [ ] **Invoice the aunt for costs fronted on her behalf** (domain, and anything after it). Keep the receipts as you go rather than reconstructing them later.
+- [ ] **Move the domain to her name once the site is finished.** It is already registered with her as registrant; this is the second half — moving it into her own TransIP account, which is a free internal transfer, so she owns the management too and is not dependent on Jay's login.
 - [ ] **Set the Vercel mail env vars**: `RESEND_API_KEY`, `CONTACT_FROM_EMAIL`, optionally `CONTACT_TO_EMAIL` — *both forms are dead without these*
 - [ ] Paste a permanent Google Meet room link for the confirmation e-mail
 - [ ] Verify the Resend sending domain (EU region)
