@@ -9,7 +9,7 @@ brief, and the open threads were living in three different places.
 - **This file** — what is still open, and who can do it.
 
 Branch: `claude/trinity-contact-hover-t7xsrf`. Last verified green: lint, 0 type
-errors, 171 unit, 324 integration, HTML + JSON-LD audits.
+errors, 186 unit, 324 integration, HTML + JSON-LD audits.
 
 ---
 
@@ -21,6 +21,7 @@ errors, 171 unit, 324 integration, HTML + JSON-LD audits.
 | **Pre-launch audit** | **Done.** CSP, security headers, self-hosted fonts, stubs out of the sitemap and noindexed, custom 404. |
 | **Page list / sitemap** | **Settled.** 20 routes in `src/lib/constants/routes.ts`. Published: `/`, `/faq`, `/privacyverklaring`, `/algemene-voorwaarden`, `/disclaimer`. The rest are reserved stubs, noindexed and out of the sitemap. |
 | **Legal pages + OG image + favicons + Plausible** | **Done and pushed.** |
+| **Booking approval + slot blocking** | **Live.** A requested slot greys out at once; she approves or declines from her inbox; approval sends a calendar invite, a decline reopens the slot. Supabase holds only date, time and status — no name, e-mail or klachten. |
 | **Homepage redesign** | **Recorded below, not started.** Waiting on an approved layout. |
 
 **Live since 2026-08-24** on `trinitybreathhealing.nl`, with mail wired through Resend. What is left is content, not plumbing.
@@ -75,6 +76,8 @@ modal image animation.
 - [ ] Sign the Resend verwerkersovereenkomst (named in the privacy statement)
 - [ ] Google Search Console: add `trinitybreathhealing.nl` as a **new property**, then submit `/sitemap.xml`. Use the **Domain** property type, not URL prefix: it covers `www` and both protocols at once and is verified with a DNS TXT record in TransIP, so nothing has to change in the codebase. The old `google-site-verification` meta tag has been removed. See `Insights/manual-steps.md` §2.
 - [ ] Create the Plausible account, then set `PUBLIC_PLAUSIBLE_DOMAIN` in Vercel
+- [x] Supabase booking store — project created, migration run, `DATABASE_URL` (transaction pooler, IPv4) and `BOOKING_TOKEN_SECRET` set in Vercel
+- [ ] **Sign the Supabase verwerkersovereenkomst** and add Supabase to the processor table in `/privacyverklaring`. Lower stakes than Resend's — the table holds no personal data — but it is still a processor and the statement currently does not name it.
 - [ ] Google Business Profile
 - [ ] Regenerate the visual-regression baselines on Windows (`npm run test:visual -- --update-snapshots`) — the spec skips on Linux, so CI cannot
 - [ ] Check LCP in Search Console a few weeks after launch
@@ -96,6 +99,8 @@ modal image animation.
 
 - [ ] **Sitewide colour contrast.** pa11y reports contrast errors on `/`. `--brand-muted` and `--brand-border` were already darkened to pass AA, but the tan CTA pills (nav "Maak een afspraak", the form's "Verstuur email") still fail at roughly 2.1–2.7:1. Fixing them changes the brand look, so it is the owner's call.
 - [ ] Homepage redesign — §6.
+- [ ] Modal layout and carousel speed — §7.
+- [ ] Availability sources — §8.
 
 ---
 
@@ -156,3 +161,71 @@ work in the wrong direction.
 Verified against the spacing claim, which holds: sections do use `--space-16`,
 `--space-12` and asymmetric values interchangeably, and the scale does stop at
 4rem.
+
+
+---
+
+## 7. Service modal layout — agreed 2026-08-24, not started
+
+The desktop grid is `1fr auto 1fr` with the image capped at `max-width: 12rem`,
+and the modal itself is `92vw × 92vh`. So on a 2560px screen the panel is about
+2350×1200 holding 17px type and a 192px image, pinned to the top edge — a thin
+stretched band with the height unused. The modal is already full-page; making it
+more full-page cannot help. The contents are what do not scale.
+
+Agreed changes:
+
+- Text columns flex, but only within a narrow band — real changes happen at
+  breakpoints, not continuously between them.
+- The **image column becomes the flexible one**; the `12rem` cap goes.
+- Left block hugs the left edge, text left-aligned.
+- Right block hugs the **right** edge with its text still **left**-aligned —
+  a left-aligned block positioned right, not right-aligned text.
+- The image hits a ceiling on wide screens rather than growing forever.
+- **Cap the content width inside the full-screen modal** (~1100–1300px, centred).
+  This is what stops the horizontal stretch. It leaves dark space either side on
+  ultrawide, which is breathing room rather than waste.
+- **Raise the type-scale ceiling.** The `clamp()`s in `app.css` top out around a
+  1440px viewport, so everything above that is frozen at its maximum — this is
+  the "font way too small on big screens" complaint, and fixing it lifts the
+  whole site, not just the modal.
+- Distribute vertically instead of `align-items: start`.
+
+**Open question:** three columns capped, or two columns (image left at half
+width, all text right) at the widest sizes? The two-column version is squarer
+and uses height naturally, with no empty flanks. Mock both at 2560px before
+deciding.
+
+**Also:** carousel motion down to **×0.5, possibly ×0.25**. Same thread as
+"turn Behandelingen down" in §6.
+
+---
+
+## 8. Availability — how slots get blocked
+
+Decided: **the combination**, built in this order, with one rule — her calendar
+is a **read-only input**. The site reads busy times from it and never writes
+back except approved appointments. Two sources, one direction each; anything
+else is a sync loop.
+
+1. [x] **Bookings block slots.** Live.
+2. [ ] **Manual slot toggles on the site.** She closes a slot for reasons that
+   are not appointments — tired, admin, a buffer between sessions, a week off.
+   Needs nothing from her, so it can be built any time.
+3. [ ] **Read her calendar.** Needs her account, so it waits for her anyway.
+   Google Calendar API `freeBusy` rather than a secret iCal link: the iCal feed
+   is cached for hours, and a slot still bookable hours after she blocked it
+   causes exactly the rejection this is meant to avoid. `freeBusy` returns busy
+   windows only — never event titles or details. If she is on Apple Calendar,
+   iCal is the only route and its lag is much smaller.
+
+**Not yet asked:** which calendar she actually uses. That decides step 3.
+
+Also still open on the booking flow itself:
+
+- [ ] Reword the visitor's first e-mail — it should read "aanvraag ontvangen",
+  not anything that sounds like a confirmation, now that approval is a real step.
+- [ ] A dashboard for her, when volume justifies it. Login can be the same
+  signed-link trick as the approval e-mail — she clicks a link in her inbox, no
+  password ever, which is better for a non-technical person than a password
+  anyway.
