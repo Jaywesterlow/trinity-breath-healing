@@ -42,8 +42,12 @@
 	<meta name="twitter:description" content={meta.description} />
 	<meta name="twitter:image" content={ogImage} />
 
-	<!-- noindex for preview environments — Plan 08 wires the env-conditional (T-00-noindex-preview) -->
+	<!-- noindex for preview environments and for reserved stubs.
+	     `follow`, not `nofollow`: keeping a placeholder out of the index is the
+	     point, but the page still links back to the landing page and the
+	     footer, and nofollow would throw that internal link equity away for no
+	     gain. Nothing here needs its outbound links suppressed. -->
 	{#if meta.noindex}
-		<meta name="robots" content="noindex,nofollow" />
+		<meta name="robots" content="noindex,follow" />
 	{/if}
 </svelte:head>

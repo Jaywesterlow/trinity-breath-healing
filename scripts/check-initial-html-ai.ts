@@ -18,7 +18,7 @@
  *
  *   # All 5 crawlers against live URL (run in CI via Plan 09 manual step):
  *   for UA in OAI-SearchBot ChatGPT-User PerplexityBot ClaudeBot Google-Extended; do
- *     tsx scripts/check-initial-html-ai.ts --url https://trinity-breath-healing.vercel.app/ --ua $UA
+ *     tsx scripts/check-initial-html-ai.ts --url https://trinitybreathhealing.nl/ --ua $UA
  *   done
  *
  * Exit 0 → assertions pass.  Exit 1 → violation or fetch error.

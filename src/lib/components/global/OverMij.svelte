@@ -17,8 +17,9 @@
 	import heartSvg from '$lib/images/heart.svg?raw';
 	import sproutSvg from '$lib/images/sprout.svg?raw';
 
-	const bodyText =
-		'Ik ben 53 jaar en weet uit eigen ervaring hoe het voelt om vast te lopen. Mijn aanpak is geen theorie, het is wat mij zelf heeft geholpen. Ik werk vanuit rust, veiligheid en echte ervaring.';
+	/* Shared with /over-mij, which shows the same introduction. One constant, so
+	   editing her words in one place cannot leave the other version behind. */
+	import { ABOUT_INTRO as bodyText } from '$lib/content/about';
 </script>
 
 {#snippet portraitCard(svg: string, modifier: string)}

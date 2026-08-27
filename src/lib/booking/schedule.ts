@@ -1,0 +1,129 @@
+/**
+ * Booking availability.
+ *
+ * This module is the seam the CMS plugs into. The planner never hardcodes an
+ * opening time — it asks here. Today `DEFAULT_SCHEDULE` answers; once the
+ * practitioner can edit her hours, a `load()` fetches the same `Schedule`
+ * shape from the CMS and passes it to `<DatePlanner schedule={...} />`.
+ * Nothing in the UI changes when that happens, which is the point.
+ *
+ * All times are local wall-clock. The practice runs in a single timezone
+ * (Europe/Amsterdam) and the visitors booking it are in the same one, so a
+ * date here is the date she writes in her diary — no UTC round-trip, and no
+ * off-by-one when the clocks change.
+ */
+
+export interface OpeningHours {
+	/** ISO-8601 weekday: 1 = Monday … 7 = Sunday. */
+	weekday: number;
+	/** Inclusive start of the window, "HH:MM". */
+	from: string;
+	/** Exclusive end of the window, "HH:MM". */
+	to: string;
+}
+
+export interface Schedule {
+	/** Length of one bookable slot. The site sells 30-minute calls. */
+	slotMinutes: number;
+	/** Recurring weekly availability. A weekday with no entry is a day off. */
+	openingHours: OpeningHours[];
+	/** Whole days blocked off regardless of the weekly pattern, "YYYY-MM-DD". */
+	closedDates: string[];
+	/** Nothing bookable sooner than this many hours from now. */
+	leadTimeHours: number;
+	/** Nothing bookable further ahead than this many days. */
+	horizonDays: number;
+}
+
+export interface TimeSlot {
+	/** "HH:MM" the slot starts. */
+	start: string;
+	/** "HH:MM" the slot ends. */
+	end: string;
+	/** What the tile shows — Figma writes it "10:00 - 10:30". */
+	label: string;
+}
+
+/**
+ * Until the CMS exists, this is the practitioner's availability: weekdays,
+ * 10:00-16:00, in 30-minute slots — the twelve slots drawn in Figma 441-48.
+ */
+export const DEFAULT_SCHEDULE: Schedule = {
+	slotMinutes: 30,
+	openingHours: [1, 2, 3, 4, 5].map((weekday) => ({ weekday, from: '10:00', to: '16:00' })),
+	closedDates: [],
+	leadTimeHours: 24,
+	horizonDays: 90
+};
+
+/** "YYYY-MM-DD" for a local date, without going near UTC. */
+export function toIso(date: Date): string {
+	const month = String(date.getMonth() + 1).padStart(2, '0');
+	const day = String(date.getDate()).padStart(2, '0');
+	return `${date.getFullYear()}-${month}-${day}`;
+}
+
+/** Parse "YYYY-MM-DD" into a local midnight Date. */
+export function fromIso(iso: string): Date {
+	const [year, month, day] = iso.split('-').map(Number) as [number, number, number];
+	return new Date(year, month - 1, day);
+}
+
+/** ISO-8601 weekday (1 = Monday … 7 = Sunday); JS puts Sunday at 0. */
+export function isoWeekday(date: Date): number {
+	return date.getDay() === 0 ? 7 : date.getDay();
+}
+
+function minutesOf(time: string): number {
+	const [hours, mins] = time.split(':').map(Number) as [number, number];
+	return hours * 60 + mins;
+}
+
+function timeOf(minutes: number): string {
+	const hours = Math.floor(minutes / 60);
+	return `${String(hours).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`;
+}
+
+function startOfDay(date: Date): Date {
+	return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+/**
+ * Every slot on a date, already filtered by lead time — a slot that starts in
+ * three hours is not offered when she asks for a day's notice.
+ */
+export function slotsFor(schedule: Schedule, iso: string, now: Date = new Date()): TimeSlot[] {
+	if (schedule.closedDates.includes(iso)) return [];
+
+	const date = fromIso(iso);
+	const windows = schedule.openingHours.filter((w) => w.weekday === isoWeekday(date));
+	const earliest = new Date(now.getTime() + schedule.leadTimeHours * 60 * 60 * 1000);
+
+	const slots: TimeSlot[] = [];
+	for (const window of windows) {
+		const from = minutesOf(window.from);
+		const to = minutesOf(window.to);
+		for (let start = from; start + schedule.slotMinutes <= to; start += schedule.slotMinutes) {
+			const startsAt = new Date(date);
+			startsAt.setHours(0, start, 0, 0);
+			if (startsAt < earliest) continue;
+
+			const end = timeOf(start + schedule.slotMinutes);
+			slots.push({ start: timeOf(start), end, label: `${timeOf(start)} - ${end}` });
+		}
+	}
+	return slots;
+}
+
+/** A date is selectable when it has at least one slot left and is in range. */
+export function isBookable(schedule: Schedule, iso: string, now: Date = new Date()): boolean {
+	const date = fromIso(iso);
+	const today = startOfDay(now);
+	if (date < today) return false;
+
+	const horizon = startOfDay(now);
+	horizon.setDate(horizon.getDate() + schedule.horizonDays);
+	if (date > horizon) return false;
+
+	return slotsFor(schedule, iso, now).length > 0;
+}

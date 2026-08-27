@@ -9,6 +9,44 @@
 	const SOCIAL_COLOR = 'var(--color-bg-sand)';
 	const instagramUrl = `https://www.instagram.com/${BRAND.socials.instagram.replace('@', '')}/`;
 
+	/* NAP comes from BRAND, never from literals in this file — brand.ts is the
+	   source of truth and says so at the top. The address and phone were until
+	   now typed straight into the markup and matched nothing: an unconfirmed
+	   street in Almere and a placeholder "(+31) 6 123 456 78". A wrong address
+	   on a health practice's site costs more than a missing one, and Google
+	   reads footer NAP against KvK and the Business Profile, so anything still
+	   marked TODO_ is withheld rather than guessed at. */
+	const isPending = (value: string) => value.startsWith('TODO_');
+
+	const address = BRAND.address;
+	const hasAddress = !(
+		isPending(address.street) ||
+		isPending(address.postalCode) ||
+		isPending(address.city)
+	);
+	const hasPhone = !isPending(BRAND.phone);
+	/* tel: needs the digits unspaced; the visible label keeps the spacing. */
+	const telHref = `tel:${BRAND.phone.replace(/[^+\d]/g, '')}`;
+
+	/* Only the profiles that actually exist. facebook and x are null in BRAND —
+	   they were still rendered here as links to x.com/trinitybnh and
+	   facebook.com/trinitybnh, neither of which is a real account. */
+	const socials = [
+		{ icon: 'instagram' as const, href: instagramUrl, label: 'Volg ons op Instagram' },
+		...(BRAND.socials.facebook
+			? [
+					{
+						icon: 'facebook' as const,
+						href: BRAND.socials.facebook,
+						label: 'Volg ons op Facebook'
+					}
+				]
+			: []),
+		...(BRAND.socials.x
+			? [{ icon: 'x' as const, href: BRAND.socials.x, label: 'Volg ons op X' }]
+			: [])
+	];
+
 	const NAV_COLUMNS = [
 		{
 			heading: 'DIENSTEN',
@@ -50,25 +88,32 @@
 				<li>
 					<address class="footer__contact">
 						<ul>
-							<li>Stationsstraat 45 A<br />1315 KS Almere, Nederland</li>
+							{#if hasAddress}
+								<li>
+									{address.street}<br />{address.postalCode}
+									{address.city}, {address.country}
+								</li>
+							{/if}
 							<li>
 								<TextLink
-									href="mailto:info@trinitybnh.nl"
-									label="info@trinitybnh.nl"
+									href="mailto:{BRAND.email}"
+									label={BRAND.email}
 									inverted={true}
 									showArrow={false}
 									size="sm"
 								/>
 							</li>
-							<li>
-								<TextLink
-									href="tel:+31612345678"
-									label="(+31) 6 123 456 78"
-									inverted={true}
-									showArrow={false}
-									size="sm"
-								/>
-							</li>
+							{#if hasPhone}
+								<li>
+									<TextLink
+										href={telHref}
+										label={BRAND.phone}
+										inverted={true}
+										showArrow={false}
+										size="sm"
+									/>
+								</li>
+							{/if}
 						</ul>
 					</address>
 				</li>
@@ -77,30 +122,16 @@
 			<!-- Social icons — row on mobile, vertical column on desktop (order: 3) -->
 			<nav class="footer__social" aria-label="Sociale media links" use:reveal={{ delay: 110 }}>
 				<ul class="footer__social-list">
-					<li>
-						<SocialIcon
-							icon="x"
-							href="https://x.com/trinitybnh"
-							label="Volg ons op X (Twitter)"
-							color={SOCIAL_COLOR}
-						/>
-					</li>
-					<li>
-						<SocialIcon
-							icon="facebook"
-							href="https://facebook.com/trinitybnh"
-							label="Volg ons op Facebook"
-							color={SOCIAL_COLOR}
-						/>
-					</li>
-					<li>
-						<SocialIcon
-							icon="instagram"
-							href={instagramUrl}
-							label="Volg ons op Instagram"
-							color={SOCIAL_COLOR}
-						/>
-					</li>
+					{#each socials as social (social.icon)}
+						<li>
+							<SocialIcon
+								icon={social.icon}
+								href={social.href}
+								label={social.label}
+								color={SOCIAL_COLOR}
+							/>
+						</li>
+					{/each}
 				</ul>
 			</nav>
 
@@ -228,8 +259,28 @@
 		line-height: var(--line-height-normal);
 	}
 
-	.footer__legal a:hover {
-		opacity: 0.7;
+	/* Plain text links get the underline reveal rather than the lift: moving a
+	   line of running text is noisy, an underline arriving is not. */
+	.footer__legal a {
+		position: relative;
+	}
+
+	.footer__legal a::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: -0.125rem;
+		height: 1px;
+		background: currentColor;
+		transform: scaleX(0);
+		transform-origin: left center;
+		transition: transform var(--motion-hover) var(--ease-hover);
+	}
+
+	.footer__legal a:hover::after,
+	.footer__legal a:focus-visible::after {
+		transform: scaleX(1);
 	}
 
 	/* ─── Desktop (≥ 1024px) ─── */

@@ -38,7 +38,10 @@
 		display: inline-flex;
 		align-items: center;
 		text-decoration: none;
-		transition: opacity var(--motion-fast);
+		border-radius: var(--radius-full);
+		transition:
+			transform var(--motion-hover) var(--ease-hover),
+			box-shadow var(--motion-hover) var(--ease-hover);
 	}
 
 	.btn-link:not(.btn-link--arrow) {
@@ -82,7 +85,13 @@
 	}
 
 	.btn-link:hover {
-		opacity: 0.88;
+		transform: translateY(var(--lift-hover));
+		box-shadow: var(--shadow-hover);
+	}
+
+	.btn-link:active {
+		transform: translateY(0);
+		box-shadow: none;
 	}
 
 	.btn-link--outline .btn-link__label {

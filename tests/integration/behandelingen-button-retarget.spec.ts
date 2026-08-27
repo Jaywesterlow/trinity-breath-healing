@@ -95,6 +95,20 @@ test('a second Next press mid-flight extends the same motion instead of stalling
 
 	// (iv) Spacing invariant, checked at every sampled frame, including
 	// across the retarget instant itself.
+	//
+	// Tolerance is 1e-4, not 1e-6 — --pos is registered via @property (see
+	// its own comment in Behandelingen.svelte: typing it as an animatable
+	// <number> is what lets the browser hand its derived transform off to
+	// the compositor instead of forcing a full style recalc every drag
+	// frame, a real, measured mobile perf fix). Registered custom
+	// properties are compositor/GPU-interpolatable, which routes them
+	// through float32 internally — getComputedStyle can read back a
+	// ~1e-6-magnitude rounding artifact even though nothing actually
+	// drifted (JS still writes/tracks the exact double-precision value;
+	// only this test's own readback via the browser's typed CSS OM sees
+	// the float32 rounding). 1e-4 is still five orders of magnitude below
+	// anything visually perceptible and would still fail hard on a real
+	// drift bug (which reads in whole fractions of a step, not millionths).
 	let maxSpacingErr = 0;
 	for (const s of samples) {
 		const sorted = [...s.pos].sort((a, b) => a - b);
@@ -105,7 +119,7 @@ test('a second Next press mid-flight extends the same motion instead of stalling
 	expect(
 		maxSpacingErr,
 		'adjacent cards must stay exactly 1 apart through the retarget'
-	).toBeLessThan(1e-6);
+	).toBeLessThan(1e-4);
 
 	const track = samples.map((s) => ({ t: s.t, pos: s.pos[startIndex]! }));
 

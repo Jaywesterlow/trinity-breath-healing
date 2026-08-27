@@ -1,7 +1,7 @@
 /**
  * routes.spec.ts — Playwright integration test for Plan 05 Task 2.
  *
- * Verifies that all 13 remaining stub routes:
+ * Verifies that every reserved stub route:
  *   1. Return HTTP 200
  *   2. Each has exactly one <h1> matching the route's title text fragment
  *   3. <title> is 50-60 chars and matches STUB_META[path].title
@@ -17,15 +17,18 @@
  * that don't fit this generic stub-route contract. See src/routes/faq/+page.ts.
  *
  * Playwright config: tests/integration/ dir, webServer: pnpm preview on port 4173.
- * Run AFTER: PUBLIC_SITE_URL=https://trinity-breath-healing.vercel.app pnpm build
+ * Run AFTER: PUBLIC_SITE_URL=https://trinitybreathhealing.nl pnpm build
  *
- * Requirements: FND-08 (14 reserved stubs, 13 remaining), Phase 0 success criterion #3
+ * Requirements: FND-08 (14 reserved stubs, 13 remaining, +3 service stubs 260810-mdl = 16),
+ * Phase 0 success criterion #3
  */
 import { test, expect } from '@playwright/test';
 import { parse } from 'node-html-parser';
 import { STUB_META } from '../../src/lib/seo/stub-meta';
 
-const SITE_URL = 'https://trinity-breath-healing.vercel.app';
+/* Follows whatever the build used, so pointing PUBLIC_SITE_URL at the real
+   domain does not silently break every canonical assertion here. */
+const SITE_URL = process.env.PUBLIC_SITE_URL ?? 'https://trinitybreathhealing.nl';
 
 const STUB_PATHS = [
 	'/werkwijze',
@@ -36,16 +39,27 @@ const STUB_PATHS = [
 	'/diensten/mahatma-healing',
 	'/diensten/goldhealing',
 	'/diensten/raster-energie',
+	'/diensten/cranio-fascia-unwinding',
 	'/diensten/spinal-touch',
+	'/diensten/brtt-body',
+	'/diensten/trb-breathwork',
 	'/blog',
 	'/artikelen',
-	'/privacyverklaring',
-	'/algemene-voorwaarden'
+	'/reviews'
 ] as const;
 
-const SERVICE_SLUGS = ['mahatma-healing', 'goldhealing', 'raster-energie', 'spinal-touch'] as const;
+// 260810-mdl: 4 -> 7 real services (BRTT Body and Trauma Release Breathwork ship separate).
+const SERVICE_SLUGS = [
+	'mahatma-healing',
+	'goldhealing',
+	'raster-energie',
+	'cranio-fascia-unwinding',
+	'spinal-touch',
+	'brtt-body',
+	'trb-breathwork'
+] as const;
 
-test.describe.parallel('13 stub routes — SEO scaffolding', () => {
+test.describe.parallel('reserved stub routes — SEO scaffolding', () => {
 	for (const path of STUB_PATHS) {
 		test(`GET ${path} returns 200 with correct SEO scaffolding`, async ({ page }) => {
 			const response = await page.goto(path);
@@ -95,6 +109,16 @@ test.describe.parallel('13 stub routes — SEO scaffolding', () => {
 				descContent.length,
 				`${path}: meta description should be 150-160 chars`
 			).toBeLessThanOrEqual(160);
+
+			// 4b. Stubs are placeholders: they must carry noindex so Google never
+			// indexes an empty page under this domain. They stay `follow` so link
+			// equity still flows to the landing page.
+			const robots = root.querySelector('meta[name="robots"]');
+			expect(robots, `${path}: stub should have a robots meta tag`).not.toBeNull();
+			expect(
+				robots!.getAttribute('content') ?? '',
+				`${path}: stub robots meta should be noindex`
+			).toContain('noindex');
 
 			// 5. Canonical link href === SITE_URL + path
 			const canonical = root.querySelector('link[rel="canonical"]');

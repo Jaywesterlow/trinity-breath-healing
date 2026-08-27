@@ -194,6 +194,17 @@
 	--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 	--ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 
+	/* --- Hover interaction (one vocabulary, used by every interactive surface) ---
+	   Buttons and cards lift by --lift-hover and pick up --shadow-hover; plain
+	   text links wipe an underline in. Both are driven from these four tokens so
+	   the feel can be retuned in one place — and so the reduced-motion block at
+	   the bottom of this file can flatten the movement to nothing without every
+	   component needing its own media query. */
+	--motion-hover: 180ms;
+	--ease-hover: cubic-bezier(0.22, 1, 0.36, 1);
+	--lift-hover: -2px;
+	--shadow-hover: 0 6px 18px color-mix(in srgb, var(--color-fg-forest) 22%, transparent);
+
 	/* --- Layout --- */
 	--container-max: 1200px;
 	--nav-height: 80px; /* mobile: 20px padding × 2 + 40px logo */
@@ -235,6 +246,26 @@
 	font-family: 'Cormorant Garamond';
 	src: url('/fonts/cormorant-garamond/cormorant-garamond-bold.woff2') format('woff2');
 	font-weight: 700;
+	font-style: normal;
+	font-display: swap;
+}
+
+/* Wordmark faces. Self-hosted for the same reason as the other two: a Google
+   Fonts <link> sends every visitor's IP to Google, which is what would put a
+   consent question on a site that currently needs no cookie banner at all.
+   Montserrat ships as one variable file covering the whole weight range. */
+@font-face {
+	font-family: 'Cinzel';
+	src: url('/fonts/cinzel/cinzel-400.woff2') format('woff2');
+	font-weight: 400;
+	font-style: normal;
+	font-display: swap;
+}
+
+@font-face {
+	font-family: 'Montserrat';
+	src: url('/fonts/montserrat/montserrat-variable.woff2') format('woff2-variations');
+	font-weight: 100 900;
 	font-style: normal;
 	font-display: swap;
 }
@@ -343,5 +374,12 @@ h6 {
 		animation-duration: 0.01ms !important;
 		transition-duration: 0.01ms !important;
 		scroll-behavior: auto !important;
+	}
+
+	/* Killing the transition alone would still teleport the element on hover.
+	   Flattening the tokens removes the movement itself — the colour and shadow
+	   feedback that carry the affordance stay. */
+	:root {
+		--lift-hover: 0px;
 	}
 }

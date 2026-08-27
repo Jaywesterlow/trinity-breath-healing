@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 	import { Nav, Footer, Head, JsonLd } from '$lib/components';
+	import Analytics from '$lib/analytics/Analytics.svelte';
 	import { page } from '$app/stores';
 	import { onNavigate } from '$app/navigation';
 	import type { Snippet } from 'svelte';
@@ -33,7 +34,11 @@
 </script>
 
 <svelte:head>
-	<!-- Preload self-hosted primary fonts (FND-06) — body (DM Sans) + display (Cormorant Garamond) -->
+	<!-- Preload self-hosted fonts (FND-06). Cinzel is the wordmark and sits in the
+	     first paint, so it is preloaded too; Montserrat is the smaller subtitle
+	     line and loads normally. No Google Fonts <link> anywhere: that request
+	     hands every visitor's IP to Google and is exactly what would drag a
+	     cookie question onto a site that currently needs none. -->
 	<link
 		rel="preload"
 		href="/fonts/dm-sans/dm-sans-regular.woff2"
@@ -48,16 +53,17 @@
 		type="font/woff2"
 		crossorigin="anonymous"
 	/>
-	<!-- Cinzel + Montserrat via Google Fonts — TODO: self-host woff2 (FND-06) -->
-	<link rel="preconnect" href="https://fonts.googleapis.com" />
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous" />
 	<link
-		href="https://fonts.googleapis.com/css2?family=Cinzel&family=Montserrat:wght@300;400&display=swap"
-		rel="stylesheet"
+		rel="preload"
+		href="/fonts/cinzel/cinzel-400.woff2"
+		as="font"
+		type="font/woff2"
+		crossorigin="anonymous"
 	/>
 </svelte:head>
 
 <Head {meta} />
+<Analytics />
 <JsonLd {graph} />
 <Nav />
 <main class="page-content" style="view-transition-name: page-content">

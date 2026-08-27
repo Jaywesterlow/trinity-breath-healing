@@ -1,9 +1,9 @@
 /**
- * behandelingen-click-to-jump.spec.ts — desktop click-to-jump on the
- * Behandelingen fan (src/lib/components/global/Behandelingen.svelte).
+ * behandelingen-click-to-jump.spec.ts — click-to-jump on the Behandelingen
+ * fan (src/lib/components/global/Behandelingen.svelte), desktop AND mobile.
  *
- * Three things here are invisible to a type check, a lint, or a snapshot, and
- * each is the specific way this feature breaks:
+ * Things here are invisible to a type check, a lint, or a snapshot, and each
+ * is the specific way this feature breaks:
  *
  *   1. The overlay must not cover the centre card. If it does, that card's own
  *      `tcard__button` link stops being clickable and the section quietly loses
@@ -11,9 +11,14 @@
  *   2. A mouse drag ends in a `click` on whatever sat under the pointer. Without
  *      the `dragMoved` guard, every desktop drag-follow also fires a jump on
  *      release — the fan lands somewhere the user did not aim for.
- *   3. The overlay is desktop-only. Rendered live on mobile it would swallow the
- *      `pointerdown` that starts the swipe, which is that breakpoint's only way
- *      to navigate the section at all.
+ *   3. Only the CENTRE card ever opens anything (the service modal — see
+ *      behandelingen-service-modal.spec.ts). Every other card, tapped on ANY
+ *      viewport, must centre itself instead of navigating straight to its
+ *      real page. This used to be desktop-only (mobile navigated the fan by
+ *      swiping, so a tap there had always meant "open it") — that gate was
+ *      removed once the modal made "open" a centre-card-only action; a
+ *      non-centre tap navigating away on mobile is the exact regression this
+ *      file's mobile describe block guards against.
  *
  * Positions are read straight off `--pos`, the persistent per-item value the
  * whole mechanism is built on — asserting on it is asserting on the real state,
@@ -96,15 +101,22 @@ test.describe('desktop', () => {
 		expect((await positions(page))[target]).toBe(0);
 	});
 
-	test('clicking the centre card follows its link', async ({ page }) => {
+	// 260810-mdl: the centre card now opens the service modal instead of navigating —
+	// see behandelingen-service-modal.spec.ts for the modal's own coverage. This test keeps
+	// the still-true half of the old contract (a real href survives in the markup, for
+	// crawlers and JS-off visitors) and asserts the new half (clicking does NOT navigate).
+	test('clicking the centre card has a real href but does not navigate (opens the modal instead)', async ({
+		page
+	}) => {
 		const centre = await indexAt(page, 0);
 		const href = await page.locator(PIVOT).nth(centre).locator(CARD).getAttribute('href');
 		expect(href).toBeTruthy();
 
 		await page.locator(PIVOT).nth(centre).locator(CARD).click();
-		await page.waitForURL(`**${href}`);
+		await page.waitForTimeout(200);
 
-		expect(new URL(page.url()).pathname).toBe(href);
+		expect(new URL(page.url()).pathname).toBe('/');
+		await expect(page.locator('dialog.service-modal')).toBeVisible();
 	});
 
 	test('a drag does not also fire a jump on release', async ({ page }) => {
@@ -136,23 +148,55 @@ test.describe('desktop', () => {
 test.describe('mobile', () => {
 	test.use({ viewport: MOBILE });
 
-	test('tapping a side card opens it rather than centring it', async ({ page }) => {
+	test.beforeEach(async ({ page }) => {
 		await page.goto('/');
 		await page.locator('.treatments__fan').scrollIntoViewIfNeeded();
+	});
 
-		// Mobile navigates this section by swiping the fan, so a tap has always
-		// meant "open this card" at every position — enforced by the media
-		// query that used to hide the overlay below 1024px, and now by
-		// onCardClick's canJumpOnClick gate. Deleting the overlay without
-		// reproducing that gate would silently have turned every mobile tap on
-		// a side card into a centring gesture.
+	test('tapping a side card centres it instead of navigating', async ({ page }) => {
+		// The regression this guards against, reported directly: tapping a
+		// non-centre card on mobile navigated straight to its real page
+		// instead of centring it — a leftover from when mobile always
+		// navigated on tap, before the modal made "open" a centre-card-only
+		// action (onCardClick used to gate jumpTo behind a desktop-only
+		// (min-width: 1024px) media query; that gate is gone, this is the
+		// only behaviour left).
 		const target = await indexAt(page, 1);
 		const href = await page.locator(PIVOT).nth(target).locator(CARD).getAttribute('href');
 		expect(href).toBeTruthy();
 
 		await page.locator(PIVOT).nth(target).locator(CARD).click();
-		await page.waitForURL(`**${href}`);
+		await page.waitForTimeout(2000);
 
-		expect(new URL(page.url()).pathname).toBe(href);
+		expect(new URL(page.url()).pathname).toBe('/');
+		expect((await positions(page))[target]).toBe(0);
+	});
+
+	test('tapping the centre card opens the modal instead of navigating', async ({ page }) => {
+		const centre = await indexAt(page, 0);
+		const href = await page.locator(PIVOT).nth(centre).locator(CARD).getAttribute('href');
+		expect(href).toBeTruthy();
+
+		await page.locator(PIVOT).nth(centre).locator(CARD).click();
+		await page.waitForTimeout(200);
+
+		expect(new URL(page.url()).pathname).toBe('/');
+		await expect(page.locator('dialog.service-modal')).toBeVisible();
+	});
+
+	test('tapping an already-centred card opens the modal', async ({ page }) => {
+		// The owner's own contract: tap once to centre, tap again (now that
+		// it's the centre card) to open — this is just the previous test's
+		// same click, proven to work when the card started off-centre first.
+		const target = await indexAt(page, 1);
+		await page.locator(PIVOT).nth(target).locator(CARD).click();
+		await page.waitForTimeout(2000);
+		expect((await positions(page))[target]).toBe(0);
+
+		await page.locator(PIVOT).nth(target).locator(CARD).click();
+		await page.waitForTimeout(200);
+
+		expect(new URL(page.url()).pathname).toBe('/');
+		await expect(page.locator('dialog.service-modal')).toBeVisible();
 	});
 });

@@ -1,0 +1,81 @@
+/**
+ * The schedule is the seam the CMS will replace. These cases pin the contract
+ * the planner depends on, so swapping the source cannot silently change it.
+ */
+import { describe, it, expect } from 'vitest';
+import {
+	DEFAULT_SCHEDULE,
+	isBookable,
+	isoWeekday,
+	slotsFor,
+	toIso,
+	type Schedule
+} from '$lib/booking/schedule';
+
+/** Monday 8 June 2026, 09:00 — the day the Figma frame draws. */
+const MONDAY = '2026-06-08';
+const now = new Date(2026, 5, 1, 9, 0, 0);
+
+describe('slotsFor', () => {
+	it('produces the twelve 30-minute slots the design shows', () => {
+		const slots = slotsFor(DEFAULT_SCHEDULE, MONDAY, now);
+		expect(slots).toHaveLength(12);
+		expect(slots[0]!.label).toBe('10:00 - 10:30');
+		expect(slots.at(-1)!.label).toBe('15:30 - 16:00');
+	});
+
+	it('never runs past the closing time', () => {
+		for (const slot of slotsFor(DEFAULT_SCHEDULE, MONDAY, now)) {
+			expect(slot.end <= '16:00').toBe(true);
+		}
+	});
+
+	it('offers nothing on a weekend, because the schedule has no window for it', () => {
+		expect(slotsFor(DEFAULT_SCHEDULE, '2026-06-13', now)).toEqual([]);
+	});
+
+	it('offers nothing on a closed date', () => {
+		const schedule: Schedule = { ...DEFAULT_SCHEDULE, closedDates: [MONDAY] };
+		expect(slotsFor(schedule, MONDAY, now)).toEqual([]);
+	});
+
+	it('drops slots inside the lead time', () => {
+		// 09:00 on the day itself, with 24h notice required — nothing left today.
+		const sameDay = new Date(2026, 5, 8, 9, 0, 0);
+		expect(slotsFor(DEFAULT_SCHEDULE, MONDAY, sameDay)).toEqual([]);
+	});
+
+	it('honours a schedule the CMS could supply verbatim', () => {
+		const schedule: Schedule = {
+			slotMinutes: 45,
+			openingHours: [{ weekday: 6, from: '09:00', to: '11:00' }],
+			closedDates: [],
+			leadTimeHours: 0,
+			horizonDays: 30
+		};
+		const saturday = slotsFor(schedule, '2026-06-13', now);
+		expect(saturday.map((s) => s.label)).toEqual(['09:00 - 09:45', '09:45 - 10:30']);
+	});
+});
+
+describe('isBookable', () => {
+	it('rejects a date in the past', () => {
+		expect(isBookable(DEFAULT_SCHEDULE, '2026-05-29', now)).toBe(false);
+	});
+
+	it('rejects a date beyond the horizon', () => {
+		const far = toIso(new Date(2026, 5, 1 + DEFAULT_SCHEDULE.horizonDays + 1));
+		expect(isBookable(DEFAULT_SCHEDULE, far, now)).toBe(false);
+	});
+
+	it('accepts a weekday inside the window', () => {
+		expect(isBookable(DEFAULT_SCHEDULE, MONDAY, now)).toBe(true);
+	});
+});
+
+describe('isoWeekday', () => {
+	it('puts Monday at 1 and Sunday at 7', () => {
+		expect(isoWeekday(new Date(2026, 5, 8))).toBe(1);
+		expect(isoWeekday(new Date(2026, 5, 14))).toBe(7);
+	});
+});

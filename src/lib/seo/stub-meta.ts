@@ -10,7 +10,8 @@
  * Uniqueness: no two entries share identical title or description (Pitfall #7 — distinct
  * per-route schema prevents duplicate-content devaluation by AI crawlers).
  *
- * FND-08: 14 reserved stub routes per CONTEXT.md D-04, of which 13 remain stubs here.
+ * FND-08: 14 reserved stub routes per CONTEXT.md D-04, of which 13 remain stubs here — plus 3
+ * more service-stub routes added 260810-mdl (the owner's 7-real-services decision), for 16.
  * `/faq` graduated to real content (`src/routes/faq/+page.ts` + `+page.svelte`) and no
  * longer has an entry — a linked, crawlable page with no content was an SEO liability.
  * Plan 08 audit gate will enforce length and uniqueness automatically.
@@ -122,6 +123,19 @@ export const STUB_META: Record<string, StubMeta> = {
 		]
 	},
 
+	// ─── /diensten/cranio-fascia-unwinding ──────────────────────────────────────
+	// title: 56 chars ✓  desc: 153 chars ✓
+	'/diensten/cranio-fascia-unwinding': {
+		title: 'Cranio & Fascia Unwinding – Zacht lichaamswerk | Trinity',
+		description:
+			'Cranio & Fascia Unwinding is zacht lichaamswerk waarbij uw lichaam zelf het tempo bepaalt en opgeslagen spanning rustig kan loslaten bij Trinity Healing.',
+		crumbs: [
+			{ name: 'Home', path: '/' },
+			{ name: 'Diensten', path: '/diensten' },
+			{ name: 'Cranio & Fascia Unwinding', path: '/diensten/cranio-fascia-unwinding' }
+		]
+	},
+
 	// ─── /diensten/spinal-touch ─────────────────────────────────────────────────
 	// title: 51 chars ✓  desc: 152 chars ✓
 	'/diensten/spinal-touch': {
@@ -132,6 +146,32 @@ export const STUB_META: Record<string, StubMeta> = {
 			{ name: 'Home', path: '/' },
 			{ name: 'Diensten', path: '/diensten' },
 			{ name: 'Spinal Touch', path: '/diensten/spinal-touch' }
+		]
+	},
+
+	// ─── /diensten/brtt-body ─────────────────────────────────────────────────────
+	// title: 53 chars ✓  desc: 152 chars ✓
+	'/diensten/brtt-body': {
+		title: 'BRTT Body – Lichaamsgericht trauma loslaten | Trinity',
+		description:
+			'BRTT Body is een lichaamsgericht proces dat via de psoas opgeslagen trauma en stress uit het lichaam bevrijdt, voor meer rust en veerkracht bij Trinity.',
+		crumbs: [
+			{ name: 'Home', path: '/' },
+			{ name: 'Diensten', path: '/diensten' },
+			{ name: 'BRTT Body', path: '/diensten/brtt-body' }
+		]
+	},
+
+	// ─── /diensten/trb-breathwork ────────────────────────────────────────────────
+	// title: 51 chars ✓  desc: 151 chars ✓
+	'/diensten/trb-breathwork': {
+		title: 'Trauma Release Breathwork – Diep ademwerk | Trinity',
+		description:
+			'Trauma Release Breathwork gebruikt zeven ademtechnieken om diepgaand vastgezet trauma en emoties veilig te laten loslaten bij Trinity Breath & Healing.',
+		crumbs: [
+			{ name: 'Home', path: '/' },
+			{ name: 'Diensten', path: '/diensten' },
+			{ name: 'Trauma Release Breathwork', path: '/diensten/trb-breathwork' }
 		]
 	},
 
@@ -159,27 +199,17 @@ export const STUB_META: Record<string, StubMeta> = {
 		]
 	},
 
-	// ─── /privacyverklaring ─────────────────────────────────────────────────────
-	// title: 50 chars ✓  desc: 153 chars ✓
-	'/privacyverklaring': {
-		title: 'Privacyverklaring – AVG | Trinity Breath & Healing',
-		description:
-			'Lees de privacyverklaring van Trinity Breath & Healing: hoe persoonsgegevens worden verwerkt conform de AVG, welke gegevens worden bewaard en uw rechten.',
-		crumbs: [
-			{ name: 'Home', path: '/' },
-			{ name: 'Privacyverklaring', path: '/privacyverklaring' }
-		]
-	},
+	// /privacyverklaring, /algemene-voorwaarden and /disclaimer used to live here.
+	// They now carry real content and own their own metadata — see each route's
+	// +page.ts.
 
-	// ─── /algemene-voorwaarden ──────────────────────────────────────────────────
-	// title: 50 chars ✓  desc: 158 chars ✓
-	'/algemene-voorwaarden': {
-		title: 'Algemene voorwaarden – Afspraken | Trinity Healing',
+	'/reviews': {
+		title: 'Reviews en ervaringen | TRINITY Breath & Healing NL',
 		description:
-			'Bekijk de algemene voorwaarden van Trinity Breath & Healing: afspraken over annulering, betaling, aansprakelijkheid en vertrouwelijkheid voor therapiesessies.',
+			'Ervaringen van mensen die bij TRINITY Breath & Healing in Almere een sessie volgden. Lees wat ademwerk en energetische behandeling voor hen betekende.',
 		crumbs: [
 			{ name: 'Home', path: '/' },
-			{ name: 'Algemene voorwaarden', path: '/algemene-voorwaarden' }
+			{ name: 'Reviews', path: '/reviews' }
 		]
 	}
 };

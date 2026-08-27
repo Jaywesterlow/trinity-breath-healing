@@ -1,0 +1,154 @@
+/**
+ * Resend transport for the forms that mail the practitioner.
+ *
+ * Talks to the Resend REST API over `fetch` rather than the SDK: one less
+ * dependency in the serverless bundle, and the payload we send is four fields.
+ * EU data residency (CLAUDE.md: `eu-west-1`) is an account/domain-level setting
+ * in Resend — configure the sending domain in the EU region; there is no
+ * per-request region field to set here.
+ *
+ * Env (all read lazily via $env/dynamic/private so an unset key never breaks the
+ * prerender build — the endpoint degrades to a friendly "mail me directly" instead):
+ *   RESEND_API_KEY      — server-only API key
+ *   CONTACT_TO_EMAIL    — inbox that receives submissions (defaults to BRAND.email)
+ *   CONTACT_FROM_EMAIL  — verified sender on the Resend domain
+ *
+ * Both the contact form and the booking flow deliver through `deliver()`; only
+ * the body-building differs, so a change to how mail is sent lands in one place.
+ */
+import { env } from '$env/dynamic/private';
+import { BRAND } from '$lib/constants/brand';
+import type { ContactValues } from '$lib/forms/contact';
+import type { BookingValues } from '$lib/booking/booking';
+
+export type SendResult =
+	| { ok: true; id: string | null }
+	| { ok: false; reason: 'unconfigured' | 'upstream'; detail?: string };
+
+/** True when the transport has everything it needs to actually deliver mail. */
+export function isEmailConfigured(): boolean {
+	return Boolean(env.RESEND_API_KEY && env.CONTACT_FROM_EMAIL);
+}
+
+function escapeHtml(value: string): string {
+	return value
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;');
+}
+
+function buildBodies(values: ContactValues) {
+	const naam = `${values.voornaam} ${values.achternaam}`;
+	const telefoon = values.telefoon ? `${values.landcode} ${values.telefoon}` : '—';
+
+	const text = [
+		`Naam: ${naam}`,
+		`E-mail: ${values.email}`,
+		`Telefoon: ${telefoon}`,
+		'',
+		'Bericht:',
+		values.bericht
+	].join('\n');
+
+	const html = [
+		'<h2>Nieuw bericht via het contactformulier</h2>',
+		`<p><strong>Naam:</strong> ${escapeHtml(naam)}<br>`,
+		`<strong>E-mail:</strong> <a href="mailto:${encodeURIComponent(values.email)}">${escapeHtml(values.email)}</a><br>`,
+		`<strong>Telefoon:</strong> ${escapeHtml(telefoon)}</p>`,
+		`<p><strong>Bericht:</strong><br>${escapeHtml(values.bericht).replace(/\n/g, '<br>')}</p>`
+	].join('');
+
+	return { text, html, naam };
+}
+
+interface Delivery {
+	subject: string;
+	text: string;
+	html: string;
+	/** Replying to the notification should reach the visitor, not the site. */
+	replyTo: string;
+}
+
+async function deliver(mail: Delivery, fetchImpl: typeof fetch): Promise<SendResult> {
+	if (!isEmailConfigured()) return { ok: false, reason: 'unconfigured' };
+
+	const response = await fetchImpl('https://api.resend.com/emails', {
+		method: 'POST',
+		headers: {
+			Authorization: `Bearer ${env.RESEND_API_KEY}`,
+			'Content-Type': 'application/json'
+		},
+		body: JSON.stringify({
+			from: env.CONTACT_FROM_EMAIL,
+			to: [env.CONTACT_TO_EMAIL || BRAND.email],
+			reply_to: mail.replyTo,
+			subject: mail.subject,
+			text: mail.text,
+			html: mail.html
+		})
+	});
+
+	if (!response.ok) {
+		const detail = await response.text().catch(() => '');
+		return { ok: false, reason: 'upstream', detail: `${response.status} ${detail}`.trim() };
+	}
+
+	const payload = (await response.json().catch(() => null)) as { id?: string } | null;
+	return { ok: true, id: payload?.id ?? null };
+}
+
+export async function sendContactEmail(
+	values: ContactValues,
+	fetchImpl: typeof fetch = fetch
+): Promise<SendResult> {
+	const { text, html, naam } = buildBodies(values);
+	return deliver(
+		{ subject: `Contactformulier — ${naam}`, text, html, replyTo: values.email },
+		fetchImpl
+	);
+}
+
+/**
+ * A booking request. The practitioner reads this and confirms — the subject
+ * line carries the slot so her inbox is sortable without opening anything.
+ */
+export async function sendBookingEmail(
+	values: BookingValues,
+	/** Human-readable date, e.g. "donderdag 20 augustus 2026". */
+	spokenDate: string,
+	fetchImpl: typeof fetch = fetch
+): Promise<SendResult> {
+	const naam = `${values.voornaam} ${values.achternaam}`;
+	const klachten = values.klachten.trim() || '—';
+
+	const text = [
+		`Datum: ${spokenDate}`,
+		`Tijd: ${values.start} - ${values.end}`,
+		'',
+		`Naam: ${naam}`,
+		`E-mail: ${values.email}`,
+		'',
+		'Waar loopt deze persoon tegenaan:',
+		klachten
+	].join('\n');
+
+	const html = [
+		'<h2>Nieuwe aanvraag voor een online meeting</h2>',
+		`<p><strong>${escapeHtml(spokenDate)}</strong><br>`,
+		`<strong>${escapeHtml(values.start)} - ${escapeHtml(values.end)}</strong> (30 minuten)</p>`,
+		`<p><strong>Naam:</strong> ${escapeHtml(naam)}<br>`,
+		`<strong>E-mail:</strong> <a href="mailto:${encodeURIComponent(values.email)}">${escapeHtml(values.email)}</a></p>`,
+		`<p><strong>Waar loopt deze persoon tegenaan:</strong><br>${escapeHtml(klachten).replace(/\n/g, '<br>')}</p>`
+	].join('');
+
+	return deliver(
+		{
+			subject: `Afspraakaanvraag — ${spokenDate}, ${values.start} — ${naam}`,
+			text,
+			html,
+			replyTo: values.email
+		},
+		fetchImpl
+	);
+}

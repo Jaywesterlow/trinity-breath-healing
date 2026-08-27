@@ -2,16 +2,6 @@
 	let { inverted = false, footer = false }: { inverted?: boolean; footer?: boolean } = $props();
 </script>
 
-<!-- TODO: self-host Cinzel + Montserrat woff2 to static/fonts/ and remove Google Fonts -->
-<svelte:head>
-	<link rel="preconnect" href="https://fonts.googleapis.com" />
-	<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="" />
-	<link
-		href="https://fonts.googleapis.com/css2?family=Cinzel&family=Montserrat:wght@300&display=swap"
-		rel="stylesheet"
-	/>
-</svelte:head>
-
 <a
 	href="/"
 	class="logo"

@@ -81,7 +81,19 @@ test('desktop: a fast flick keeps drifting after release and decelerates, rather
 }) => {
 	const { samples, releaseTime } = await flickAndSample(page);
 
-	const after = samples.filter((s) => s.t >= releaseTime);
+	// Upper-bounded at IDLE_DRIFT_DELAY_MS minus a small margin, not just
+	// releaseTime onward: once coast+latch settle (endGesture), idle
+	// auto-drift's own countdown starts and — being a CONSTANT, non-
+	// decaying velocity once it fires — would corrupt the deceleration
+	// measurement below if any of its samples leaked in (this test asserts
+	// the LATE window's speed trends toward zero, which drift's own speed
+	// deliberately does not do). Its onset can only happen AT OR AFTER
+	// releaseTime + IDLE_DRIFT_DELAY_MS at the theoretical earliest (settle
+	// itself can't take negative time) — 1900ms is a safe margin under that
+	// floor regardless of how MOMENTUM_TAU_MS/SPRING_OMEGA/
+	// IDLE_DRIFT_DELAY_MS are retuned later, matching this file's own
+	// "relative, not fixed-millisecond" philosophy.
+	const after = samples.filter((s) => s.t >= releaseTime && s.t - releaseTime < 1900);
 	expect(after.length, 'need enough post-release samples to analyse motion').toBeGreaterThan(10);
 
 	// Per-frame instantaneous speed after release.

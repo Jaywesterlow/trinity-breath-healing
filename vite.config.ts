@@ -31,7 +31,8 @@ export default defineConfig({
 				test: {
 					name: 'unit',
 					environment: 'jsdom',
-					include: ['tests/unit/**/*.{test,spec}.{js,ts}']
+					include: ['tests/unit/**/*.{test,spec}.{js,ts}'],
+					setupFiles: ['./tests/setup.ts'] // stands up the globals SvelteKit assumes at runtime
 				}
 			},
 			{

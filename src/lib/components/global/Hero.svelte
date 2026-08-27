@@ -7,6 +7,25 @@
 
 	const instagramUrl = `https://www.instagram.com/${BRAND.socials.instagram.replace('@', '')}/`;
 
+	/* Only real profiles. facebook and x are null in BRAND, but this list used
+	   to link x.com/trinitybnh and facebook.com/trinitybnh regardless — two
+	   accounts that do not exist, in the hero, above the fold. */
+	const socials = [
+		{ icon: 'instagram' as const, href: instagramUrl, label: 'Volg ons op Instagram' },
+		...(BRAND.socials.facebook
+			? [
+					{
+						icon: 'facebook' as const,
+						href: BRAND.socials.facebook,
+						label: 'Volg ons op Facebook'
+					}
+				]
+			: []),
+		...(BRAND.socials.x
+			? [{ icon: 'x' as const, href: BRAND.socials.x, label: 'Volg ons op X' }]
+			: [])
+	];
+
 	// The hero illustration is a centerline trace of the original line art, inlined as SVG so
 	// its strokes can draw themselves on load (stroke-dashoffset, see .hero__draw below).
 	// Inlined via ?raw + {@html} rather than <img>: an external SVG can't be reached by this
@@ -54,36 +73,18 @@
 			</div>
 			<nav class="hero__social" aria-label="Sociale media">
 				<ul class="hero__social-list">
-					<li>
-						<SocialIcon
-							icon="x"
-							href="https://x.com/trinitybnh"
-							label="Volg ons op X (Twitter)"
-							color="var(--brand-border)"
-							background="var(--color-bg-sand)"
-							responsiveSize={false}
-						/>
-					</li>
-					<li>
-						<SocialIcon
-							icon="facebook"
-							href="https://facebook.com/trinitybnh"
-							label="Volg ons op Facebook"
-							color="var(--brand-border)"
-							background="var(--color-bg-sand)"
-							responsiveSize={false}
-						/>
-					</li>
-					<li>
-						<SocialIcon
-							icon="instagram"
-							href={instagramUrl}
-							label="Volg ons op Instagram"
-							color="var(--brand-border)"
-							background="var(--color-bg-sand)"
-							responsiveSize={false}
-						/>
-					</li>
+					{#each socials as social (social.icon)}
+						<li>
+							<SocialIcon
+								icon={social.icon}
+								href={social.href}
+								label={social.label}
+								color="var(--brand-border)"
+								background="var(--color-bg-sand)"
+								responsiveSize={false}
+							/>
+						</li>
+					{/each}
 				</ul>
 			</nav>
 		</div>

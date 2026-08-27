@@ -25,6 +25,13 @@
 		/** Service name — shown as the visible bottom title. */
 		label: string;
 		icon?: string | null;
+		/** Shown in the icon slot instead of art when `icon` is null (260810-mdl) — driven by
+		 * absence from Behandelingen.svelte's ICONS map, not a flag, so dropping art in later
+		 * makes the number disappear on its own. Real text content, not a background image or
+		 * CSS `content:`, so it stays readable to AI crawlers — but `aria-label` above is
+		 * already this card's one accessible name, so the number itself is `aria-hidden` to
+		 * avoid announcing it twice. */
+		number?: number;
 		/** Where the corner button goes. Accessible name only for now — the
 		 * arrow itself carries no visible text (not final copy either way). */
 		buttonLabel: string;
@@ -60,6 +67,7 @@
 	let {
 		label,
 		icon = null,
+		number,
 		buttonLabel,
 		buttonHref,
 		description,
@@ -83,35 +91,44 @@
 	<div class="tcard__icon-wrap">
 		{#if icon}
 			<img src={icon} alt="" aria-hidden="true" class="tcard__icon" draggable="false" />
+		{:else if number}
+			<span class="tcard__number" aria-hidden="true">{number}</span>
 		{/if}
 	</div>
 
-	<div class="tcard__bottom">
-		<p class="tcard__title">{label}</p>
+	<!-- Title row and description share one bottom-anchored column so the
+	     description's own height is what lifts the title, rather than a
+	     fixed distance guessed per breakpoint — see .tcard__desc-wrap. -->
+	<div class="tcard__footer">
+		<div class="tcard__bottom">
+			<p class="tcard__title">{label}</p>
 
-		<!-- Decorative only — the whole card above is now the single <a>, so
-		     this no longer needs to be its own link or carry a stretched-link
-		     pseudo-element (simplification of what shipped in 7c557ae: with no
-		     second link inside the card there's no nested-link problem left to
-		     solve). aria-hidden since it adds no information beyond the card's
-		     own accessible name. -->
-		<span class="tcard__arrow" aria-hidden="true">
-			<svg width="14" height="14" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-				<path
-					d="M5 17L17 5M17 5H9M17 5V13"
-					stroke="currentColor"
-					stroke-width="2"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-				/>
-			</svg>
-		</span>
+			<!-- Decorative only — the whole card above is now the single <a>, so
+			     this no longer needs to be its own link or carry a stretched-link
+			     pseudo-element (simplification of what shipped in 7c557ae: with no
+			     second link inside the card there's no nested-link problem left to
+			     solve). aria-hidden since it adds no information beyond the card's
+			     own accessible name. -->
+			<span class="tcard__arrow" aria-hidden="true">
+				<svg width="14" height="14" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+					<path
+						d="M5 17L17 5M17 5H9M17 5V13"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				</svg>
+			</span>
+		</div>
+
+		<!-- Always in the DOM, collapsed to zero height rather than removed —
+		     never {#if hovered}. Conditionally-rendered content is invisible
+		     to AI crawlers, and this project is judged first on AEO. -->
+		<div class="tcard__desc-wrap">
+			<p class="tcard__description">{description}</p>
+		</div>
 	</div>
-
-	<!-- Always in the DOM, hidden with opacity/transform — never {#if hovered}.
-	     Conditionally-rendered content is invisible to AI crawlers, and this
-	     project is judged first on AEO. -->
-	<p class="tcard__description">{description}</p>
 </a>
 
 <style>
@@ -129,7 +146,6 @@
 		text-decoration: none;
 		cursor: pointer;
 		--tcard-scale: 1;
-		--tcard-desc-shift: 2.25rem;
 		/* The reveal (icon fade-out, title/arrow slide-up, description
 		   fade-in) runs at half the speed of the site's base motion token —
 		   a direct owner request after seeing 250ms live. Kept as one local
@@ -170,11 +186,32 @@
 
 	.tcard__icon-wrap {
 		grid-row: 1;
-		align-self: center;
+		/* Deliberately NOT align-self: center (removed — see own history):
+		   that gave this element an indefinite (shrink-to-fit) height, so
+		   .tcard__icon's own height: 100% below had nothing definite to
+		   resolve against and the wrap ended up shorter than its actual
+		   grid row, unevenly — the shortfall landed almost entirely below
+		   the wrap rather than split top/bottom. Most icons are tall/narrow
+		   enough that the gap was barely visible, but Goldhealing's wide,
+		   short sun art made it obvious: the icon visibly sat high, with a
+		   big gap to the title below and almost none above. Grid's own
+		   default (align-self: stretch, i.e. no override at all) instead
+		   makes this element fill the ENTIRE row — confirmed via
+		   getBoundingClientRect() to land with zero px of slack above or
+		   below — which gives .tcard__icon a real, definite height to
+		   resolve 100% against, so object-fit: contain's own default
+		   centering (object-position: 50% 50%) actually has the full,
+		   correct space to centre within. */
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		width: 100%;
+		/* Lets this row actually give up height as the description below
+		   expands into it — a grid item's automatic minimum size would
+		   otherwise floor it at the icon's own height and force the card to
+		   overflow instead. The icon is fading to nothing across the same
+		   duration, so the give is not visible. */
+		min-height: 0;
 		transition: opacity var(--tcard-reveal-duration) var(--ease-out);
 	}
 
@@ -187,55 +224,99 @@
 		object-fit: contain;
 	}
 
-	.tcard__bottom {
+	/* Stand-in for missing art (260810-mdl) — the display font at roughly the
+	   size the icon art occupies, so a numbered card reads at the same visual
+	   weight as an illustrated one rather than looking like an error state. */
+	.tcard__number {
+		font-family: var(--font-display);
+		font-size: clamp(2rem, 8vw, 2.75rem);
+		font-weight: var(--font-weight-medium);
+		line-height: 1;
+	}
+
+	/* Bottom-anchored column holding the title row and the collapsible
+	   description. Occupies grid row 2, so at rest — with the description
+	   collapsed to zero height — the card's layout is byte-for-byte what it
+	   was before this element existed. */
+	.tcard__footer {
 		grid-row: 2;
+		width: 100%;
+	}
+
+	.tcard__bottom {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
+		/* Mobile: the arrow is gone (display: none below), so this row's only
+		   child is the title — centre it in the space the arrow left behind.
+		   Desktop restores the original title-left/arrow-right split, once
+		   the arrow is back. */
+		justify-content: center;
 		gap: var(--space-2);
 		width: 100%;
-		transition: transform var(--tcard-reveal-duration) var(--ease-out);
 	}
 
 	.tcard__title {
 		margin: 0;
 		font-family: var(--font-body);
 		font-size: var(--fs-body-xs);
-		font-weight: var(--font-weight-medium);
+		font-weight: var(--font-weight-bold);
 		line-height: var(--line-height-tight);
 	}
 
+	/* Removed on mobile entirely (owner request) — not just its circle, the
+	   whole element. Every other property this needs (size, centring, the
+	   circle) only ever applied on top of that visibility, so they live
+	   entirely in the 1024px breakpoint below now instead of splitting
+	   "shown, no circle" here and "circle added" there. */
 	.tcard__arrow {
-		flex-shrink: 0;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 1.5rem;
-		height: 1.5rem;
-		border-radius: var(--radius-full);
-		border: 1px solid currentColor;
+		display: none;
 	}
 
-	/* Anchored to the same bottom padding edge .tcard__bottom rests on — see
-	   this file's hover-reveal commit for how fading this in while
-	   .tcard__bottom translates up reads as one movement. Hidden with
-	   opacity/transform (never display/height): the text stays real,
-	   readable DOM content at all times, resting state included. */
+	/* The description's OWN height is what lifts the title row, replacing a
+	   fixed --tcard-desc-shift translate that had to be guessed per
+	   breakpoint and was wrong for every card whose copy ran to a different
+	   number of lines (the taller ones ended up with the title sitting on
+	   top of the text instead of above it). This wrapper animates its grid
+	   row from 0fr to 1fr, and 1fr resolves to exactly the description's
+	   content height — so the title always lands directly on top of the
+	   description, one line or four, with nothing to measure or re-tune per
+	   card.
+
+	   Collapsed via grid-template-rows rather than display:none or
+	   height:auto: the text stays real, readable DOM content at all times
+	   including at rest (display:none would hide it from crawlers, and this
+	   project is judged first on AEO), and 0fr->1fr is animatable where
+	   height:auto is not. */
+	.tcard__desc-wrap {
+		display: grid;
+		grid-template-rows: 0fr;
+		/* The title-to-description gap lives here rather than as padding on
+		   the description itself: padding cannot collapse below its own size
+		   (border-box floors the element at 8px even with min-height: 0), so
+		   putting it there left the row 8px tall at rest and lifted the
+		   resting title 8px off the card's bottom edge. As a margin that is
+		   0 until hover it costs nothing at rest, and transitions on the
+		   same duration/easing as the row so the two still read as one
+		   movement. */
+		margin-top: 0;
+		transition:
+			grid-template-rows var(--tcard-reveal-duration) var(--ease-out),
+			margin-top var(--tcard-reveal-duration) var(--ease-out);
+	}
+
 	.tcard__description {
-		position: absolute;
-		left: var(--space-3);
-		right: var(--space-3);
-		bottom: var(--space-3);
+		/* Defeats the automatic minimum size of a grid item, which would
+		   otherwise refuse to shrink below the text's own height and leave
+		   the row permanently open. */
+		min-height: 0;
+		overflow: hidden;
 		margin: 0;
 		font-family: var(--font-body);
 		font-size: var(--fs-body-xs);
 		line-height: var(--line-height-tight);
 		opacity: 0;
-		transform: translateY(6px);
 		pointer-events: none;
-		transition:
-			opacity var(--tcard-reveal-duration) var(--ease-out),
-			transform var(--tcard-reveal-duration) var(--ease-out);
+		transition: opacity var(--tcard-reveal-duration) var(--ease-out);
 	}
 
 	/* Whole hover reveal gated behind (hover: hover) and (pointer: fine) —
@@ -251,15 +332,15 @@
 			opacity: 0;
 		}
 
-		.tcard:hover .tcard__bottom,
-		.tcard:focus-visible .tcard__bottom {
-			transform: translateY(calc(-1 * var(--tcard-desc-shift, 2.25rem)));
+		.tcard:hover .tcard__desc-wrap,
+		.tcard:focus-visible .tcard__desc-wrap {
+			grid-template-rows: 1fr;
+			margin-top: var(--space-2);
 		}
 
 		.tcard:hover .tcard__description,
 		.tcard:focus-visible .tcard__description {
 			opacity: 1;
-			transform: translateY(0);
 		}
 
 		/* Scale is deliberately its own, narrower media query (adds
@@ -278,20 +359,34 @@
 	}
 
 	@media (min-width: 1024px) {
+		.tcard__bottom {
+			/* Arrow is back at this breakpoint — restore the original
+			   title-left/arrow-right split the mobile-only centring above
+			   replaced. */
+			justify-content: space-between;
+		}
+
 		.tcard__arrow {
-			/* ~50% bigger than the base 1.5rem (2.625rem) — tap target and
-			   glyph scale together (see the svg rule below) so the arrow's
-			   proportions inside the circle hold at the new size. Mobile's
-			   1.5rem/14x14 is untouched. */
+			/* Only ever shown here — see its own display: none above. Sized
+			   ~50% bigger than the old mobile 1.5rem (2.625rem); tap target
+			   and glyph (the svg rule below) scale together so the arrow's
+			   proportions inside the circle hold. */
+			display: flex;
+			flex-shrink: 0;
+			align-items: center;
+			justify-content: center;
 			width: 2.625rem;
 			height: 2.625rem;
+			border-radius: var(--radius-full);
+			border: 1px solid currentColor;
 		}
 
 		.tcard__arrow svg {
 			/* Scaled by the same ~1.5x as the arrow circle above (14px ->
 			   21px) so the glyph keeps the same visual proportion inside its
-			   now-bigger circle. Overrides the width/height attributes set
-			   in the markup, which stay 14x14 for mobile. */
+			   circle. Overrides the width/height attributes set in the
+			   markup (still 14x14, since this component has no
+			   breakpoint-awareness of its own to size them from). */
 			width: 21px;
 			height: 21px;
 		}
@@ -304,11 +399,8 @@
 			font-size: var(--fs-body-sm);
 		}
 
-		.tcard {
-			/* Desktop cards are noticeably bigger (--card-width 15rem vs 6.5rem
-			   mobile, see Behandelingen.svelte) — the description needs more
-			   reserved room to read as a real sentence, not a cramped sliver. */
-			--tcard-desc-shift: 3.5rem;
+		.tcard__number {
+			font-size: clamp(3rem, 5vw, 4.5rem);
 		}
 	}
 </style>
