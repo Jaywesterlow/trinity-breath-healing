@@ -155,7 +155,50 @@
 	/** Where the roving tabindex starts before anything is focused. */
 	const firstBookableDay = $derived(Math.max(bookableDays.findIndex(Boolean), 1));
 
-	const slots = $derived(selectedDate ? slotsFor(schedule, selectedDate, now) : []);
+	/**
+	 * Slots already claimed by someone else, keyed "YYYY-MM-DD HH:MM".
+	 *
+	 * Fetched rather than rendered: the landing page is prerendered, so
+	 * availability baked in at build time would be a snapshot from deploy day.
+	 * Starts empty and stays empty if the request fails — every slot stays
+	 * offered, and the server remains the only thing that can actually refuse
+	 * one. Failing the other way would show a fully booked calendar because of
+	 * a network blip.
+	 */
+	let taken = $state(new Set<string>());
+
+	async function loadAvailability() {
+		const first = isoFor(1);
+		const last = isoFor(daysInMonth);
+		try {
+			const response = await fetch(`/api/availability?from=${first}&to=${last}`);
+			if (!response.ok) return;
+			const payload = (await response.json()) as { taken?: { datum: string; start: string }[] };
+			taken = new Set((payload.taken ?? []).map((s) => `${s.datum} ${s.start}`));
+		} catch {
+			/* Offline or blocked — leave the calendar as the schedule describes it. */
+		}
+	}
+
+	$effect(() => {
+		/* Re-read on every month change; touching both is what subscribes this
+		   effect to them. */
+		void viewYear;
+		void viewMonth;
+		void loadAvailability();
+	});
+
+	const slots = $derived(
+		selectedDate
+			? slotsFor(schedule, selectedDate, now).map((slot) => ({
+					...slot,
+					taken: taken.has(`${selectedDate} ${slot.start}`)
+				}))
+			: []
+	);
+
+	/** A day with slots, but all of them spoken for, is not selectable. */
+	const freeSlotCount = $derived(slots.filter((slot) => !slot.taken).length);
 
 	const selectedLabel = $derived.by(() => {
 		if (!selectedDate) return null;
@@ -424,7 +467,7 @@
 					</div>
 				{:else if step === 'tijd'}
 					<p class="planner__date">{selectedLabel}</p>
-					{#if slots.length > 0}
+					{#if slots.length > 0 && freeSlotCount > 0}
 						<div
 							class="planner__times"
 							role="group"
@@ -434,9 +477,18 @@
 								<button
 									class="planner__time"
 									class:planner__time--selected={selectedSlot?.start === slot.start}
+									class:planner__time--taken={slot.taken}
 									type="button"
 									aria-pressed={selectedSlot?.start === slot.start}
-									onclick={() => (selectedSlot = slot)}
+									aria-disabled={slot.taken ? 'true' : undefined}
+									aria-label={slot.taken ? `${slot.label} — al bezet` : undefined}
+									onclick={() => {
+										/* aria-disabled rather than disabled: a disabled button
+										   drops out of the tab order, so someone arriving by
+										   keyboard would skip silently past the taken slots
+										   instead of hearing that they are taken. */
+										if (!slot.taken) selectedSlot = slot;
+									}}
 								>
 									{slot.label}
 								</button>
@@ -886,6 +938,21 @@
 	.planner__time--selected {
 		background: rgb(var(--pl-tile) / 0.75);
 		border-color: var(--pl-ink);
+	}
+
+	/* Someone else already asked for this one. Struck through as well as
+	   dimmed: opacity alone reads as "loading" or as a rendering glitch, and
+	   the line makes the state unambiguous without adding a legend. */
+	.planner__time--taken {
+		opacity: 0.4;
+		text-decoration: line-through;
+		cursor: not-allowed;
+	}
+
+	.planner__time--taken:hover {
+		/* Cancel the lift — a tile that rises to meet the cursor promises a
+		   click that will not happen. */
+		transform: none;
 	}
 
 	.planner__empty {
