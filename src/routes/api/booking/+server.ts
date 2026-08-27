@@ -17,6 +17,10 @@ import {
 } from '$lib/booking/booking';
 import { DEFAULT_SCHEDULE, fromIso, isoWeekday, slotsFor } from '$lib/booking/schedule';
 import { isEmailConfigured, sendBookingEmail } from '$lib/server/email';
+import { isDatabaseConfigured } from '$lib/server/db';
+import { PENDING_TTL_HOURS, reserveSlot } from '$lib/server/bookings';
+import { hashToken, signToken, type BookingToken } from '$lib/server/token';
+import { SITE_URL } from '$lib/seo/defaults';
 import { BRAND } from '$lib/constants/brand';
 
 export const prerender = false;
@@ -45,7 +49,11 @@ const MESSAGES = {
 		'Er zijn net te veel aanvragen verstuurd. Probeer het over een paar minuten opnieuw.',
 	unconfigured: `Online plannen is nog niet actief. Mail gerust rechtstreeks naar ${BRAND.email}.`,
 	upstream: `De aanvraag kon niet worden verstuurd. Mail gerust rechtstreeks naar ${BRAND.email}.`,
-	success: 'Je aanvraag is verstuurd. Je krijgt zo snel mogelijk een bevestiging per e-mail.'
+	/* "Aanvraag", not "afspraak": the slot is held, not booked, until she
+	   answers. Promising a confirmation that may turn into a decline is how a
+	   visitor ends up feeling misled. */
+	success:
+		'Je aanvraag is verstuurd. Je hoort binnen 48 uur of het moment doorgaat — je krijgt daar bericht van per e-mail.'
 } as const;
 
 const MONTHS = [
@@ -91,9 +99,36 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 	const slot = offered.find((s) => s.start === parsed.data.start && s.end === parsed.data.end);
 	if (!slot) return fail(409, MESSAGES.unavailable);
 
-	if (!isEmailConfigured()) return fail(503, MESSAGES.unconfigured);
+	if (!isEmailConfigured() || !isDatabaseConfigured()) return fail(503, MESSAGES.unconfigured);
 
-	const result = await sendBookingEmail(parsed.data, spokenDate(parsed.data.datum));
+	/* Hold the slot before sending anything. If the insert loses the race the
+	   visitor is told the moment has gone, which is true — sending the mail
+	   first would confirm a slot that someone else already holds. */
+	const expiresAt = Math.floor(Date.now() / 1000) + PENDING_TTL_HOURS * 60 * 60;
+	const claim: BookingToken = {
+		voornaam: parsed.data.voornaam,
+		achternaam: parsed.data.achternaam,
+		email: parsed.data.email,
+		klachten: parsed.data.klachten,
+		datum: parsed.data.datum,
+		start: slot.start,
+		end: slot.end,
+		exp: expiresAt
+	};
+
+	const token = signToken(claim);
+	const reserved = await reserveSlot(
+		{ datum: claim.datum, start: claim.start, end: claim.end },
+		hashToken(token)
+	);
+	if (!reserved.ok) {
+		if (reserved.reason === 'taken') return fail(409, MESSAGES.unavailable);
+		console.error('[booking] reserve failed:', reserved.detail);
+		return fail(502, MESSAGES.upstream);
+	}
+
+	const decideUrl = `${SITE_URL}/afspraak/${encodeURIComponent(token)}`;
+	const result = await sendBookingEmail(parsed.data, spokenDate(parsed.data.datum), decideUrl);
 	if (!result.ok) {
 		if (result.reason === 'upstream') console.error('[booking] resend failed:', result.detail);
 		return fail(502, MESSAGES.upstream);
