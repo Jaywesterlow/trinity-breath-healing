@@ -26,6 +26,13 @@ export function db(): postgres.Sql {
 	}
 	client ??= postgres(env.DATABASE_URL, {
 		prepare: false,
+		/* Supabase refuses unencrypted connections, and postgres.js does NOT
+		   enable TLS on its own — its default is ssl: false. The connection
+		   string Supabase hands you carries no sslmode either, so without this
+		   every query fails to connect. 'require' rather than 'prefer': a
+		   silent downgrade to plaintext is not an acceptable fallback for a
+		   production database, even one holding only dates and times. */
+		ssl: 'require',
 		/* Serverless: many short-lived instances, each wanting very little. A
 		   large pool per instance is how a small site exhausts its connection
 		   limit without ever being busy. */
