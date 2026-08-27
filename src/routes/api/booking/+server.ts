@@ -16,7 +16,8 @@ import {
 	type BookingFieldErrors
 } from '$lib/booking/booking';
 import { DEFAULT_SCHEDULE, fromIso, isoWeekday, slotsFor } from '$lib/booking/schedule';
-import { isEmailConfigured, sendBookingEmail } from '$lib/server/email';
+import { isEmailConfigured, sendBookingEmail, sendBookingReceived } from '$lib/server/email';
+import { CANCELLATION_HOURS } from '$lib/legal/meta';
 import { isDatabaseConfigured } from '$lib/server/db';
 import { PENDING_TTL_HOURS, reserveSlot } from '$lib/server/bookings';
 import { hashToken, signToken, type BookingToken } from '$lib/server/token';
@@ -81,7 +82,7 @@ function fail(status: number, message: string, errors?: BookingFieldErrors): Res
 	return json({ ok: false, message, errors: errors ?? {} }, { status });
 }
 
-export const POST: RequestHandler = async ({ request, getClientAddress }) => {
+export const POST: RequestHandler = async ({ request, getClientAddress, fetch }) => {
 	if (rateLimited(getClientAddress())) return fail(429, MESSAGES.rateLimited);
 
 	const raw = (await request.json().catch(() => ({}))) as Record<string, unknown>;
@@ -127,12 +128,30 @@ export const POST: RequestHandler = async ({ request, getClientAddress }) => {
 		return fail(502, MESSAGES.upstream);
 	}
 
+	const spoken = spokenDate(parsed.data.datum);
 	const decideUrl = `${SITE_URL}/afspraak/${encodeURIComponent(token)}`;
-	const result = await sendBookingEmail(parsed.data, spokenDate(parsed.data.datum), decideUrl);
+	const result = await sendBookingEmail(parsed.data, spoken, decideUrl);
 	if (!result.ok) {
 		if (result.reason === 'upstream') console.error('[booking] resend failed:', result.detail);
 		return fail(502, MESSAGES.upstream);
 	}
+
+	/* Acknowledge to the visitor too. Deliberately not awaited as a condition of
+	   success: the slot is held and she has been notified, so failing the whole
+	   request because the courtesy copy bounced would throw away a real booking
+	   over a cosmetic step. Logged instead. */
+	const ack = await sendBookingReceived(
+		{
+			to: parsed.data.email,
+			clientName: parsed.data.voornaam,
+			spokenDate: spoken,
+			start: slot.start,
+			end: slot.end,
+			cancellationHours: CANCELLATION_HOURS
+		},
+		fetch
+	);
+	if (!ack.ok) console.error('[booking] acknowledgement failed:', ack);
 
 	return json({ ok: true, message: MESSAGES.success });
 };

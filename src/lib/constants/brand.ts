@@ -24,10 +24,15 @@ export const BRAND = {
 	    still has to be created (or forwarded) before this address receives. */
 	email: 'info@trinitybreathhealing.nl',
 
-	/** E.164 formatted business phone — locked when practitioner provides it.
-	    While it is TODO_, the footer omits the line entirely rather than
-	    printing a placeholder number to visitors. */
-	phone: 'TODO_PHONE',
+	/** E.164 for the tel: link; `phoneDisplay` is what a visitor reads. */
+	phone: '+31624244585',
+	phoneDisplay: '06 24 24 45 85',
+
+	/** KvK and BTW, supplied 2026-08-24. Both belong on the legal pages and in
+	    the Organization JSON-LD — a Dutch business is expected to publish them,
+	    and they are a trust signal in a category where anyone can put up a site. */
+	kvk: '97538159',
+	vatId: 'NL005276270B90',
 
 	/**
 	 * Practice address. Part of the NAP triplet and therefore a local-SEO
@@ -41,10 +46,33 @@ export const BRAND = {
 	 * once they stop being TODO_.
 	 */
 	address: {
-		street: 'TODO_STREET',
-		postalCode: 'TODO_POSTAL_CODE',
-		city: 'TODO_CITY',
+		street: 'Reigersbos 100 L',
+		/* Third floor. Part of the address rather than a separate field: it is
+		   what someone standing in the lobby needs, and Schema.org has no
+		   better slot for it than streetAddress. */
+		floor: '3e etage',
+		postalCode: '1107 ES',
+		city: 'Amsterdam',
 		country: 'Nederland'
+	},
+
+	/**
+	 * How she actually works, supplied 2026-08-24 — and it is not "a practice
+	 * you visit on weekdays".
+	 *
+	 * The Reigersbos address is a Saturday location. On other days she travels
+	 * to the client, and several treatments can be given remotely. Publishing
+	 * the address without that context would send someone to a closed door on a
+	 * Tuesday, so anywhere the address appears, this has to appear with it.
+	 */
+	practice: {
+		/** Weekday at the fixed location; ISO-8601, 6 = Saturday. */
+		locationWeekday: 6,
+		locationNote: 'Op zaterdag geef ik behandelingen op de praktijk in Amsterdam-Zuidoost.',
+		homeVisits: true,
+		homeVisitNote: 'Op andere dagen kom ik naar je toe.',
+		remote: true,
+		remoteNote: 'Een aantal behandelingen kan ook op afstand.'
 	},
 
 	/** Social media profiles */

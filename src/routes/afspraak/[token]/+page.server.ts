@@ -16,6 +16,7 @@ import { sendBookingApproved, sendBookingRejected, isEmailConfigured } from '$li
 import { buildInvite } from '$lib/server/ics';
 import { SITE_URL } from '$lib/seo/defaults';
 import { BRAND } from '$lib/constants/brand';
+import { CANCELLATION_HOURS } from '$lib/legal/meta';
 import { env } from '$env/dynamic/private';
 
 export const prerender = false;
@@ -122,6 +123,7 @@ export const actions: Actions = {
 							spokenDate: spoken,
 							start: token.start,
 							end: token.end,
+							cancellationHours: CANCELLATION_HOURS,
 							ics: buildInvite({
 								/* Stable per request, so a later update or cancellation
 								   can address the same event rather than creating a

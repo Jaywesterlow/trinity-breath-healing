@@ -90,8 +90,13 @@
 						<ul>
 							{#if hasAddress}
 								<li>
-									{address.street}<br />{address.postalCode}
-									{address.city}, {address.country}
+									{address.street}, {address.floor}<br />{address.postalCode}
+									{address.city}
+									<!-- Never the address on its own. She is only there on
+									     Saturdays; on other days she travels to the client. An
+									     address without that line sends someone to a closed
+									     door. -->
+									<br /><span class="footer__note">{BRAND.practice.locationNote}</span>
 								</li>
 							{/if}
 							<li>
@@ -107,7 +112,7 @@
 								<li>
 									<TextLink
 										href={telHref}
-										label={BRAND.phone}
+										label={BRAND.phoneDisplay}
 										inverted={true}
 										showArrow={false}
 										size="sm"
@@ -193,6 +198,18 @@
 		font-size: var(--font-size-base);
 		color: var(--color-bg-sand);
 		line-height: var(--line-height-normal);
+	}
+
+	/* The "only on Saturdays" line sits under the address and must read as a
+	   caveat rather than part of it — smaller and quieter, but not so faint
+	   that someone planning a visit skips it. */
+	.footer__note {
+		display: inline-block;
+		margin-top: 0.35rem;
+		font-family: var(--font-body);
+		font-size: 0.8125rem;
+		line-height: 1.5;
+		opacity: 0.75;
 	}
 
 	.footer__contact ul {

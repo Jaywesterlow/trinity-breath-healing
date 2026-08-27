@@ -33,19 +33,30 @@ errors, 186 unit, 324 integration, HTML + JSON-LD audits.
 Every one of these renders as **red bracketed text** on a live page right now.
 `npm run audit:placeholders` lists them under "Unfilled `<Todo>` markers".
 
-- [ ] KvK number
-- [ ] Business address + city
-- [ ] Phone number (also clears `TODO_PHONE` in `brand.ts`, which blocks the launch gate)
+- [x] KvK number — `97538159`
+- [x] Business address — Reigersbos 100 L, 3e etage, 1107 ES Amsterdam
+- [x] Phone number — 06 24 24 45 85
+- [x] BTW-ID — `NL005276270B90`
+- [x] E-mail — she uses `bgrohe72@gmail.com` and wants a business address, so `info@trinitybreathhealing.nl` has to be created and forwarded there
 - [ ] Price per session
-- [ ] Cancellation window — 24 hours?
+- [ ] Cancellation window — **provisionally 24 h**, set in `CANCELLATION_HOURS` and already quoted to visitors in the booking e-mails. Confirm or change.
 - [ ] Payment method and when it is due
-- [ ] BTW-plichtig: yes or no
 - [ ] Beroepsvereniging — which, and since when
 - [ ] Trainings and certifications, with institute and year
 - [ ] Her story — 2–3 paragraphs, her own words
 - [ ] What a first session is actually like
-- [ ] Which e-mail provider hosts the inbox
 - [ ] **Confirm the contraindication list on `/disclaimer`** ⚠️
+- [ ] **Which calendar does she use — Google or Apple?** Decides §8 step 3.
+- [ ] **Does she still have login access to `trinitybreathandhealing.nl`?** It is
+  still registered (checked 2026-08-24), so it did not lapse — but she bought it
+  in May 2025 and only access makes it usable as a redirect.
+
+**How she actually works**, supplied 2026-08-24 and now in `BRAND.practice`:
+Saturdays at the Reigersbos praktijk, other days she travels to the client, and
+several treatments can be given remotely. This is a real constraint, not colour:
+`DEFAULT_SCHEDULE` still offers **Mon–Fri 10:00–16:00**. That is probably right
+for a 30-minute online kennismaking and wrong for anything else — confirm before
+the planner is used for treatments rather than intake calls.
 
 ⚠️ The contraindication list is the one item on the site with a safety
 consequence. It was written from what is standard for this kind of breathwork,
@@ -223,8 +234,10 @@ else is a sync loop.
 
 Also still open on the booking flow itself:
 
-- [ ] Reword the visitor's first e-mail — it should read "aanvraag ontvangen",
-  not anything that sounds like a confirmation, now that approval is a real step.
+- [x] The visitor now gets an immediate "aanvraag ontvangen" e-mail, which says
+  in as many words that it is not a confirmation and that they hear back within
+  48 hours. Without it the silence between requesting and hearing back reads as
+  a broken form, and people re-submit.
 - [ ] A dashboard for her, when volume justifies it. Login can be the same
   signed-link trick as the approval e-mail — she clicks a link in her inbox, no
   password ever, which is better for a non-technical person than a password
