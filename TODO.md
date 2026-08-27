@@ -23,7 +23,7 @@ errors, 171 unit, 324 integration, HTML + JSON-LD audits.
 | **Legal pages + OG image + favicons + Plausible** | **Done and pushed.** |
 | **Homepage redesign** | **Recorded below, not started.** Waiting on an approved layout. |
 
-The two things blocking a live site are both in §3: the mail env vars and a domain.
+**Live since 2026-08-24** on `trinitybreathhealing.nl`, with mail wired through Resend. What is left is content, not plumbing.
 
 ---
 
@@ -68,9 +68,10 @@ modal image animation.
 - [x] Buy the domain — **bought 2026-08-24**, under Jay's own TransIP account
 - [ ] **Invoice the aunt for costs fronted on her behalf** (domain, and anything after it). Keep the receipts as you go rather than reconstructing them later.
 - [ ] **Move the domain to her name once the site is finished.** It is already registered with her as registrant; this is the second half — moving it into her own TransIP account, which is a free internal transfer, so she owns the management too and is not dependent on Jay's login.
-- [ ] **Set the Vercel mail env vars**: `RESEND_API_KEY`, `CONTACT_FROM_EMAIL`, optionally `CONTACT_TO_EMAIL` — *both forms are dead without these*
+- [x] **Set the Vercel mail env vars** — done. `RESEND_API_KEY` (Secret), `CONTACT_FROM_EMAIL` = `Trinity Breath & Healing <contact@trinitybreathhealing.nl>`, `CONTACT_TO_EMAIL` = Jay's Gmail.
+- [ ] **Repoint `CONTACT_TO_EMAIL` at her inbox** once `info@` forwarding exists. Required, not optional: unset, the code falls back to `BRAND.email`, which has no mailbox — Resend would report success and the submission would vanish.
 - [ ] Paste a permanent Google Meet room link for the confirmation e-mail
-- [ ] Verify the Resend sending domain (EU region)
+- [x] Verify the Resend sending domain — DKIM, SPF and MX in TransIP, region `eu-west-1` (Ireland), which is what the privacy statement promises
 - [ ] Sign the Resend verwerkersovereenkomst (named in the privacy statement)
 - [ ] Google Search Console: add `trinitybreathhealing.nl` as a **new property**, then submit `/sitemap.xml`. Use the **Domain** property type, not URL prefix: it covers `www` and both protocols at once and is verified with a DNS TXT record in TransIP, so nothing has to change in the codebase. The old `google-site-verification` meta tag has been removed. See `Insights/manual-steps.md` §2.
 - [ ] Create the Plausible account, then set `PUBLIC_PLAUSIBLE_DOMAIN` in Vercel
