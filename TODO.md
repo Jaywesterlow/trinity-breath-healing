@@ -47,7 +47,7 @@ Every one of these renders as **red bracketed text** on a live page right now.
 - [ ] What a first session is actually like
 - [ ] **Confirm the contraindication list on `/disclaimer`** ⚠️
 - [ ] **Which calendar does she use — Google or Apple?** Decides §8 step 3.
-- [ ] **Heeft ze Facebook, of andere socials?** Right now Instagram is the only real profile, and a single icon reads as an orphan rather than a set — see §9.
+- [ ] **Heeft ze Facebook, of andere socials?** Nice to have, no longer blocking — §9 fills the row with Instagram, WhatsApp and e-mail instead.
 - [ ] **Does she still have login access to `trinitybreathandhealing.nl`?** It is
   still registered (checked 2026-08-24), so it did not lapse — but she bought it
   in May 2025 and only access makes it usable as a redirect.
@@ -256,17 +256,22 @@ recorded both as `null` the whole time; the markup simply did not read it. Those
 two are now removed, which is correct, and leaves a single icon sitting where a
 row used to be.
 
-A lone icon reads as something that lost its siblings. Options, roughly in order
-of how little they assume:
+**Decided 2026-08-24: Instagram, WhatsApp, e-mail.** Three icons again, and the
+row reads as a set rather than an orphan — but the point is that all three are
+real. WhatsApp is `wa.me/31624244585` and the mail icon is `info@`, both of which
+exist, so nothing here is a link to a profile that is not there. It also reframes
+the row: not "follow us on social media" but "here is how to reach her", which
+suits a practice better than a brand.
 
-1. **Ask her first.** If she has a Facebook page — likely, for this audience —
-   the row comes back and there is nothing to design around. This is the cheapest
-   answer and it is already in §1.
-2. **Make it a labelled link rather than an icon.** "Volg mee op Instagram" as
-   text sits comfortably alone in a way a bare glyph does not.
-3. **Fold it into the contact block**, next to the e-mail and phone, so it is one
-   of several ways to reach her rather than a stranded navigation row.
+Nothing needed from her, and it answers the question in §1 — a Facebook page
+would be a bonus rather than a dependency.
 
-Part of the redesign in §6 either way: it is a composition problem, not a missing
-feature. Do not re-add a Facebook or X icon unless the account actually exists —
-a link to a dead profile is worse than no link, and it was already shipping once.
+- [ ] `SocialIcon.svelte` only knows `x | facebook | instagram`. Needs `whatsapp`
+      and `mail` glyphs drawn in the same 40×40 ringed style as the existing two.
+- [ ] Footer: render the three.
+- [ ] Hero: **undecided** whether the row belongs there at all. Part of the §6
+      redesign — the hero is meant to be the one loud element, and a social row
+      near the top competes with that.
+
+Do not re-add Facebook or X unless the account actually exists. A link to a dead
+profile is worse than no link, and it was already shipping once.
