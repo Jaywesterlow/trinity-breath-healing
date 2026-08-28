@@ -47,6 +47,7 @@ Every one of these renders as **red bracketed text** on a live page right now.
 - [ ] What a first session is actually like
 - [ ] **Confirm the contraindication list on `/disclaimer`** ⚠️
 - [ ] **Which calendar does she use — Google or Apple?** Decides §8 step 3.
+- [ ] **Heeft ze Facebook, of andere socials?** Right now Instagram is the only real profile, and a single icon reads as an orphan rather than a set — see §9.
 - [ ] **Does she still have login access to `trinitybreathandhealing.nl`?** It is
   still registered (checked 2026-08-24), so it did not lapse — but she bought it
   in May 2025 and only access makes it usable as a redirect.
@@ -85,11 +86,11 @@ modal image animation.
 - [ ] Paste a permanent Google Meet room link for the confirmation e-mail
 - [x] Verify the Resend sending domain — DKIM, SPF and MX in TransIP, region `eu-west-1` (Ireland), which is what the privacy statement promises
 - [ ] Sign the Resend verwerkersovereenkomst (named in the privacy statement)
-- [ ] Google Search Console: add `trinitybreathhealing.nl` as a **new property**, then submit `/sitemap.xml`. Use the **Domain** property type, not URL prefix: it covers `www` and both protocols at once and is verified with a DNS TXT record in TransIP, so nothing has to change in the codebase. The old `google-site-verification` meta tag has been removed. See `Insights/manual-steps.md` §2.
+- [ ] **Tomorrow.** Google Search Console: add `trinitybreathhealing.nl` as a **new property**, then submit `/sitemap.xml`. Use the **Domain** property type, not URL prefix: it covers `www` and both protocols at once and is verified with a DNS TXT record in TransIP, so nothing has to change in the codebase. The old `google-site-verification` meta tag has been removed. See `Insights/manual-steps.md` §2.
 - [ ] Create the Plausible account, then set `PUBLIC_PLAUSIBLE_DOMAIN` in Vercel
 - [x] Supabase booking store — project created, migration run, `DATABASE_URL` (transaction pooler, IPv4) and `BOOKING_TOKEN_SECRET` set in Vercel
 - [ ] **Sign the Supabase verwerkersovereenkomst** and add Supabase to the processor table in `/privacyverklaring`. Lower stakes than Resend's — the table holds no personal data — but it is still a processor and the statement currently does not name it.
-- [ ] Google Business Profile
+- [ ] **Tomorrow.** Google Business Profile — **must be created from her Google account**, not Jay's: verification goes to the business and transferring ownership afterwards is a genuine hassle. Set it up as a **service-area business** (Amsterdam and surroundings) rather than a storefront. She rents the Reigersbos room one day a week; listing a part-time rented room as a normal storefront is how listings get suspended. Address hidden, or shown with Saturday-only hours.
 - [ ] Regenerate the visual-regression baselines on Windows (`npm run test:visual -- --update-snapshots`) — the spec skips on Linux, so CI cannot
 - [ ] Check LCP in Search Console a few weeks after launch
 - [ ] Decide on PR #13 (`docs/consolidate`), open since 2026-08-10
@@ -242,3 +243,30 @@ Also still open on the booking flow itself:
   signed-link trick as the approval e-mail — she clicks a link in her inbox, no
   password ever, which is better for a non-technical person than a password
   anyway.
+
+
+---
+
+## 9. Social icons — one profile is not a set
+
+Instagram is the only real profile she has. The footer and the hero used to show
+three icons, but two of them linked to `x.com/trinitybnh` and
+`facebook.com/trinitybnh` — accounts that do not exist. `BRAND.socials` had
+recorded both as `null` the whole time; the markup simply did not read it. Those
+two are now removed, which is correct, and leaves a single icon sitting where a
+row used to be.
+
+A lone icon reads as something that lost its siblings. Options, roughly in order
+of how little they assume:
+
+1. **Ask her first.** If she has a Facebook page — likely, for this audience —
+   the row comes back and there is nothing to design around. This is the cheapest
+   answer and it is already in §1.
+2. **Make it a labelled link rather than an icon.** "Volg mee op Instagram" as
+   text sits comfortably alone in a way a bare glyph does not.
+3. **Fold it into the contact block**, next to the e-mail and phone, so it is one
+   of several ways to reach her rather than a stranded navigation row.
+
+Part of the redesign in §6 either way: it is a composition problem, not a missing
+feature. Do not re-add a Facebook or X icon unless the account actually exists —
+a link to a dead profile is worse than no link, and it was already shipping once.
