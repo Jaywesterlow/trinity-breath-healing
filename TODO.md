@@ -41,16 +41,15 @@ Every one of these renders as **red bracketed text** on a live page right now.
 - [ ] Price per session
 - [ ] Cancellation window — **provisionally 24 h**, set in `CANCELLATION_HOURS` and already quoted to visitors in the booking e-mails. Confirm or change.
 - [ ] Payment method and when it is due
-- [ ] Beroepsvereniging — which, and since when
-- [ ] Trainings and certifications, with institute and year
+- [~] **Beroepsvereniging: CAT** — she has decided to join **CAT-collectief**, but has **not registered yet** (28-08). Registration matters to the site beyond a logo: CAT membership puts her under the **Wkkgz**, with **GAT** (Geschilleninstantie Alternatieve Therapeuten) as the rijks-erkende complaints body, plus a BAT beroepsaansprakelijkheidsverzekering. That is the answer to the `<Todo>` in the algemene voorwaarden asking where a client goes if they cannot resolve a complaint directly — so **that clause stays open until she is actually a member**. Roughly €189/yr ex btw via Het Coach Lokaal's student code.
+- [ ] **Trainings — needs confirming, do not publish the list as-is.** She forwarded a message from Het Coach Lokaal naming their *registered* courses: Cupping Coach®, YinYang Breath® Facilitator, YinYang Breath® ademtherapeut, Holistisch Healer, Spinal Touch® Facilitator, plus bijscholing such as the snijzaal. That is the school listing its own catalogue, **not a statement of what she completed**. Ask which of these she actually holds and in which year. Publishing an unearned qualification on a health practitioner's site is the worst kind of error to make.
 - [ ] Her story — 2–3 paragraphs, her own words
 - [ ] What a first session is actually like
 - [ ] **Confirm the contraindication list on `/disclaimer`** ⚠️
 - [ ] **Which calendar does she use — Google or Apple?** Decides §8 step 3.
 - [ ] **Heeft ze Facebook, of andere socials?** Nice to have, no longer blocking — §9 fills the row with Instagram, WhatsApp and e-mail instead.
-- [ ] **Does she still have login access to `trinitybreathandhealing.nl`?** It is
-  still registered (checked 2026-08-24), so it did not lapse — but she bought it
-  in May 2025 and only access makes it usable as a redirect.
+- [x] **`trinitybreathandhealing.nl` — she has access.** Registered at **mijndomein.nl**. She sent the login over WhatsApp in plain text; **have her change that password** and do not store it anywhere in this repo.
+- [ ] **Decide: keep `trinitybreathhealing.nl` as the real site?** Recommended yes. Hers is the exact business name, which is marginally better for recall, but the site, DNS, Resend, the CSP and every canonical URL already point at ours. Redirect hers rather than migrating — the gain does not cover redoing all of it.
 
 **How she actually works**, supplied 2026-08-24 and now in `BRAND.practice`:
 Saturdays at the Reigersbos praktijk, other days she travels to the client, and
@@ -256,6 +255,11 @@ recorded both as `null` the whole time; the markup simply did not read it. Those
 two are now removed, which is correct, and leaves a single icon sitting where a
 row used to be.
 
+**Confirmed by her, 28-08.** She asked for exactly this without prompting: *"Soms
+klik ik op een mobielnr en dan kom ik meteen in WhatsApp van dat bedrijf."* So the
+WhatsApp icon is not a designer's idea of a nice extra, it is the channel she
+expects people to use.
+
 **Decided 2026-08-24: Instagram, WhatsApp, e-mail.** Three icons again, and the
 row reads as a set rather than an orphan — but the point is that all three are
 real. WhatsApp is `wa.me/31624244585` and the mail icon is `info@`, both of which
@@ -275,3 +279,23 @@ would be a bonus rather than a dependency.
 
 Do not re-add Facebook or X unless the account actually exists. A link to a dead
 profile is worse than no link, and it was already shipping once.
+
+
+---
+
+## 10. Wkkgz and CAT — what changes on the site once she registers
+
+Not just a badge. Joining CAT puts her under the Wkkgz, which obliges every care
+provider to handle complaints through a recognised body — for CAT members that is
+**GAT**. Three things follow:
+
+- [ ] **Algemene voorwaarden, artikel 10.** The `<Todo>` there asks where a client
+      goes when a complaint cannot be resolved directly. That becomes GAT, with a
+      link to `gatgeschillen.nl`. It stays a `<Todo>` until she is a member —
+      naming a complaints body she has not joined would be worse than the gap.
+- [ ] **`/over-mij`.** CAT membership and the GAT scheme are exactly the kind of
+      thing that answers "why should I trust this person" for a visitor deciding
+      between practitioners. Worth stating plainly rather than as a logo.
+- [ ] **Privacyverklaring.** Check whether CAT's beroepscode sets a retention
+      period for client records — that is the open `<Todo>` about bewaartermijn,
+      and her beroepsvereniging is usually what decides it.
