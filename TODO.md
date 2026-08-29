@@ -295,6 +295,30 @@ profile is worse than no link, and it was already shipping once.
 
 ---
 
+## 11. Contra-indicaties: één lijst of één per behandeling?
+
+`/disclaimer` carries **one shared list** of situations to discuss first, and it
+applies to all seven treatments at once.
+
+Her message of 29-08 says that is not how she works: *"Als mensen een bepaalde
+aandoening hebben dan wil ik ze eigenlijk niet behandelen maar ik heb wel een
+behandeling wat ik misschien wel weer bij ze zou kunnen doen."* A condition rules
+out one modality and still allows another — breathwork and an energetic treatment
+are not the same risk.
+
+That is a content-structure question, not a wording one:
+
+- [ ] Decide: keep the global list and add a per-service line, or move
+      contra-indications onto each service in `BRAND.services` and let
+      `/disclaimer` summarise.
+- [ ] A per-service list also feeds the Service JSON-LD and gives each
+      `/diensten/*` page real, specific content — an AEO gain, not just a
+      legal one.
+- [ ] Blocked on her definitive answer (promised 30-08) — do not restructure
+      before it lands, the shape of her answer decides the shape of the page.
+
+---
+
 ## 10. Wkkgz and CAT — what changes on the site once she registers
 
 Not just a badge. Joining CAT puts her under the Wkkgz, which obliges every care
