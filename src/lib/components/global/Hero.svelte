@@ -3,28 +3,11 @@
 	import ButtonLink from '$lib/components/ui/interactions/ButtonLink.svelte';
 	import SocialIcon from '$lib/components/ui/SocialIcon.svelte';
 	import HeroServiceCard from '$lib/components/ui/HeroServiceCard.svelte';
-	import { BRAND } from '$lib/constants/brand';
-
-	const instagramUrl = `https://www.instagram.com/${BRAND.socials.instagram.replace('@', '')}/`;
-
-	/* Only real profiles. facebook and x are null in BRAND, but this list used
-	   to link x.com/trinitybnh and facebook.com/trinitybnh regardless — two
-	   accounts that do not exist, in the hero, above the fold. */
-	const socials = [
-		{ icon: 'instagram' as const, href: instagramUrl, label: 'Volg ons op Instagram' },
-		...(BRAND.socials.facebook
-			? [
-					{
-						icon: 'facebook' as const,
-						href: BRAND.socials.facebook,
-						label: 'Volg ons op Facebook'
-					}
-				]
-			: []),
-		...(BRAND.socials.x
-			? [{ icon: 'x' as const, href: BRAND.socials.x, label: 'Volg ons op X' }]
-			: [])
-	];
+	/* Instagram, WhatsApp, e-mail — built once in constants/socials.ts and
+	   shared with the footer. This list used to be assembled here by hand and
+	   linked x.com/trinitybnh and facebook.com/trinitybnh, two accounts that do
+	   not exist, in the hero, above the fold. */
+	import { SOCIAL_LINKS } from '$lib/constants/socials';
 
 	// The hero illustration is a centerline trace of the original line art, inlined as SVG so
 	// its strokes can draw themselves on load (stroke-dashoffset, see .hero__draw below).
@@ -73,12 +56,13 @@
 			</div>
 			<nav class="hero__social" aria-label="Sociale media">
 				<ul class="hero__social-list">
-					{#each socials as social (social.icon)}
+					{#each SOCIAL_LINKS as social (social.icon)}
 						<li>
 							<SocialIcon
 								icon={social.icon}
 								href={social.href}
 								label={social.label}
+								newTab={social.newTab}
 								color="var(--brand-border)"
 								background="var(--color-bg-sand)"
 								responsiveSize={false}

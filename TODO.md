@@ -270,12 +270,24 @@ suits a practice better than a brand.
 Nothing needed from her, and it answers the question in §1 — a Facebook page
 would be a bonus rather than a dependency.
 
-- [ ] `SocialIcon.svelte` only knows `x | facebook | instagram`. Needs `whatsapp`
-      and `mail` glyphs drawn in the same 40×40 ringed style as the existing two.
-- [ ] Footer: render the three.
-- [ ] Hero: **undecided** whether the row belongs there at all. Part of the §6
-      redesign — the hero is meant to be the one loud element, and a social row
-      near the top competes with that.
+- [x] `SocialIcon.svelte` gained `whatsapp` and `mail` glyphs in the same 40×40
+      ringed style, plus a `newTab` prop — `mailto:` hands off to the mail client,
+      so opening a blank tab first would leave the visitor staring at an empty
+      window.
+- [x] The row is built once, in `src/lib/constants/socials.ts`, and read by both
+      hero and footer. Building it twice by hand is how they both came to link
+      two accounts that never existed. WhatsApp and mail are skipped
+      automatically if `BRAND.phone` / `BRAND.email` ever go back to `TODO_`.
+- [x] Footer: renders the three.
+- [x] Hero: renders the three. **Confirmed 28-08** — he asked for them at the top
+      of the page. Note this is still the desktop-only row: `.hero__social` is
+      `display: none` below 768px per the Figma frames, so on a phone the icons
+      appear in the footer only. If they should show on mobile too, that is a
+      §6 redesign decision, not a bug.
+Labels deliberately avoid the word "bericht" — the contact form's message
+textarea is labelled `Bericht`, accessible names match by substring, and
+      "Stuur een WhatsApp-bericht naar …" collided with it in five tests. Keep
+social labels short and free of form-field names.
 
 Do not re-add Facebook or X unless the account actually exists. A link to a dead
 profile is worse than no link, and it was already shipping once.

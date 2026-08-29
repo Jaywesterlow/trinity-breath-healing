@@ -5,9 +5,12 @@
 	import TextLink from '$lib/components/ui/interactions/TextLink.svelte';
 	import { reveal } from '$lib/actions/reveal';
 	import { BRAND } from '$lib/constants/brand';
+	/* Instagram, WhatsApp, e-mail — the same row the hero renders, built once
+	   in constants/socials.ts. Both used to assemble it separately, which is
+	   how they both came to link two accounts that never existed. */
+	import { SOCIAL_LINKS } from '$lib/constants/socials';
 
 	const SOCIAL_COLOR = 'var(--color-bg-sand)';
-	const instagramUrl = `https://www.instagram.com/${BRAND.socials.instagram.replace('@', '')}/`;
 
 	/* NAP comes from BRAND, never from literals in this file — brand.ts is the
 	   source of truth and says so at the top. The address and phone were until
@@ -27,25 +30,6 @@
 	const hasPhone = !isPending(BRAND.phone);
 	/* tel: needs the digits unspaced; the visible label keeps the spacing. */
 	const telHref = `tel:${BRAND.phone.replace(/[^+\d]/g, '')}`;
-
-	/* Only the profiles that actually exist. facebook and x are null in BRAND —
-	   they were still rendered here as links to x.com/trinitybnh and
-	   facebook.com/trinitybnh, neither of which is a real account. */
-	const socials = [
-		{ icon: 'instagram' as const, href: instagramUrl, label: 'Volg ons op Instagram' },
-		...(BRAND.socials.facebook
-			? [
-					{
-						icon: 'facebook' as const,
-						href: BRAND.socials.facebook,
-						label: 'Volg ons op Facebook'
-					}
-				]
-			: []),
-		...(BRAND.socials.x
-			? [{ icon: 'x' as const, href: BRAND.socials.x, label: 'Volg ons op X' }]
-			: [])
-	];
 
 	const NAV_COLUMNS = [
 		{
@@ -127,12 +111,13 @@
 			<!-- Social icons — row on mobile, vertical column on desktop (order: 3) -->
 			<nav class="footer__social" aria-label="Sociale media links" use:reveal={{ delay: 110 }}>
 				<ul class="footer__social-list">
-					{#each socials as social (social.icon)}
+					{#each SOCIAL_LINKS as social (social.icon)}
 						<li>
 							<SocialIcon
 								icon={social.icon}
 								href={social.href}
 								label={social.label}
+								newTab={social.newTab}
 								color={SOCIAL_COLOR}
 							/>
 						</li>
