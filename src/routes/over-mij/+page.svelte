@@ -19,6 +19,7 @@
 	import { ButtonLink } from '$lib/components/ui/interactions';
 	import { BRAND } from '$lib/constants/brand';
 	import { ABOUT_INTRO } from '$lib/content/about';
+	import { COMPLETED_TRAININGS, PLANNED_TRAININGS } from '$lib/constants/trainings';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -62,12 +63,30 @@
 	<section class="about-page__section">
 		<h2>Opleiding en achtergrond</h2>
 		<p>
-			<Todo>
-				Opleidingen, certificeringen en jaartallen — per stuk: naam van de opleiding, instituut,
-				jaar van afronding. Dit is het onderdeel waar zowel bezoekers als Google op afgaan, dus
-				liever volledig dan bescheiden
-			</Todo>
+			Sinds 2024 volg ik onafgebroken opleidingen en verdiepingen. Niet één cursus en klaar — elk
+			jaar komt er werk bij, en een deel daarvan herhaal ik bewust.
 		</p>
+		<ul class="about-page__trainings">
+			{#each COMPLETED_TRAININGS as training (training.date + training.name)}
+				<li>
+					<span class="about-page__training-date">{training.dateLabel}</span>
+					<span class="about-page__training-name">{training.name}</span>
+				</li>
+			{/each}
+		</ul>
+
+		{#if PLANNED_TRAININGS.length > 0}
+			<!-- Separated on purpose. Something she has planned is not something she
+			     has completed, and on a health page that difference is the whole
+			     point of publishing the list. -->
+			<p class="about-page__training-planned">
+				Gepland:
+				{#each PLANNED_TRAININGS as training, i (training.date + training.name)}{i > 0
+						? ', '
+						: ''}{training.name} ({training.dateLabel}){/each}
+			</p>
+		{/if}
+
 		<p>
 			<Todo>Aangesloten bij een beroepsvereniging? Zo ja, welke, en sinds wanneer</Todo>
 		</p>
@@ -93,7 +112,9 @@
 	<section class="about-page__section">
 		<h2>Waar ik werk</h2>
 		<p>
-			De praktijk is gevestigd in <Todo>plaats</Todo>. Mensen komen naar me toe uit {areaList} en omgeving.
+			{BRAND.practice.locationNote}
+			{BRAND.practice.homeVisitNote}
+			{BRAND.practice.remoteNote} Mensen komen naar me toe uit {areaList} en omgeving.
 		</p>
 	</section>
 
@@ -180,6 +201,40 @@
 	.about-page__services p {
 		margin: 0;
 		font-size: 0.9375rem;
+	}
+
+	/* Date and course name as two columns on anything but the narrowest phone:
+	   a reader scanning for "how recent is this" wants the years to line up. It
+	   collapses to a stacked list below 30rem, where a fixed date column would
+	   squeeze the longer course names to three words a line. */
+	.about-page__trainings {
+		list-style: none;
+		margin: 0 0 1.25rem;
+		padding: 0;
+		display: grid;
+		gap: 0.5rem;
+	}
+
+	.about-page__trainings li {
+		display: grid;
+		gap: 0.1rem 1rem;
+	}
+
+	.about-page__training-date {
+		font-size: 0.8125rem;
+		color: var(--color-text-subtle);
+	}
+
+	.about-page__training-planned {
+		font-size: 0.9375rem;
+		color: var(--color-text-subtle);
+	}
+
+	@media (min-width: 30rem) {
+		.about-page__trainings li {
+			grid-template-columns: 9rem 1fr;
+			align-items: baseline;
+		}
 	}
 
 	.about-page__section--note {

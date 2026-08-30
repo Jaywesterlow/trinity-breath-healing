@@ -12,6 +12,7 @@
 import type { Organization, ProfessionalService, Person, WebSite } from 'schema-dts';
 import { SITE_URL } from '$lib/seo/defaults';
 import { BRAND } from '$lib/constants/brand';
+import { COMPLETED_TRAININGS } from '$lib/constants/trainings';
 
 /** Filters null/undefined from BRAND.socials for sameAs array */
 function getSameAs(): string[] {
@@ -59,7 +60,26 @@ export const personNode: Person = {
 	name: BRAND.practitionerFullName,
 	jobTitle: 'Ademwerk begeleider',
 	// jobTitle will be revisited at Phase 4 once BIG (Big Integrative Governance) status is known
-	worksFor: { '@id': `${SITE_URL}/#organization` }
+	worksFor: { '@id': `${SITE_URL}/#organization` },
+	/**
+	 * Her completed training, 2024 onwards. This is the machine-readable half of
+	 * the E-E-A-T argument on /over-mij: on a YMYL health topic the question a
+	 * search engine and an answer engine both ask is who she is and what
+	 * qualifies her, and until now the graph had no answer at all.
+	 *
+	 * Only completed courses. September 2026 has not happened yet and is filtered
+	 * out upstream — a planned course asserted as a credential is a false claim,
+	 * and it would be one made in structured data, where it is quoted rather than
+	 * read in context.
+	 *
+	 * No `recognizedBy` / `educationalLevel`: she gave course names and dates, not
+	 * the institutes, and an unverified issuer is worse than an absent one.
+	 */
+	hasCredential: COMPLETED_TRAININGS.map((training) => ({
+		'@type': 'EducationalOccupationalCredential' as const,
+		name: training.name,
+		dateCreated: training.date
+	}))
 };
 
 export const webSiteNode: WebSite = {

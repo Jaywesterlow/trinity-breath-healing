@@ -39,14 +39,37 @@ Every one of these renders as **red bracketed text** on a live page right now.
 - [x] BTW-ID — `NL005276270B90`
 - [x] E-mail — she uses `bgrohe72@gmail.com` and wants a business address, so `info@trinitybreathhealing.nl` has to be created and forwarded there
 - [ ] Price per session
-- [ ] Cancellation window — **provisionally 24 h**, set in `CANCELLATION_HOURS` and already quoted to visitors in the booking e-mails. Confirm or change.
-- [ ] Payment method and when it is due
+- [x] Cancellation window — **confirmed 24 h, 29-08.** `CANCELLATION_HOURS` was already provisionally 24, so the e-mails and the algemene voorwaarden were quoting the right number by luck. It is now hers.
+- [~] Payment method — **answered 29-08, half-blocked.** Payment is **after** the
+      treatment, by **factuur, Tikkie, iDEAL or cash**. Two things follow:
+      - She asked what the transaction costs are before committing to Tikkie /
+        iDEAL. See §12.
+      - "After the treatment" has to reach the algemene voorwaarden and the
+        booking confirmation, otherwise the site implies payment up front.
 - [~] **Beroepsvereniging: CAT** — she has decided to join **CAT-collectief**, but has **not registered yet** (28-08). Registration matters to the site beyond a logo: CAT membership puts her under the **Wkkgz**, with **GAT** (Geschilleninstantie Alternatieve Therapeuten) as the rijks-erkende complaints body, plus a BAT beroepsaansprakelijkheidsverzekering. That is the answer to the `<Todo>` in the algemene voorwaarden asking where a client goes if they cannot resolve a complaint directly — so **that clause stays open until she is actually a member**. Roughly €189/yr ex btw via Het Coach Lokaal's student code.
-- [ ] **Trainings — needs confirming, do not publish the list as-is.** She forwarded a message from Het Coach Lokaal naming their *registered* courses: Cupping Coach®, YinYang Breath® Facilitator, YinYang Breath® ademtherapeut, Holistisch Healer, Spinal Touch® Facilitator, plus bijscholing such as the snijzaal. That is the school listing its own catalogue, **not a statement of what she completed**. Ask which of these she actually holds and in which year. Publishing an unearned qualification on a health practitioner's site is the worst kind of error to make.
+- [x] **Trainings — supplied 29-08, thirteen courses with dates.** Now in
+      `src/lib/constants/trainings.ts`, rendered on `/over-mij` and emitted as
+      `Person.hasCredential`. Earlier worry resolved: the Het Coach Lokaal list
+      was indeed the school's own catalogue, and her actual history is a
+      different and much better set — an unbroken run from January 2024 to now.
+      Two encodings matter and must not be flattened away:
+      - **September 2026 has not happened.** Soul Alchemist module 3 is marked
+        `planned`, rendered apart from the rest, and excluded from the JSON-LD.
+      - **May 2025 is a repeat** of January 2024, marked `repeat`, so the list
+        does not silently count it twice.
+      Still open, tracked below: the institutes, and two spellings.
+- [ ] **Which school gave each training?** She sent course names and dates, no
+      institutes. A credential list is markedly stronger for E-E-A-T with the
+      issuer named, and `hasCredential` has a `recognizedBy` slot standing empty.
+- [ ] **Two spellings to confirm:** "The Sorcerers Symphony" (she wrote "The
+      socerers Symphony") and "G-Tummo" (she wrote "Gtummo"). Proper names of
+      specific courses, so I tidied rather than corrected — she should check.
 - [ ] Her story — 2–3 paragraphs, her own words
 - [ ] What a first session is actually like
 - [ ] **Confirm the contraindication list on `/disclaimer`** ⚠️
-- [ ] **Which calendar does she use — Google or Apple?** Decides §8 step 3.
+- [x] **Calendar: Google.** Confirmed 29-08. Unblocks §8 step 3 — the ICS feed
+      route works with Google Calendar's secret address, which is the easier of
+      the two options.
 - [ ] **Heeft ze Facebook, of andere socials?** Nice to have, no longer blocking — §9 fills the row with Instagram, WhatsApp and e-mail instead.
 - [x] **`trinitybreathandhealing.nl` — she has access.** Registered at **mijndomein.nl**. She sent the login over WhatsApp in plain text; **have her change that password** and do not store it anywhere in this repo.
 - [ ] **Decide: keep `trinitybreathhealing.nl` as the real site?** Recommended yes. Hers is the exact business name, which is marginally better for recall, but the site, DNS, Resend, the CSP and every canonical URL already point at ours. Redirect hers rather than migrating — the gain does not cover redoing all of it.
@@ -223,7 +246,7 @@ else is a sync loop.
 2. [ ] **Manual slot toggles on the site.** She closes a slot for reasons that
    are not appointments — tired, admin, a buffer between sessions, a week off.
    Needs nothing from her, so it can be built any time.
-3. [ ] **Read her calendar.** Needs her account, so it waits for her anyway.
+3. [ ] **Read her calendar. Unblocked 29-08 — she uses Google.**
    Google Calendar API `freeBusy` rather than a secret iCal link: the iCal feed
    is cached for hours, and a slot still bookable hours after she blocked it
    causes exactly the rejection this is meant to avoid. `freeBusy` returns busy
@@ -316,6 +339,69 @@ That is a content-structure question, not a wording one:
       legal one.
 - [ ] Blocked on her definitive answer (promised 30-08) — do not restructure
       before it lands, the shape of her answer decides the shape of the page.
+
+---
+
+## 12. Payment — what Tikkie and iDEAL actually cost her
+
+Answered 29-08: payment is **after** the treatment, by **factuur, Tikkie, iDEAL
+or cash**. She asked what the transaction costs are before committing.
+
+Two site-facing consequences, neither of which needs her:
+
+- [ ] "Betaling na de behandeling" belongs in the algemene voorwaarden and in
+      the booking confirmation. Right now neither says when payment is due, and
+      a booking flow that never mentions it reads as "pay up front".
+- [ ] The FAQ has no payment question. It is one of the three things anyone
+      checks before a first appointment, alongside price and cancellation.
+
+And one that does:
+
+- [ ] **Get her the fee numbers before she picks.** Rough shape, to verify
+      against each provider's current tariff page rather than quoted from
+      memory: an invoice paid by bank transfer costs nothing; Tikkie's
+      *consumer* version is free but is not licensed for business use, so a
+      practice needs Tikkie Zakelijk, which charges per paid request; a real
+      iDEAL integration goes through a PSP (Mollie, Buckaroo) at a fixed fee
+      per transaction with no monthly minimum. For a solo practice at her
+      volume, invoice + bank transfer is almost certainly the cheapest and
+      Tikkie Zakelijk is the convenience premium.
+- [ ] A PSP means a **verwerkersovereenkomst**, same as Resend and Supabase.
+
+Note: nothing here implies taking payment *on the site*. She takes it after the
+session; the site only has to say so.
+
+---
+
+## 13. Intake questionnaire with the confirmation e-mail
+
+New requirement, 29-08: *"Graag na bevestiging afspraak in agenda vragenlijst
+meesturen in de bevestigingsmail van de afspraak met de termijn erbij — reactie
+formulier terug moet zijn 24u voor de afspraak."*
+
+So: when she approves a booking, the confirmation that goes to the visitor
+should carry an intake questionnaire and state that it must come back **24 hours
+before** the appointment.
+
+The plumbing is already there — `sendBookingApproved` builds the confirmation
+and attaches the `.ics`, and `CANCELLATION_HOURS` is the same 24. What is
+missing is the questionnaire itself and a decision about its form:
+
+- [ ] **Blocked on her: the questions.** This is an intake form for a health
+      practice; the questions are hers, not mine to invent.
+- [ ] **Decide the form.** A PDF attached to the confirmation is the least work
+      and gives her a returned file. A page on the site (`/intake/[token]`,
+      reusing the booking token) is better for her — answers arrive typed and
+      she cannot lose the attachment — but the answers are **Art. 9 health
+      data**, and the whole booking design so far has deliberately kept health
+      data out of the database. A form that stores answers reverses that. If we
+      build it, answers should e-mail straight to her and never be written down.
+- [ ] Whichever form: the 24-hour deadline goes in the e-mail body, computed
+      from the appointment rather than typed as a literal.
+
+Related: her contraindication doubt in §11 is the same conversation. If the
+questionnaire asks about conditions per treatment, it partly answers the
+question of where the per-treatment list should live.
 
 ---
 

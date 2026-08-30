@@ -12,6 +12,13 @@
  * Run AFTER: PUBLIC_SITE_URL=https://trinitybreathhealing.nl npm run build
  */
 import { test, expect, type Page } from '@playwright/test';
+import { DEFAULT_SCHEDULE, slotsFor } from '../../src/lib/booking/schedule';
+
+/* The opening window is the practitioner's, and it has already moved once — from
+   the Figma mock-up's office hours to her real weekday evenings. Tests that name
+   a literal "10:00", or reach for the sixth slot, break on every such move for
+   no reason: none of them assert anything about which hour it is. Ask the
+   schedule instead. */
 
 const VALID = {
 	voornaam: 'John',
@@ -206,7 +213,9 @@ test.describe('Contact — date planner', () => {
 
 	async function toDetailStep(page: Page) {
 		await toTimeStep(page);
-		await times(page).nth(5).click();
+		// .last(), not a fixed index: the window is four slots wide today and was
+		// twelve before, and this step only needs *a* time to be chosen.
+		await times(page).last().click();
 		await page.getByRole('button', { name: 'Verder' }).click();
 		await settled(page);
 	}
@@ -417,8 +426,11 @@ test.describe('Contact — /api/booking', () => {
 		target.setDate(target.getDate() + ((3 - (target.getDay() || 7) + 7) % 7));
 		const datum = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`;
 
+		const offered = slotsFor(DEFAULT_SCHEDULE, datum, new Date())[0];
+		expect(offered, 'the schedule must offer something on a Wednesday').toBeTruthy();
+
 		const response = await request.post('/api/booking', {
-			data: { ...person, datum, start: '10:00', end: '10:30' }
+			data: { ...person, datum, start: offered!.start, end: offered!.end }
 		});
 		// 200 with Resend configured, 503 without; either way the slot was real.
 		expect([400, 409]).not.toContain(response.status());

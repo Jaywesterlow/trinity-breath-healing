@@ -17,16 +17,16 @@ const MONDAY = '2026-06-08';
 const now = new Date(2026, 5, 1, 9, 0, 0);
 
 describe('slotsFor', () => {
-	it('produces the twelve 30-minute slots the design shows', () => {
+	it("offers the practitioner's evening window in 30-minute slots", () => {
 		const slots = slotsFor(DEFAULT_SCHEDULE, MONDAY, now);
-		expect(slots).toHaveLength(12);
-		expect(slots[0]!.label).toBe('10:00 - 10:30');
-		expect(slots.at(-1)!.label).toBe('15:30 - 16:00');
+		expect(slots).toHaveLength(4);
+		expect(slots[0]!.label).toBe('19:00 - 19:30');
+		expect(slots.at(-1)!.label).toBe('20:30 - 21:00');
 	});
 
 	it('never runs past the closing time', () => {
 		for (const slot of slotsFor(DEFAULT_SCHEDULE, MONDAY, now)) {
-			expect(slot.end <= '16:00').toBe(true);
+			expect(slot.end <= '21:00').toBe(true);
 		}
 	});
 

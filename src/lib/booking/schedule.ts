@@ -45,12 +45,28 @@ export interface TimeSlot {
 }
 
 /**
- * Until the CMS exists, this is the practitioner's availability: weekdays,
- * 10:00-16:00, in 30-minute slots — the twelve slots drawn in Figma 441-48.
+ * Until the CMS exists, this is the practitioner's availability.
+ *
+ * What the planner sells is the 30-minute online kennismaking, and she said
+ * where that fits (29-08): *"Kennismaking online door de weeks kan maar in de
+ * avonden."* Weekday evenings, not office hours.
+ *
+ * This used to be Mon-Fri 10:00-16:00 — the twelve slots drawn in Figma 441-48,
+ * which were a layout study rather than her diary. Twelve daytime slots she
+ * cannot take is worse than four she can: every booking against them is a
+ * request she has to decline, and the decline arrives after the visitor has
+ * already committed to a time.
+ *
+ * 19:00-21:00 is the conservative reading of "in de avonden" — narrow on
+ * purpose, since an offered slot she cannot make costs more than an unoffered
+ * slot she could have. TODO.md §1 tracks confirming the real window with her.
+ *
+ * `leadTimeHours: 24` is hers too: nothing bookable inside 24 hours, matching
+ * the 24-hour free cancellation window in CANCELLATION_HOURS.
  */
 export const DEFAULT_SCHEDULE: Schedule = {
 	slotMinutes: 30,
-	openingHours: [1, 2, 3, 4, 5].map((weekday) => ({ weekday, from: '10:00', to: '16:00' })),
+	openingHours: [1, 2, 3, 4, 5].map((weekday) => ({ weekday, from: '19:00', to: '21:00' })),
 	closedDates: [],
 	leadTimeHours: 24,
 	horizonDays: 90
