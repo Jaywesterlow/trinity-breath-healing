@@ -58,12 +58,31 @@ Every one of these renders as **red bracketed text** on a live page right now.
       - **May 2025 is a repeat** of January 2024, marked `repeat`, so the list
         does not silently count it twice.
       Still open, tracked below: the institutes, and two spellings.
-- [ ] **Which school gave each training?** She sent course names and dates, no
-      institutes. A credential list is markedly stronger for E-E-A-T with the
-      issuer named, and `hasCredential` has a `recognizedBy` slot standing empty.
-- [ ] **Two spellings to confirm:** "The Sorcerers Symphony" (she wrote "The
-      socerers Symphony") and "G-Tummo" (she wrote "Gtummo"). Proper names of
-      specific courses, so I tidied rather than corrected — she should check.
+- [x] **Schools — answered 30-08 by photographs of the certificates.** One
+      Consciousness Academy (the three Mahatma / Sorcerers / Mahakali courses),
+      Het Coach Lokaal in Zoetermeer (both Spinal Touch modules), Sluis NLP
+      Instituut (NLP Practitioner) and Inner Journey — Institute for Trauma
+      Release and Breathwork, Hilversum (BRTT & TRB). All now render on
+      `/over-mij` and emit as `recognizedBy` on each credential.
+- [x] **Spellings — settled by the certificates, and one of them overruled me.**
+      The document reads **GTUMMO**, so her "Gtummo" was correct and my tidy to
+      "G-Tummo" was wrong; it is back. "The Sorcerers Symphony" is confirmed as
+      printed, no apostrophe. Spinal Touch carries the **®**, so it is now
+      "Spinal Touch® Facilitator".
+- [ ] **Four courses still have no named school**, because no certificate for
+      them was in the photograph: Mahatma Master neveninitiatie 1 and 2 (these
+      appear as *seals on the Master certificate* rather than as separate
+      documents, so they may well not have their own) and **Soul Alchemist
+      module 1 and 2**. Ask about Soul Alchemist specifically.
+- [ ] **One date to confirm: Spinal Touch module 2.** Her list says March 2026
+      and the certificate's own date was not legible in the photo — it could
+      read 2025. March 2026 is what the site shows, on the grounds that the
+      3-day base training was December 2025 and module 2 follows it. Worth one
+      look at the paper.
+
+**Not recorded on purpose:** the Trauma Release certificate carries her **date
+of birth**. The institute prints it; it does not belong in this repository or on
+a public page, and it is not in `trainings.ts`.
 - [ ] Her story — 2–3 paragraphs, her own words
 - [ ] What a first session is actually like
 - [ ] **Confirm the contraindication list on `/disclaimer`** ⚠️
@@ -339,6 +358,29 @@ That is a content-structure question, not a wording one:
       legal one.
 - [ ] Blocked on her definitive answer (promised 30-08) — do not restructure
       before it lands, the shape of her answer decides the shape of the page.
+
+---
+
+## 14. Planner opens on the first bookable month (fixed 30-08)
+
+Found by a test that started failing when the hours moved to weekday evenings,
+and it was a real dead end rather than a stale assertion.
+
+The calendar opened on the current month and disabled its back arrow there. With
+the old six-hour daytime window something was always bookable within a day or
+two, so the two were never different. A two-hour evening window plus a 24-hour
+lead time makes them differ: late on the last weekday evening of a month, every
+remaining slot is inside the lead time and the current month has nothing left.
+The visitor got an empty grid, a disabled back arrow, and no sign that the answer
+was one click forward.
+
+`firstBookableDate()` now walks forward to the first date the schedule actually
+offers, and the planner opens on that month and stops its back arrow there. Four
+unit tests cover it, including the month-boundary and weekend cases.
+
+Worth remembering as a shape: **narrowing the opening hours narrows every margin
+that depended on them.** If the window is ever cut further — one evening a week,
+say — check the lead time against it again.
 
 ---
 

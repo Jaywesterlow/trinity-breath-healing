@@ -70,7 +70,11 @@
 			{#each COMPLETED_TRAININGS as training (training.date + training.name)}
 				<li>
 					<span class="about-page__training-date">{training.dateLabel}</span>
-					<span class="about-page__training-name">{training.name}</span>
+					<span class="about-page__training-name">
+						{training.name}{#if training.provider}<span class="about-page__training-provider"
+								>{training.provider}</span
+							>{/if}
+					</span>
 				</li>
 			{/each}
 		</ul>
@@ -221,6 +225,15 @@
 	}
 
 	.about-page__training-date {
+		font-size: 0.8125rem;
+		color: var(--color-text-subtle);
+	}
+
+	/* The school on its own line under the course. It is the part a sceptical
+	   reader checks, so it stays visible rather than collapsing into a tooltip —
+	   just quieter than the course itself. */
+	.about-page__training-provider {
+		display: block;
 		font-size: 0.8125rem;
 		color: var(--color-text-subtle);
 	}

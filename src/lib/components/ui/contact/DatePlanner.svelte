@@ -30,6 +30,8 @@
 	} from '$lib/booking/booking';
 	import {
 		DEFAULT_SCHEDULE,
+		firstBookableDate,
+		fromIso,
 		isBookable,
 		isoWeekday,
 		slotsFor,
@@ -72,8 +74,26 @@
 	 */
 	const buildToday = new Date(`${__BUILD_DATE__}T00:00:00`);
 	let now = $state(buildToday);
-	let viewYear = $state(buildToday.getFullYear());
-	let viewMonth = $state(buildToday.getMonth());
+
+	/**
+	 * The month the calendar opens on: the one holding the first date the
+	 * schedule actually offers, not simply the current one. Those are usually
+	 * the same month and occasionally are not — late on the last evening of a
+	 * month, every remaining slot is inside the 24-hour lead time — and when
+	 * they differ, opening on the current month shows an empty grid with the
+	 * back arrow disabled and no hint that the answer is one click forward.
+	 */
+	function openingMonth(reference: Date): { year: number; month: number } {
+		const first = firstBookableDate(DEFAULT_SCHEDULE, reference);
+		const date = first ? fromIso(first) : reference;
+		return { year: date.getFullYear(), month: date.getMonth() };
+	}
+
+	const opening = openingMonth(buildToday);
+	let viewYear = $state(opening.year);
+	let viewMonth = $state(opening.month);
+	/** The month the back arrow stops at — never earlier than what is bookable. */
+	let firstMonth = $state(opening);
 
 	/**
 	 * The flow, in order. `klaar` is the confirmation the card becomes once the
@@ -109,16 +129,18 @@
 		const real = new Date();
 		if (toIso(real) === toIso(now)) return;
 		now = real;
-		viewYear = real.getFullYear();
-		viewMonth = real.getMonth();
+		const fresh = openingMonth(real);
+		firstMonth = fresh;
+		viewYear = fresh.year;
+		viewMonth = fresh.month;
 	});
 
-	const today = $derived(new Date(now.getFullYear(), now.getMonth(), now.getDate()));
 	const daysInMonth = $derived(new Date(viewYear, viewMonth + 1, 0).getDate());
 	const monthLabel = $derived(`${MONTHS[viewMonth]!} ${viewYear}`);
 
-	/** Nothing before today is bookable, so the previous arrow stops at this month. */
-	const atFirstMonth = $derived(viewYear === today.getFullYear() && viewMonth === today.getMonth());
+	/** Nothing before the first bookable date is reachable, so the previous arrow
+	 *  stops at its month rather than at today's. */
+	const atFirstMonth = $derived(viewYear === firstMonth.year && viewMonth === firstMonth.month);
 
 	function isoFor(day: number): string {
 		return toIso(new Date(viewYear, viewMonth, day));

@@ -72,13 +72,17 @@ export const personNode: Person = {
 	 * and it would be one made in structured data, where it is quoted rather than
 	 * read in context.
 	 *
-	 * No `recognizedBy` / `educationalLevel`: she gave course names and dates, not
-	 * the institutes, and an unverified issuer is worse than an absent one.
+	 * `recognizedBy` is present wherever the certificate names a school, and
+	 * omitted where it does not. An issuer is the checkable half of a
+	 * credential, so a guessed one would be worse than none at all.
 	 */
 	hasCredential: COMPLETED_TRAININGS.map((training) => ({
 		'@type': 'EducationalOccupationalCredential' as const,
 		name: training.name,
-		dateCreated: training.date
+		dateCreated: training.date,
+		...(training.provider
+			? { recognizedBy: { '@type': 'Organization' as const, name: training.provider } }
+			: {})
 	}))
 };
 

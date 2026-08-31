@@ -143,3 +143,30 @@ export function isBookable(schedule: Schedule, iso: string, now: Date = new Date
 
 	return slotsFor(schedule, iso, now).length > 0;
 }
+
+/**
+ * The first date the schedule actually offers, walking forward from today.
+ *
+ * The planner opens on a month and disables its back arrow there, so "which
+ * month do we open on" has to be a real question rather than "the current one".
+ * With a six-hour daytime window there was always something bookable within a
+ * day or two and the distinction never showed. With a two-hour evening window
+ * and a 24-hour lead time it does: late on the last day of a month, every
+ * remaining slot is inside the lead time and the current month has nothing
+ * left — so the planner would open on an empty grid with the back arrow
+ * disabled and no indication that the answer is one click forward.
+ *
+ * Returns null when the whole horizon is empty, which only happens if the
+ * schedule has no opening hours at all.
+ */
+export function firstBookableDate(schedule: Schedule, now: Date = new Date()): string | null {
+	const start = startOfDay(now);
+
+	for (let offset = 0; offset <= schedule.horizonDays; offset += 1) {
+		const day = new Date(start.getFullYear(), start.getMonth(), start.getDate() + offset);
+		const iso = toIso(day);
+		if (isBookable(schedule, iso, now)) return iso;
+	}
+
+	return null;
+}
