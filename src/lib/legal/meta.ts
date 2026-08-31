@@ -5,7 +5,7 @@
  * date: a legal document's date has to mean "the text changed", not "the site
  * redeployed". Bump it when the wording changes and only then.
  */
-export const LEGAL_LAST_UPDATED = '2026-08-21';
+export const LEGAL_LAST_UPDATED = '2026-08-31';
 
 /**
  * Free cancellation window, in hours.

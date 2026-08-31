@@ -11,9 +11,42 @@ than assuming.
 
 | Processor | What it handles | Document | Status |
 |---|---|---|---|
-| **Resend** | Outgoing e-mail: contact form, booking request, approval and rejection | `resend-dpa.pdf` | Executed on sign-up — Resend's dashboard states the attached DPA "is considered fully executed once you sign up". No counter-signature to chase. |
-| **Supabase** | `booking_request` — dates, times, status, token hashes. **No personal data.** | `supabase-dpa.pdf` | View-only in the dashboard, i.e. incorporated by their terms rather than separately signed. |
+| **Resend** | Outgoing e-mail: contact form, booking request, approval and rejection | `resend-dpa.pdf` | Executed on sign-up — the dashboard states the attached DPA "is considered fully executed once you sign up". DocuSign-countersigned copy held. |
+| **Supabase** | `booking_request` — dates, times, status, token hashes. **No personal data.** | `supabase-dpa.pdf` | View-only in the dashboard, i.e. incorporated by their terms rather than separately signed. Version 1, 1 August 2026. |
 | **Vercel** | Hosting; request logs | — | Covered by Vercel's own DPA in their terms. |
+
+## What the documents actually say
+
+Read 31-08 rather than filed unread, and one line of `/privacyverklaring` was
+wrong because of it.
+
+**Every one of these three is a non-EU company, and the privacy statement said
+only "Europese Unie".** Storage region and corporate reach are different
+questions, and the second one was missing:
+
+- **Resend** is *Plus Five Five, Inc.*, San Francisco. Its DPA §6.1 is explicit:
+  "Company's primary processing operations take place in the United States, and
+  the transfer of Customer's Personal Data to the United States is necessary for
+  the provision of the Services."
+- **Supabase** contracts as *Supabase Pte. Ltd* (Singapore); the TIA covers
+  transfer to *Supabase Inc*, Delaware. DPA §6.1 does honour a chosen region for
+  storage and primary processing — ours is **eu-west-1 (Ireland)**, confirmed
+  in the dashboard.
+- Both rely on **EU SCCs, Commission Decision 2021/914, Module Two**.
+
+`/privacyverklaring` now carries a fourth column ("Toegang van buiten de EU")
+and a section naming the modelcontractbepalingen as the safeguard. AVG art.
+13(1)(f) asks for exactly that, and a health practice is the wrong place to be
+approximately right about it.
+
+**Supabase's DPA defines health data as "Sensitive Data"** and puts the notice
+and explicit-consent burden on the customer. This is the clause that justifies
+the booking table holding no name, e-mail or klachten — that design choice is
+now load-bearing rather than tidy, and should not be relaxed.
+
+`supabase-tia.pdf` is their FISA 702 / Schrems II analysis. Worth keeping: it is
+the document that answers "what about American surveillance law" if a client or
+her beroepsvereniging ever asks.
 
 Also worth keeping when the vendor offers them, since they answer the questions
 a beroepsvereniging or a client asks without needing a lawyer:
