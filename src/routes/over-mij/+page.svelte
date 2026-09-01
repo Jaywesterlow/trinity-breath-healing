@@ -64,7 +64,9 @@
 		<h2>Opleiding en achtergrond</h2>
 		<p>
 			Sinds 2024 volg ik onafgebroken opleidingen en verdiepingen. Niet één cursus en klaar — elk
-			jaar komt er werk bij, en een deel daarvan herhaal ik bewust.
+			jaar komt er werk bij, een deel herhaal ik bewust, en sommige trajecten lopen nog. Het Soul
+			Alchemist-traject telt zes modules; daarvan heb ik er twee afgerond en volgen de rest dit jaar
+			en volgend jaar.
 		</p>
 		<ul class="about-page__trainings">
 			{#each COMPLETED_TRAININGS as training (training.date + training.name)}

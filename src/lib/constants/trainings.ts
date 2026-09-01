@@ -20,10 +20,16 @@
  * `provider` comes from photographs of the certificates themselves (30-08), not
  * from memory or inference. A named school is what turns "she says she trained"
  * into something a reader can check, and it is the half of the credential that
- * `recognizedBy` wants in the JSON-LD. Four courses still have none: the two
- * Mahatma neveninitiaties (which appear as seals on the Master certificate
- * rather than as separate documents) and both Soul Alchemist modules, for which
- * no certificate was in the photograph.
+ * `recognizedBy` wants in the JSON-LD. Soul Alchemist was the gap and she closed
+ * it on 31-08: it is One Consciousness Academy too (ocacademy.eu), which makes
+ * that school four of her five. Only the two Mahatma neveninitiaties have none,
+ * and they appear as seals on the Master certificate rather than as documents of
+ * their own, so they may simply never have had one.
+ *
+ * SOUL ALCHEMIST IS A SIX-MODULE TRAJECT and she has finished two. Module 3 runs
+ * 12–14 September 2026; three more follow next year. That is why the page frames
+ * her training as ongoing rather than finished — it is accurate, and a
+ * practitioner still in training every year reads better than one who stopped.
  *
  * SPELLING is now the certificates', which settled both open questions and
  * overruled me on one: the document reads "GTUMMO", so her "Gtummo" was right
@@ -97,18 +103,29 @@ export const TRAININGS: Training[] = [
 		name: 'Spinal Touch® Facilitator',
 		provider: 'Het Coach Lokaal'
 	},
-	{ date: '2026-01', dateLabel: 'januari 2026', name: 'Soul Alchemist — module 1' },
+	{
+		date: '2026-01',
+		dateLabel: 'januari 2026',
+		name: 'Soul Alchemist — module 1',
+		provider: 'One Consciousness Academy'
+	},
 	{
 		date: '2026-03',
 		dateLabel: 'maart 2026',
 		name: 'Spinal Touch® Facilitator — module 2',
 		provider: 'Het Coach Lokaal'
 	},
-	{ date: '2026-05', dateLabel: 'mei 2026', name: 'Soul Alchemist — module 2' },
+	{
+		date: '2026-05',
+		dateLabel: 'mei 2026',
+		name: 'Soul Alchemist — module 2',
+		provider: 'One Consciousness Academy'
+	},
 	{
 		date: '2026-09',
-		dateLabel: 'september 2026',
+		dateLabel: '12–14 september 2026',
 		name: 'Soul Alchemist — module 3',
+		provider: 'One Consciousness Academy',
 		planned: true
 	}
 ];
