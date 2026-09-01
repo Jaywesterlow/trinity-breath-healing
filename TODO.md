@@ -88,11 +88,12 @@ Every one of these renders as **red bracketed text** on a live page right now.
 **Not recorded on purpose:** the Trauma Release certificate carries her **date
 of birth**. The institute prints it; it does not belong in this repository or on
 a public page, and it is not in `trainings.ts`.
-- [x] **Access to her Google account — supplied 31-08.** Unblocks the Google
-      Business Profile and, later, reading her calendar (§8 step 3). End state
-      should be that Jay is a **Manager** on the Business Profile in his own
-      account rather than signed in as her; the shared login is a means of
-      getting there, not where this should stay.
+- [~] **Access to her Google account** — sent 31-08 but the password does not
+      work, so still blocked. Gates the Google Business Profile and, later,
+      reading her calendar (§8 step 3). End state should be that Jay is a
+      **Manager** on the Business Profile from his own account rather than
+      signed in as her; a shared login is how you get there, not where it
+      should stay.
 - [ ] ~~**Access to her Google account**~~ (the one behind `bgrohe72@gmail.com`).
       Needed for the **Google Business Profile**, which cannot be created from
       Jay's account: Google verifies the listing against the business itself and
@@ -146,7 +147,7 @@ modal image animation.
 - [ ] Create the Plausible account, then set `PUBLIC_PLAUSIBLE_DOMAIN` in Vercel
 - [x] Supabase booking store — project created, migration run, `DATABASE_URL` (transaction pooler, IPv4) and `BOOKING_TOKEN_SECRET` set in Vercel
 - [ ] **Sign the Supabase verwerkersovereenkomst** and add Supabase to the processor table in `/privacyverklaring`. Lower stakes than Resend's — the table holds no personal data — but it is still a processor and the statement currently does not name it.
-- [ ] **UNBLOCKED 31-08 — her login is available.** Google Business Profile — **must be created from her Google account**, not Jay's: verification goes to the business and transferring ownership afterwards is a genuine hassle. Set it up as a **service-area business** (Amsterdam and surroundings) rather than a storefront. She rents the Reigersbos room one day a week; listing a part-time rented room as a normal storefront is how listings get suspended. Address hidden, or shown with Saturday-only hours.
+- [~] **BLOCKED AGAIN 31-08 — the password she sent does not work.** Google Business Profile — **must be created from her Google account**, not Jay's: verification goes to the business and transferring ownership afterwards is a genuine hassle. Set it up as a **service-area business** (Amsterdam and surroundings) rather than a storefront. She rents the Reigersbos room one day a week; listing a part-time rented room as a normal storefront is how listings get suspended. Address hidden, or shown with Saturday-only hours.
 - [ ] Regenerate the visual-regression baselines on Windows (`npm run test:visual -- --update-snapshots`) — the spec skips on Linux, so CI cannot
 - [ ] Check LCP in Search Console a few weeks after launch
 - [ ] Decide on PR #13 (`docs/consolidate`), open since 2026-08-10
