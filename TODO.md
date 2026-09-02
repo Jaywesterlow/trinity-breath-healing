@@ -34,7 +34,21 @@ Every one of these renders as **red bracketed text** on a live page right now.
 `npm run audit:placeholders` lists them under "Unfilled `<Todo>` markers".
 
 - [x] KvK number — `97538159`
-- [x] Business address — Reigersbos 100 L, 3e etage, 1107 ES Amsterdam
+- [~] **Address — corrected 31-08, and it was wrong in a way worth remembering.**
+      Reigersbos is her **home**; the business is registered at a **different
+      building, one she owns and rents to tenants**. She sent the first under
+      "Adres" and it went straight into the footer on all thirteen pages.
+      Neither address should be published: the registered one sends a client to
+      a stranger's door, and the other is a solo practitioner's home on a health
+      site. The footer now gives the region (`BRAND.workArea`), home visits and
+      remote — matching the Google Business Profile, which is a service-area
+      listing with the address hidden.
+- [ ] **Still needed: the KvK vestigingsadres**, for the legal pages only.
+      `registeredAddress` in `brand.ts` is TODO_, and `<Todo>vestigingsadres</Todo>`
+      sits in both `/algemene-voorwaarden` and `/privacyverklaring`. This one
+      cannot be dropped — art. 3:15d BW requires a service provider to publish
+      the address where it is established — but "gevestigd te" on a legal page
+      is the right frame for it, not a footer that reads as "come here".
 - [x] Phone number — 06 24 24 45 85
 - [x] BTW-ID — `NL005276270B90`
 - [x] E-mail — she uses `bgrohe72@gmail.com` and wants a business address, so `info@trinitybreathhealing.nl` has to be created and forwarded there

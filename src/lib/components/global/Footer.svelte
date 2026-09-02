@@ -18,15 +18,24 @@
 	   street in Almere and a placeholder "(+31) 6 123 456 78". A wrong address
 	   on a health practice's site costs more than a missing one, and Google
 	   reads footer NAP against KvK and the Business Profile, so anything still
-	   marked TODO_ is withheld rather than guessed at. */
+	   marked TODO_ is withheld rather than guessed at.
+
+	   NO STREET ADDRESS, decided 31-08. This footer printed Reigersbos on all
+	   thirteen pages. That turned out to be her *home* — she works from there
+	   and travels to clients — while the business is registered at a different
+	   building, one she owns and rents to tenants. Neither belongs here: the
+	   registered one would send a client to a stranger's door, and publishing a
+	   solo practitioner's home on a health site is a decision she should make
+	   deliberately rather than by listing it in a message.
+
+	   So the footer answers "where are you" the way the practice actually works
+	   — a region, home visits, remote — which is also how the Google Business
+	   Profile is set up. The vestigingsadres that art. 3:15d BW requires lives
+	   on the legal pages, where "gevestigd te" is the right frame for it. The
+	   Organization JSON-LD has never carried an address either (see
+	   schema/shared.ts), so this brings the footer in line with the rest. */
 	const isPending = (value: string) => value.startsWith('TODO_');
 
-	const address = BRAND.address;
-	const hasAddress = !(
-		isPending(address.street) ||
-		isPending(address.postalCode) ||
-		isPending(address.city)
-	);
 	const hasPhone = !isPending(BRAND.phone);
 	/* tel: needs the digits unspaced; the visible label keeps the spacing. */
 	const telHref = `tel:${BRAND.phone.replace(/[^+\d]/g, '')}`;
@@ -72,17 +81,16 @@
 				<li>
 					<address class="footer__contact">
 						<ul>
-							{#if hasAddress}
-								<li>
-									{address.street}, {address.floor}<br />{address.postalCode}
-									{address.city}
-									<!-- Never the address on its own. She is only there on
-									     Saturdays; on other days she travels to the client. An
-									     address without that line sends someone to a closed
-									     door. -->
-									<br /><span class="footer__note">{BRAND.practice.locationNote}</span>
-								</li>
-							{/if}
+							<li>
+								{BRAND.workArea.label}
+								<!-- The region, then how she works. One without the other is
+								     misleading in both directions: a place with no note reads
+								     as a clinic you can walk into, and a note with no place
+								     leaves a visitor unable to tell whether she covers them. -->
+								<br /><span class="footer__note"
+									>{BRAND.practice.homeVisitNote} {BRAND.practice.remoteNote}</span
+								>
+							</li>
 							<li>
 								<TextLink
 									href="mailto:{BRAND.email}"

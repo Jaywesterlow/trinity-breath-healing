@@ -35,15 +35,22 @@ export const BRAND = {
 	vatId: 'NL005276270B90',
 
 	/**
-	 * Practice address. Part of the NAP triplet and therefore a local-SEO
-	 * signal, so it must match KvK and Google Business Profile exactly.
+	 * HER HOME ADDRESS. NOT FOR PUBLICATION.
 	 *
-	 * The footer used to hard-code "Stationsstraat 45 A, 1315 KS Almere" and a
-	 * phone number of "(+31) 6 123 456 78" — neither confirmed by the
-	 * practitioner, and the second obviously a placeholder. Publishing an
-	 * unverified street address for a real health practice is worse than
-	 * publishing none, so both now live here and the footer renders them only
-	 * once they stop being TODO_.
+	 * Clarified 31-08, and it reverses what this block used to assume. Reigersbos
+	 * is where she lives and works from; it is not the address the business is
+	 * registered at. The KvK registration sits on a different building — one she
+	 * owns and rents out to tenants — so neither address belongs in the footer:
+	 * the registered one would send a client to a stranger's door, and this one
+	 * broadcasts a solo practitioner's home on a health site.
+	 *
+	 * Kept here because the booking flow and her own correspondence need it, and
+	 * because a NAP source of truth that silently drops the address invites
+	 * someone to retype it in a component later. Nothing renders it. The public
+	 * answer to "where are you" is `workArea` below.
+	 *
+	 * The address the legal pages need is the KvK vestigingsadres — a different
+	 * value, still outstanding, and marked TODO_ in `registeredAddress`.
 	 */
 	address: {
 		street: 'Reigersbos 100 L',
@@ -54,6 +61,34 @@ export const BRAND = {
 		postalCode: '1107 ES',
 		city: 'Amsterdam',
 		country: 'Nederland'
+	},
+
+	/**
+	 * The KvK vestigingsadres, for the legal pages only.
+	 *
+	 * Article 3:15d BW requires a service provider to publish the geographic
+	 * address where it is established, so this cannot simply be omitted — but it
+	 * belongs in the "gevestigd te" line of the algemene voorwaarden and the
+	 * privacyverklaring, never in a footer that reads as "come here".
+	 */
+	registeredAddress: {
+		street: 'TODO_REGISTERED_STREET',
+		postalCode: 'TODO_REGISTERED_POSTCODE',
+		city: 'TODO_REGISTERED_CITY'
+	},
+
+	/**
+	 * What a visitor is told about location. No street, on purpose.
+	 *
+	 * She works from home, travels to clients, and treats remotely — so the
+	 * honest answer to "where are you" is a region, not a doorway. This is also
+	 * what the Google Business Profile is set up as: a service-area business
+	 * with the address hidden, which is the right shape for a practice with no
+	 * storefront and the wrong one to contradict on the site.
+	 */
+	workArea: {
+		label: 'Amsterdam-Zuidoost',
+		region: 'Amsterdam en omgeving'
 	},
 
 	/**
