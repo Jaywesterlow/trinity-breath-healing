@@ -28,9 +28,11 @@
 >
 	<h2>1. Wie is verantwoordelijk voor jouw gegevens?</h2>
 	<p>
-		De verwerkingsverantwoordelijke is {BRAND.legalName}, gevestigd te
-		<Todo>vestigingsadres</Todo>, ingeschreven bij de Kamer van Koophandel onder nummer
-		<Todo>KvK-nummer</Todo>. De praktijk wordt gevoerd door {BRAND.practitionerFullName}.
+		De verwerkingsverantwoordelijke is {BRAND.legalName}, ingeschreven bij de Kamer van Koophandel
+		onder nummer {BRAND.kvk}. De praktijk wordt gevoerd door {BRAND.practitionerFullName}. Je
+		bereikt mij op <a href="mailto:{BRAND.email}">{BRAND.email}</a> en op
+		{BRAND.phoneDisplay}; het inschrijvingsadres van de onderneming staat in de
+		<a href="/algemene-voorwaarden">algemene voorwaarden</a>.
 	</p>
 	<p>
 		Heb je een vraag over je gegevens? Mail dan naar

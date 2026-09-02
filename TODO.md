@@ -43,12 +43,19 @@ Every one of these renders as **red bracketed text** on a live page right now.
       site. The footer now gives the region (`BRAND.workArea`), home visits and
       remote — matching the Google Business Profile, which is a service-area
       listing with the address hidden.
-- [ ] **Still needed: the KvK vestigingsadres**, for the legal pages only.
-      `registeredAddress` in `brand.ts` is TODO_, and `<Todo>vestigingsadres</Todo>`
-      sits in both `/algemene-voorwaarden` and `/privacyverklaring`. This one
-      cannot be dropped — art. 3:15d BW requires a service provider to publish
-      the address where it is established — but "gevestigd te" on a legal page
-      is the right frame for it, not a footer that reads as "come here".
+- [x] **KvK vestigingsadres — supplied 31-08, on one page only.** It appears in
+      the "gevestigd te" line of `/algemene-voorwaarden` and nowhere else, always
+      followed by the sentence saying it is an inschrijvingsadres and not a
+      bezoekadres. That sentence carries weight: it is a building she owns and
+      rents out, and a client who reads the line as "where the treatments are"
+      is knocking on a tenant's door. Do not move this address, repeat it, or
+      drop the qualifying sentence.
+      The privacyverklaring deliberately does **not** repeat it — AVG art.
+      13(1)(a) asks for the controller's identity and contact details, and name,
+      KvK, e-mail and telephone are contact details. One page instead of two
+      halves the exposure at no legal cost.
+      KvK number and btw-id also filled in while there; both legal pages are now
+      free of `<Todo>` markers.
 - [x] Phone number — 06 24 24 45 85
 - [x] BTW-ID — `NL005276270B90`
 - [x] E-mail — she uses `bgrohe72@gmail.com` and wants a business address, so `info@trinitybreathhealing.nl` has to be created and forwarded there

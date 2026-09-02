@@ -68,13 +68,26 @@ export const BRAND = {
 	 *
 	 * Article 3:15d BW requires a service provider to publish the geographic
 	 * address where it is established, so this cannot simply be omitted — but it
-	 * belongs in the "gevestigd te" line of the algemene voorwaarden and the
-	 * privacyverklaring, never in a footer that reads as "come here".
+	 * appears on ONE page, the algemene voorwaarden, in the "gevestigd te" line,
+	 * and nowhere else.
+	 *
+	 * NOBODY WORKS HERE. It is a building she owns and rents out; the tenants
+	 * have nothing to do with the practice. A client who reads this as a
+	 * visiting address and turns up is knocking on a stranger's door, so
+	 * wherever it renders it must be followed by the sentence saying it is a
+	 * registration address and not a place to visit. That sentence is not
+	 * decoration.
+	 *
+	 * The privacyverklaring deliberately does NOT repeat it. AVG art. 13(1)(a)
+	 * asks for the controller's identity and contact details, and a name, KvK
+	 * number, e-mail address and telephone number are contact details — a street
+	 * is not required there. One page instead of two halves the exposure at no
+	 * legal cost.
 	 */
 	registeredAddress: {
-		street: 'TODO_REGISTERED_STREET',
-		postalCode: 'TODO_REGISTERED_POSTCODE',
-		city: 'TODO_REGISTERED_CITY'
+		street: 'Kantershof 7',
+		postalCode: '1104 GA',
+		city: 'Amsterdam'
 	},
 
 	/**
