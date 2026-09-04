@@ -203,6 +203,11 @@
 	--motion-hover: 180ms;
 	--ease-hover: cubic-bezier(0.22, 1, 0.36, 1);
 	--lift-hover: -2px;
+	/* ButtonLink's arrow swap: how far each arrow travels on both axes. Equal x and
+	   y, so the path runs at 45deg — the angle the glyph itself points. Lives here,
+	   not on the component, so the reduced-motion block below can flatten it; a
+	   declaration on .btn-link__circle would out-specify that :root override. */
+	--arrow-travel: 14px;
 	/* No shadows anywhere on this site, hover included — the lift alone carries the
 	   interaction. Kept as a token rather than deleted so every surface that reads it
 	   stays on one vocabulary, and so a shadow can never creep back in one component
@@ -385,5 +390,9 @@ h6 {
 	   feedback that carry the affordance stay. */
 	:root {
 		--lift-hover: 0px;
+		/* Same reason as the lift: the two arrows in ButtonLink would still fly
+		   across the circle on hover if only the transition were killed. At 0 they
+		   sit on top of each other and only the fade is left. */
+		--arrow-travel: 0px;
 	}
 }
