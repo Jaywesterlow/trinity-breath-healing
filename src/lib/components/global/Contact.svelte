@@ -7,7 +7,12 @@
 	   in constants/socials.ts. */
 	import { SOCIAL_LINKS } from '$lib/constants/socials';
 
-	let active = $state<'form' | 'meeting'>('form');
+	/* null is the rest state: neither route chosen, both cards on offer. Picking
+	   one replaces the pair with that panel, and the switch link above it goes
+	   straight to the other — so the two panels still alternate in place, which
+	   is what the panel's fixed sizing below exists for. */
+	let active = $state<'form' | 'meeting' | null>(null);
+
 </script>
 
 <section id="contact" class="contact" aria-labelledby="contact-heading">
@@ -31,43 +36,56 @@
 				</p>
 			</div>
 
-			<!-- Figma draws these as radio dots, and that is what they are: one
-			     choice out of two. Native radios come with arrow-key navigation
-			     and the right announcement for free — a pair of aria-pressed
-			     buttons would have to fake both. -->
-			<fieldset class="contact__toggle">
-				<legend class="visually-hidden">Hoe wil je contact opnemen?</legend>
-				<label class="contact__toggle-btn" class:contact__toggle-btn--active={active === 'form'}>
-					<input
-						class="contact__toggle-input visually-hidden"
-						type="radio"
-						name="contact-mode"
-						value="form"
-						bind:group={active}
-					/>
-					<span class="contact__toggle-dot" aria-hidden="true"></span>
-					<span class="contact__toggle-label">Email formulier</span>
-				</label>
-				<label class="contact__toggle-btn" class:contact__toggle-btn--active={active === 'meeting'}>
-					<input
-						class="contact__toggle-input visually-hidden"
-						type="radio"
-						name="contact-mode"
-						value="meeting"
-						bind:group={active}
-					/>
-					<span class="contact__toggle-dot" aria-hidden="true"></span>
-					<span class="contact__toggle-label">Online meeting</span>
-				</label>
-			</fieldset>
 		</div>
 
-		<div class="contact__panel">
-			{#if active === 'form'}
-				<ContactForm />
-			{:else}
-				<DatePlanner />
-			{/if}
+		<!-- Whole card is the control, so the visible pill inside it is a span, not a
+		     nested button — one target, and the pill is still free to answer the
+		     hover on its own. -->
+		<div class="contact__routes" hidden={active !== null}>
+			<button type="button" class="route" onclick={() => (active = 'meeting')}>
+				<span class="route__title">Plan een kennismaking</span>
+				<span class="route__body">Kies zelf een moment. Dertig minuten, online, vrijblijvend.</span>
+				<span class="route__cta">Kies een datum</span>
+			</button>
+			<button type="button" class="route" onclick={() => (active = 'form')}>
+				<span class="route__title">Stuur een bericht</span>
+				<span class="route__body">
+					Liever eerst een vraag stellen? Mailen en appen kan de hele dag.
+				</span>
+				<span class="route__cta">Schrijf een bericht</span>
+			</button>
+		</div>
+
+		<!-- Both panels are always in the DOM, and only their visibility changes.
+		     Rendering the chosen one with {#if} kept the e-mail form out of the
+		     prerendered HTML entirely, which is the one thing this site cannot
+		     trade away: no crawler, and nobody without JS, would have found a
+		     contact form at all. -->
+		<div class="contact__chosen" hidden={active === null}>
+			<button
+				type="button"
+				class="contact__switch"
+				onclick={() => (active = active === 'form' ? 'meeting' : 'form')}
+			>
+				<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+					<path
+						d="M14 6 8 12l6 6"
+						stroke="currentColor"
+						stroke-width="1.8"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				</svg>
+				{active === 'form' ? 'Liever een afspraak plannen' : 'Liever een bericht sturen'}
+			</button>
+			<div class="contact__panel">
+				<div class="contact__pane" hidden={active === 'meeting'}>
+					<ContactForm />
+				</div>
+				<div class="contact__pane" hidden={active === 'form'}>
+					<DatePlanner />
+				</div>
+			</div>
 		</div>
 	</div>
 
@@ -83,8 +101,8 @@
 						href={social.href}
 						label={social.label}
 						newTab={social.newTab}
+						text={social.text}
 						color="var(--brand-border)"
-						background="var(--color-bg-sand)"
 						responsiveSize={false}
 					/>
 				</li>
@@ -224,78 +242,111 @@
 		align-items: center;
 	}
 
-	.contact__toggle {
+	/* ─── The two routes ─── */
+	.contact__routes {
 		display: flex;
-		gap: clamp(0.25rem, 1.5vw, 0.5rem);
-		border: 0;
-		padding: 0;
-		margin: 0;
-		min-width: 0; /* fieldset defaults to min-content — would blow out the grid column */
+		flex-direction: column;
+		gap: var(--space-5);
+		margin-top: 1.5rem; /* same 24px the panel used to take */
 	}
 
-	.contact__toggle-btn {
-		position: relative; /* containing block for the visually-hidden radio inside */
-		display: inline-flex;
-		flex: 1 1 0;
-		align-items: center;
-		justify-content: center;
-		gap: clamp(0.25rem, 1.8vw, 0.5rem);
-		padding: clamp(0.375rem, 2vw, 0.5rem);
+	.route {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-3);
+		width: 100%;
+		padding: var(--space-6);
 		border: none;
-		background: transparent;
-		border-radius: 0.625rem; /* 10px */
+		border-radius: 1.125rem; /* 18px */
+		background: var(--color-brand-green);
+		color: var(--color-bg-sand);
+		text-align: left;
 		cursor: pointer;
-		font-family: var(--font-body);
-		font-size: clamp(0.8125rem, 3.6vw, 1rem);
-		color: var(--color-fg-forest);
-		transition:
-			background-color var(--motion-hover) var(--ease-hover),
-			transform var(--motion-hover) var(--ease-hover);
+		transition: transform var(--motion-hover) var(--ease-hover);
 	}
 
-	.contact__toggle-btn:has(.contact__toggle-input:focus-visible) {
+	.route:hover {
+		transform: translateY(var(--lift-hover));
+	}
+
+	.route:active {
+		transform: translateY(0);
+	}
+
+	.route:focus-visible {
 		outline: 2px solid var(--color-accent-gold);
 		outline-offset: 2px;
 	}
 
-	.contact__toggle-btn:hover {
-		background: color-mix(in srgb, var(--color-card-warm) 55%, transparent);
-		transform: translateY(var(--lift-hover));
+	.route__title {
+		font-family: var(--font-display);
+		font-size: 1.5rem; /* 24px */
+		font-weight: var(--font-weight-medium);
+		line-height: var(--line-height-tight);
 	}
 
-	.contact__toggle-btn:active {
-		transform: translateY(0);
+	.route__body {
+		font-family: var(--font-body);
+		font-size: 0.9375rem; /* 15px */
+		font-weight: var(--font-weight-light);
+		line-height: var(--line-height-normal);
 	}
 
-	.contact__toggle-btn--active:hover {
-		background: var(--color-card-warm);
-	}
-
-	.contact__toggle-btn--active {
-		background: var(--color-card-warm);
-	}
-
-	.contact__toggle-dot {
-		width: clamp(0.6875rem, 3vw, 0.875rem);
-		height: clamp(0.6875rem, 3vw, 0.875rem);
-		border-radius: var(--radius-full);
-		border: 2px solid var(--color-fg-forest);
-		flex-shrink: 0;
-		display: flex;
+	/* Not a button — the card is. It still answers the hover on its own so the
+	   call to action stays distinguishable inside its own target. */
+	.route__cta {
+		display: inline-flex;
 		align-items: center;
-		justify-content: center;
-	}
-
-	.contact__toggle-btn--active .contact__toggle-dot::before {
-		content: '';
-		width: 0.375rem; /* 6px */
-		height: 0.375rem;
+		height: var(--space-10);
+		margin-top: var(--space-2);
+		padding: 0 var(--space-6);
 		border-radius: var(--radius-full);
-		background: var(--color-fg-forest);
+		background: var(--brand-border);
+		color: var(--color-bg-sand);
+		font-family: var(--font-display);
+		font-size: var(--font-size-xl);
+		line-height: 1;
+		transition:
+			background-color var(--motion-hover) var(--ease-hover),
+			color var(--motion-hover) var(--ease-hover);
 	}
 
-	.contact__toggle-label {
-		white-space: nowrap;
+	.route:hover .route__cta,
+	.route:focus-visible .route__cta {
+		background: var(--color-bg-sand);
+		color: var(--brand-border);
+	}
+
+	/* ─── The chosen route ─── */
+	.contact__chosen {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-4);
+	}
+
+	/* The only way back, so it sits above the panel where the pair of cards
+	   started, not buried under the form. */
+	.contact__switch {
+		display: inline-flex;
+		align-items: center;
+		gap: var(--space-2);
+		margin-top: 1.5rem;
+		padding: 0;
+		border: none;
+		background: none;
+		cursor: pointer;
+		font-family: var(--font-body);
+		font-size: 0.9375rem; /* 15px */
+		color: var(--brand-border);
+		text-decoration: underline;
+		text-underline-offset: 4px;
+	}
+
+	.contact__switch:focus-visible {
+		outline: 2px solid var(--color-accent-gold);
+		outline-offset: 2px;
 	}
 
 	/* The wrapper owns the card's size and its single child stretches to fill —
@@ -304,7 +355,24 @@
 	.contact__panel {
 		display: grid;
 		width: 100%;
-		margin-top: 1.5rem; /* 24px, buttons -> panel gap */
+	}
+
+	/* Both panes occupy the same cell, so the wrapper is the size of whichever is
+	   showing and never the sum of the two. */
+	.contact__pane {
+		grid-column: 1;
+		grid-row: 1;
+		display: grid;
+		min-width: 0;
+	}
+
+	.contact__pane[hidden] {
+		display: none;
+	}
+
+	.contact__routes[hidden],
+	.contact__chosen[hidden] {
+		display: none;
 	}
 
 	/* Below the desktop breakpoint the e-mail form is usually the taller panel,
@@ -344,11 +412,24 @@
 			justify-content: center;
 		}
 
-		/* Desktop: panel LEFT, text RIGHT (node 424-113) */
-		.contact__panel {
+		/* Desktop: routes / panel LEFT, text RIGHT (node 424-113) */
+		.contact__routes,
+		.contact__chosen {
 			grid-column: 1;
 			grid-row: 1;
 			margin-top: 0;
+			align-self: start;
+		}
+
+		.contact__routes {
+			gap: var(--space-6);
+		}
+
+		.contact__switch {
+			margin-top: 0;
+		}
+
+		.contact__panel {
 			/* Height follows width instead of the viewport, so the calendar's tiles
 			   stay square at every screen size. The ratio is the planner's own
 			   natural height at this width — the taller of the two panels — and

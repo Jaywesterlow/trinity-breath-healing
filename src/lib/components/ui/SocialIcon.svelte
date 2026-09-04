@@ -16,7 +16,8 @@
 		color = 'currentColor',
 		background = 'transparent',
 		responsiveSize = true,
-		newTab = true
+		newTab = true,
+		text
 	}: {
 		icon: IconKey;
 		href: string;
@@ -28,6 +29,10 @@
 		/** mailto: and tel: hand off to another app — opening a blank tab first
 		    leaves the visitor staring at an empty window. */
 		newTab?: boolean;
+		/** Visible wording beside the icon. Omitted, the icon stands alone as it
+		    does in the footer; supplied, it sits inside the same link so the
+		    words are part of the target rather than decoration next to it. */
+		text?: string;
 	} = $props();
 </script>
 
@@ -35,6 +40,7 @@
 	{href}
 	class="social-icon"
 	class:social-icon--fixed={!responsiveSize}
+	class:social-icon--labelled={text !== undefined}
 	aria-label={label}
 	rel={newTab ? 'noopener noreferrer' : undefined}
 	target={newTab ? '_blank' : undefined}
@@ -44,6 +50,7 @@
 		<!-- eslint-disable-next-line svelte/no-at-html-tags -- ICONS is a hardcoded constant of trusted inline SVG keyed by a typed union; no user input -->
 		{@html ICONS[icon]}
 	</svg>
+	{#if text !== undefined}<span class="social-icon__text">{text}</span>{/if}
 </a>
 
 <style>
@@ -57,6 +64,24 @@
 			opacity var(--motion-hover) var(--ease-hover);
 	}
 
+	/* With wording beside it the link stops being a circle, so the round
+	   background and the centring both have to go. */
+	.social-icon--labelled {
+		justify-content: flex-start;
+		gap: var(--space-3);
+		border-radius: var(--radius-full);
+		background: transparent !important;
+		text-decoration: none;
+	}
+
+	.social-icon__text {
+		font-family: var(--font-body);
+		font-size: 1rem;
+		font-weight: var(--font-weight-light);
+		color: var(--color-fg-forest);
+		white-space: nowrap;
+	}
+
 	.social-icon svg {
 		width: 1.5rem;
 		height: 1.5rem;
@@ -68,7 +93,25 @@
 	}
 
 	@media (min-width: 1024px) {
-		.social-icon svg {
+		/* With wording beside it the link stops being a circle, so the round
+	   background and the centring both have to go. */
+	.social-icon--labelled {
+		justify-content: flex-start;
+		gap: var(--space-3);
+		border-radius: var(--radius-full);
+		background: transparent !important;
+		text-decoration: none;
+	}
+
+	.social-icon__text {
+		font-family: var(--font-body);
+		font-size: 1rem;
+		font-weight: var(--font-weight-light);
+		color: var(--color-fg-forest);
+		white-space: nowrap;
+	}
+
+	.social-icon svg {
 			width: 2.5rem; /* 40px — Figma spec */
 			height: 2.5rem;
 		}

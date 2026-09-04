@@ -20,6 +20,10 @@ export type SocialLink = {
 	icon: SocialIconKey;
 	href: string;
 	label: string;
+	/** Short visible wording, for the places that show the channel next to its
+	    icon rather than relying on the icon alone. Kept clear of the contact
+	    form's own field names, same as `label`. */
+	text: string;
 	/** mailto: opens the visitor's mail client — never a new tab. */
 	newTab: boolean;
 };
@@ -39,6 +43,7 @@ export const SOCIAL_LINKS: SocialLink[] = [
 		icon: 'instagram',
 		href: `https://www.instagram.com/${BRAND.socials.instagram.replace('@', '')}/`,
 		label: 'Trinity Breath & Healing op Instagram',
+		text: BRAND.socials.instagram,
 		newTab: true
 	},
 	...(isPending(BRAND.phone)
@@ -48,6 +53,7 @@ export const SOCIAL_LINKS: SocialLink[] = [
 					icon: 'whatsapp' as const,
 					href: `https://wa.me/${whatsappDigits}`,
 					label: `WhatsApp naar ${BRAND.phoneDisplay}`,
+					text: 'WhatsApp',
 					newTab: true
 				}
 			]),
@@ -58,6 +64,7 @@ export const SOCIAL_LINKS: SocialLink[] = [
 					icon: 'mail' as const,
 					href: `mailto:${BRAND.email}`,
 					label: `E-mail naar ${BRAND.email}`,
+					text: BRAND.email,
 					newTab: false
 				}
 			])

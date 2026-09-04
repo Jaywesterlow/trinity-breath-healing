@@ -22,6 +22,11 @@
 	--color-text-subtle: #848981; /* neutral stone gray — body text on light bg (Figma) */
 	--brand-border: #7c5e49; /* dark cream, darkened for WCAG AA — dividers, input borders, CTA chrome (was #b68a6b, 2.73:1; now 5.25:1 on --color-bg-sand) */
 	--color-accent-gold-soft: #c7a27a; /* Figma-sourced — Over mij mobile CTA/link accents on dark overlay */
+	/* Leaf green, for filled cards that used to be --color-fg-forest. 8% darker
+	   than the #6f8460 it came from, which is what lifts sand on it from 3.63:1
+	   to 4.50:1 — #6f8460 has no working text colour at all (charcoal on it is
+	   2.31:1). Never a text colour itself. */
+	--color-brand-green: #627454;
 	--brand-destructive: #b3402c; /* rust/brick red — NOT in Figma's palette; chosen because Trinity's
                                     palette has no existing red, and destructive/error states need a
                                     hue that reads as "stop" while still sitting comfortably in a warm
