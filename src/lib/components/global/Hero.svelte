@@ -1,13 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import ButtonLink from '$lib/components/ui/interactions/ButtonLink.svelte';
-	import SocialIcon from '$lib/components/ui/SocialIcon.svelte';
-	import HeroServiceCard from '$lib/components/ui/HeroServiceCard.svelte';
-	/* Instagram, WhatsApp, e-mail — built once in constants/socials.ts and
-	   shared with the footer. This list used to be assembled here by hand and
-	   linked x.com/trinitybnh and facebook.com/trinitybnh, two accounts that do
-	   not exist, in the hero, above the fold. */
-	import { SOCIAL_LINKS } from '$lib/constants/socials';
 
 	// The hero illustration is a centerline trace of the original line art, inlined as SVG so
 	// its strokes can draw themselves on load (stroke-dashoffset, see .hero__draw below).
@@ -20,7 +13,7 @@
 	let leftEl: HTMLDivElement | null = $state(null);
 
 	// The desktop hero image must never grow taller than the content column beside it
-	// (heading + body + CTA + service cards). CSS percentage-height on a replaced
+	// (heading + body + CTA). CSS percentage-height on a replaced
 	// element (img) nested this deep in grid+flex doesn't resolve as a definite value —
 	// confirmed empirically, it falls back to matching the viewport width outright and
 	// crops the image (the same failure mode documented on .hero__img below for a
@@ -54,23 +47,6 @@
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -- build-time asset, not user input -->
 				{@html heroSvg}
 			</div>
-			<nav class="hero__social" aria-label="Sociale media">
-				<ul class="hero__social-list">
-					{#each SOCIAL_LINKS as social (social.icon)}
-						<li>
-							<SocialIcon
-								icon={social.icon}
-								href={social.href}
-								label={social.label}
-								newTab={social.newTab}
-								color="var(--brand-border)"
-								background="var(--color-bg-sand)"
-								responsiveSize={false}
-							/>
-						</li>
-					{/each}
-				</ul>
-			</nav>
 		</div>
 
 		<!-- Content column: below image on mobile (DOM order), left on desktop (order:1) -->
@@ -90,46 +66,6 @@
 				</div>
 			</div>
 
-			<ul class="hero__cards" aria-label="Behandelingen">
-				<li>
-					<HeroServiceCard
-						href="/diensten/goldhealing"
-						label="Goldhealing"
-						imgSrc="/images/card-goldhealing.svg"
-						variant="forest"
-					/>
-				</li>
-				<li>
-					<HeroServiceCard
-						href="/diensten/spinal-touch"
-						label="Spinal Touch"
-						imgSrc="/images/card-spinal-touch.svg"
-						variant="border"
-					/>
-				</li>
-				<li>
-					<a href="/behandelingen" class="card card--outline">
-						<div class="card__head">
-							<span class="card__title">Meer klachten</span>
-							<span class="card__arrow" aria-hidden="true">
-								<svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-									<path
-										d="M6 18L18 6M18 6H11M18 6V13"
-										stroke="currentColor"
-										stroke-width="1.5"
-										stroke-linecap="round"
-										stroke-linejoin="round"
-									/>
-								</svg>
-							</span>
-						</div>
-						<p class="card__desc">
-							Er altijd is een aanpak die bij jou past. Ik leg per therapie uit wat je kunt
-							verwachten.
-						</p>
-					</a>
-				</li>
-			</ul>
 		</div>
 	</div>
 </section>
@@ -196,9 +132,7 @@
 		   A single animation-delay value applies to both entries in the list. */
 		.hero__heading,
 		.hero__body,
-		.hero__cta,
-		.hero__social,
-		.hero__cards > li {
+		.hero__cta {
 			animation:
 				hero-fade 1300ms cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards,
 				hero-rise 1100ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
@@ -212,20 +146,6 @@
 		}
 		.hero__cta {
 			animation-delay: calc(var(--hero-in-start) + 280ms);
-		}
-		/* Sits under the illustration on mobile and bottom-right on desktop — early enough not
-		   to lag behind the image it belongs to, late enough not to precede the heading. */
-		.hero__social {
-			animation-delay: calc(var(--hero-in-start) + 340ms);
-		}
-		.hero__cards > li:nth-child(1) {
-			animation-delay: calc(var(--hero-in-start) + 420ms);
-		}
-		.hero__cards > li:nth-child(2) {
-			animation-delay: calc(var(--hero-in-start) + 530ms);
-		}
-		.hero__cards > li:nth-child(3) {
-			animation-delay: calc(var(--hero-in-start) + 640ms);
 		}
 	}
 
@@ -341,17 +261,6 @@
 		}
 	}
 
-	/* Social: desktop only */
-	.hero__social {
-		display: none;
-	}
-
-	.hero__social-list {
-		list-style: none;
-		padding: 0;
-		margin: 0;
-	}
-
 	/* ─── Content ─── */
 	.hero__content {
 		padding: var(--space-4) var(--space-6) var(--space-16); /* bottom space so the section doesn't butt the next one */
@@ -376,74 +285,6 @@
 		line-height: var(--line-height-loose);
 		color: var(--color-text-subtle);
 		margin-bottom: var(--space-4);
-	}
-
-	/* ─── Service cards ─── */
-	.hero__cards {
-		list-style: none;
-		padding: var(--space-8) var(--space-6) 3.5rem; /* 3.5rem = 56px; between --space-12 and --space-16 */
-		margin: 0;
-		display: none; /* mobile: cards hidden per Figma; keeps the CTA above the fold */
-		gap: var(--space-4);
-		overflow-x: auto;
-		-webkit-overflow-scrolling: touch;
-		scrollbar-width: none;
-	}
-
-	.hero__cards::-webkit-scrollbar {
-		display: none;
-	}
-
-	/* ─── Outline card (Meer klachten) ─── */
-	.card--outline {
-		background: var(--color-bg-sand);
-		border: 2px solid var(--color-fg-forest);
-		border-radius: 1.25rem; /* 20px — Figma spec; see HeroServiceCard for same value */
-		color: var(--color-fg-forest);
-		flex-shrink: 0;
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		width: 12.5rem; /* 200px — Figma text-card width */
-		height: 8.125rem; /* 130px — match photo cards (HeroServiceCard) */
-		box-sizing: border-box;
-		padding: var(--space-4) var(--space-5);
-		gap: var(--space-2);
-		text-decoration: none;
-		transition: opacity var(--motion-fast);
-		overflow: hidden;
-	}
-
-	.card--outline:hover {
-		opacity: 0.88;
-	}
-
-	.card__head {
-		display: flex;
-		align-items: center;
-		gap: var(--space-1);
-	}
-
-	.card__title {
-		font-family: var(--font-body);
-		font-size: var(--font-size-xl);
-		font-weight: var(--font-weight-medium);
-		white-space: nowrap;
-	}
-
-	.card__arrow {
-		flex-shrink: 0;
-		width: 1.5rem;
-		height: 1.5rem;
-		color: inherit;
-	}
-
-	.card__desc {
-		font-family: var(--font-body);
-		font-size: var(--font-size-xs);
-		font-weight: var(--font-weight-light);
-		color: var(--color-text-subtle); /* neutral stone gray token (was --color-muted sage) */
-		line-height: var(--line-height-normal);
 	}
 
 	/* ─── Desktop / tablet (≥ 768px) — two-column, image beside text ─── */
@@ -496,12 +337,6 @@
 			margin-bottom: var(--space-6);
 		}
 
-		.hero__cards {
-			display: flex; /* re-enabled at desktop (hidden on mobile) */
-			padding: 0 0 var(--space-10) 0; /* left is 0 — max-width + centering sets the edge */
-			overflow: visible; /* let the third card render fully; column is wide enough now */
-		}
-
 		/* Image column sits in the right grid track (col 2), which spans exactly from the content's
 		   right edge to the screen's right edge. The illustration is centred within it — i.e. at the
 		   midpoint between the hero content and the right edge of the screen. */
@@ -527,7 +362,7 @@
 			   of the aspect-ratio + height-clamped size, badly cropping the image. A
 			   genuinely definite length sidesteps it. --hero-content-height is a plain px
 			   value written by a ResizeObserver in the script block, measuring
-			   .hero__left's real rendered height (heading + body + CTA + cards) — so the
+			   .hero__left's real rendered height (heading + body + CTA) — so the
 			   image is capped at exactly the content column's height and never grows past
 			   it. The var() fallback only matters for the brief pre-hydration paint,
 			   before the observer has measured anything. */
@@ -536,20 +371,6 @@
 			max-height: none; /* cancels the mobile-base max-height, which otherwise keeps cascading through */
 		}
 
-		/* Social icons appear at desktop — top-right, matches Figma */
-		.hero__social {
-			display: block;
-			position: absolute;
-			right: 0; /* max-width + centering on .hero__inner sets the edge */
-			top: var(--space-12);
-			z-index: 5;
-		}
-
-		.hero__social-list {
-			display: flex;
-			flex-direction: column;
-			gap: var(--space-6);
-		}
 	}
 
 	/* Tablet only (768–1023px): row is too narrow for content to breathe flush against
@@ -558,14 +379,6 @@
 	@media (min-width: 768px) and (max-width: 1023.98px) {
 		.hero__content {
 			padding-left: var(--space-6);
-		}
-
-		.hero__cards {
-			padding-left: var(--space-6);
-		}
-
-		.hero__social {
-			right: var(--space-6);
 		}
 	}
 
