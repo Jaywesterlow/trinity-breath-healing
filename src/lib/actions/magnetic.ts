@@ -30,6 +30,14 @@ export type MagneticOptions = {
 	enabled: boolean;
 	/** True while the carousel fan itself is being dragged. */
 	dragging: boolean;
+	/**
+	 * How far outside the element's edges the magnet starts tracking, in px.
+	 * Defaults to the carousel's own 60. A treatment card sits in a fan with
+	 * space around it, so reaching for it early feels right; a contact card is
+	 * a big block in a two-column layout, where 60px means it starts moving
+	 * while the cursor is still nowhere near it.
+	 */
+	margin?: number;
 };
 
 // Fraction of the cursor's offset from the card's CENTRE that the card
@@ -56,6 +64,8 @@ const MAGNET_STRENGTH = 0.08;
 // anywhere on the card itself. Breakpoint-safe without a multiplier, since
 // it is a margin around the real measured box rather than a fraction of it.
 const MAGNET_MARGIN_PX = 60;
+
+const marginOf = (o: MagneticOptions): number => o.margin ?? MAGNET_MARGIN_PX;
 
 const MAGNET_TRACK_MS = 300;
 
@@ -117,7 +127,8 @@ export function magnetic(node: HTMLElement, options: MagneticOptions) {
 				Math.max(0, Math.abs(dy) - halfHeight)
 			);
 
-			if (edgeDistance > MAGNET_MARGIN_PX) {
+			const margin = marginOf(opts);
+			if (edgeDistance > margin) {
 				releaseTo('0px', '0px');
 				return;
 			}
@@ -148,7 +159,7 @@ export function magnetic(node: HTMLElement, options: MagneticOptions) {
 			// so the card leans toward wherever the cursor is on it: nothing
 			// at dead centre, ~MAGNET_STRENGTH * halfWidth (~10px) at the
 			// left/right edge.
-			const falloff = 1 - edgeDistance / MAGNET_MARGIN_PX;
+			const falloff = 1 - edgeDistance / margin;
 			const pull = MAGNET_STRENGTH * falloff;
 			node.style.setProperty('--magnet-x', `${dx * pull}px`);
 			node.style.setProperty('--magnet-y', `${dy * pull}px`);

@@ -14,11 +14,34 @@
 	   straight to the other — so the two panels still alternate in place, which
 	   is what the panel's fixed sizing below exists for. */
 	let active = $state<'form' | 'meeting' | null>(null);
+	/* 'out' while the block on screen fades away, 'in' for the frame the
+	   replacement arrives on, then idle. Both blocks stay in the DOM the whole
+	   time — hidden is what the a11y tree and the crawler read — so the fade is
+	   driven by a class rather than by a Svelte transition, which would have to
+	   unmount one of them. */
+	let phase = $state<'idle' | 'out' | 'in'>('idle');
+
+	const FADE_MS = 180;
+
+	function choose(next: 'form' | 'meeting' | null) {
+		if (phase !== 'idle') return;
+		phase = 'out';
+		setTimeout(() => {
+			active = next;
+			phase = 'in';
+			requestAnimationFrame(() => requestAnimationFrame(() => (phase = 'idle')));
+		}, FADE_MS);
+	}
 
 	/* The design lists the channels e-mail first and Instagram last — the reverse
 	   of the footer's order, where the profile leads. Reversed here rather than
 	   reordered in constants/socials.ts, so the footer keeps its own order. */
 	const CONTACT_SOCIALS = [...SOCIAL_LINKS].reverse();
+
+	/* 60px is the carousel's reach, tuned for a 240px card standing in a fan.
+	   These are 600px blocks side by side with the copy, where 60px had them
+	   moving while the cursor was still over the other column. */
+	const MAGNET_MARGIN = 18;
 
 	const CHECKS = [
 		'Een kennismaking van 30 minuten, online en vrijblijvend',
@@ -44,12 +67,16 @@
 			<!-- Whole card is the control, so the visible pill inside it is a span,
 			     not a nested button — one target, and the pill is still free to
 			     answer the hover on its own. -->
-			<div class="contact__routes" hidden={active !== null}>
+			<div
+				class="contact__routes"
+				class:is-leaving={phase !== 'idle'}
+				hidden={active !== null}
+			>
 				<button
 					type="button"
 					class="route"
-					use:magnetic={{ enabled: true, dragging: false }}
-					onclick={() => (active = 'meeting')}
+					use:magnetic={{ enabled: true, dragging: false, margin: MAGNET_MARGIN }}
+					onclick={() => choose('meeting')}
 				>
 					<span class="route__title">Plan een kennismaking</span>
 					<span class="route__body">Kies zelf een moment. Dertig minuten, online, vrijblijvend.</span>
@@ -58,8 +85,8 @@
 				<button
 					type="button"
 					class="route"
-					use:magnetic={{ enabled: true, dragging: false }}
-					onclick={() => (active = 'form')}
+					use:magnetic={{ enabled: true, dragging: false, margin: MAGNET_MARGIN }}
+					onclick={() => choose('form')}
 				>
 					<span class="route__title">Stuur een bericht</span>
 					<span class="route__body">
@@ -74,11 +101,11 @@
 			     prerendered HTML entirely, which is the one thing this site cannot
 			     trade away: no crawler, and nobody without JS, would have found a
 			     contact form at all. -->
-			<div class="contact__chosen" hidden={active === null}>
+			<div class="contact__chosen" class:is-leaving={phase !== 'idle'} hidden={active === null}>
 				<button
 					type="button"
 					class="contact__switch"
-					onclick={() => (active = active === 'form' ? 'meeting' : 'form')}
+					onclick={() => choose(active === 'form' ? 'meeting' : 'form')}
 				>
 					<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
 						<path
@@ -227,12 +254,38 @@
 		display: none;
 	}
 
+	/* The swap: what is leaving drops 8px and fades, what arrives comes back up.
+	   Transform and opacity only, so nothing reflows and the card underneath
+	   does not resize mid-swap. */
+	.contact__routes,
+	.contact__chosen {
+		transition:
+			opacity 180ms var(--ease-out),
+			transform 180ms var(--ease-out);
+	}
+
+	.contact__routes.is-leaving,
+	.contact__chosen.is-leaving {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.contact__routes.is-leaving,
+		.contact__chosen.is-leaving {
+			transform: none;
+		}
+	}
+
 	.route {
 		--magnet-x: 0px;
 		--magnet-y: 0px;
 		display: flex;
 		flex-direction: column;
-		align-items: flex-start;
+		/* Mobile centres the card's contents; the desktop block below puts them
+		   back to the left. The card itself is full width either way. */
+		align-items: center;
+		text-align: center;
 		gap: var(--space-3);
 		width: 100%;
 		padding: var(--space-6);
@@ -240,7 +293,6 @@
 		border-radius: 1.125rem; /* 18px */
 		background: var(--color-brand-green);
 		color: var(--color-bg-sand);
-		text-align: left;
 		cursor: pointer;
 		/* The carousel's magnet, composed the same way TreatmentCard composes it:
 		   use:magnetic only ever writes --magnet-x/y and, while tracking,
@@ -289,9 +341,9 @@
 			color var(--motion-hover) var(--ease-hover);
 	}
 
-	/* Mobile: the pill spans the card, as the design has it. */
+	/* Its own width, centred — not stretched across the card. */
 	.route__cta {
-		align-self: stretch;
+		align-self: center;
 	}
 
 	.route:hover .route__cta,
@@ -481,6 +533,8 @@
 		.route {
 			padding: 2rem;
 			gap: var(--space-4);
+			align-items: flex-start;
+			text-align: left;
 		}
 
 		.route__title {
@@ -513,9 +567,15 @@
 			   The step row added on top of that. Measured need at 583px wide:
 			   month head 36 + grid 539 + gaps, inside padding 52, step row 36 and
 			   footer 36. */
-			aspect-ratio: 588 / 745;
+			/* Measured, not guessed: at 639px wide the planner's own content comes
+			   to 694px — 28px padding twice, the 20px step row and its 20px
+			   margin, the 28px month row, the grid's 14px offset and its 497px,
+			   then the footer's 18px margin and 41px. 639/694 is that ratio. The
+			   e-mail form stretches into the same box, so switching panels still
+			   cannot resize the card. */
+			aspect-ratio: 588 / 645; /* +6px of slack over the measured 639 */
 			max-height: 88vh;
-			min-height: 38rem;
+			min-height: 34rem;
 		}
 	}
 </style>

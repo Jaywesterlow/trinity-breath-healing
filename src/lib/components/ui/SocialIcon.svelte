@@ -79,7 +79,7 @@
 	   too heavy beside a line of text. The labelled variant drops that first
 	   child and draws a hairline ring on the link instead, so the glyph reads as
 	   a small mark inside a light circle. */
-	.social-icon--labelled svg > :first-child {
+	.social-icon--labelled svg > :global(:first-child) {
 		display: none;
 	}
 
@@ -128,7 +128,7 @@
 	   too heavy beside a line of text. The labelled variant drops that first
 	   child and draws a hairline ring on the link instead, so the glyph reads as
 	   a small mark inside a light circle. */
-	.social-icon--labelled svg > :first-child {
+	.social-icon--labelled svg > :global(:first-child) {
 		display: none;
 	}
 

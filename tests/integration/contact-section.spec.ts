@@ -35,6 +35,10 @@ const VALID = {
 async function chooseMode(page: Page, route: 'bericht' | 'afspraak') {
 	const title = route === 'bericht' ? 'Stuur een bericht' : 'Plan een kennismaking';
 	await page.locator('.route', { hasText: title }).click();
+	// The cards fade out before the panel fades in, so the panel is not there to
+	// be clicked or focused for ~180ms after the click.
+	await expect(page.locator('.contact__chosen')).toBeVisible();
+	await expect(page.locator('.contact__chosen')).toHaveCSS('opacity', '1');
 }
 
 async function fillValid(page: Page) {
@@ -230,10 +234,13 @@ test.describe('Contact — date planner', () => {
 		await settled(page);
 	}
 
-	test('step 1: month grid and legend, and the step counter says so', async ({ page }) => {
+	test('step 1: the month grid, the hint, and the step counter', async ({ page }) => {
 		await expect(pane(page).getByRole('grid')).toBeVisible();
-		await expect(pane(page).getByText('Beschikbaar', { exact: true })).toBeVisible();
-		await expect(pane(page).getByText('Niet beschikbaar', { exact: true })).toBeVisible();
+		// The legend is gone: the design replaces it with the line that explains
+		// why there is nothing to press.
+		await expect(
+			pane(page).getByText('Klikken op een datum is het doorgaan', { exact: false })
+		).toBeVisible();
 		await expect(pane(page).getByText('Stap 1 van 3')).toBeVisible();
 		await expect(pane(page).getByRole('button', { name: 'Verder' })).toHaveCount(0);
 	});
