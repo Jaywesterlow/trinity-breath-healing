@@ -366,7 +366,16 @@
 			   image is capped at exactly the content column's height and never grows past
 			   it. The var() fallback only matters for the brief pre-hydration paint,
 			   before the observer has measured anything. */
-			height: var(--hero-content-height, min(calc(100vh - var(--nav-height)), 1000px, 55vw));
+			/* Floor, so dropping the service cards does not shrink the drawing. That column
+			   measured 615px with the cards and 445px without them, and the image is sized
+			   from it — so without a floor the artwork loses 170px of height for a reason
+			   the visitor cannot see. 38.5rem is the old height; the 42vw term keeps the
+			   floor below the track's own width on narrow desktops, where a 720px-wide
+			   drawing would be clipped by this column's overflow: hidden. */
+			height: max(
+				var(--hero-content-height, min(calc(100vh - var(--nav-height)), 1000px, 55vw)),
+				min(38.5rem, 42vw)
+			);
 			max-width: none; /* width follows aspect */
 			max-height: none; /* cancels the mobile-base max-height, which otherwise keeps cascading through */
 		}
