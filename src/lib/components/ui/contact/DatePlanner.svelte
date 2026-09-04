@@ -18,7 +18,7 @@
 	 * size inside it is a clamp anchored to the Figma value at that reference.
 	 */
 	import { onMount, tick } from 'svelte';
-	import { fly } from 'svelte/transition';
+	import { fly, slide } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { BRAND } from '$lib/constants/brand';
 	import {
@@ -112,6 +112,13 @@
 	const PREVIOUS: Partial<Record<Step, Step>> = { tijd: 'datum', gegevens: 'tijd' };
 
 	let step = $state<Step>('datum');
+	/* What the slide transition keys on. 'datum' and 'tijd' share one stage so
+	   the calendar stays put while the time panel rises over it — keying on
+	   `step` itself tore the calendar down and rebuilt it on that hop, which is
+	   the opposite of what the design does. */
+	const stage = $derived(step === 'datum' || step === 'tijd' ? 'kalender' : step);
+	/* Three dashes and "Stap n van 3". `klaar` is the confirmation, past the end. */
+	const STEP_INDEX: Record<Step, number> = { datum: 1, tijd: 2, gegevens: 3, klaar: 3 };
 	/** 1 = moving forward through the flow, -1 = going back. Drives which way
 	 *  the steps slide, so back genuinely looks like back. */
 	let direction = $state(1);
@@ -226,6 +233,21 @@
 		if (!selectedDate) return null;
 		const [year, month, day] = selectedDate.split('-').map(Number) as [number, number, number];
 		return `${day} ${MONTHS[month - 1]!} - ${year}`;
+	});
+
+	/* The sheet's own heading: "Vrijdag 11 september — 19.00 tot 21.00 uur". The
+	   window comes from the day's real slots rather than a constant, so a day
+	   with different hours says so. */
+	const sheetLabel = $derived.by(() => {
+		if (!selectedDate) return '';
+		const [year, month, day] = selectedDate.split('-').map(Number) as [number, number, number];
+		const spoken = WEEKDAYS[isoWeekday(new Date(year, month - 1, day)) - 1]!.long;
+		const weekday = spoken.charAt(0).toUpperCase() + spoken.slice(1);
+		const named = `${weekday} ${day} ${MONTHS[month - 1]!.toLowerCase()}`;
+		if (slots.length === 0) return named;
+		const from = slots[0]!.start.replace(':', '.');
+		const until = slots[slots.length - 1]!.end.replace(':', '.');
+		return `${named} — ${from} tot ${until} uur`;
 	});
 
 	/** Spoken form — "8 Juni - 2026" reads badly to a screen reader. */
@@ -375,6 +397,9 @@
 	const OUT_MS = 160;
 	const IN_MS = 300;
 	const SLIDE = 40;
+	/* The time sheet's rise. Reads the same reduced-motion gate the step slide
+	   does, so it appears rather than travels when movement is off. */
+	const sheetMs = $derived(motionless() ? 0 : 260);
 
 	function motionless(): boolean {
 		return (
@@ -403,10 +428,23 @@
 </script>
 
 <div class="planner">
+	<!-- Three dashes and the step's name, above everything and unchanged between
+	     steps: the one part of the card that tells you where you are. -->
+	{#if step !== 'klaar'}
+		<div class="planner__steps">
+			<span class="planner__dashes" aria-hidden="true">
+				{#each [1, 2, 3] as n (n)}
+					<span class="planner__dash" class:planner__dash--done={n <= STEP_INDEX[step]}></span>
+				{/each}
+			</span>
+			<span class="planner__steps-label">Stap {STEP_INDEX[step]} van 3</span>
+		</div>
+	{/if}
+
 	<div class="planner__stage">
-		{#key step}
+		{#key stage}
 			<div class="planner__step" in:stepIn out:stepOut>
-				{#if step === 'datum'}
+				{#if step === 'datum' || step === 'tijd'}
 					<div class="planner__head">
 						<button
 							class="planner__nav"
@@ -487,40 +525,6 @@
 						</p>
 						<p class="planner__done-text">{confirmation}</p>
 					</div>
-				{:else if step === 'tijd'}
-					<p class="planner__date">{selectedLabel}</p>
-					{#if slots.length > 0 && freeSlotCount > 0}
-						<div
-							class="planner__times"
-							role="group"
-							aria-label="Tijden op {selectedDate ? spokenDate(selectedDate) : ''}"
-						>
-							{#each slots as slot (slot.start)}
-								<button
-									class="planner__time"
-									class:planner__time--selected={selectedSlot?.start === slot.start}
-									class:planner__time--taken={slot.taken}
-									type="button"
-									aria-pressed={selectedSlot?.start === slot.start}
-									aria-disabled={slot.taken ? 'true' : undefined}
-									aria-label={slot.taken ? `${slot.label} — al bezet` : undefined}
-									onclick={() => {
-										/* aria-disabled rather than disabled: a disabled button
-										   drops out of the tab order, so someone arriving by
-										   keyboard would skip silently past the taken slots
-										   instead of hearing that they are taken. */
-										if (!slot.taken) selectedSlot = slot;
-									}}
-								>
-									{slot.label}
-								</button>
-							{/each}
-						</div>
-					{:else}
-						<p class="planner__empty">
-							Op deze dag zijn geen tijden meer vrij. Kies een andere dag.
-						</p>
-					{/if}
 				{:else}
 					<p class="planner__date">
 						{selectedLabel}{selectedSlot ? `, ${selectedSlot.start}` : ''}
@@ -616,6 +620,52 @@
 				{/if}
 			</div>
 		{/key}
+
+		<!-- Step 2 arrives over the calendar rather than replacing it: the day you
+		     just picked stays visible above the times you are choosing between.
+		     Clicking a time is the way forward — there is no Volgende button. -->
+		{#if step === 'tijd'}
+			<div class="planner__sheet" transition:slide={{ duration: sheetMs, easing: cubicOut }}>
+				<span class="planner__grabber" aria-hidden="true"></span>
+				<p class="planner__sheet-date">{sheetLabel}</p>
+				{#if slots.length > 0 && freeSlotCount > 0}
+					<div
+						class="planner__times"
+						role="group"
+						aria-label="Tijden op {selectedDate ? spokenDate(selectedDate) : ''}"
+					>
+						{#each slots as slot (slot.start)}
+							<button
+								class="planner__time"
+								class:planner__time--selected={selectedSlot?.start === slot.start}
+								class:planner__time--taken={slot.taken}
+								type="button"
+								aria-pressed={selectedSlot?.start === slot.start}
+								aria-disabled={slot.taken ? 'true' : undefined}
+								aria-label={slot.taken ? `${slot.label} — al bezet` : slot.label}
+								onclick={() => {
+									/* aria-disabled rather than disabled: a disabled button
+									   drops out of the tab order, so someone arriving by
+									   keyboard would skip silently past the taken slots
+									   instead of hearing that they are taken. */
+									if (slot.taken) return;
+									selectedSlot = slot;
+									toDetails();
+								}}
+							>
+								<!-- The start time alone. The full range is still what a
+								     screen reader hears, via aria-label below. -->
+								{slot.start}
+							</button>
+						{/each}
+					</div>
+				{:else}
+					<p class="planner__empty">
+						Op deze dag zijn geen tijden meer vrij. Kies een andere dag.
+					</p>
+				{/if}
+			</div>
+		{/if}
 	</div>
 
 	<!-- The footer never moves between steps: only what sits in it changes. -->
@@ -636,6 +686,9 @@
 				Nog een moment plannen
 			</button>
 		{:else}
+			<!-- Text, not an icon button. Forward is never a button in this flow —
+			     picking a date is step 1's forward, picking a time is step 2's —
+			     so the only control that has to look like a control is Verzenden. -->
 			<button
 				class="planner__back"
 				type="button"
@@ -651,13 +704,10 @@
 						stroke-linejoin="round"
 					/>
 				</svg>
+				Vorige
 			</button>
 
-			{#if step === 'tijd'}
-				<button class="planner__proceed" type="button" disabled={!selectedSlot} onclick={toDetails}>
-					Verder
-				</button>
-			{:else}
+			{#if step === 'gegevens'}
 				<button
 					class="planner__proceed"
 					type="button"
@@ -704,6 +754,96 @@
 		position: relative;
 		flex: 1 1 auto;
 		min-height: 0;
+	}
+
+	/* ─── Stepper ─── */
+	.planner__steps {
+		display: flex;
+		align-items: center;
+		gap: 0.625rem;
+		margin-bottom: var(--space-4);
+		flex-shrink: 0;
+	}
+
+	.planner__dashes {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+	}
+
+	.planner__dash {
+		width: 1.625rem; /* 26px */
+		height: 3px;
+		border-radius: 2px;
+		background: rgb(var(--pl-tile) / 0.45);
+		transition: background-color var(--motion-base) var(--ease-out);
+	}
+
+	.planner__dash--done {
+		background: var(--pl-ink);
+	}
+
+	.planner__steps-label {
+		font-family: var(--font-body);
+		font-size: 0.8125rem; /* 13px */
+		font-weight: var(--font-weight-light);
+		color: var(--pl-ink);
+		margin-left: 0.25rem;
+	}
+
+	/* ─── The time sheet ─── */
+	/* Rises from the bottom of the card and covers only as much of the calendar
+	   as it needs, so the day you just chose stays in view above it. */
+	.planner__sheet {
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		z-index: 2;
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding: 0.75rem clamp(0.75rem, 2.5vw, 1.25rem) clamp(0.75rem, 2vh, 1rem);
+		border-radius: 1rem 1rem 0 0;
+		background: var(--color-card-warm);
+		color: var(--color-fg-forest);
+	}
+
+	.planner__sheet-date {
+		font-family: var(--font-body);
+		font-size: 0.875rem;
+		font-weight: var(--font-weight-medium);
+		color: var(--color-fg-forest);
+		margin: 0 0 0.25rem;
+	}
+
+	/* Two across, as the design lays them out — not as many as fit. */
+	.planner__sheet .planner__times {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.625rem;
+	}
+
+	.planner__sheet .planner__time {
+		min-height: 2.75rem;
+		background: transparent;
+		border-color: color-mix(in srgb, var(--brand-border) 35%, transparent);
+		color: var(--color-fg-forest);
+		font-size: 0.9375rem;
+	}
+
+	.planner__sheet .planner__time--selected {
+		background: var(--brand-border);
+		border-color: var(--brand-border);
+		color: var(--pl-ink);
+	}
+
+	.planner__grabber {
+		width: 2.375rem;
+		height: 4px;
+		border-radius: 2px;
+		background: color-mix(in srgb, var(--brand-border) 35%, transparent);
+		align-self: center;
+		margin-bottom: 0.25rem;
 	}
 
 	.planner__step {
@@ -862,9 +1002,12 @@
 	}
 
 	.planner__day--selected,
+	/* A filled brown circle, as the design draws it — the outlined square read as
+	   a focus ring rather than a choice. */
 	.planner__day--open.planner__day--selected {
-		background: rgb(var(--pl-tile) / 0.75);
-		border-color: var(--pl-ink);
+		background: var(--brand-border);
+		border-color: var(--brand-border);
+		border-radius: var(--radius-full);
 		color: var(--pl-ink);
 		opacity: 1;
 	}
@@ -984,10 +1127,13 @@
 	}
 
 	/* ─── Details ─── */
+	/* Sized by its own content, not by the card: the card is as tall as the
+	   calendar needs and the step centres what it holds, so a stretching fields
+	   block would just pin the form to the top with a hole under it. */
 	.planner__fields {
 		display: flex;
 		flex-direction: column;
-		flex: 1 1 auto;
+		flex: 0 0 auto;
 		min-height: 0;
 		gap: clamp(0.375rem, 1.1vh, 0.75rem);
 	}
@@ -1005,8 +1151,10 @@
 		min-width: 0;
 	}
 
+	/* Grows into what the step has spare, but no further than the textarea's own
+	   cap — the taller card would otherwise make this field the whole step. */
 	.planner__field--grow {
-		flex: 1 1 auto;
+		flex: 0 1 auto;
 		min-height: 0;
 	}
 
@@ -1017,6 +1165,14 @@
 
 	.planner__optional {
 		color: rgb(250 240 230 / 0.65);
+	}
+
+	/* The card gained height for the calendar, and .planner__field--grow handed
+	   all of it to this one control — a textarea taller than the rest of the
+	   step put together. It gets a working size and the step keeps the slack. */
+	.planner__input--area {
+		max-height: 9rem;
+		resize: vertical;
 	}
 
 	.planner__input {
@@ -1121,17 +1277,27 @@
 			opacity var(--motion-hover) var(--ease-hover);
 	}
 
+	/* A text link with a chevron, not a round icon button: the design gives the
+	   step's only real button to Verzenden, and back reads as secondary. */
 	.planner__back {
-		width: clamp(1.875rem, 3.3vh, 2.25rem);
-		padding: 0;
-		background: rgb(var(--pl-tile) / 0.5);
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		width: auto;
+		min-height: 2.75rem; /* stays a 44px touch target even though it is text */
+		padding: 0 0.25rem;
+		background: transparent;
 		color: var(--pl-ink);
+		font-family: var(--font-body);
+		font-size: 0.9375rem;
+		text-decoration: underline;
+		text-underline-offset: 4px;
 		flex-shrink: 0;
 	}
 
 	.planner__back svg {
-		width: 60%;
-		height: 60%;
+		width: 0.9375rem;
+		height: 0.9375rem;
 	}
 
 	.planner__back:hover {
@@ -1141,7 +1307,10 @@
 
 	.planner__proceed {
 		padding: 0.5rem 1.25rem;
-		background: var(--color-accent-gold-soft); /* #c7a27a */
+		/* Was --color-accent-gold-soft: sand on #c7a27a is 2.1:1. Same failure the
+		   contact form's submit had, and it hides from the a11y sweep because it
+		   only exists on step 3. --brand-border carries this label at 5.25:1. */
+		background: var(--brand-border);
 		color: var(--pl-ink);
 		margin-left: auto;
 	}

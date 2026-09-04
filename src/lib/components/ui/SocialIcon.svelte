@@ -74,6 +74,26 @@
 		text-decoration: none;
 	}
 
+	/* Every glyph in ICONS opens with its own ring — a 38px rect at stroke-width
+	   2 — which is right for the footer, where the icon IS the circle, and far
+	   too heavy beside a line of text. The labelled variant drops that first
+	   child and draws a hairline ring on the link instead, so the glyph reads as
+	   a small mark inside a light circle. */
+	.social-icon--labelled svg > :first-child {
+		display: none;
+	}
+
+	.social-icon--labelled svg {
+		width: 2.625rem; /* 42px ring */
+		height: 2.625rem;
+		flex: none;
+		padding: 0.5rem;
+		border-radius: var(--radius-full);
+		border: 1px solid color-mix(in srgb, currentcolor 32%, transparent);
+		box-sizing: border-box;
+		overflow: visible;
+	}
+
 	.social-icon__text {
 		font-family: var(--font-body);
 		font-size: 1rem;
@@ -101,6 +121,26 @@
 		border-radius: var(--radius-full);
 		background: transparent !important;
 		text-decoration: none;
+	}
+
+	/* Every glyph in ICONS opens with its own ring — a 38px rect at stroke-width
+	   2 — which is right for the footer, where the icon IS the circle, and far
+	   too heavy beside a line of text. The labelled variant drops that first
+	   child and draws a hairline ring on the link instead, so the glyph reads as
+	   a small mark inside a light circle. */
+	.social-icon--labelled svg > :first-child {
+		display: none;
+	}
+
+	.social-icon--labelled svg {
+		width: 2.625rem; /* 42px ring */
+		height: 2.625rem;
+		flex: none;
+		padding: 0.5rem;
+		border-radius: var(--radius-full);
+		border: 1px solid color-mix(in srgb, currentcolor 32%, transparent);
+		box-sizing: border-box;
+		overflow: visible;
 	}
 
 	.social-icon__text {

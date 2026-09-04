@@ -214,9 +214,12 @@ test.describe('Contact — date planner', () => {
 	/** Steps crossfade: for ~160ms both panels are mounted. Wait for one. */
 	const settled = (page: Page) => expect(page.locator('.planner__step')).toHaveCount(1);
 
+	/* There is no forward button anywhere in this flow: picking a date is step
+	   1's forward and picking a time is step 2's. The only button that moves the
+	   booking on is Verzenden, at the end. */
 	async function toTimeStep(page: Page) {
 		await openDay(page).click();
-		await settled(page);
+		await expect(page.locator('.planner__sheet')).toBeVisible();
 	}
 
 	async function toDetailStep(page: Page) {
@@ -224,14 +227,14 @@ test.describe('Contact — date planner', () => {
 		// .last(), not a fixed index: the window is four slots wide today and was
 		// twelve before, and this step only needs *a* time to be chosen.
 		await times(page).last().click();
-		await pane(page).getByRole('button', { name: 'Verder' }).click();
 		await settled(page);
 	}
 
-	test('step 1: month grid and legend, no step controls yet', async ({ page }) => {
+	test('step 1: month grid and legend, and the step counter says so', async ({ page }) => {
 		await expect(pane(page).getByRole('grid')).toBeVisible();
 		await expect(pane(page).getByText('Beschikbaar', { exact: true })).toBeVisible();
 		await expect(pane(page).getByText('Niet beschikbaar', { exact: true })).toBeVisible();
+		await expect(pane(page).getByText('Stap 1 van 3')).toBeVisible();
 		await expect(pane(page).getByRole('button', { name: 'Verder' })).toHaveCount(0);
 	});
 
@@ -240,31 +243,29 @@ test.describe('Contact — date planner', () => {
 		expect(await openDay(page).count(), 'the month must offer at least one day').toBeGreaterThan(0);
 	});
 
-	test('step 2: a date reveals its times, back returns to step 1, proceed is disabled', async ({
-		page
-	}) => {
+	test('step 2: the times rise over the calendar, which stays put', async ({ page }) => {
 		const day = openDay(page);
 		const dayNumber = (await day.textContent())?.trim();
 		await day.click();
-		await settled(page);
+		await expect(page.locator('.planner__sheet')).toBeVisible();
 
-		// The calendar slides out entirely rather than staying under the slots.
-		await expect(pane(page).getByRole('grid')).toHaveCount(0);
-		await expect(page.locator('.planner__date')).toContainText(`${dayNumber} `);
+		// The calendar stays: the day just chosen is still visible above the sheet.
+		await expect(pane(page).getByRole('grid')).toBeVisible();
+		await expect(page.locator('.planner__sheet-date')).toContainText(`${dayNumber} `);
 		expect(await times(page).count()).toBeGreaterThan(0);
 
+		await expect(pane(page).getByText('Stap 2 van 3')).toBeVisible();
 		await expect(pane(page).getByRole('button', { name: 'Terug naar kies datum' })).toBeVisible();
-		const proceed = pane(page).getByRole('button', { name: 'Verder' });
-		await expect(proceed, 'no time chosen yet').toBeDisabled();
+		await expect(pane(page).getByRole('button', { name: 'Verder' })).toHaveCount(0);
 	});
 
-	test('picking a time enables the proceed button', async ({ page }) => {
+	test('picking a time is the way forward — no button in between', async ({ page }) => {
 		await toTimeStep(page);
-		const time = times(page).first();
-		await time.click();
+		await times(page).first().click();
+		await settled(page);
 
-		await expect(time).toHaveAttribute('aria-pressed', 'true');
-		await expect(pane(page).getByRole('button', { name: 'Verder' })).toBeEnabled();
+		await expect(pane(page).getByText('Stap 3 van 3')).toBeVisible();
+		await expect(pane(page).getByLabel('Voornaam')).toBeVisible();
 	});
 
 	test('step 3: the fields appear, back names step 2, booking is disabled until filled', async ({
@@ -356,7 +357,6 @@ test.describe('Contact — date planner', () => {
 		await times(page).first().click();
 		expect(await overflow(), 'step 2 overflows').toBeLessThanOrEqual(1);
 
-		await pane(page).getByRole('button', { name: 'Verder' }).click();
 		await settled(page);
 		await expect(pane(page).getByLabel('Voornaam')).toBeVisible();
 		expect(await overflow(), 'step 3 overflows').toBeLessThanOrEqual(1);

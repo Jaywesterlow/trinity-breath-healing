@@ -62,11 +62,24 @@ const openPlanner = async (p) => {
   await p.waitForTimeout(600);
 };
 
+// Step 3 of the planner is where its own submit button lives, and a violation
+// there is invisible to a sweep that only ever sees the calendar — which is
+// exactly how a 2.1:1 submit survived the first pass.
+const openPlannerStep3 = async (p) => {
+  await openPlanner(p);
+  await p.getByRole('gridcell').and(p.locator('button:not([aria-disabled="true"])')).first().click();
+  await p.waitForTimeout(500);
+  await p.locator('.planner__time:not([aria-disabled="true"])').first().click();
+  await p.waitForTimeout(800);
+};
+
 let total = 0;
 total += await run(1440, 'desktop — at rest');
 total += await run(390, 'mobile — at rest');
 total += await run(1440, 'desktop — e-mail form open', openForm);
 total += await run(1440, 'desktop — planner open', openPlanner);
+total += await run(1440, 'desktop — planner, step 3', openPlannerStep3);
+total += await run(390, 'mobile — planner, step 3', openPlannerStep3);
 await b.close();
 
 console.log(`\nTOTAL violation types across all states: ${total}`);
