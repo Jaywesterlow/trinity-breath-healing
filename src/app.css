@@ -31,6 +31,10 @@
 	   to 4.50:1 — #6f8460 has no working text colour at all (charcoal on it is
 	   2.31:1). Never a text colour itself. */
 	--color-brand-green: #627454;
+	/* The contact panels' ground. Bone rather than the page's own sand, so an
+	   empty form still reads as a card sitting on the section instead of a
+	   rectangle of border floating on the same colour. */
+	--color-panel: #fdf8f1;
 	--brand-destructive: #b3402c; /* rust/brick red — NOT in Figma's palette; chosen because Trinity's
                                     palette has no existing red, and destructive/error states need a
                                     hue that reads as "stop" while still sitting comfortably in a warm

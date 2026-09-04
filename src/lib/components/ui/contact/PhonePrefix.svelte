@@ -167,7 +167,9 @@
 		padding: 0 0.625rem 0 0.75rem;
 		border: none;
 		background: transparent;
-		color: var(--color-bg-sand);
+		/* Sand on a sand card is invisible — this is why the +31 could not be seen,
+		   only the flag beside it. */
+		color: var(--color-fg-forest);
 		font-family: inherit;
 		font-size: inherit;
 		line-height: 1;
@@ -176,7 +178,7 @@
 	}
 
 	.prefix__button:hover {
-		background: color-mix(in srgb, var(--color-bg-sand) 8%, transparent);
+		background: color-mix(in srgb, var(--brand-border) 8%, transparent);
 	}
 
 	.prefix__button:focus-visible {
@@ -201,6 +203,7 @@
 
 	.prefix__dial {
 		font-variant-numeric: tabular-nums;
+		white-space: nowrap;
 	}
 
 	.prefix__chevron {
@@ -227,12 +230,12 @@
 		margin: 0;
 		padding: 0.25rem;
 		list-style: none;
-		background: color-mix(in srgb, #ffffff 8%, var(--color-fg-forest));
-		border: 1px solid color-mix(in srgb, var(--color-bg-sand) 25%, transparent);
+		background: var(--color-card-warm);
+		border: 1px solid rgba(124, 94, 73, 0.28);
 		border-radius: 0.625rem;
 		box-shadow: 0 12px 28px rgb(0 0 0 / 0.35);
 		scrollbar-width: thin;
-		scrollbar-color: color-mix(in srgb, var(--color-bg-sand) 35%, transparent) transparent;
+		scrollbar-color: rgba(124, 94, 73, 0.35) transparent;
 	}
 
 	.prefix__list:focus-visible {
@@ -246,12 +249,12 @@
 		gap: 0.5rem;
 		padding: 0.4375rem 0.5rem;
 		border-radius: 0.375rem;
-		color: var(--color-bg-sand);
+		color: var(--color-fg-forest);
 		cursor: pointer;
 	}
 
 	.prefix__option--active {
-		background: color-mix(in srgb, var(--color-bg-sand) 14%, transparent);
+		background: color-mix(in srgb, var(--brand-border) 12%, transparent);
 	}
 
 	.prefix__option[aria-selected='true'] .prefix__dial {
@@ -264,6 +267,6 @@
 	}
 
 	.prefix__list .prefix__dial {
-		color: color-mix(in srgb, var(--color-bg-sand) 70%, transparent);
+		color: var(--color-text-subtle);
 	}
 </style>

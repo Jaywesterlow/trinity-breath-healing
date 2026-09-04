@@ -226,7 +226,8 @@
 		width: 100%;
 		min-height: 0; /* the wrapper sets the height; this just fills its cell */
 		padding: 1.75rem; /* 28px */
-		background: var(--color-bg-sand);
+		--panel-bg: var(--color-panel);
+		background: var(--panel-bg);
 		border: 1px solid rgba(124, 94, 73, 0.22);
 		border-radius: 1.125rem; /* 18px */
 		color: var(--color-fg-forest);
@@ -298,7 +299,25 @@
 	}
 
 	.field__input::placeholder {
-		color: var(--color-text-subtle);
+		/* Lighter than the value it stands in for, so the two cannot be confused —
+		   --color-text-subtle is the body-copy colour and read as real input.
+		   72% lands at 3.01:1 on the panel: clearly a placeholder, and still above
+		   the 3:1 floor. Every field has a real visible <label>, so this text is a
+		   redundant example rather than the only cue. */
+		color: color-mix(in srgb, var(--color-text-subtle) 72%, transparent);
+	}
+
+	/* Chrome paints its own fill behind an autofilled field, as a background the
+	   page cannot restyle — square, so it cut the corners off the 10px radius.
+	   An inset shadow is the one thing that paints inside the border box and
+	   follows its radius, so it covers Chrome's fill instead of fighting it. */
+	.field__input:-webkit-autofill,
+	.field__input:-webkit-autofill:hover,
+	.field__input:-webkit-autofill:focus {
+		-webkit-box-shadow: 0 0 0 3rem var(--panel-bg) inset;
+		-webkit-text-fill-color: var(--color-fg-forest);
+		caret-color: var(--color-fg-forest);
+		transition: background-color 100000s ease-in-out 0s;
 	}
 
 	.field__input:hover,

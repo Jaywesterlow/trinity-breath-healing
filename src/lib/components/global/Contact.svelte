@@ -38,10 +38,11 @@
 	   reordered in constants/socials.ts, so the footer keeps its own order. */
 	const CONTACT_SOCIALS = [...SOCIAL_LINKS].reverse();
 
-	/* 60px is the carousel's reach, tuned for a 240px card standing in a fan.
-	   These are 600px blocks side by side with the copy, where 60px had them
-	   moving while the cursor was still over the other column. */
-	const MAGNET_MARGIN = 18;
+	/* Reach and pull are separate knobs, and only the pull was ever the problem.
+	   The card should already be leaning toward a cursor that is merely nearby,
+	   so the field is wide — wider than the carousel's 60 — while the strength
+	   below keeps the actual movement small. */
+	const MAGNET_MARGIN = 140;
 	/* 0.08 is a fraction of the element's half-width, so on a ~600px card it
 	   pulls ~24px where the same number moves a 240px treatment card ~10px.
 	   0.035 lands these on that same ~10px. */

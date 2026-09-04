@@ -648,7 +648,7 @@
 								type="button"
 								aria-pressed={selectedSlot?.start === slot.start}
 								aria-disabled={slot.taken ? 'true' : undefined}
-								aria-label={slot.taken ? `${slot.label} — al bezet` : slot.label}
+								aria-label={slot.taken ? `${slot.label} — al bezet` : undefined}
 								onclick={() => {
 									/* aria-disabled rather than disabled: a disabled button
 									   drops out of the tab order, so someone arriving by
@@ -659,9 +659,7 @@
 									toDetails();
 								}}
 							>
-								<!-- The start time alone. The full range is still what a
-								     screen reader hears, via aria-label below. -->
-								{slot.start}
+								{slot.label}
 							</button>
 						{/each}
 					</div>
@@ -727,6 +725,7 @@
 		--pl-line: rgba(124, 94, 73, 0.22);
 		--pl-ink: var(--color-fg-forest); /* #3d4a35 */
 		--pl-radius: 0.625rem; /* 10px */
+		--panel-bg: var(--color-panel);
 
 		position: relative;
 		display: flex;
@@ -734,7 +733,7 @@
 		width: 100%;
 		min-height: 0;
 		padding: 1.75rem; /* 28px */
-		background: var(--color-bg-sand); /* #faf0e6 */
+		background: var(--panel-bg);
 		border: 1px solid var(--pl-line);
 		border-radius: 1.125rem; /* 18px */
 		color: var(--pl-ink);
@@ -944,17 +943,13 @@
 		bottom: 0;
 		z-index: 2;
 		padding: 1.375rem 1.75rem 1.625rem; /* 22px 28px 26px */
-		/* Not a flat fill: the calendar stays faintly readable through it, so the
-		   sheet reads as something lying over the month rather than a second
-		   panel that replaced it. The colour is the card's own warm tone at 72%,
-		   and the blur is what keeps the text on top legible. */
-		background: color-mix(in srgb, var(--color-card-warm) 72%, transparent);
-		backdrop-filter: blur(14px);
+		/* No fill and no shadow: the blur alone is what separates it from the
+		   calendar, and the month stays visible through it. A hairline top edge
+		   is all that draws the boundary. */
+		background: transparent;
+		backdrop-filter: blur(16px);
 		border-top: 1px solid var(--pl-line);
 		border-radius: 1.125rem 1.125rem 0 0;
-		/* The one shadow on this site, and it is not a hover: it is what separates
-		   a sheet lying over the calendar from a panel sitting beside it. */
-		box-shadow: 0 -14px 30px rgba(61, 74, 53, 0.14);
 	}
 
 	.planner__grabber {
@@ -974,10 +969,13 @@
 		margin: 0;
 	}
 
+	/* The layout this had before the four-tile version: auto-fit, so the column
+	   count follows the width and whatever the schedule offers rather than being
+	   fixed at two. */
 	.planner__times {
 		display: grid;
-		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 0.75rem; /* 12px */
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, 7.5rem), 1fr));
+		gap: 0.625rem;
 		margin-top: 1rem; /* 16px */
 	}
 
@@ -985,7 +983,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		min-height: 3.125rem; /* 50px */
+		min-height: 2.75rem; /* 44px — a touch target, and the ranges are wider */
 		padding: 0.375rem 0.5rem;
 		border: 1px solid rgba(124, 94, 73, 0.3);
 		border-radius: var(--pl-radius);
@@ -1090,7 +1088,25 @@
 	}
 
 	.planner__input::placeholder {
-		color: var(--color-text-subtle);
+		/* Lighter than the value it stands in for, so the two cannot be confused —
+		   --color-text-subtle is the body-copy colour and read as real input.
+		   72% lands at 3.01:1 on the panel: clearly a placeholder, and still above
+		   the 3:1 floor. Every field has a real visible <label>, so this text is a
+		   redundant example rather than the only cue. */
+		color: color-mix(in srgb, var(--color-text-subtle) 72%, transparent);
+	}
+
+	/* Chrome paints its own fill behind an autofilled field, as a background the
+	   page cannot restyle — square, so it cut the corners off the 10px radius.
+	   An inset shadow is the one thing that paints inside the border box and
+	   follows its radius, so it covers Chrome's fill instead of fighting it. */
+	.planner__input:-webkit-autofill,
+	.planner__input:-webkit-autofill:hover,
+	.planner__input:-webkit-autofill:focus {
+		-webkit-box-shadow: 0 0 0 3rem var(--panel-bg) inset;
+		-webkit-text-fill-color: var(--color-fg-forest);
+		caret-color: var(--color-fg-forest);
+		transition: background-color 100000s ease-in-out 0s;
 	}
 
 	.planner__input:hover,
