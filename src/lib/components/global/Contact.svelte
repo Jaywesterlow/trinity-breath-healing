@@ -2,6 +2,10 @@
 	import ContactForm from '$lib/components/ui/contact/ContactForm.svelte';
 	import DatePlanner from '$lib/components/ui/contact/DatePlanner.svelte';
 	import { BRAND } from '$lib/constants/brand';
+	import SocialIcon from '$lib/components/ui/SocialIcon.svelte';
+	/* Instagram, WhatsApp, e-mail — the same list the footer renders, built once
+	   in constants/socials.ts. */
+	import { SOCIAL_LINKS } from '$lib/constants/socials';
 
 	let active = $state<'form' | 'meeting'>('form');
 </script>
@@ -13,6 +17,7 @@
 			<h2 id="contact-heading" class="contact__heading">
 				Een eerste stap hoeft niet groot te zijn.
 			</h2>
+			<p class="contact__subtitle">Zo bereik je mij</p>
 			<div class="contact__description">
 				<p class="contact__description-intro">
 					Wil je iets vragen, of meteen een gesprek plannen? Laat een bericht achter of kies een
@@ -65,6 +70,27 @@
 			{/if}
 		</div>
 	</div>
+
+	<!-- Under the whole section rather than beside the copy: the column beside
+	     the card is short, and stacking these into it was what left the two
+	     sides visibly mismatched. -->
+	<nav class="contact__socials" aria-label="Sociale media">
+		<ul class="contact__socials-list">
+			{#each SOCIAL_LINKS as social (social.icon)}
+				<li>
+					<SocialIcon
+						icon={social.icon}
+						href={social.href}
+						label={social.label}
+						newTab={social.newTab}
+						color="var(--brand-border)"
+						background="var(--color-bg-sand)"
+						responsiveSize={false}
+					/>
+				</li>
+			{/each}
+		</ul>
+	</nav>
 </section>
 
 <style>
@@ -122,6 +148,17 @@
 		margin-bottom: 1rem; /* 16px — Figma 519:52 -> 519:67 */
 	}
 
+	/* Sits between the heading and the copy — the copy is three dense lines and
+	   ran straight on from the heading with nothing to break the fall. */
+	.contact__subtitle {
+		font-family: var(--font-body);
+		font-size: 0.875rem; /* 14px */
+		font-weight: var(--font-weight-medium);
+		line-height: 1.3;
+		color: var(--color-fg-forest);
+		margin-bottom: 0.5rem; /* 8px */
+	}
+
 	.contact__description {
 		display: flex;
 		flex-direction: column;
@@ -168,6 +205,23 @@
 	.contact__description a:hover::after,
 	.contact__description a:focus-visible::after {
 		height: 2px;
+	}
+
+	/* One row, full width, spread with space-around — not stacked beside the
+	   copy, where they made the right column read as the odd one out. */
+	.contact__socials {
+		max-width: var(--container-max);
+		margin: var(--space-12) auto 0;
+	}
+
+	.contact__socials-list {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		width: 100%;
+		justify-content: space-around;
+		align-items: center;
 	}
 
 	.contact__toggle {
@@ -327,6 +381,11 @@
 			line-height: 1.2; /* 96/(2*40) — Figma 449:7 */
 			max-width: 30.375rem; /* 486px */
 			margin-bottom: 1rem; /* 16px — 449:7 ends 122, 449:8 starts 138 */
+		}
+
+		.contact__subtitle {
+			font-size: 1rem; /* 16px */
+			margin-bottom: 0.5rem;
 		}
 
 		.contact__description {
