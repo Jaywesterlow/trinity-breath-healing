@@ -221,6 +221,12 @@
 	   not on the component, so the reduced-motion block below can flatten it; a
 	   declaration on .btn-link__circle would out-specify that :root override. */
 	--arrow-travel: 14px;
+	/* The arrow swap and the circle filling run slower than a plain hover: at
+	   --motion-hover (180ms) the two arrows crossed so fast the movement barely
+	   registered, and the fill snapped. This is the one interaction on the site
+	   people are meant to watch. */
+	--motion-arrow: 420ms;
+	--ease-arrow: cubic-bezier(0.22, 1, 0.36, 1);
 	/* No shadows anywhere on this site, hover included — the lift alone carries the
 	   interaction. Kept as a token rather than deleted so every surface that reads it
 	   stays on one vocabulary, and so a shadow can never creep back in one component

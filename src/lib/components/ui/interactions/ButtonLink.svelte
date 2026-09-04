@@ -101,16 +101,16 @@
 		flex-shrink: 0;
 		overflow: hidden; /* the departing arrow is clipped at the rim, not drawn outside it */
 		transition:
-			background-color var(--motion-hover) var(--ease-hover),
-			color var(--motion-hover) var(--ease-hover);
+			background-color var(--motion-arrow) var(--ease-arrow),
+			color var(--motion-arrow) var(--ease-arrow);
 	}
 
 	.btn-link__arrow {
 		position: absolute;
 		display: inline-flex;
 		transition:
-			transform var(--motion-hover) var(--ease-hover),
-			opacity var(--motion-hover) var(--ease-hover);
+			transform var(--motion-arrow) var(--ease-arrow),
+			opacity var(--motion-arrow) var(--ease-arrow);
 	}
 
 	/* Waits off-circle at the bottom-left — the corner the arrow points away from. */
