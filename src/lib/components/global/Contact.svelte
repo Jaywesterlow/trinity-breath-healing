@@ -99,31 +99,7 @@
 				>
 					<span class="route__title">Plan een kennismaking</span>
 					<span class="route__body">Kies zelf een moment. Dertig minuten, online, vrijblijvend.</span>
-					<span class="route__cta">
-						<span class="route__cta-label">Kies een datum</span>
-						<!-- The same circle the nav and hero buttons carry, so the three
-						     calls to action on the page read as one control. -->
-						<span class="route__circle" aria-hidden="true">
-							<span class="route__arrow route__arrow--out"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-							<path
-								d="M4 12L12 4M12 4H7M12 4V9"
-								stroke="currentColor"
-								stroke-width="1.5"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							/>
-						</svg></span>
-							<span class="route__arrow route__arrow--in"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-							<path
-								d="M4 12L12 4M12 4H7M12 4V9"
-								stroke="currentColor"
-								stroke-width="1.5"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							/>
-						</svg></span>
-						</span>
-					</span>
+					<span class="route__cta">Kies een datum</span>
 				</button>
 				<button
 					type="button"
@@ -142,31 +118,7 @@
 					<span class="route__body">
 						Liever eerst een vraag stellen? Mailen en appen kan de hele dag.
 					</span>
-					<span class="route__cta">
-						<span class="route__cta-label">Schrijf een bericht</span>
-						<!-- The same circle the nav and hero buttons carry, so the three
-						     calls to action on the page read as one control. -->
-						<span class="route__circle" aria-hidden="true">
-							<span class="route__arrow route__arrow--out"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-							<path
-								d="M4 12L12 4M12 4H7M12 4V9"
-								stroke="currentColor"
-								stroke-width="1.5"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							/>
-						</svg></span>
-							<span class="route__arrow route__arrow--in"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-							<path
-								d="M4 12L12 4M12 4H7M12 4V9"
-								stroke="currentColor"
-								stroke-width="1.5"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							/>
-						</svg></span>
-						</span>
-					</span>
+					<span class="route__cta">Schrijf een bericht</span>
 				</button>
 			</div>
 
@@ -400,20 +352,15 @@
 		line-height: var(--line-height-normal);
 	}
 
-	/* Not a button — the card is. Built like ButtonLink: a pill and a circle that
-	   fills on hover, sharing --motion-arrow so all three CTAs move alike. */
+	/* Not a button — the card is. It still answers its own hover so the call to
+	   action stays distinguishable inside the card's target. */
 	.route__cta {
 		display: inline-flex;
 		align-items: center;
-		margin-top: var(--space-2);
-	}
-
-	.route__cta-label {
-		display: flex;
-		align-items: center;
+		justify-content: center;
 		min-height: var(--space-10);
+		margin-top: var(--space-2);
 		padding: 0 var(--space-6);
-		margin-right: -2px; /* the overlap ButtonLink uses to close the seam */
 		border-radius: var(--radius-full);
 		background: var(--brand-border);
 		color: var(--color-bg-sand);
@@ -422,69 +369,17 @@
 		line-height: 1;
 		white-space: nowrap;
 		transition:
-			background-color var(--motion-arrow) var(--ease-arrow),
-			color var(--motion-arrow) var(--ease-arrow);
-	}
-
-	/* Sand, not --brand-border: the circle sits on the green card, where brown on
-	   green is 1.17:1 — the ring and the arrow were effectively invisible. Sand
-	   on green is 4.50:1, and it matches the pill's own text. On hover it fills
-	   with sand and the arrow turns brown, the pill's colours inverted. */
-	.route__circle {
-		position: relative;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: var(--space-10);
-		height: var(--space-10);
-		border-radius: 50%;
-		border: 2px solid var(--color-bg-sand);
-		background: transparent;
-		color: var(--color-bg-sand);
-		flex-shrink: 0;
-		overflow: hidden;
-		transition:
-			background-color var(--motion-arrow) var(--ease-arrow),
-			color var(--motion-arrow) var(--ease-arrow);
-	}
-
-	.route__arrow {
-		position: absolute;
-		display: inline-flex;
-		transition:
-			transform var(--motion-arrow) var(--ease-arrow),
-			opacity var(--motion-arrow) var(--ease-arrow);
-	}
-
-	.route__arrow--in {
-		opacity: 0;
-		transform: translate(calc(-1 * var(--arrow-travel)), var(--arrow-travel));
-	}
-
-	/* Its own width, centred — not stretched across the card. */
-	.route__cta {
-		align-self: center;
+			background-color var(--motion-hover) var(--ease-hover),
+			color var(--motion-hover) var(--ease-hover);
 	}
 
 	/* The pill's own hover, not the card's: standing anywhere on the card used to
 	   light it up, which made it look pressed before the pointer had reached it.
 	   The card is still the click target — this only governs how the pill looks. */
-	.route__cta:hover .route__circle,
-	.route:focus-visible .route__circle {
+	.route__cta:hover,
+	.route:focus-visible .route__cta {
 		background: var(--color-bg-sand);
 		color: var(--brand-border);
-	}
-
-	.route__cta:hover .route__arrow--out,
-	.route:focus-visible .route__arrow--out {
-		opacity: 0;
-		transform: translate(var(--arrow-travel), calc(-1 * var(--arrow-travel)));
-	}
-
-	.route__cta:hover .route__arrow--in,
-	.route:focus-visible .route__arrow--in {
-		opacity: 1;
-		transform: translate(0, 0);
 	}
 
 	/* ─── The chosen route ─── */

@@ -62,9 +62,7 @@
 					rust, herstel en jezelf.
 				</p>
 				<div class="hero__cta">
-					<!-- withArrow: same circle-and-swap as the nav's CTA, so the two
-					     calls to action on the first screen behave alike. -->
-					<ButtonLink href="/contact" label="Maak een afspraak" withArrow />
+					<ButtonLink href="/contact" label="Maak een afspraak" />
 				</div>
 			</div>
 
