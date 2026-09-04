@@ -292,6 +292,12 @@
 		.hero__inner {
 			display: grid;
 			grid-template-columns: 44% 1fr; /* content keeps its reserved 44% share; image gets the rest */
+			/* The height both columns agree on. A constant expression, deliberately: the
+			   content column and the illustration each read it, and neither is measured
+			   from the other, so there is no loop to feed. 38.5rem is what .hero__left
+			   measured before the service cards were removed; the 42vw term keeps it under
+			   the image track's own width on narrow desktops. */
+			--hero-col-h: min(38.5rem, 42vw);
 			/* align-items: start (not the grid default, stretch) is load-bearing: .hero__left
 			   must report its own intrinsic content height to the ResizeObserver in the
 			   script block, unaffected by the row's track height. Stretch would make it
@@ -302,25 +308,26 @@
 			position: relative; /* anchor for the absolutely-positioned social icons */
 		}
 
-		/* Content column: heading group + cards stack from the top, fixed gap between them.
-		   flex-start (not space-between) keeps the gap tight and constant at every viewport
-		   height, so the content never drifts and the cards stay above the fold. */
+		/* Content column. With the service cards gone this is much shorter than the
+		   illustration beside it, so it holds --hero-col-h and centres its content in
+		   that space rather than hanging from the top with a gap underneath.
+		   min-height is a constant, not the image's height — the ResizeObserver reads
+		   this column and the image is sized from what it reads, so measuring the image
+		   here would close a loop. */
 		.hero__left {
 			grid-column: 1;
 			grid-row: 1;
 			position: relative;
 			z-index: 1; /* content always paints above the artwork — no absolute positioning needed */
 			min-width: 0;
+			min-height: var(--hero-col-h);
 			display: flex;
 			flex-direction: column;
-			justify-content: flex-start;
+			justify-content: center;
 		}
 
 		.hero__content {
-			padding: var(--space-12) var(--space-10) 0 0; /* left is 0 — max-width + centering sets the edge */
-			margin-bottom: var(
-				--space-8
-			); /* desktop-only floor gap so content never butts the service cards */
+			padding: 0 var(--space-10) 0 0; /* vertical space now comes from centring in --hero-col-h */
 			--btn-label-size: var(--font-size-xl); /* 20px on desktop */
 		}
 
@@ -366,15 +373,13 @@
 			   image is capped at exactly the content column's height and never grows past
 			   it. The var() fallback only matters for the brief pre-hydration paint,
 			   before the observer has measured anything. */
-			/* Floor, so dropping the service cards does not shrink the drawing. That column
-			   measured 615px with the cards and 445px without them, and the image is sized
-			   from it — so without a floor the artwork loses 170px of height for a reason
-			   the visitor cannot see. 38.5rem is the old height; the 42vw term keeps the
-			   floor below the track's own width on narrow desktops, where a 720px-wide
-			   drawing would be clipped by this column's overflow: hidden. */
+			/* Floor at --hero-col-h, so dropping the service cards does not shrink the
+			   drawing: that column measured 615px with the cards and 445px without them,
+			   and the image is sized from it. Same constant the content column holds, so
+			   the two end up the same height. */
 			height: max(
 				var(--hero-content-height, min(calc(100vh - var(--nav-height)), 1000px, 55vw)),
-				min(38.5rem, 42vw)
+				var(--hero-col-h)
 			);
 			max-width: none; /* width follows aspect */
 			max-height: none; /* cancels the mobile-base max-height, which otherwise keeps cascading through */

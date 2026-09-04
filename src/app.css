@@ -195,15 +195,19 @@
 	--ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 
 	/* --- Hover interaction (one vocabulary, used by every interactive surface) ---
-	   Buttons and cards lift by --lift-hover and pick up --shadow-hover; plain
-	   text links wipe an underline in. Both are driven from these four tokens so
+	   Buttons and cards lift by --lift-hover; plain text links wipe an underline
+	   in. Both are driven from these four tokens so
 	   the feel can be retuned in one place — and so the reduced-motion block at
 	   the bottom of this file can flatten the movement to nothing without every
 	   component needing its own media query. */
 	--motion-hover: 180ms;
 	--ease-hover: cubic-bezier(0.22, 1, 0.36, 1);
 	--lift-hover: -2px;
-	--shadow-hover: 0 6px 18px color-mix(in srgb, var(--color-fg-forest) 22%, transparent);
+	/* No shadows anywhere on this site, hover included — the lift alone carries the
+	   interaction. Kept as a token rather than deleted so every surface that reads it
+	   stays on one vocabulary, and so a shadow can never creep back in one component
+	   at a time. */
+	--shadow-hover: none;
 
 	/* --- Layout --- */
 	--container-max: 1200px;
