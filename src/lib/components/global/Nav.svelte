@@ -112,7 +112,7 @@
 		role="dialog"
 		aria-modal="true"
 		aria-label="Mobiel navigatiemenu"
-		aria-hidden={!menuOpen}
+		{...{ inert: menuOpen ? undefined : true }}
 	>
 		{#each NAV_LINKS as link (link.path)}
 			<a

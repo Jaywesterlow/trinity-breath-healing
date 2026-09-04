@@ -2284,7 +2284,9 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: var(--space-2);
+		/* No gap: each dot's target is already 24px wide, so the targets sit edge to
+		   edge and their centres land exactly 24px apart. */
+		gap: 0;
 		list-style: none;
 		margin: 0;
 		padding: 0;
@@ -2293,23 +2295,34 @@
 	.treatments__dot {
 		display: grid;
 		place-items: center;
-		width: 0.7rem;
-		height: 0.7rem;
 	}
 
+	/* The button is the 24x24 the WCAG 2.2 target-size minimum asks for; the dot
+	   you see is drawn by ::before and stays 6.4px. Sizing the button to the dot
+	   is what made these seven a 6.4px target. */
 	.treatments__dot-visual {
+		display: grid;
+		place-items: center;
+		width: 1.5rem;
+		height: 1.5rem;
+		border: none;
+		background: transparent;
+		padding: 0;
+		appearance: none;
+		cursor: pointer;
+	}
+
+	.treatments__dot-visual::before {
+		content: '';
 		width: 0.4rem;
 		height: 0.4rem;
 		border-radius: var(--radius-full);
 		border: 1px solid var(--color-fg-forest);
 		background: transparent;
-		padding: 0;
-		appearance: none;
-		cursor: pointer;
 		transition: background-color var(--motion-fast);
 	}
 
-	.treatments__dot-visual--active {
+	.treatments__dot-visual--active::before {
 		background: var(--color-fg-forest);
 	}
 

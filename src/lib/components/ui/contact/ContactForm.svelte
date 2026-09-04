@@ -414,7 +414,12 @@
 		padding: 0 clamp(1rem, 5vw, 1.5rem);
 		border: none;
 		border-radius: var(--radius-full);
-		background: var(--color-accent-gold-soft);
+		/* Was --color-accent-gold-soft, which put sand on #c7a27a at 2.1:1 — the
+		   worst contrast on the page, on its primary action. No gold in the palette
+		   works here: forest on gold-soft is 3.98:1 and on the brighter gold 4.34:1,
+		   both under the 4.5:1 this 16px label needs. --brand-border carries sand at
+		   5.25:1 and is what every other primary button on the site already uses. */
+		background: var(--brand-border);
 		color: var(--color-bg-sand);
 		font-family: inherit;
 		font-size: clamp(0.875rem, 3.6vw, 1rem);

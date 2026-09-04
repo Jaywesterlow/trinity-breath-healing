@@ -19,7 +19,11 @@
 	--color-accent-gold: #d4a968; /* gold accent — CTA buttons, focus rings */
 	--color-card-warm: #ede8d0; /* pale sage — card backgrounds */
 	--brand-muted: #5f6d56; /* mid sage, darkened for WCAG AA — secondary text, borders (was #7a8c6e, 3.22:1; now 4.90:1 on --color-bg-sand) */
-	--color-text-subtle: #848981; /* neutral stone gray — body text on light bg (Figma) */
+	/* Was #848981, which is 3.17:1 on the sand ground — under the 4.5:1 AA asks of
+	   body text, and this token is the body text colour (hero intro, contact copy,
+	   card bodies). Darkened along its own hue until it clears AA on both grounds
+	   it actually sits on: 4.98:1 on --color-bg-sand, 4.55:1 on --color-card-warm. */
+	--color-text-subtle: #656962; /* neutral stone gray — body text on light bg */
 	--brand-border: #7c5e49; /* dark cream, darkened for WCAG AA — dividers, input borders, CTA chrome (was #b68a6b, 2.73:1; now 5.25:1 on --color-bg-sand) */
 	--color-accent-gold-soft: #c7a27a; /* Figma-sourced — Over mij mobile CTA/link accents on dark overlay */
 	/* Leaf green, for filled cards that used to be --color-fg-forest. 8% darker
