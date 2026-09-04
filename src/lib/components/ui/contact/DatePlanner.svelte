@@ -18,7 +18,7 @@
 	 * size inside it is a clamp anchored to the Figma value at that reference.
 	 */
 	import { onMount, tick } from 'svelte';
-	import { fly, slide } from 'svelte/transition';
+	import { fade, fly, slide } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { BRAND } from '$lib/constants/brand';
 	import {
@@ -241,9 +241,7 @@
 
 	/** "Maandag 7 september, 19:00" — the heading on step 3 and on the confirmation. */
 	const chosenLabel = $derived(
-		selectedDate
-			? `${namedDay(selectedDate)}${selectedSlot ? `, ${selectedSlot.start}` : ''}`
-			: ''
+		selectedDate ? `${namedDay(selectedDate)}${selectedSlot ? `, ${selectedSlot.start}` : ''}` : ''
 	);
 
 	const sheetLabel = $derived.by(() => {
@@ -456,70 +454,80 @@
 			>
 				{#if step === 'datum' || step === 'tijd'}
 					<div class="planner__head">
-						<button
-							class="planner__nav"
-							type="button"
-							onclick={() => shiftMonth(-1)}
-							disabled={atFirstMonth}
-							aria-label="Vorige maand"
-						>
-							<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-								<path
-									d="M15 5L8 12L15 19"
-									stroke="currentColor"
-									stroke-width="2"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-								/>
-							</svg>
-						</button>
 						<p class="planner__month" id="planner-month" aria-live="polite">{monthLabel}</p>
-						<button
-							class="planner__nav"
-							type="button"
-							onclick={() => shiftMonth(1)}
-							aria-label="Volgende maand"
-						>
-							<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-								<path
-									d="M9 5L16 12L9 19"
-									stroke="currentColor"
-									stroke-width="2"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-								/>
-							</svg>
-						</button>
+						<div class="planner__nav-pair">
+							<button
+								class="planner__nav"
+								type="button"
+								onclick={() => shiftMonth(-1)}
+								disabled={atFirstMonth}
+								aria-label="Vorige maand"
+							>
+								<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+									<path
+										d="M15 5L8 12L15 19"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									/>
+								</svg>
+							</button>
+							<button
+								class="planner__nav"
+								type="button"
+								onclick={() => shiftMonth(1)}
+								aria-label="Volgende maand"
+							>
+								<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+									<path
+										d="M9 5L16 12L9 19"
+										stroke="currentColor"
+										stroke-width="2"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									/>
+								</svg>
+							</button>
+						</div>
 					</div>
 
-					<div class="planner__grid" role="grid" aria-labelledby="planner-month">
-						{#each weeks as week, weekIndex (weekIndex)}
-							<div class="planner__row" role="row">
-								{#each week as day, dayIndex (dayIndex)}
-									{#if day === null}
-										<span class="planner__cell planner__cell--empty" role="gridcell"></span>
-									{:else}
-										<button
-											class="planner__cell planner__day"
-											class:planner__day--open={bookableDays[day]}
-											class:planner__day--selected={selectedDate === isoFor(day)}
-											role="gridcell"
-											type="button"
-											data-day={day}
-											aria-disabled={bookableDays[day] ? undefined : 'true'}
-											aria-label={labelFor(day)}
-											aria-selected={selectedDate === isoFor(day)}
-											tabindex={(focusedDay || firstBookableDay) === day ? 0 : -1}
-											onclick={() => selectDay(day)}
-											onkeydown={(event) => onKeydown(event, day)}
-										>
-											{day}
-										</button>
-									{/if}
-								{/each}
-							</div>
-						{/each}
-					</div>
+					<!-- Keyed on the month so a change is a fade, not a redraw in place. -->
+					{#key `${viewYear}-${viewMonth}`}
+						<div
+							class="planner__grid"
+							role="grid"
+							aria-labelledby="planner-month"
+							in:fade={{ duration: motionless() ? 0 : 180, easing: cubicOut }}
+						>
+							{#each weeks as week, weekIndex (weekIndex)}
+								<div class="planner__row" role="row">
+									{#each week as day, dayIndex (dayIndex)}
+										{#if day === null}
+											<span class="planner__cell planner__cell--empty" role="gridcell"></span>
+										{:else}
+											<button
+												class="planner__cell planner__day"
+												class:planner__day--open={bookableDays[day]}
+												class:planner__day--selected={selectedDate === isoFor(day)}
+												role="gridcell"
+												type="button"
+												data-day={day}
+												aria-disabled={bookableDays[day] ? undefined : 'true'}
+												aria-label={labelFor(day)}
+												aria-selected={selectedDate === isoFor(day)}
+												tabindex={(focusedDay || firstBookableDay) === day ? 0 : -1}
+												onclick={() => selectDay(day)}
+												onkeydown={(event) => onKeydown(event, day)}
+											>
+												{day}
+											</button>
+										{/if}
+									{/each}
+								</div>
+							{/each}
+						</div>
+					{/key}
 				{:else if step === 'klaar'}
 					<div class="planner__done" role="status">
 						<p class="planner__date">{chosenLabel}</p>
@@ -658,56 +666,57 @@
 						{/each}
 					</div>
 				{:else}
-					<p class="planner__empty">
-						Op deze dag zijn geen tijden meer vrij. Kies een andere dag.
-					</p>
+					<p class="planner__empty">Op deze dag zijn geen tijden meer vrij. Kies een andere dag.</p>
 				{/if}
 			</div>
 		{/if}
 	</div>
 
-	<!-- The footer never moves between steps: only what sits in it changes. -->
-	<div class="planner__footer">
-		{#if step === 'datum'}
-			<p class="planner__hint">Geen Volgende-knop. Klikken op een datum is het doorgaan.</p>
-		{:else if step === 'klaar'}
-			<button class="planner__proceed" type="button" onclick={restart}>
-				Nog een moment plannen
-			</button>
-		{:else}
-			<!-- Text, not an icon button. Forward is never a button in this flow —
+	<!-- The footer never moves between steps: only what sits in it changes. Step 1
+	     is the exception — the calendar is the whole step and there is nothing to
+	     press, so the footer is not rendered at all rather than standing empty
+	     where the design's hint line used to be. -->
+	{#if step !== 'datum'}
+		<div class="planner__footer">
+			{#if step === 'klaar'}
+				<button class="planner__proceed" type="button" onclick={restart}>
+					Nog een moment plannen
+				</button>
+			{:else}
+				<!-- Text, not an icon button. Forward is never a button in this flow —
 			     picking a date is step 1's forward, picking a time is step 2's —
 			     so the only control that has to look like a control is Verzenden. -->
-			<button
-				class="planner__back"
-				type="button"
-				onclick={goBack}
-				aria-label="Terug naar {STEP_LABEL[PREVIOUS[step]!].toLowerCase()}"
-			>
-				<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-					<path
-						d="M15 5L8 12L15 19"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					/>
-				</svg>
-				Vorige
-			</button>
-
-			{#if step === 'gegevens'}
 				<button
-					class="planner__proceed"
+					class="planner__back"
 					type="button"
-					disabled={!detailsReady || sending}
-					onclick={book}
+					onclick={goBack}
+					aria-label="Terug naar {STEP_LABEL[PREVIOUS[step]!].toLowerCase()}"
 				>
-					{sending ? 'Versturen…' : 'Verzenden'}
+					<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+						<path
+							d="M15 5L8 12L15 19"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
+					Vorige
 				</button>
+
+				{#if step === 'gegevens'}
+					<button
+						class="planner__proceed"
+						type="button"
+						disabled={!detailsReady || sending}
+						onclick={book}
+					>
+						{sending ? 'Versturen…' : 'Verzenden'}
+					</button>
+				{/if}
 			{/if}
-		{/if}
-	</div>
+		</div>
+	{/if}
 </div>
 
 <style>
@@ -807,12 +816,22 @@
 	   because the booking window runs past this month and the label alone cannot
 	   reach it — they are the one control the frame left out. Styled down to
 	   match: same 13px label, hairline chevrons, no chrome. */
+	/* The design puts the month at the left with nothing beside it. The arrows
+	   are the one control it left out, so they sit as a pair at the far end
+	   rather than bracketing the label — the label keeps the design's position
+	   and the month stays navigable. */
 	.planner__head {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
 		gap: 0.5rem;
 		flex-shrink: 0;
+	}
+
+	.planner__nav-pair {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
 	}
 
 	.planner__month {
@@ -876,13 +895,16 @@
 		column-gap: 0.375rem;
 	}
 
-	/* A bare circle: no fill, no border, no tile. */
+	/* A bare circle: no fill, no border, no tile. 75% of the column rather than
+	   all of it — at full width the selected day read as a disc rather than a
+	   marked date. The column itself is unchanged, so the grid does not move. */
 	.planner__cell {
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		justify-self: center;
 		aspect-ratio: 1;
-		width: 100%;
+		width: 75%;
 		border: none;
 		border-radius: var(--radius-full);
 		background: transparent;
@@ -914,15 +936,6 @@
 		color: var(--color-bg-sand);
 	}
 
-	/* ─── Step 1 hint ─── */
-	.planner__hint {
-		font-size: 0.8125rem; /* 13px */
-		font-weight: var(--font-weight-light);
-		line-height: var(--line-height-loose);
-		color: var(--brand-muted);
-		margin: 1.125rem 0 0; /* 18px */
-	}
-
 	/* ─── Step 2 sheet ─── */
 	.planner__sheet {
 		position: absolute;
@@ -931,7 +944,12 @@
 		bottom: 0;
 		z-index: 2;
 		padding: 1.375rem 1.75rem 1.625rem; /* 22px 28px 26px */
-		background: var(--color-card-warm); /* #ede8d0 */
+		/* Not a flat fill: the calendar stays faintly readable through it, so the
+		   sheet reads as something lying over the month rather than a second
+		   panel that replaced it. The colour is the card's own warm tone at 72%,
+		   and the blur is what keeps the text on top legible. */
+		background: color-mix(in srgb, var(--color-card-warm) 72%, transparent);
+		backdrop-filter: blur(14px);
 		border-top: 1px solid var(--pl-line);
 		border-radius: 1.125rem 1.125rem 0 0;
 		/* The one shadow on this site, and it is not a hover: it is what separates
@@ -1057,9 +1075,18 @@
 		border-radius: var(--pl-radius);
 		color: var(--pl-ink);
 		font-family: inherit;
-		font-size: 0.875rem; /* 14px */
+		/* 16px below desktop: iOS Safari zooms the page when a focused input is
+		   smaller than that. The design's 14px applies from 1024px up, where no
+		   phone is looking. Same rule in ContactForm. */
+		font-size: 1rem;
 		line-height: var(--line-height-normal);
 		transition: border-color var(--motion-hover) var(--ease-hover);
+	}
+
+	@media (min-width: 1024px) {
+		.planner__input {
+			font-size: 0.875rem; /* 14px */
+		}
 	}
 
 	.planner__input::placeholder {
@@ -1104,6 +1131,8 @@
 	}
 
 	/* ─── Footer ─── */
+	/* :empty rather than a step-specific class: whatever the reason the footer
+	   has nothing in it, it should take no height — margin included. */
 	.planner__footer {
 		display: flex;
 		align-items: center;

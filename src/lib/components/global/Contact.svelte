@@ -42,6 +42,10 @@
 	   These are 600px blocks side by side with the copy, where 60px had them
 	   moving while the cursor was still over the other column. */
 	const MAGNET_MARGIN = 18;
+	/* 0.08 is a fraction of the element's half-width, so on a ~600px card it
+	   pulls ~24px where the same number moves a 240px treatment card ~10px.
+	   0.035 lands these on that same ~10px. */
+	const MAGNET_STRENGTH = 0.035;
 
 	const CHECKS = [
 		'Een kennismaking van 30 minuten, online en vrijblijvend',
@@ -56,8 +60,8 @@
 		<header class="contact__header">
 			<p class="contact__eyebrow">Contact</p>
 			<h2 id="contact-heading" class="contact__heading">Hoe wil je contact opnemen?</h2>
-			<!-- Desktop shows this in the right-hand column; on mobile it belongs
-			     under the heading, which is where the design puts it. -->
+			<!-- Desktop shows this in the right-hand column, under its own small
+			     title; on mobile it belongs under the heading. -->
 			<p class="contact__intro contact__intro--mobile">
 				Vul het formulier in of plan een kennismaking, wanneer het jou uitkomt.
 			</p>
@@ -75,7 +79,7 @@
 				<button
 					type="button"
 					class="route"
-					use:magnetic={{ enabled: true, dragging: false, margin: MAGNET_MARGIN }}
+					use:magnetic={{ enabled: true, dragging: false, margin: MAGNET_MARGIN, strength: MAGNET_STRENGTH }}
 					onclick={() => choose('meeting')}
 				>
 					<span class="route__title">Plan een kennismaking</span>
@@ -85,7 +89,7 @@
 				<button
 					type="button"
 					class="route"
-					use:magnetic={{ enabled: true, dragging: false, margin: MAGNET_MARGIN }}
+					use:magnetic={{ enabled: true, dragging: false, margin: MAGNET_MARGIN, strength: MAGNET_STRENGTH }}
 					onclick={() => choose('form')}
 				>
 					<span class="route__title">Stuur een bericht</span>
@@ -129,9 +133,14 @@
 			</div>
 
 			<div class="contact__aside">
-				<p class="contact__intro contact__intro--desktop">
-					Vul het formulier in of plan een kennismaking, wanneer het jou uitkomt.
-				</p>
+				<!-- Same shape as the two blocks under it: a small title, then its
+				     content. It read as a loose sentence without one. -->
+				<div class="contact__block contact__block--intro">
+					<p class="contact__block-title">Hoe het werkt</p>
+					<p class="contact__intro contact__intro--desktop">
+						Vul het formulier in of plan een kennismaking, wanneer het jou uitkomt.
+					</p>
+				</div>
 
 				<div class="contact__block">
 					<p class="contact__block-title">Wat je kunt verwachten</p>
@@ -420,6 +429,18 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-4);
+	}
+
+	/* Tighter than the check list: a title over one paragraph, not over rows. */
+	.contact__block--intro {
+		gap: var(--space-2);
+		display: none;
+	}
+
+	@media (min-width: 1024px) {
+		.contact__block--intro {
+			display: flex;
+		}
 	}
 
 	.contact__block-title {

@@ -234,15 +234,13 @@ test.describe('Contact — date planner', () => {
 		await settled(page);
 	}
 
-	test('step 1: the month grid, the hint, and the step counter', async ({ page }) => {
+	test('step 1: the month grid, the step counter, and no footer at all', async ({ page }) => {
 		await expect(pane(page).getByRole('grid')).toBeVisible();
-		// The legend is gone: the design replaces it with the line that explains
-		// why there is nothing to press.
-		await expect(
-			pane(page).getByText('Klikken op een datum is het doorgaan', { exact: false })
-		).toBeVisible();
 		await expect(pane(page).getByText('Stap 1 van 3')).toBeVisible();
 		await expect(pane(page).getByRole('button', { name: 'Verder' })).toHaveCount(0);
+		// Nothing to press on this step, so the footer is not rendered — it must
+		// not stand empty holding the space the design's hint line used to fill.
+		await expect(page.locator('.planner__footer')).toHaveCount(0);
 	});
 
 	test('cannot leave the current month backwards', async ({ page }) => {

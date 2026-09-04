@@ -38,6 +38,16 @@ export type MagneticOptions = {
 	 * while the cursor is still nowhere near it.
 	 */
 	margin?: number;
+	/**
+	 * Fraction of the cursor's offset from the centre that the element follows
+	 * by, before the edge falloff. Defaults to the carousel's 0.08.
+	 *
+	 * It is a fraction of the element's own half-width, so the same number does
+	 * not mean the same movement: 0.08 is ~10px on a 240px treatment card and
+	 * ~24px on a 600px contact card. A wider element needs a smaller value to
+	 * move by the same amount.
+	 */
+	strength?: number;
 };
 
 // Fraction of the cursor's offset from the card's CENTRE that the card
@@ -66,6 +76,7 @@ const MAGNET_STRENGTH = 0.08;
 const MAGNET_MARGIN_PX = 60;
 
 const marginOf = (o: MagneticOptions): number => o.margin ?? MAGNET_MARGIN_PX;
+const strengthOf = (o: MagneticOptions): number => o.strength ?? MAGNET_STRENGTH;
 
 const MAGNET_TRACK_MS = 300;
 
@@ -160,7 +171,7 @@ export function magnetic(node: HTMLElement, options: MagneticOptions) {
 			// at dead centre, ~MAGNET_STRENGTH * halfWidth (~10px) at the
 			// left/right edge.
 			const falloff = 1 - edgeDistance / margin;
-			const pull = MAGNET_STRENGTH * falloff;
+			const pull = strengthOf(opts) * falloff;
 			node.style.setProperty('--magnet-x', `${dx * pull}px`);
 			node.style.setProperty('--magnet-y', `${dy * pull}px`);
 		});
