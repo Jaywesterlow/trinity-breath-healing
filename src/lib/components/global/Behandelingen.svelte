@@ -1985,7 +1985,35 @@
 		</div>
 
 		<div class="treatments__controls">
-			<button type="button" class="treatments__nav" onclick={prev} aria-label="Vorige">Prev</button>
+			<button
+				type="button"
+				class="treatments__nav treatments__nav--prev arrow-swap roll-host"
+				onclick={prev}
+				aria-label="Vorige"
+			>
+				<span class="arrow-swap__glyph arrow-swap__glyph--out">
+					<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+						<path
+							d="M11 8H3M3 8L6.5 4.5M3 8L6.5 11.5"
+							stroke="currentColor"
+							stroke-width="1.5"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
+				</span>
+				<span class="arrow-swap__glyph arrow-swap__glyph--in">
+					<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+						<path
+							d="M11 8H3M3 8L6.5 4.5M3 8L6.5 11.5"
+							stroke="currentColor"
+							stroke-width="1.5"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
+				</span>
+			</button>
 
 			<!-- One dot per SERVICE, not per slot: the item list is repeated so the
 			     loop has hidden slots to recycle through (see REPEATS), and surfacing
@@ -2007,9 +2035,35 @@
 				{/each}
 			</ul>
 
-			<button type="button" class="treatments__nav" onclick={next} aria-label="Volgende"
-				>Next</button
+			<button
+				type="button"
+				class="treatments__nav treatments__nav--next arrow-swap roll-host"
+				onclick={next}
+				aria-label="Volgende"
 			>
+				<span class="arrow-swap__glyph arrow-swap__glyph--out">
+					<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+						<path
+							d="M5 8H13M13 8L9.5 4.5M13 8L9.5 11.5"
+							stroke="currentColor"
+							stroke-width="1.5"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
+				</span>
+				<span class="arrow-swap__glyph arrow-swap__glyph--in">
+					<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+						<path
+							d="M5 8H13M13 8L9.5 4.5M13 8L9.5 11.5"
+							stroke="currentColor"
+							stroke-width="1.5"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
+				</span>
+			</button>
 		</div>
 	</div>
 
@@ -2260,24 +2314,40 @@
 		z-index: 1;
 	}
 
+	/* The same circle the CTA buttons carry, pointing sideways instead of up:
+	   40px, a 2px ring in --brand-border, transparent until hover and filled
+	   after it. The two arrows and their clipping come from .arrow-swap in
+	   app.css; this only sets the axis each one travels along. */
 	.treatments__nav {
 		/* Mobile/tablet navigate by swiping the carousel itself (see
 		   onPointerDown/Up) — Prev/Next are desktop-only, restored below. */
 		display: none;
-		border: none;
-		border-radius: var(--radius-full);
-		background: var(--color-fg-forest);
-		color: var(--color-bg-sand);
-		font-family: var(--font-body);
-		font-size: var(--fs-cta);
-		font-weight: var(--font-weight-medium);
-		padding: var(--space-2) var(--space-5);
+		width: var(--space-10);
+		height: var(--space-10);
+		padding: 0;
+		border: 2px solid var(--brand-border);
+		border-radius: 50%;
+		background: transparent;
+		color: var(--brand-border);
 		cursor: pointer;
-		transition: background-color var(--motion-fast);
+		--swap-y: 0px;
+		transition:
+			background-color var(--motion-arrow) var(--ease-arrow),
+			color var(--motion-arrow) var(--ease-arrow);
 	}
 
-	.treatments__nav:hover {
-		background: var(--brand-muted);
+	.treatments__nav--prev {
+		--swap-x: calc(-1 * var(--arrow-roll));
+	}
+
+	.treatments__nav--next {
+		--swap-x: var(--arrow-roll);
+	}
+
+	.treatments__nav:hover,
+	.treatments__nav:focus-visible {
+		background: var(--brand-border);
+		color: var(--color-bg-sand);
 	}
 
 	.treatments__dots {
@@ -2437,7 +2507,7 @@
 		}
 
 		.treatments__nav {
-			display: inline-block;
+			display: inline-flex;
 		}
 	}
 

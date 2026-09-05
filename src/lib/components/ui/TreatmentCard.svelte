@@ -109,16 +109,33 @@
 			     second link inside the card there's no nested-link problem left to
 			     solve). aria-hidden since it adds no information beyond the card's
 			     own accessible name. -->
-			<span class="tcard__arrow" aria-hidden="true">
-				<svg width="14" height="14" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-					<path
-						d="M5 17L17 5M17 5H9M17 5V13"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					/>
-				</svg>
+			<span class="tcard__arrow arrow-swap roll-host" aria-hidden="true">
+				<!-- Two copies: the visible one leaves along the diagonal it points
+				     down, and the second arrives on that same axis from the
+				     opposite corner. .arrow-swap in app.css owns the motion; this
+				     only says which way. -->
+				<span class="arrow-swap__glyph arrow-swap__glyph--out">
+					<svg width="14" height="14" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+						<path
+							d="M5 17L17 5M17 5H9M17 5V13"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
+				</span>
+				<span class="arrow-swap__glyph arrow-swap__glyph--in">
+					<svg width="14" height="14" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+						<path
+							d="M5 17L17 5M17 5H9M17 5V13"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
+				</span>
 			</span>
 		</div>
 
@@ -371,14 +388,27 @@
 			   ~50% bigger than the old mobile 1.5rem (2.625rem); tap target
 			   and glyph (the svg rule below) scale together so the arrow's
 			   proportions inside the circle hold. */
-			display: flex;
+			display: inline-flex;
 			flex-shrink: 0;
-			align-items: center;
-			justify-content: center;
 			width: 2.625rem;
 			height: 2.625rem;
 			border-radius: var(--radius-full);
 			border: 1px solid currentColor;
+			/* Up and to the right, the way the glyph points. */
+			--swap-x: var(--arrow-travel);
+			--swap-y: calc(-1 * var(--arrow-travel));
+			transition:
+				background-color var(--motion-arrow) var(--ease-arrow),
+				color var(--motion-arrow) var(--ease-arrow);
+		}
+
+		/* The circle's own hover, not the card's: the whole card is the link, so
+		   without this the arrow would swap whenever the pointer was anywhere on
+		   it. Filling inverts the pair — sand ring on forest becomes a sand disc
+		   with a forest glyph, 8.38:1 either way round. */
+		.tcard__arrow:hover {
+			background: var(--color-bg-sand);
+			color: var(--color-fg-forest);
 		}
 
 		.tcard__arrow svg {

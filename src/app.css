@@ -542,3 +542,49 @@ h6 {
 .text-roll.roll-host:focus-visible::after {
 	transform: translateY(0);
 }
+
+/* ─── Two arrows in one circle ───────────────────────────────────────────────
+   The same gesture wherever an arrow sits inside a ring: the one you can see
+   leaves along an axis, and a second copy arrives on that axis from the
+   opposite side, so the arrow reads as continuing rather than as fading out
+   and back in. The ring clips both, so neither is ever drawn outside it.
+
+   Direction is the instance's business, not this file's: --swap-x/--swap-y is
+   the vector the visible arrow leaves along, and the incoming one waits at
+   exactly its negative. A diagonal CTA arrow leaves up and to the right, a
+   button's arrow rolls straight down against its label, a carousel's Vorige
+   leaves to the left. Both offsets come from --arrow-travel / --arrow-roll,
+   which the reduced-motion block flattens to 0 — at which point the two
+   copies sit on top of each other and only the fade is left. */
+.arrow-swap {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+}
+
+.arrow-swap__glyph {
+	position: absolute;
+	display: inline-flex;
+	transition:
+		transform var(--motion-arrow) var(--ease-arrow),
+		opacity var(--motion-arrow) var(--ease-arrow);
+}
+
+.arrow-swap__glyph--in {
+	opacity: 0;
+	transform: translate(calc(-1 * var(--swap-x, 0px)), calc(-1 * var(--swap-y, 0px)));
+}
+
+.roll-host:hover .arrow-swap__glyph--out,
+.roll-host:focus-visible .arrow-swap__glyph--out {
+	opacity: 0;
+	transform: translate(var(--swap-x, 0px), var(--swap-y, 0px));
+}
+
+.roll-host:hover .arrow-swap__glyph--in,
+.roll-host:focus-visible .arrow-swap__glyph--in {
+	opacity: 1;
+	transform: translate(0, 0);
+}

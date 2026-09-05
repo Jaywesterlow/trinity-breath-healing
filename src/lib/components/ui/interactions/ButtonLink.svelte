@@ -36,8 +36,8 @@
 	{#if withArrow}
 		<!-- Two arrows, one on top of the other. They roll straight down while the
 		     label rolls up, so the pill and the circle turn against each other. -->
-		<span class="btn-link__circle" aria-hidden="true">
-			<span class="btn-link__arrow btn-link__arrow--out">
+		<span class="btn-link__circle arrow-swap" aria-hidden="true">
+			<span class="arrow-swap__glyph arrow-swap__glyph--out">
 				<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
 					<path
 						d="M4 12L12 4M12 4H7M12 4V9"
@@ -48,7 +48,7 @@
 					/>
 				</svg>
 			</span>
-			<span class="btn-link__arrow btn-link__arrow--in">
+			<span class="arrow-swap__glyph arrow-swap__glyph--in">
 				<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
 					<path
 						d="M4 12L12 4M12 4H7M12 4V9"
@@ -119,11 +119,11 @@
 		margin-right: -2px; /* slight overlap with circle, per Figma */
 	}
 
+	/* Straight down, against the label's roll upward. Positioning, clipping and
+	   the swap itself come from .arrow-swap in app.css. */
 	.btn-link__circle {
-		position: relative; /* the two arrows position against it */
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
+		--swap-x: 0px;
+		--swap-y: var(--arrow-roll);
 		width: var(--space-10);
 		height: var(--space-10);
 		border-radius: 50%;
@@ -131,36 +131,9 @@
 		background: transparent;
 		color: var(--btn-arrow-fill, var(--brand-border));
 		flex-shrink: 0;
-		overflow: hidden; /* the departing arrow is clipped at the rim, not drawn outside it */
 		transition:
 			background-color var(--motion-arrow) var(--ease-arrow),
 			color var(--motion-arrow) var(--ease-arrow);
-	}
-
-	.btn-link__arrow {
-		position: absolute;
-		display: inline-flex;
-		transition:
-			transform var(--motion-arrow) var(--ease-arrow),
-			opacity var(--motion-arrow) var(--ease-arrow);
-	}
-
-	/* Waits above the rim, because the pair rolls downward. */
-	.btn-link__arrow--in {
-		opacity: 0;
-		transform: translateY(calc(-1 * var(--arrow-roll)));
-	}
-
-	.btn-link:hover .btn-link__arrow--out,
-	.btn-link:focus-visible .btn-link__arrow--out {
-		opacity: 0;
-		transform: translateY(var(--arrow-roll));
-	}
-
-	.btn-link:hover .btn-link__arrow--in,
-	.btn-link:focus-visible .btn-link__arrow--in {
-		opacity: 1;
-		transform: translateY(0);
 	}
 
 	/* The pill swallows the circle: same fill, same border colour, so the two
