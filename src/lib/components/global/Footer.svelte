@@ -127,6 +127,7 @@
 								label={social.label}
 								newTab={social.newTab}
 								color={SOCIAL_COLOR}
+								ground="dark"
 							/>
 						</li>
 					{/each}

@@ -246,6 +246,10 @@
 	   flip in .link-underline below does. */
 	--underline-height: 2px;
 	--motion-underline: 260ms;
+	/* The social icons taking on their channel's own colour. Slower than a plain
+	   hover because it is a hue change rather than a movement, and a fast one
+	   reads as a flicker. */
+	--motion-social: 250ms;
 	--ease-arrow: cubic-bezier(0.22, 1, 0.36, 1);
 	/* No shadows anywhere on this site, hover included — the lift alone carries the
 	   interaction. Kept as a token rather than deleted so every surface that reads it

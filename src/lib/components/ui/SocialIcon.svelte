@@ -9,13 +9,42 @@
 		mail: `<rect x="1" y="1" width="38" height="38" rx="19" stroke="currentColor" stroke-width="2" /><rect x="10" y="14.5" width="20" height="11" rx="2" stroke="currentColor" stroke-width="2" /><path d="M10.8 15.6 20 22.1l9.2-6.5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />`
 	};
 
+	/* Each channel's own colour, in the variant that survives the ground it is
+	   painted on. WCAG 1.4.11 asks 3:1 of a graphic against its background, and
+	   no single official value clears that on both of this site's grounds:
+	   WhatsApp's #25D366 is 4.75:1 on forest but 1.76:1 on sand, so the light
+	   ground gets WhatsApp's own darker teal (#128C7E, 3.68:1) instead. Same
+	   argument for the rest — every value below is from the channel's published
+	   palette, never a tint invented here. */
+	const BRAND_ON_LIGHT: Partial<Record<IconKey, string>> = {
+		whatsapp: '#128c7e', // WhatsApp "Surfie Green" — 3.68:1 on --color-bg-sand
+		mail: '#ea4335', // Gmail red — 3.49:1
+		x: '#000000',
+		facebook: '#1877f2'
+	};
+
+	const BRAND_ON_DARK: Partial<Record<IconKey, string>> = {
+		whatsapp: '#25d366', // WhatsApp primary green — 4.75:1 on --color-fg-forest
+		mail: '#f28b82', // Google red 300 — 3.94:1; #EA4335 is only 2.40:1 here
+		x: '#ffffff', // X's own inverse mark, since black on forest is 1.2:1
+		facebook: '#1877f2'
+	};
+
+	/* Instagram is a gradient, not a colour. Its published ramp runs blue →
+	   purple → pink → red → orange → gold, and the two ends behave in opposite
+	   ways: the blue end carries on light grounds (4.5–5.8:1) and vanishes on
+	   dark ones, the gold end the reverse. Each ground therefore gets the half
+	   of Instagram's own ramp that it can actually show. */
+	const INSTAGRAM_ON_LIGHT = ['#405de6', '#833ab4', '#c13584'];
+	const INSTAGRAM_ON_DARK = ['#f77737', '#fcaf45', '#ffdc80'];
+
 	let {
 		icon,
 		href,
 		label,
 		color = 'currentColor',
 		background = 'transparent',
-		responsiveSize = true,
+		ground = 'light',
 		newTab = true,
 		text
 	}: {
@@ -24,8 +53,9 @@
 		label: string;
 		color?: string;
 		background?: string;
-		/** When false, the icon keeps a fixed size and ignores the ≥1024px shrink breakpoint. */
-		responsiveSize?: boolean;
+		/** Which ground this sits on, so the brand colour picked for hover is the
+		    variant that stays visible against it. */
+		ground?: 'light' | 'dark';
 		/** mailto: and tel: hand off to another app — opening a blank tab first
 		    leaves the visitor staring at an empty window. */
 		newTab?: boolean;
@@ -34,34 +64,73 @@
 		    words are part of the target rather than decoration next to it. */
 		text?: string;
 	} = $props();
+
+	/* SSR-stable and unique per instance: the gradient is referenced by id, and
+	   the same page renders this component several times. */
+	const uid = $props.id();
+	const gradientId = `ig-${uid}`;
+
+	const gradientStops = $derived(ground === 'dark' ? INSTAGRAM_ON_DARK : INSTAGRAM_ON_LIGHT);
+	/* Instagram's flat stand-in is the middle of its own ramp: the glyph itself
+	   is painted with the gradient, but the ring around it is a CSS border and
+	   a border cannot take an SVG paint server. */
+	const brand = $derived(
+		icon === 'instagram'
+			? gradientStops[1]
+			: ((ground === 'dark' ? BRAND_ON_DARK : BRAND_ON_LIGHT)[icon] ?? 'currentColor')
+	);
 </script>
 
 <a
 	{href}
 	class="social-icon"
-	class:social-icon--fixed={!responsiveSize}
+	class:social-icon--instagram={icon === 'instagram'}
 	class:social-icon--labelled={text !== undefined}
 	aria-label={label}
 	rel={newTab ? 'noopener noreferrer' : undefined}
 	target={newTab ? '_blank' : undefined}
-	style="color: {color}; background: {background};"
+	style="--social-rest: {color}; background: {background}; --social-brand: {brand}; --social-paint: url(#{gradientId});"
 >
 	<svg viewBox="0 0 40 40" fill="none" aria-hidden="true">
 		<!-- eslint-disable-next-line svelte/no-at-html-tags -- ICONS is a hardcoded constant of trusted inline SVG keyed by a typed union; no user input -->
 		{@html ICONS[icon]}
+		<!-- Last, not first: the ring every glyph opens with is hidden by
+		     :first-child below, and a <defs> at the top would take that position
+		     and leave the ring drawn. Where a <defs> sits makes no difference to
+		     what it defines. -->
+		{#if icon === 'instagram'}
+			<defs>
+				<linearGradient
+					id={gradientId}
+					x1="0"
+					y1="40"
+					x2="40"
+					y2="0"
+					gradientUnits="userSpaceOnUse"
+				>
+					{#each gradientStops as stop, i (stop)}
+						<stop offset={i / (gradientStops.length - 1)} stop-color={stop} />
+					{/each}
+				</linearGradient>
+			</defs>
+		{/if}
 	</svg>
 	{#if text !== undefined}<span class="social-icon__text">{text}</span>{/if}
 </a>
 
 <style>
+	/* The resting colour arrives as a custom property, not as an inline `color`.
+	   Inline styles beat every stylesheet rule, so setting colour that way made
+	   the hover state below silently do nothing. */
 	.social-icon {
+		color: var(--social-rest, currentcolor);
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		border-radius: 50%; /* an optional background renders as a circle behind the icon */
 		transition:
 			transform var(--motion-hover) var(--ease-hover),
-			opacity var(--motion-hover) var(--ease-hover);
+			color var(--motion-social) var(--ease-out);
 	}
 
 	/* With wording beside it the link stops being a circle, so the round
@@ -75,91 +144,47 @@
 	}
 
 	/* Every glyph in ICONS opens with its own ring — a 38px rect at stroke-width
-	   2 — which is right for the footer, where the icon IS the circle, and far
-	   too heavy beside a line of text. The labelled variant drops that first
-	   child and draws a hairline ring on the link instead, so the glyph reads as
-	   a small mark inside a light circle. */
-	.social-icon--labelled svg > :global(:first-child) {
+	   2 — which is right where the icon IS the circle, and far too heavy beside
+	   a line of text. Both places drop that first child and draw a hairline ring
+	   on the link instead, so the glyph reads as a small mark inside a light
+	   circle. The footer used to keep the heavy version; one treatment now. */
+	.social-icon svg > :global(:first-child) {
 		display: none;
 	}
 
-	.social-icon--labelled svg {
-		width: 2.625rem; /* 42px ring */
-		height: 2.625rem;
-		flex: none;
-		padding: 0.5rem;
-		border-radius: var(--radius-full);
-		border: 1px solid color-mix(in srgb, currentcolor 32%, transparent);
-		box-sizing: border-box;
-		overflow: visible;
-	}
-
-	.social-icon__text {
-		font-family: var(--font-body);
-		font-size: 1rem;
-		font-weight: var(--font-weight-light);
-		color: var(--color-fg-forest);
-		white-space: nowrap;
-	}
-
 	.social-icon svg {
-		width: 1.5rem;
-		height: 1.5rem;
-	}
-
-	.social-icon:hover {
-		transform: translateY(var(--lift-hover));
-		opacity: 0.85;
-	}
-
-	@media (min-width: 1024px) {
-		/* With wording beside it the link stops being a circle, so the round
-	   background and the centring both have to go. */
-	.social-icon--labelled {
-		justify-content: flex-start;
-		gap: var(--space-3);
-		border-radius: var(--radius-full);
-		background: transparent !important;
-		text-decoration: none;
-	}
-
-	/* Every glyph in ICONS opens with its own ring — a 38px rect at stroke-width
-	   2 — which is right for the footer, where the icon IS the circle, and far
-	   too heavy beside a line of text. The labelled variant drops that first
-	   child and draws a hairline ring on the link instead, so the glyph reads as
-	   a small mark inside a light circle. */
-	.social-icon--labelled svg > :global(:first-child) {
-		display: none;
-	}
-
-	.social-icon--labelled svg {
-		width: 2.625rem; /* 42px ring */
-		height: 2.625rem;
-		flex: none;
-		padding: 0.5rem;
-		border-radius: var(--radius-full);
-		border: 1px solid color-mix(in srgb, currentcolor 32%, transparent);
-		box-sizing: border-box;
-		overflow: visible;
-	}
-
-	.social-icon__text {
-		font-family: var(--font-body);
-		font-size: 1rem;
-		font-weight: var(--font-weight-light);
-		color: var(--color-fg-forest);
-		white-space: nowrap;
-	}
-
-	.social-icon svg {
-			width: 2.5rem; /* 40px — Figma spec */
-			height: 2.5rem;
-		}
-	}
-
-	/* fixed size — bypasses the ≥1024 shrink breakpoint (used by the hero socials) */
-	.social-icon--fixed svg {
-		width: 2.5rem;
+		width: 2.5rem; /* 40px — the same in the footer and the contact panel */
 		height: 2.5rem;
+		flex: none;
+		padding: 0.5rem;
+		border-radius: var(--radius-full);
+		border: 1px solid color-mix(in srgb, currentcolor 32%, transparent);
+		box-sizing: border-box;
+		overflow: visible;
+		transition: border-color var(--motion-social) var(--ease-out);
+	}
+
+	.social-icon__text {
+		font-family: var(--font-body);
+		font-size: 1rem;
+		font-weight: var(--font-weight-light);
+		color: var(--color-fg-forest);
+		white-space: nowrap;
+	}
+
+	/* The channel's own colour arrives on hover; the wording beside it does not
+	   move, because it is body copy and has to keep its 4.5:1 against the panel. */
+	.social-icon:hover,
+	.social-icon:focus-visible {
+		transform: translateY(var(--lift-hover));
+		color: var(--social-brand);
+	}
+
+	/* Instagram is painted, not coloured. Only its <path> takes the fill and only
+	   its ring <rect> takes the stroke — a blanket `fill` would flood the mail
+	   icon's envelope, which is drawn as an outline with fill="none". */
+	.social-icon--instagram:hover svg :global(path),
+	.social-icon--instagram:focus-visible svg :global(path) {
+		fill: var(--social-paint);
 	}
 </style>

@@ -202,7 +202,6 @@
 										newTab={social.newTab}
 										text={social.text}
 										color="var(--brand-border)"
-										responsiveSize={false}
 									/>
 								</li>
 							{/each}
