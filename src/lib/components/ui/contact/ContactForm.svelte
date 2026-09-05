@@ -201,8 +201,14 @@
 			>
 				{statusMessage}
 			</p>
-			<button class="form__submit" type="submit" disabled={sending}>
-				{sending ? 'Versturen…' : 'Verstuur email'}
+			<button
+				class="form__submit text-roll"
+				class:roll-host={!sending}
+				type="submit"
+				disabled={sending}
+				data-label={sending ? 'Versturen…' : 'Verstuur email'}
+			>
+				<span class="text-roll__face">{sending ? 'Versturen…' : 'Verstuur email'}</span>
 			</button>
 		</div>
 
@@ -441,7 +447,15 @@
 	   --brand-border, 13/30 padding, right-aligned in the footer row. */
 	.form__submit {
 		align-self: flex-end;
-		padding: 0.8125rem 1.875rem; /* 13px 30px */
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		/* Height rather than vertical padding, and the same 40px every other pill
+		   on the site uses. The label roll clips at the padding edge, so a pill
+		   padded to its height would leave the outgoing word sitting in the
+		   padding instead of leaving the button. */
+		height: var(--space-10);
+		padding: 0 1.875rem; /* 30px */
 		border: none;
 		border-radius: var(--radius-full);
 		/* Was --color-accent-gold-soft, which put sand on #c7a27a at 2.1:1 — the

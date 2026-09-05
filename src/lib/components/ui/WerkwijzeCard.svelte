@@ -81,7 +81,7 @@
 
 	{#if ctaHref && ctaLabel}
 		<div class="wcard__cta" use:reveal={{ delay: 220 }}>
-			<ButtonLink href={ctaHref} label={ctaLabel} withArrow />
+			<ButtonLink href={ctaHref} label={ctaLabel} withArrow block />
 		</div>
 	{/if}
 </article>

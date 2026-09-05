@@ -26,6 +26,10 @@
 	--color-text-subtle: #656962; /* neutral stone gray — body text on light bg */
 	--brand-border: #7c5e49; /* dark cream, darkened for WCAG AA — dividers, input borders, CTA chrome (was #b68a6b, 2.73:1; now 5.25:1 on --color-bg-sand) */
 	--color-accent-gold-soft: #c7a27a; /* Figma-sourced — Over mij mobile CTA/link accents on dark overlay */
+	/* Forest taken down 20% so it can carry *text* on gold-soft. Plain
+	   --color-fg-forest is 3.98:1 there: enough for a glyph under WCAG 1.4.11,
+	   short of the 4.5:1 a label needs. This is 4.96:1, and still reads forest. */
+	--color-fg-forest-deep: #313b2a;
 	/* Leaf green, for filled cards that used to be --color-fg-forest. 8% darker
 	   than the #6f8460 it came from, which is what lifts sand on it from 3.63:1
 	   to 4.50:1 — #6f8460 has no working text colour at all (charcoal on it is
@@ -221,6 +225,14 @@
 	   not on the component, so the reduced-motion block below can flatten it; a
 	   declaration on .btn-link__circle would out-specify that :root override. */
 	--arrow-travel: 14px;
+	/* The same swap when it runs straight down instead of along the diagonal —
+	   the arrow half of a filled button, counter-rolling against its label. It
+	   has to clear the full inner height of the circle (36px) rather than a
+	   corner of it, so it travels further than --arrow-travel. */
+	--arrow-roll: 24px;
+	/* How far a button's label rolls. 100% of the label box, so the word leaves
+	   the pill completely rather than stopping halfway up it. */
+	--btn-text-travel: 100%;
 	/* The arrow swap and the circle filling run slower than a plain hover: at
 	   --motion-hover (180ms) the two arrows crossed so fast the movement barely
 	   registered, and the fill snapped. This is the one interaction on the site
@@ -421,6 +433,10 @@ h6 {
 		   across the circle on hover if only the transition were killed. At 0 they
 		   sit on top of each other and only the fade is left. */
 		--arrow-travel: 0px;
+		--arrow-roll: 0px;
+		/* At 0 the incoming copy of the label sits exactly on the outgoing one —
+		   same word, same place — so the swap is invisible rather than a jump. */
+		--btn-text-travel: 0%;
 	}
 }
 
@@ -462,4 +478,63 @@ h6 {
 .link-underline--always::after {
 	transform: scaleX(1);
 	transform-origin: left center;
+}
+
+/* ─── The button label roll ──────────────────────────────────────────────────
+   Every filled button uses it: on hover the label rolls up out of the pill
+   while the same word rolls up from underneath to take its place.
+
+   The second copy is a pseudo-element carrying `content: attr(data-label)`,
+   not a second element. That matters here — a duplicated <span> would put the
+   label in the HTML twice, and this site is judged first on what a crawler
+   reads. A pseudo-element is invisible to both the DOM and a screen reader.
+
+   Put `roll-host` on whatever receives the hover (the <a>, or the <button>)
+   and `text-roll` with `data-label` on the box that clips. */
+/* Deliberately no `display` here: every button that opts in already sets its
+   own (inline-flex on a pill that must not stretch, flex on one that must),
+   and a `display` in this file would either lose or win that fight depending
+   on which stylesheet the bundler happens to emit second. */
+.text-roll {
+	position: relative;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+/* align-self: stretch, not height: 100% — several of these pills are sized by
+   min-height rather than height, and a percentage height against an auto
+   parent resolves to auto. Stretched, the face is as tall as the pill, so
+   translating it by 100% carries the word right out of it instead of leaving
+   it half inside. */
+.text-roll__face {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	align-self: stretch;
+	transition: transform var(--motion-arrow) var(--ease-arrow);
+}
+
+.text-roll::after {
+	content: attr(data-label);
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transform: translateY(var(--btn-text-travel));
+	transition: transform var(--motion-arrow) var(--ease-arrow);
+}
+
+.roll-host:hover .text-roll__face,
+.roll-host:focus-visible .text-roll__face {
+	transform: translateY(calc(-1 * var(--btn-text-travel)));
+}
+
+.roll-host:hover .text-roll::after,
+.roll-host:focus-visible .text-roll::after,
+/* Same element carrying both classes — the pill in a contact card is its own
+   hover target, so there is no wrapper for the descendant form to match. */
+.text-roll.roll-host:hover::after,
+.text-roll.roll-host:focus-visible::after {
+	transform: translateY(0);
 }

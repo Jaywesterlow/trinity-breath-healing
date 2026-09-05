@@ -79,11 +79,7 @@
 			<!-- Whole card is the control, so the visible pill inside it is a span,
 			     not a nested button — one target, and the pill is still free to
 			     answer the hover on its own. -->
-			<div
-				class="contact__routes"
-				class:is-leaving={phase !== 'idle'}
-				hidden={active !== null}
-			>
+			<div class="contact__routes" class:is-leaving={phase !== 'idle'} hidden={active !== null}>
 				<button
 					type="button"
 					class="route"
@@ -98,8 +94,12 @@
 					onclick={() => choose('meeting')}
 				>
 					<span class="route__title">Plan een kennismaking</span>
-					<span class="route__body">Kies zelf een moment. Dertig minuten, online, vrijblijvend.</span>
-					<span class="route__cta">Kies een datum</span>
+					<span class="route__body"
+						>Kies zelf een moment. Dertig minuten, online, vrijblijvend.</span
+					>
+					<span class="route__cta text-roll roll-host" data-label="Kies een datum">
+						<span class="text-roll__face">Kies een datum</span>
+					</span>
 				</button>
 				<button
 					type="button"
@@ -118,7 +118,9 @@
 					<span class="route__body">
 						Liever eerst een vraag stellen? Mailen en appen kan de hele dag.
 					</span>
-					<span class="route__cta">Schrijf een bericht</span>
+					<span class="route__cta text-roll roll-host" data-label="Schrijf een bericht">
+						<span class="text-roll__face">Schrijf een bericht</span>
+					</span>
 				</button>
 			</div>
 
@@ -380,6 +382,17 @@
 	.route:focus-visible .route__cta {
 		background: var(--color-bg-sand);
 		color: var(--brand-border);
+	}
+
+	/* The pill answers its own pointer through .roll-host (app.css). Keyboard
+	   focus lands on the card, never on the pill, so the roll has to be driven
+	   from there too or the label would sit still for anyone not using a mouse. */
+	.route:focus-visible .route__cta :global(.text-roll__face) {
+		transform: translateY(calc(-1 * var(--btn-text-travel)));
+	}
+
+	.route:focus-visible .route__cta::after {
+		transform: translateY(0);
 	}
 
 	/* ─── The chosen route ─── */

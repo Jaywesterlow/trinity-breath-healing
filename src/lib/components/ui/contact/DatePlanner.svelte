@@ -677,8 +677,13 @@
 	{#if step !== 'datum'}
 		<div class="planner__footer">
 			{#if step === 'klaar'}
-				<button class="planner__proceed" type="button" onclick={restart}>
-					Nog een moment plannen
+				<button
+					class="planner__proceed text-roll roll-host"
+					type="button"
+					onclick={restart}
+					data-label="Nog een moment plannen"
+				>
+					<span class="text-roll__face">Nog een moment plannen</span>
 				</button>
 			{:else}
 				<!-- Text, not an icon button. Forward is never a button in this flow —
@@ -704,12 +709,14 @@
 
 				{#if step === 'gegevens'}
 					<button
-						class="planner__proceed"
+						class="planner__proceed text-roll"
+						class:roll-host={detailsReady && !sending}
 						type="button"
 						disabled={!detailsReady || sending}
 						onclick={book}
+						data-label={sending ? 'Versturen…' : 'Verzenden'}
 					>
-						{sending ? 'Versturen…' : 'Verzenden'}
+						<span class="text-roll__face">{sending ? 'Versturen…' : 'Verzenden'}</span>
 					</button>
 				{/if}
 			{/if}
@@ -1184,7 +1191,10 @@
 		align-items: center;
 		justify-content: center;
 		margin-left: auto;
-		padding: 0.8125rem 1.875rem; /* 13px 30px */
+		/* Height rather than vertical padding, for the same reason as
+		   .form__submit: the roll clips at the padding edge. */
+		height: var(--space-10);
+		padding: 0 1.875rem; /* 30px */
 		border: none;
 		border-radius: var(--radius-full);
 		background: var(--brand-border);
