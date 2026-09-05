@@ -63,7 +63,7 @@
 	}
 
 	.card--forest {
-		background: var(--color-fg-forest);
+		background: var(--color-brand-green);
 		color: var(--color-bg-sand);
 	}
 

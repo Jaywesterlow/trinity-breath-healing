@@ -82,8 +82,13 @@
 		color: var(--color-bg-sand);
 	}
 
+	/* Sand, not the pale gold this used to be. The inverted logo now sits on
+	   --color-brand-green rather than forest, and that green tops out at 4.50:1
+	   against pure sand — there is no gold tint left with any headroom on it
+	   (#c3bba2 lands at 2.64:1, and even a near-white gold only reaches 4.18).
+	   The gold subtitle survives untouched on the light ground above. */
 	.logo--inverted .logo__sub {
-		color: #c3bba2; /* lightened for WCAG AA: was #afa483 at 3.8:1, now 4.91:1 on --color-fg-forest */
+		color: var(--color-bg-sand);
 	}
 
 	/* Footer variant: larger sizes */

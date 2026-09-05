@@ -192,10 +192,9 @@
 				<div class="contact__block contact__block--socials">
 					<p class="contact__block-title">Of rechtstreeks</p>
 					<nav aria-label="Sociale media">
-						<!-- No cursor tooltip here, unlike the footer's: these links
-						     already carry the channel in words beside the icon, and the
-						     label would have been drawn straight over the e-mail address
-						     it was repeating. -->
+						<!-- A row of bare icons. The channel names used to sit beside
+						     them; the cursor now carries that wording instead, which is
+						     what makes the row work at all. -->
 						<ul class="contact__socials">
 							{#each CONTACT_SOCIALS as social (social.icon)}
 								<li>
@@ -204,7 +203,7 @@
 										href={social.href}
 										label={social.label}
 										newTab={social.newTab}
-										text={social.text}
+										tooltip={social.tooltip}
 										color="var(--brand-border)"
 									/>
 								</li>
@@ -524,7 +523,7 @@
 		margin: 0;
 		padding: 0;
 		display: flex;
-		flex-direction: column;
+		flex-direction: row;
 		gap: var(--space-4);
 	}
 

@@ -162,7 +162,7 @@
 		aspect-ratio: 282 / 459;
 		padding: var(--space-3); /* consistent on all 4 sides */
 		border-radius: var(--radius-lg);
-		background: var(--color-fg-forest);
+		background: var(--color-brand-green);
 		color: var(--color-bg-sand);
 		text-decoration: none;
 		cursor: pointer;

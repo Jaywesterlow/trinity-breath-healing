@@ -140,7 +140,7 @@
 	.about__card {
 		position: relative;
 		background: var(
-			--color-fg-forest
+			--color-brand-green
 		); /* portrait art is transparent-bg line work; needs this behind it */
 		border-radius: 1.563rem; /* 25px — Figma spec, matches WerkwijzeCard convention */
 		overflow: hidden;

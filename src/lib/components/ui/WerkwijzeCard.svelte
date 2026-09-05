@@ -103,7 +103,7 @@
 	}
 
 	.wcard--filled {
-		background: var(--color-fg-forest);
+		background: var(--color-brand-green);
 		color: var(--color-bg-sand);
 		align-items: flex-start;
 		text-align: left;

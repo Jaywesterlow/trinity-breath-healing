@@ -80,6 +80,20 @@ const strengthOf = (o: MagneticOptions): number => o.strength ?? MAGNET_STRENGTH
 
 const MAGNET_TRACK_MS = 300;
 
+// How long the offset takes to come home when the magnet lets go — leaving the
+// element's margin, or another element taking the hover and switching this one
+// off. Releasing used to fall back to --motion-fast, which at 180ms reads as a
+// snap rather than a return: the owner's report is exactly that, "the card
+// snaps back to its original position... it should be smoothed out, not just a
+// snap back, but actually going back in a fluent motion." Longer than the
+// tracking duration on purpose — following the cursor should feel immediate,
+// letting go should not.
+const MAGNET_RELEASE_MS = 620;
+
+// The one release that must not be slow: the carousel fan is being dragged, and
+// an offset still easing home would be fighting the drag.
+const MAGNET_DRAG_RELEASE_MS = 120;
+
 function prefersReducedMotion(): boolean {
 	if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
 	return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -97,11 +111,13 @@ export function magnetic(node: HTMLElement, options: MagneticOptions) {
 	let pendingX = 0;
 	let pendingY = 0;
 
-	function releaseTo(x: string, y: string): void {
-		// Restore the CSS transition BEFORE changing the offset, in the same
-		// tick, so the browser animates the change instead of snapping —
-		// "release must animate back, not snap."
-		node.style.removeProperty('--tcard-transition-duration');
+	function releaseTo(x: string, y: string, ms: number = MAGNET_RELEASE_MS): void {
+		// Set the transition BEFORE changing the offset, in the same tick, so the
+		// browser animates the change instead of snapping — "release must animate
+		// back, not snap." An explicit duration rather than removing the property
+		// and falling back to --motion-fast: the fallback was fast enough to read
+		// as the snap it was supposed to replace.
+		node.style.setProperty('--tcard-transition-duration', `${ms}ms`);
 		node.style.setProperty('--magnet-x', x);
 		node.style.setProperty('--magnet-y', y);
 	}
@@ -228,7 +244,7 @@ export function magnetic(node: HTMLElement, options: MagneticOptions) {
 			const wasDragging = opts.dragging;
 			opts = newOptions;
 			if (opts.dragging && !wasDragging) {
-				releaseTo('0px', '0px');
+				releaseTo('0px', '0px', MAGNET_DRAG_RELEASE_MS);
 			}
 			sync();
 		},

@@ -214,7 +214,7 @@
 
 	/* ─── Nav open state (mobile) ─── */
 	.nav--open {
-		background: var(--color-fg-forest);
+		background: var(--color-brand-green);
 	}
 
 	/* ─── Mobile menu — full-screen overlay ─── */
@@ -222,7 +222,7 @@
 		position: fixed;
 		inset: 0;
 		z-index: 15;
-		background: var(--color-fg-forest);
+		background: var(--color-brand-green);
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -347,8 +347,11 @@
 			transition: transform var(--motion-underline) var(--ease-out);
 		}
 
+		/* Stage one is an actual grey. It was --brand-muted, which is a sage green
+		   — near enough to the forest that lands on top of it that the two
+		   stages read as a single line and the first one was never visible. */
 		.nav__link::before {
-			background: var(--brand-muted);
+			background: var(--color-underline-idle);
 		}
 
 		.nav__link::after {
@@ -360,15 +363,21 @@
 			transform: scaleX(1);
 		}
 
-		/* The current page keeps the grey line under the green one, so the green
-		   arrives over something rather than out of nothing. */
 		.nav__link--active {
 			color: var(--color-fg-forest);
 		}
 
+		/* The current page draws both: the grey first, then the green out of the
+		   same centre a beat later. They occupy the same pixels, so without the
+		   delay the green simply covers the grey on the way out and the page
+		   looks like it only ever had one line. */
 		.nav__link--active::before,
 		.nav__link--active::after {
 			transform: scaleX(1);
+		}
+
+		.nav__link--active::after {
+			transition-delay: var(--underline-stage-delay);
 		}
 	}
 </style>

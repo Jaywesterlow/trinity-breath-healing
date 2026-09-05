@@ -20,10 +20,6 @@ export type SocialLink = {
 	icon: SocialIconKey;
 	href: string;
 	label: string;
-	/** Short visible wording, for the places that show the channel next to its
-	    icon rather than relying on the icon alone. Kept clear of the contact
-	    form's own field names, same as `label`. */
-	text: string;
 	/** What the cursor says while it is over this icon. Shorter and more direct
 	    than `label`, which has to work as a standalone accessible name; this one
 	    is read in context, with the icon right under it. */
@@ -47,7 +43,6 @@ export const SOCIAL_LINKS: SocialLink[] = [
 		icon: 'instagram',
 		href: `https://www.instagram.com/${BRAND.socials.instagram.replace('@', '')}/`,
 		label: 'Trinity Breath & Healing op Instagram',
-		text: BRAND.socials.instagram,
 		tooltip: 'Stuur een DM',
 		newTab: true
 	},
@@ -58,7 +53,6 @@ export const SOCIAL_LINKS: SocialLink[] = [
 					icon: 'whatsapp' as const,
 					href: `https://wa.me/${whatsappDigits}`,
 					label: `WhatsApp naar ${BRAND.phoneDisplay}`,
-					text: 'WhatsApp',
 					tooltip: 'Stuur een WhatsApp',
 					newTab: true
 				}
@@ -70,7 +64,6 @@ export const SOCIAL_LINKS: SocialLink[] = [
 					icon: 'mail' as const,
 					href: `mailto:${BRAND.email}`,
 					label: `E-mail naar ${BRAND.email}`,
-					text: BRAND.email,
 					tooltip: 'Stuur een e-mail',
 					newTab: false
 				}

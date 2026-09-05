@@ -207,7 +207,7 @@
 		   height only, so "the dialog appears matched exactly to the card's
 		   rect, same background, same border radius" holds automatically at
 		   every frame, not just the first one. */
-		background: var(--color-fg-forest);
+		background: var(--color-brand-green);
 		color: var(--color-bg-sand);
 		border-radius: var(--radius-lg);
 		overflow: hidden;

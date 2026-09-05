@@ -244,8 +244,16 @@
 	   The wipe always travels the same way: in from the left, and out to the
 	   right, so it continues rather than rewinding. That is what the origin
 	   flip in .link-underline below does. */
-	--underline-height: 2px;
+	--underline-height: 1.5px;
 	--motion-underline: 260ms;
+	/* The underline arrives in two stages: a neutral line first, then the link's
+	   own colour sweeping over it. --brand-muted used to play the first part and
+	   could not — it is a sage green, close enough to the forest that lands on
+	   top of it that the two stages read as one. This is an actual grey. 3.84:1
+	   on --color-bg-sand, so it clears WCAG 1.4.11 for a graphic on its own. */
+	--color-underline-idle: #7e7972;
+	/* How long the second stage waits, so the first one is seen at all. */
+	--underline-stage-delay: 130ms;
 	/* The social icons taking on their channel's own colour. Slower than a plain
 	   hover because it is a hue change rather than a movement, and a fast one
 	   reads as a flicker. */
@@ -458,6 +466,7 @@ h6 {
 	text-decoration: none;
 }
 
+.link-underline::before,
 .link-underline::after {
 	content: '';
 	position: absolute;
@@ -465,13 +474,34 @@ h6 {
 	right: 0;
 	bottom: -0.125rem;
 	height: var(--underline-height);
-	background: currentColor;
 	transform: scaleX(0);
 	transform-origin: right center;
 	transition: transform var(--motion-underline) var(--ease-out);
 }
 
+/* First stage. currentcolor faded rather than the flat grey the nav uses: these
+   links sit on sand in one place and on the footer's green in another, and a
+   fixed grey would vanish on the second. Faded, it is always a quieter version
+   of whatever colour the link already is. */
+.link-underline::before {
+	background: color-mix(in srgb, currentcolor 45%, transparent);
+}
+
+/* Second stage, and the one that waits. Both lines occupy the same pixels, so
+   without the delay the full-strength one simply covers the faded one on the
+   way out and there is no first stage to see. */
+.link-underline::after {
+	background: currentColor;
+}
+
 .link-underline:hover::after,
+.link-underline:focus-visible::after {
+	transition-delay: var(--underline-stage-delay);
+}
+
+.link-underline:hover::before,
+.link-underline:hover::after,
+.link-underline:focus-visible::before,
 .link-underline:focus-visible::after {
 	transform: scaleX(1);
 	transform-origin: left center;
@@ -589,12 +619,20 @@ h6 {
 	transform: translate(0, 0);
 }
 
-/* The pointer is replaced by the label itself (see CursorTooltip.svelte), so
-   the native cursor has to go — but only once that component has mounted and
-   confirmed a fine pointer. The class it adds to <html> is the gate: without
-   JavaScript, on a touch screen, or under prefers-reduced-motion, this rule
-   never matches and the ordinary cursor stays exactly where it was. */
-.has-cursor-tooltip [data-tooltip],
-.has-cursor-tooltip [data-tooltip] * {
+/* The native cursor is replaced by the dot in CursorTooltip.svelte, so it has
+   to go — but only once that component has mounted and confirmed a fine
+   pointer. The class it adds to <html> is the gate: without JavaScript, on a
+   touch screen, or under prefers-reduced-motion, this rule never matches and
+   the ordinary cursor stays exactly where it was.
+
+   Text entry is the exception, always. A caret tells you where the next
+   character lands, which no dot following the pointer can do, and the contact
+   form is the last place on this site to be clever with. */
+.has-cursor-tooltip,
+.has-cursor-tooltip * {
 	cursor: none;
+}
+
+.has-cursor-tooltip :is(input, textarea, [contenteditable]) {
+	cursor: text;
 }

@@ -159,7 +159,7 @@
 
 <style>
 	.footer {
-		background: var(--color-fg-forest);
+		background: var(--color-brand-green);
 		color: var(--color-bg-sand);
 	}
 
@@ -204,7 +204,10 @@
 		font-family: var(--font-body);
 		font-size: 0.8125rem;
 		line-height: 1.5;
-		opacity: 0.75;
+		/* Was 0.75. The footer's ground is --color-brand-green now, which carries
+		   full sand at exactly 4.50:1 — fading it at all drops this 13px line
+		   under AA (0.75 computes to 3.30:1). The size difference alone is what
+		   marks it as secondary here. */
 	}
 
 	.footer__contact ul {
