@@ -46,7 +46,8 @@
 		background = 'transparent',
 		ground = 'light',
 		newTab = true,
-		text
+		text,
+		tooltip
 	}: {
 		icon: IconKey;
 		href: string;
@@ -63,6 +64,9 @@
 		    does in the footer; supplied, it sits inside the same link so the
 		    words are part of the target rather than decoration next to it. */
 		text?: string;
+		/** What the cursor turns into over this icon — see CursorTooltip.svelte.
+		    Omitted, the pointer stays an ordinary pointer. */
+		tooltip?: string;
 	} = $props();
 
 	/* SSR-stable and unique per instance: the gradient is referenced by id, and
@@ -87,6 +91,7 @@
 	class:social-icon--instagram={icon === 'instagram'}
 	class:social-icon--labelled={text !== undefined}
 	aria-label={label}
+	data-tooltip={tooltip}
 	rel={newTab ? 'noopener noreferrer' : undefined}
 	target={newTab ? '_blank' : undefined}
 	style="--social-rest: {color}; background: {background}; --social-brand: {brand}; --social-paint: url(#{gradientId});"

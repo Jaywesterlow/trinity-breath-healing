@@ -77,6 +77,7 @@
 			<button
 				bind:this={hamburgerEl}
 				class="hamburger"
+				class:hamburger--open={menuOpen}
 				aria-label={menuOpen ? 'Menu sluiten' : 'Menu openen'}
 				aria-expanded={menuOpen}
 				aria-controls="mobile-menu"
@@ -180,15 +181,35 @@
 		height: 44px;
 		border-radius: var(--radius-full);
 		background: var(--brand-border);
-		border: none;
+		/* Present in both states, at the fill's own colour when closed, so the
+		   button does not change size the moment it opens. */
+		border: 2px solid var(--brand-border);
+		box-sizing: border-box;
 		cursor: pointer;
 		flex-shrink: 0;
+		transition:
+			background-color 350ms var(--ease-out),
+			border-color 350ms var(--ease-out);
+	}
+
+	/* Open, the button inverts: the panel white the contact forms are built on,
+	   the same brown ring, and brown dots. By then it is sitting on the forest
+	   overlay, where a brown disc has almost nothing to read against — the light
+	   ground is what keeps it findable. Brown on --color-panel is 5.59:1. */
+	.hamburger--open {
+		background: var(--color-panel);
 	}
 
 	.dot-grid {
 		display: block;
 		fill: var(--color-bg-sand);
-		transition: transform 350ms var(--ease-out); /* ← tweak ms to change rotation speed */
+		transition:
+			transform 350ms var(--ease-out),
+			fill 350ms var(--ease-out); /* ← tweak ms to change rotation speed */
+	}
+
+	.hamburger--open .dot-grid {
+		fill: var(--brand-border);
 	}
 
 	/* ─── Nav open state (mobile) ─── */

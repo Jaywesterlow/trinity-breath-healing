@@ -128,6 +128,7 @@
 								newTab={social.newTab}
 								color={SOCIAL_COLOR}
 								ground="dark"
+								tooltip={social.tooltip}
 							/>
 						</li>
 					{/each}

@@ -192,6 +192,10 @@
 				<div class="contact__block contact__block--socials">
 					<p class="contact__block-title">Of rechtstreeks</p>
 					<nav aria-label="Sociale media">
+						<!-- No cursor tooltip here, unlike the footer's: these links
+						     already carry the channel in words beside the icon, and the
+						     label would have been drawn straight over the e-mail address
+						     it was repeating. -->
 						<ul class="contact__socials">
 							{#each CONTACT_SOCIALS as social (social.icon)}
 								<li>

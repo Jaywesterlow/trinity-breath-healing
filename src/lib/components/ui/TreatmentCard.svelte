@@ -109,7 +109,11 @@
 			     second link inside the card there's no nested-link problem left to
 			     solve). aria-hidden since it adds no information beyond the card's
 			     own accessible name. -->
-			<span class="tcard__arrow arrow-swap roll-host" aria-hidden="true">
+			<span
+				class="tcard__arrow arrow-swap roll-host"
+				aria-hidden="true"
+				data-tooltip="Bekijk {label}"
+			>
 				<!-- Two copies: the visible one leaves along the diagonal it points
 				     down, and the second arrives on that same axis from the
 				     opposite corner. .arrow-swap in app.css owns the motion; this

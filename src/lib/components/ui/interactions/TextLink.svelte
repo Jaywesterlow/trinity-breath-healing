@@ -13,7 +13,7 @@
 
 <a
 	{href}
-	class="text-link"
+	class="text-link link-underline roll-host"
 	class:text-link--inverted={inverted}
 	class:text-link--sm={size === 'sm'}
 	class:text-link--muted={tone === 'muted'}
@@ -24,42 +24,42 @@
 		<!-- Two arrows, one leaving. This one points down-right, so it exits that
 		     way and its replacement arrives from the top-left — the opposite
 		     corner, along the same diagonal. -->
-		<span class="text-link__arrows" aria-hidden="true">
-			<span class="text-link__arrow-slot text-link__arrow-slot--out">
+		<span class="text-link__arrows arrow-swap" aria-hidden="true">
+			<span class="arrow-swap__glyph arrow-swap__glyph--out">
 				<svg
-			class="text-link__arrow"
-			width="22"
-			height="22"
-			viewBox="0 0 22 22"
-			fill="none"
-			aria-hidden="true"
-		>
-			<path
-				d="M5 17L17 5M17 5H9M17 5V13"
-				stroke="currentColor"
-				stroke-width="1.5"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			/>
-		</svg>
+					class="text-link__arrow"
+					width="22"
+					height="22"
+					viewBox="0 0 22 22"
+					fill="none"
+					aria-hidden="true"
+				>
+					<path
+						d="M5 17L17 5M17 5H9M17 5V13"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				</svg>
 			</span>
-			<span class="text-link__arrow-slot text-link__arrow-slot--in">
+			<span class="arrow-swap__glyph arrow-swap__glyph--in">
 				<svg
-			class="text-link__arrow"
-			width="22"
-			height="22"
-			viewBox="0 0 22 22"
-			fill="none"
-			aria-hidden="true"
-		>
-			<path
-				d="M5 17L17 5M17 5H9M17 5V13"
-				stroke="currentColor"
-				stroke-width="1.5"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			/>
-		</svg>
+					class="text-link__arrow"
+					width="22"
+					height="22"
+					viewBox="0 0 22 22"
+					fill="none"
+					aria-hidden="true"
+				>
+					<path
+						d="M5 17L17 5M17 5H9M17 5V13"
+						stroke="currentColor"
+						stroke-width="1.5"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				</svg>
 			</span>
 		</span>
 	{/if}
@@ -88,70 +88,24 @@
 		line-height: 1;
 	}
 
-	/* ─── The underline ───
-	   Was a permanent 1px border. It is the shared wipe now: in from the left on
-	   hover, out to the right on leave, at --underline-height like every other
-	   animated underline on the site. */
-	.text-link::after {
-		content: '';
-		position: absolute;
-		left: 0;
-		right: 0;
-		bottom: 0;
-		height: var(--underline-height);
-		background: currentColor;
-		transform: scaleX(0);
-		transform-origin: right center;
-		transition: transform var(--motion-underline) var(--ease-out);
-	}
-
-	.text-link:hover::after,
-	.text-link:focus-visible::after {
-		transform: scaleX(1);
-		transform-origin: left center;
-	}
-
-	/* ─── The arrow ───
-	   Both copies sit in one box, clipped to it, so the departing arrow is cut
-	   off at the edge rather than drawn outside the link. */
+	/* The underline and the arrow pair both come from app.css now
+	   (.link-underline and .arrow-swap). This component carried its own copy of
+	   each — a permanent 1px border first, then a hand-rolled wipe, then six
+	   rules for the swap — which is exactly how the site ended up with
+	   underlines at two different heights running in two different directions.
+	   All that is left here is which way this particular arrow travels: it
+	   points down and to the right, so it leaves that way and its replacement
+	   arrives from the opposite corner along the same diagonal. */
 	.text-link__arrows {
-		position: relative;
-		display: inline-flex;
 		width: 22px;
 		height: 22px;
 		flex-shrink: 0;
-		overflow: hidden;
-	}
-
-	.text-link__arrow-slot {
-		position: absolute;
-		inset: 0;
-		display: inline-flex;
-		transition:
-			transform var(--motion-arrow) var(--ease-arrow),
-			opacity var(--motion-arrow) var(--ease-arrow);
+		--swap-x: var(--arrow-travel);
+		--swap-y: var(--arrow-travel);
 	}
 
 	.text-link__arrow {
 		rotate: 90deg; /* points right, per Figma */
-	}
-
-	/* Waits at the top-left — the corner opposite the one it points at. */
-	.text-link__arrow-slot--in {
-		opacity: 0;
-		transform: translate(calc(-1 * var(--arrow-travel)), calc(-1 * var(--arrow-travel)));
-	}
-
-	.text-link:hover .text-link__arrow-slot--out,
-	.text-link:focus-visible .text-link__arrow-slot--out {
-		opacity: 0;
-		transform: translate(var(--arrow-travel), var(--arrow-travel));
-	}
-
-	.text-link:hover .text-link__arrow-slot--in,
-	.text-link:focus-visible .text-link__arrow-slot--in {
-		opacity: 1;
-		transform: translate(0, 0);
 	}
 
 	/* The underline is currentColor, so a tone only has to set the text colour. */

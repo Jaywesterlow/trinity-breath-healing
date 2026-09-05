@@ -65,7 +65,6 @@
 					<ButtonLink href="/contact" label="Maak een afspraak" />
 				</div>
 			</div>
-
 		</div>
 	</div>
 </section>
@@ -384,7 +383,6 @@
 			max-width: none; /* width follows aspect */
 			max-height: none; /* cancels the mobile-base max-height, which otherwise keeps cascading through */
 		}
-
 	}
 
 	/* Tablet only (768–1023px): row is too narrow for content to breathe flush against

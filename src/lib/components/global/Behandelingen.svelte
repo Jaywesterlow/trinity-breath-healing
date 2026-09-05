@@ -1988,6 +1988,7 @@
 			<button
 				type="button"
 				class="treatments__nav treatments__nav--prev arrow-swap roll-host"
+				data-tooltip="Vorige"
 				onclick={prev}
 				aria-label="Vorige"
 			>
@@ -2038,6 +2039,7 @@
 			<button
 				type="button"
 				class="treatments__nav treatments__nav--next arrow-swap roll-host"
+				data-tooltip="Volgende"
 				onclick={next}
 				aria-label="Volgende"
 			>

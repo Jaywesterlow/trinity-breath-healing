@@ -9,3 +9,4 @@ export { default as OverMij } from './OverMij.svelte';
 export { default as Behandelingen } from './Behandelingen.svelte';
 export { default as Contact } from './Contact.svelte';
 export { default as Faq } from './Faq.svelte';
+export { default as CursorTooltip } from './CursorTooltip.svelte';

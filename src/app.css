@@ -588,3 +588,13 @@ h6 {
 	opacity: 1;
 	transform: translate(0, 0);
 }
+
+/* The pointer is replaced by the label itself (see CursorTooltip.svelte), so
+   the native cursor has to go — but only once that component has mounted and
+   confirmed a fine pointer. The class it adds to <html> is the gate: without
+   JavaScript, on a touch screen, or under prefers-reduced-motion, this rule
+   never matches and the ordinary cursor stays exactly where it was. */
+.has-cursor-tooltip [data-tooltip],
+.has-cursor-tooltip [data-tooltip] * {
+	cursor: none;
+}

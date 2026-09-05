@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css';
-	import { Nav, Footer, Head, JsonLd } from '$lib/components';
+	import { Nav, Footer, Head, JsonLd, CursorTooltip } from '$lib/components';
 	import Analytics from '$lib/analytics/Analytics.svelte';
 	import { page } from '$app/stores';
 	import { onNavigate } from '$app/navigation';
@@ -70,6 +70,7 @@
 	{@render children()}
 </main>
 <Footer />
+<CursorTooltip />
 
 <style>
 	.page-content {
