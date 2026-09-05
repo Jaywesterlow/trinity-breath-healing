@@ -226,6 +226,14 @@
 	   registered, and the fill snapped. This is the one interaction on the site
 	   people are meant to watch. */
 	--motion-arrow: 420ms;
+	/* --- The underline wipe (one vocabulary, every animated link) ---
+	   Height was 1px in the footer and 1px-growing-to-2px in the contact copy,
+	   which is the jump you see when the animation lands. One value now.
+	   The wipe always travels the same way: in from the left, and out to the
+	   right, so it continues rather than rewinding. That is what the origin
+	   flip in .link-underline below does. */
+	--underline-height: 2px;
+	--motion-underline: 260ms;
 	--ease-arrow: cubic-bezier(0.22, 1, 0.36, 1);
 	/* No shadows anywhere on this site, hover included — the lift alone carries the
 	   interaction. Kept as a token rather than deleted so every surface that reads it
@@ -414,4 +422,44 @@ h6 {
 		   sit on top of each other and only the fade is left. */
 		--arrow-travel: 0px;
 	}
+}
+
+/* ─── The underline wipe ─────────────────────────────────────────────────────
+   Global rather than per-component: four components had four copies of this,
+   at two different heights and with the exit reversed. Add `link-underline` to
+   any inline link and it behaves the same everywhere.
+
+   The origin flip is the whole trick. At rest the origin is the right edge, so
+   collapsing pulls the line off toward the right; on hover it is the left edge,
+   so growing pushes it out to the right. In and out therefore travel the same
+   direction instead of rewinding. */
+.link-underline {
+	position: relative;
+	text-decoration: none;
+}
+
+.link-underline::after {
+	content: '';
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: -0.125rem;
+	height: var(--underline-height);
+	background: currentColor;
+	transform: scaleX(0);
+	transform-origin: right center;
+	transition: transform var(--motion-underline) var(--ease-out);
+}
+
+.link-underline:hover::after,
+.link-underline:focus-visible::after {
+	transform: scaleX(1);
+	transform-origin: left center;
+}
+
+/* Permanently drawn, and not animated: the current page in a nav, or a link in
+   body copy that has to read as a link before anyone points at it. */
+.link-underline--always::after {
+	transform: scaleX(1);
+	transform-origin: left center;
 }

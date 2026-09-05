@@ -145,8 +145,8 @@
 
 		<div class="footer__bottom" use:reveal={{ delay: 330 }}>
 			<nav class="footer__legal" aria-label="Juridische links">
-				<a href="/privacyverklaring">Privacyverklaring</a>
-				<a href="/algemene-voorwaarden">Algemene voorwaarden</a>
+				<a class="link-underline" href="/privacyverklaring">Privacyverklaring</a>
+				<a class="link-underline" href="/algemene-voorwaarden">Algemene voorwaarden</a>
 			</nav>
 			<p class="footer__copyright">
 				©Copyright 2026 Trinity Breath &amp; Healing, alle rechten voorbehouden
@@ -270,28 +270,9 @@
 	}
 
 	/* Plain text links get the underline reveal rather than the lift: moving a
-	   line of running text is noisy, an underline arriving is not. */
-	.footer__legal a {
-		position: relative;
-	}
-
-	.footer__legal a::after {
-		content: '';
-		position: absolute;
-		left: 0;
-		right: 0;
-		bottom: -0.125rem;
-		height: 1px;
-		background: currentColor;
-		transform: scaleX(0);
-		transform-origin: left center;
-		transition: transform var(--motion-hover) var(--ease-hover);
-	}
-
-	.footer__legal a:hover::after,
-	.footer__legal a:focus-visible::after {
-		transform: scaleX(1);
-	}
+	   line of running text is noisy, an underline arriving is not. The wipe
+	   itself is .link-underline in app.css — it used to be redeclared here at
+	   1px and rewound to the left on the way out. */
 
 	/* ─── Desktop (≥ 1024px) ─── */
 	@media (min-width: 1024px) {

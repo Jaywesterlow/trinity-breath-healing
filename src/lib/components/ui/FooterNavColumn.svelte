@@ -12,7 +12,7 @@
 	<h2 class="col__heading">{heading}</h2>
 	<ul class="col__links">
 		{#each links as link (link.href)}
-			<li><a href={link.href}>{link.label}</a></li>
+			<li><a class="link-underline" href={link.href}>{link.label}</a></li>
 		{/each}
 	</ul>
 </section>
@@ -47,23 +47,7 @@
 	}
 
 	/* Underline reveal — same vocabulary as the footer's legal links. */
-	.col__links a::after {
-		content: '';
-		position: absolute;
-		left: 0;
-		right: 0;
-		bottom: -0.125rem;
-		height: 1px;
-		background: currentColor;
-		transform: scaleX(0);
-		transform-origin: left center;
-		transition: transform var(--motion-hover) var(--ease-hover);
-	}
-
-	.col__links a:hover::after,
-	.col__links a:focus-visible::after {
-		transform: scaleX(1);
-	}
+	/* The wipe is .link-underline in app.css. */
 
 	@media (min-width: 1024px) {
 		.col__heading {
