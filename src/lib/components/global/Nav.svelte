@@ -232,20 +232,38 @@
 		pointer-events: auto;
 	}
 
+	/* Same two-line idea as the desktop nav, minus the hover half: a touch screen
+	   has no hover, so only the current-page line is ever drawn. Sand on forest,
+	   and the same 2px as every other underline on the site. */
 	.mobile-menu__link {
+		position: relative;
 		font-family: var(--font-display);
 		font-size: 1.5rem;
 		font-weight: 500;
 		color: var(--color-bg-sand);
 		text-decoration: none;
 		padding: var(--space-1) 0.375rem;
-		border-bottom: 1px solid transparent;
-		transition: border-color var(--motion-fast);
+	}
+
+	.mobile-menu__link::after {
+		content: '';
+		position: absolute;
+		left: 0.375rem;
+		right: 0.375rem;
+		bottom: 0;
+		height: var(--underline-height);
+		background: var(--color-bg-sand);
+		transform: scaleX(0);
+		transform-origin: center;
+		transition: transform var(--motion-underline) var(--ease-out);
 	}
 
 	.mobile-menu__link--active {
 		font-weight: 600;
-		border-bottom-color: var(--color-bg-sand);
+	}
+
+	.mobile-menu__link--active::after {
+		transform: scaleX(1);
 	}
 
 	/* ─── Desktop ≥ 1024px ─── */
@@ -276,7 +294,15 @@
 			justify-content: center;
 		}
 
+		/* Two lines under every link, both centred and both growing outward from
+		   the middle to the same width. ::before is the grey one and answers
+		   hover; ::after is the green one and answers being the current page. On
+		   navigation the green line on the old link shrinks back to its centre
+		   while the new link's grows out of its own — the nav is never rebuilt
+		   between pages, so both run as plain transitions on elements that stay
+		   put. */
 		.nav__link {
+			position: relative;
 			font-family: var(--font-display);
 			font-weight: 500;
 			font-size: var(--font-size-xl);
@@ -284,13 +310,44 @@
 			text-decoration: none;
 			padding: var(--space-1) 0.375rem;
 			white-space: nowrap;
-			border-bottom: 1px solid transparent;
 			transition: color var(--motion-fast);
 		}
 
+		.nav__link::before,
+		.nav__link::after {
+			content: '';
+			position: absolute;
+			left: 0.375rem; /* inside the link's own padding, so the two agree */
+			right: 0.375rem;
+			bottom: 0;
+			height: var(--underline-height);
+			transform: scaleX(0);
+			transform-origin: center;
+			transition: transform var(--motion-underline) var(--ease-out);
+		}
+
+		.nav__link::before {
+			background: var(--brand-muted);
+		}
+
+		.nav__link::after {
+			background: var(--color-fg-forest);
+		}
+
+		.nav__link:hover::before,
+		.nav__link:focus-visible::before {
+			transform: scaleX(1);
+		}
+
+		/* The current page keeps the grey line under the green one, so the green
+		   arrives over something rather than out of nothing. */
 		.nav__link--active {
 			color: var(--color-fg-forest);
-			border-bottom-color: var(--color-fg-forest);
+		}
+
+		.nav__link--active::before,
+		.nav__link--active::after {
+			transform: scaleX(1);
 		}
 	}
 </style>
