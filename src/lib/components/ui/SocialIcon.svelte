@@ -25,7 +25,7 @@
 
 	const ON_LIGHT: Partial<Record<IconKey, Paint>> = {
 		whatsapp: { fill: '#128c7e', ink: SAND }, // WhatsApp "Surfie Green" — 3.68:1
-		mail: { fill: '#ea4335', ink: SAND }, // Gmail red — 3.49:1
+		mail: { fill: '#127cd6', ink: SAND }, // Outlook Blue — 3.83:1 fill, 3.83:1 glyph
 		instagram: {
 			// The half of Instagram's published ramp a light ground can show:
 			// sand on these three is 4.5–5.8:1, where the gold end is 1.2:1.
@@ -38,7 +38,10 @@
 
 	const ON_DARK: Partial<Record<IconKey, Paint>> = {
 		whatsapp: { fill: '#25d366', ink: FOREST }, // WhatsApp primary green — 4.75:1
-		mail: { fill: '#f28b82', ink: FOREST }, // Google Red 300 — 3.94:1
+		// Malibu Blue, from Outlook's own palette. Outlook Blue is 1.18:1 against
+		// --color-brand-green, so the filled circle would not separate from the
+		// footer at all; this one is 3.07:1 with a 5.70:1 glyph on it.
+		mail: { fill: '#50d9ff', ink: FOREST },
 		instagram: {
 			// The other half, for the same reason in reverse: forest on these is
 			// 3.4–7.1:1, where the blue end is 1.8:1.

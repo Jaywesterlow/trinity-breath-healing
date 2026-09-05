@@ -125,17 +125,17 @@
 						distance: 0
 					}}
 				>
-					<summary class="faq__question">
-						<span>{item.question}</span>
-						<svg class="faq__chevron" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
-							<polyline
-								points="5,8 10,13 15,8"
-								fill="none"
-								stroke="currentColor"
-								stroke-width="2"
-								stroke-linecap="round"
-							/>
-						</svg>
+					<!-- data-cursor: the pointer becomes a circled + over a closed row and a
+					     × over an open one (CursorTooltip reads the <details> open state
+					     itself, so nothing here has to track it). -->
+					<summary class="faq__question" data-cursor="expand">
+						<span class="faq__question-text">{item.question}</span>
+						<!-- Two bars, not a chevron: the same 40px ring the CTA buttons and the
+						     carousel controls carry, with a + that turns 45deg into a ×. -->
+						<span class="faq__toggle" aria-hidden="true">
+							<span class="faq__bar"></span>
+							<span class="faq__bar faq__bar--v"></span>
+						</span>
 					</summary>
 					<p class="faq__answer">{item.answer}</p>
 				</details>
@@ -158,6 +158,10 @@
 		--faq-open: 480ms;
 		--faq-close: 380ms;
 		--faq-ease: cubic-bezier(0.4, 0, 0.2, 1);
+		/* The same hairline the contact panels are drawn with, rather than the
+		   full-strength --color-border the rows used to carry — at 1px solid
+		   brown a list of eight questions read as a table of contents. */
+		--faq-rule: color-mix(in srgb, var(--brand-border) 22%, transparent);
 	}
 
 	.faq__container {
@@ -166,8 +170,14 @@
 		padding-inline: var(--space-6);
 	}
 
+	/* Centred, like every other section header on this page — Werkwijze,
+	   Behandelingen and Contact all open this way and the FAQ was the one left
+	   ranged left. Capped narrow so the heading breaks where the design breaks
+	   it rather than running the full 1200px. */
 	.faq__header {
-		margin-bottom: var(--space-8);
+		max-width: 34rem;
+		margin: 0 auto var(--space-10);
+		text-align: center;
 	}
 
 	/* Matches the eyebrow treatment in Werkwijze/Behandelingen so all landing
@@ -186,11 +196,18 @@
 		font-weight: var(--font-weight-medium);
 		line-height: var(--line-height-tight);
 		color: var(--color-fg-forest);
+		text-wrap: balance;
 	}
 
+	/* A reading column, not the full container: 1200px of question text with a
+	   toggle stranded at the far right is a table, not a list. The rule on top
+	   closes the block — every item carries its own on the bottom. */
 	.faq__list {
 		display: flex;
 		flex-direction: column;
+		max-width: 54rem; /* 864px */
+		margin-inline: auto;
+		border-top: 1px solid var(--faq-rule);
 	}
 
 	/* Opening a <details> is, by default, instantaneous: the answer appears in one frame and the
@@ -204,7 +221,7 @@
 	   Safari would simply snap. The fr-unit transition works in every engine that supports
 	   ::details-content, which has been Baseline since September 2025. */
 	.faq__item {
-		border-bottom: 1px solid var(--color-border);
+		border-bottom: 1px solid var(--faq-rule);
 		display: grid;
 		/* min-content, NOT auto, for the summary row. An `auto` track absorbs free space, and
 		   mid-transition there is a moment where the content row is still too small to hold the
@@ -267,14 +284,23 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		gap: var(--space-4);
+		gap: var(--space-6);
 		padding-block: var(--space-5);
 		cursor: pointer;
-		font-size: var(--font-size-base);
-		font-weight: var(--font-weight-medium);
-		color: var(--color-fg-forest);
 		list-style: none;
 		min-height: 44px; /* WCAG 2.2 AA target size */
+	}
+
+	/* Cormorant, like every other title on the page — a question is a heading,
+	   and the card titles in Werkwijze set the register. The answer below it
+	   stays DM Sans, so the pair reads the same way a card's title/body does. */
+	.faq__question-text {
+		flex: 1;
+		font-family: var(--font-display);
+		font-size: 1.25rem; /* 20px */
+		font-weight: var(--font-weight-medium);
+		line-height: var(--line-height-tight);
+		color: var(--color-fg-forest);
 	}
 
 	/* Suppress the native disclosure triangle in both engines — the chevron SVG replaces it. */
@@ -283,34 +309,70 @@
 		display: none;
 	}
 
-	.faq__question span {
-		flex: 1;
+	/* The same circle the CTA buttons and the carousel's Vorige/Volgende carry:
+	   40px, a 2px --brand-border ring, transparent until the row is hovered and
+	   filled after it. */
+	.faq__toggle {
+		position: relative;
+		flex-shrink: 0;
+		width: var(--space-10);
+		height: var(--space-10);
+		border-radius: 50%;
+		border: 2px solid var(--brand-border);
+		color: var(--brand-border);
+		transition:
+			background-color var(--motion-arrow) var(--ease-arrow),
+			color var(--motion-arrow) var(--ease-arrow);
 	}
 
-	/* Matched to the panel it describes — at 150ms the chevron finished long before the answer
-	   had, which made the whole thing feel disjointed. */
-	.faq__chevron {
-		flex-shrink: 0;
+	.faq__question:hover .faq__toggle,
+	.faq__question:focus-visible .faq__toggle {
+		background: var(--brand-border);
+		color: var(--color-bg-sand);
+	}
+
+	.faq__bar {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 14px;
+		height: 2px;
+		margin: -1px 0 0 -7px;
+		border-radius: 1px;
+		background: currentColor;
+		/* Matched to the panel it describes — at 150ms the old chevron finished
+		   long before the answer had, which made the whole thing feel disjointed. */
 		transition: transform var(--faq-close) var(--faq-ease);
 	}
 
-	.faq__item[open] .faq__chevron {
+	.faq__bar--v {
+		transform: rotate(90deg);
+	}
+
+	/* Open, the + turns into a × rather than losing a stroke: one shape carrying
+	   both states is what makes it read as a single control. */
+	.faq__item[open] .faq__bar {
+		transform: rotate(45deg);
 		transition-duration: var(--faq-open);
 	}
 
-	/* `open` is still set during the close, so without this the chevron would stay rotated
-	   until the very end and then snap back. */
-	.faq__item[open]:global([data-closing]) .faq__chevron {
+	.faq__item[open] .faq__bar--v {
+		transform: rotate(135deg);
+	}
+
+	/* `open` is still set during the close, so without this the × would hold
+	   until the very end and then snap back to a +. */
+	.faq__item[open]:global([data-closing]) .faq__bar {
 		transform: rotate(0deg);
 		transition-duration: var(--faq-close);
 	}
 
-	.faq__item[open] .faq__chevron {
-		transform: rotate(180deg);
+	.faq__item[open]:global([data-closing]) .faq__bar--v {
+		transform: rotate(90deg);
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.faq__chevron,
+		.faq__bar,
 		.faq__item,
 		.faq__item::details-content {
 			transition: none;
@@ -322,16 +384,30 @@
 		}
 	}
 
+	/* Body register, and inset to clear the toggle so the answer sits under its
+	   own question rather than under the whole row. */
 	.faq__answer {
-		padding-bottom: var(--space-5);
+		padding-bottom: var(--space-6);
+		padding-right: calc(var(--space-10) + var(--space-6));
+		max-width: 46rem;
+		font-family: var(--font-body);
 		font-size: var(--font-size-base);
+		font-weight: var(--font-weight-light);
 		line-height: var(--line-height-loose);
-		color: var(--color-fg-forest);
+		color: var(--brand-muted);
 	}
 
 	@media (min-width: 1024px) {
 		.faq {
 			padding-block: var(--space-16);
+		}
+
+		.faq__question {
+			padding-block: var(--space-6);
+		}
+
+		.faq__question-text {
+			font-size: 1.375rem; /* 22px */
 		}
 	}
 </style>

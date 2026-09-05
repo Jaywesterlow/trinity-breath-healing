@@ -1951,6 +1951,7 @@
 			class="treatments__fan"
 			class:treatments__fan--grabbable={cursorInBand}
 			class:treatments__fan--dragging={dragging}
+			data-cursor={dragging ? 'dragging' : cursorInBand ? 'drag' : undefined}
 			role="group"
 			aria-roledescription="carrousel"
 			aria-label="Behandelingen"

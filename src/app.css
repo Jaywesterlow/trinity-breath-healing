@@ -619,20 +619,22 @@ h6 {
 	transform: translate(0, 0);
 }
 
-/* The native cursor is replaced by the dot in CursorTooltip.svelte, so it has
-   to go — but only once that component has mounted and confirmed a fine
+/* The native cursor is replaced by the arrowhead in CursorTooltip.svelte, so
+   it has to go — but only once that component has mounted and confirmed a fine
    pointer. The class it adds to <html> is the gate: without JavaScript, on a
    touch screen, or under prefers-reduced-motion, this rule never matches and
-   the ordinary cursor stays exactly where it was.
+   every component's own `cursor: pointer` / `grab` / `text` still applies,
+   exactly as it did before.
 
-   Text entry is the exception, always. A caret tells you where the next
-   character lands, which no dot following the pointer can do, and the contact
-   form is the last place on this site to be clever with. */
+   `!important` because those component rules are Svelte-scoped, which makes
+   them one class more specific than anything written here — a plain
+   declaration lost to every one of them, which is why the hand, the grab and
+   the I-beam kept showing through. There is no exception list any more: the
+   caret is one of the cursor's own shapes now (see its `text` mode), so a form
+   field has no reason to fall back to the native one either. */
 .has-cursor-tooltip,
-.has-cursor-tooltip * {
-	cursor: none;
-}
-
-.has-cursor-tooltip :is(input, textarea, [contenteditable]) {
-	cursor: text;
+.has-cursor-tooltip *,
+.has-cursor-tooltip *::before,
+.has-cursor-tooltip *::after {
+	cursor: none !important;
 }
