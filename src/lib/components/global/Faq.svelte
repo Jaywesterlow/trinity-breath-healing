@@ -43,11 +43,15 @@
 		const target = event.target;
 		if (!(target instanceof Element)) return;
 
-		const summary = target.closest('summary');
-		if (!summary) return;
-		const found = summary.closest('details.faq__item');
+		/* Either half of an open row closes it: the question, or the answer under
+		   it. The answer is not a <summary>, so the browser does nothing with a
+		   click there — this is what makes it act like one. */
+		const control = target.closest('summary, .faq__answer');
+		if (!control) return;
+		const found = control.closest('details.faq__item');
 		if (!(found instanceof HTMLDetailsElement)) return;
 		const item = found;
+		const fromAnswer = !control.matches('summary');
 
 		// Clicked again mid-close: cancel the collapse and leave the panel open, rather
 		// than queueing a second one against the first.
@@ -60,7 +64,11 @@
 		// Opening is the browser's job — the CSS handles it and native behaviour is better
 		// than anything reimplemented here. Same when motion is not wanted.
 		if (!item.open) return;
-		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+			// The answer still has to close it; only the animation is skipped.
+			if (fromAnswer) item.open = false;
+			return;
+		}
 
 		// Closing: keep `open` set so the panel stays rendered, and let the CSS collapse it.
 		event.preventDefault();
@@ -139,7 +147,12 @@
 							/>
 						</svg>
 					</summary>
-					<p class="faq__answer">{item.answer}</p>
+					<!-- The answer closes the row too. Reading to the end and having to
+					     travel back up to the question to shut it is a small annoyance
+					     that costs nothing to remove — and it means the disclosure
+					     cursor holds all the way down the open row instead of
+					     changing halfway. -->
+					<p class="faq__answer" data-cursor="toggle">{item.answer}</p>
 				</details>
 			{/each}
 		</div>
@@ -330,6 +343,7 @@
 	}
 
 	.faq__answer {
+		cursor: pointer;
 		padding-bottom: var(--space-5);
 		font-size: var(--font-size-base);
 		line-height: var(--line-height-loose);
@@ -352,10 +366,6 @@
 
 		.faq__header {
 			margin-bottom: 0;
-			/* Sticks while the list scrolls past — the pairing only reads as two
-			   columns if the heading is still there at the last question. */
-			position: sticky;
-			top: calc(var(--nav-height) + var(--space-10));
 		}
 
 		.faq__eyebrow {

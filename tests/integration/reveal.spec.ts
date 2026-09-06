@@ -56,16 +56,45 @@ test.describe('reveal: armed then revealed (JS)', () => {
 		}).toPass({ timeout: 5000 });
 	});
 
-	test('no inline transform or opacity style survives once the fade ends', async ({ page }) => {
+	/* `transform` must go; `opacity` must stay. A leftover transform makes the element a
+	   containing block for any fixed/sticky descendant, which silently breaks that
+	   positioning elsewhere on the page — that is the bug this test was written for.
+	   Opacity is different: the action keeps driving it after the entrance, because the
+	   element now fades back out when it leaves the viewport. */
+	test('the transform is stripped once the fade ends, and opacity is left at 1', async ({
+		page
+	}) => {
 		await page.goto('/');
 		const heading = page.locator('.faq__heading');
 		await heading.scrollIntoViewIfNeeded();
 
 		await expect(async () => {
 			const style = await heading.getAttribute('style');
-			expect(style ?? '').not.toContain('opacity');
 			expect(style ?? '').not.toContain('transform');
+			expect(style ?? '').toContain('opacity: 1');
 		}).toPass({ timeout: 5000 });
+	});
+
+	/* The exit half of the same action: an element that has been revealed fades out again as
+	   it leaves through the top of the viewport, and fades back in on the way down. Both
+	   directions, because a one-way fade would leave the top of the page blank after any
+	   scroll back up. */
+	test('fades out when scrolled past, and back in on the way down', async ({ page }) => {
+		await page.goto('/');
+		const heading = page.locator('.about__heading');
+		await heading.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+
+		const opacity = () => heading.evaluate((el) => parseFloat(getComputedStyle(el).opacity));
+
+		await expect(async () => expect(await opacity()).toBe(1)).toPass({ timeout: 5000 });
+
+		// Past the top of the viewport.
+		await page.evaluate(() => window.scrollBy(0, 900));
+		await expect(async () => expect(await opacity()).toBeLessThan(0.1)).toPass({ timeout: 4000 });
+
+		// And back.
+		await heading.evaluate((el) => el.scrollIntoView({ block: 'center' }));
+		await expect(async () => expect(await opacity()).toBe(1)).toPass({ timeout: 4000 });
 	});
 });
 

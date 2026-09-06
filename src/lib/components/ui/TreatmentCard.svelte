@@ -85,7 +85,7 @@
      one cursor label covers both. -->
 <a
 	href={buttonHref}
-	class="tcard roll-host"
+	class="tcard"
 	aria-label={`${buttonLabel} over ${label}`}
 	draggable="false"
 	aria-hidden={duplicate ? 'true' : undefined}
@@ -110,11 +110,10 @@
 		<div class="tcard__bottom">
 			<p class="tcard__title">{label}</p>
 
-			<!-- Decoration, not a control. It answers the CARD's hover rather than
-			     its own (see .tcard:hover below), so pointing anywhere on the card
-			     swaps the arrow and fills its circle — the arrow is part of what
-			     the card does, not a separate thing to find. -->
-			<span class="tcard__arrow arrow-swap" aria-hidden="true">
+			<!-- Decoration, not a control — the whole card is the link. The card's
+			     hover only makes an outer ring appear around it; the swap and the
+			     fill still belong to the arrow's own hover. -->
+			<span class="tcard__arrow arrow-swap roll-host" aria-hidden="true">
 				<!-- Two copies: the visible one leaves along the diagonal it points
 				     down, and the second arrives on that same axis from the
 				     opposite corner. .arrow-swap in app.css owns the motion; this
@@ -402,16 +401,40 @@
 			/* Up and to the right, the way the glyph points. */
 			--swap-x: var(--arrow-travel);
 			--swap-y: calc(-1 * var(--arrow-travel));
-			transition:
-				background-color var(--motion-arrow) var(--ease-arrow),
-				color var(--motion-arrow) var(--ease-arrow);
 		}
 
-		/* The CARD's hover, not the circle's. Pointing anywhere on the card fills
-		   the circle and runs the arrow swap, because the arrow is part of what
-		   the card does rather than a second thing to find. Filling inverts the
-		   pair — sand ring on green becomes a sand disc with a green glyph. */
+		/* Three states, and they are deliberately different sizes of gesture.
+
+		   Card hovered: an outer ring appears around the circle. Nothing else —
+		   the arrow does not move and the circle does not fill, because the
+		   pointer is not on it yet.
+
+		   Arrow hovered: that ring grows a little, the circle fills, and the
+		   arrow runs its swap. Moving back off the arrow while staying on the
+		   card shrinks the ring to where it was.
+
+		   The ring is a box-shadow rather than a second element: it costs
+		   nothing in markup and it animates from the circle's own edge. */
+		.tcard__arrow {
+			/* Sand, not currentcolor: the glyph's colour flips to green when the
+			   circle fills, and a green ring on a green card is no ring at all. */
+			box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-bg-sand) 0%, transparent);
+			transition:
+				background-color var(--motion-arrow) var(--ease-arrow),
+				color var(--motion-arrow) var(--ease-arrow),
+				box-shadow var(--motion-hover) var(--ease-hover);
+		}
+
 		.tcard:hover .tcard__arrow {
+			box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-bg-sand) 26%, transparent);
+		}
+
+		/* Both selectors, so this out-ranks the card rule above — `.tcard:hover
+		   .tcard__arrow` is three components and `.tcard__arrow:hover` alone is
+		   only two, so on its own it lost and the ring never grew. */
+		.tcard:hover .tcard__arrow:hover,
+		.tcard__arrow:hover {
+			box-shadow: 0 0 0 9px color-mix(in srgb, var(--color-bg-sand) 22%, transparent);
 			background: var(--color-bg-sand);
 			color: var(--color-brand-green);
 		}

@@ -15,14 +15,23 @@
  *      user can already see would flash it.
  *   3. Otherwise arm synchronously, in the action body: hidden opacity + a small upward
  *      offset, set before the next paint.
- *   4. Release on `load` (next frame) or on first intersection for `view` (the default) —
- *      one observer, fires once, disconnects.
- *   5. Releasing plays the fade/rise, then clears the values once it finishes so the element
- *      is left at its natural, unstyled state.
- *   6. Once the fade ends (backed by a timeout, since a never-painted element never fires a
- *      finish event), strip every inline style this action set. A leftover `transform` makes
- *      the element a containing block for any `position: fixed`/`sticky` descendant, which
- *      would silently break that positioning elsewhere on the page.
+ *   4. Release on `load` (next frame) or on first intersection for `view` (the default).
+ *   5. Releasing plays the fade/rise, then strips the `transform` once it finishes. A
+ *      leftover `transform` makes the element a containing block for any `position:
+ *      fixed`/`sticky` descendant, which would silently break that positioning elsewhere
+ *      on the page. Backed by a timeout, since a never-painted element never fires a
+ *      finish event.
+ *   6. From then on the observer STAYS, and opacity follows the viewport in both
+ *      directions: the element fades out as it leaves and fades back in when it returns.
+ *      Only opacity — the rise is a one-time entrance, and re-animating `transform` would
+ *      reintroduce the compositing-layer problem described below.
+ *
+ * The band is inset from the real viewport (see BAND_TOP / BAND_BOTTOM), so the fade starts
+ * while the element is still on screen rather than at the instant it clips. That is the whole
+ * point of it: something sliding off the top edge at full opacity reads as the page cutting
+ * it off, and the same element easing out reads as the page moving on.
+ *
+ * Never applied to the hero: it has its own entrance and no exit at all.
  *
  * Implementation notes:
  *
@@ -74,6 +83,23 @@ const FADE_EASING = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
 const RISE_EASING = 'cubic-bezier(0.16, 1, 0.3, 1)';
 const RISE_DURATION = 1100;
 
+/* How far in from each edge the band sits. The top is the one that matters: it is what makes
+   an element fade WHILE it is still visible on the way up rather than at the moment it
+   clips. The bottom stays close to the real edge so nothing arrives late.
+
+   22% is roughly 200px on a laptop, which puts the trigger just under the fixed nav — so
+   things dim as they pass behind it rather than in the middle of the page. Note that with
+   threshold 0 the element has to leave the band ENTIRELY, so a tall section starts fading
+   later than a short one; that reads correctly, because a tall section is still mostly on
+   screen at that point. */
+const BAND_TOP = '-22%';
+const BAND_BOTTOM = '-80px';
+
+/* Leaving is quicker than arriving. A slow fade-out on scroll feels like lag; a slow fade-in
+   feels like the section settling. */
+const EXIT_DURATION = 450;
+const RETURN_DURATION = 600;
+
 export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 	// matchMedia is guarded, not assumed. Svelte actions do not run during SSR, but they DO run
 	// under component unit tests, and a bare jsdom environment has no matchMedia — an unguarded
@@ -90,19 +116,22 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 		return;
 	}
 
-	const rect = node.getBoundingClientRect();
-	if (rect.top < window.innerHeight) {
-		return;
-	}
-
 	const { delay, duration, distance, trigger } = { ...DEFAULTS, ...options };
 	const hasRise = distance > 0;
 
+	/* Already on screen when this runs (hydration happens after the prerendered HTML has
+	   painted), so there is nothing to arm — showing it would only flash it. It still gets
+	   the observer below, because it will leave the viewport eventually. */
+	const rect = node.getBoundingClientRect();
+	const armed = rect.top >= window.innerHeight;
+
 	// Arm synchronously, before the next paint. Plain property writes — independent of
 	// whatever the element's own `transition`/`animation` CSS is doing.
-	node.style.opacity = '0';
-	if (hasRise) {
-		node.style.transform = `translate3d(0, ${distance}px, 0)`;
+	if (armed) {
+		node.style.opacity = '0';
+		if (hasRise) {
+			node.style.transform = `translate3d(0, ${distance}px, 0)`;
+		}
 	}
 
 	let observer: IntersectionObserver | null = null;
@@ -110,26 +139,51 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 	let releaseFrame: number | null = null;
 	let fadeAnimation: Animation | null = null;
 	let riseAnimation: Animation | null = null;
-	let cleaned = false;
+	let driftAnimation: Animation | null = null;
+	let released = false;
+	let shown = !armed;
 
-	function cleanup() {
-		if (cleaned) return;
-		cleaned = true;
+	/** Ends the entrance: strips the transform, keeps opacity under our control. */
+	function settle() {
 		if (cleanupTimer !== null) {
 			clearTimeout(cleanupTimer);
 			cleanupTimer = null;
 		}
-		fadeAnimation?.removeEventListener('finish', cleanup);
+		fadeAnimation?.removeEventListener('finish', settle);
 		fadeAnimation?.cancel();
 		riseAnimation?.cancel();
 		fadeAnimation = null;
 		riseAnimation = null;
-		node.style.removeProperty('opacity');
+		/* The transform has to go — while it is set, this element is a containing block for
+		   any fixed or sticky descendant. Opacity stays: it is what the drift below animates,
+		   and an inline `opacity: 1` costs nothing. */
 		node.style.removeProperty('transform');
 		node.style.removeProperty('will-change');
+		node.style.opacity = '1';
+	}
+
+	/** The ongoing in/out fade, once the entrance is done. Opacity only. */
+	function driftTo(value: number, duration: number) {
+		if (shown === (value === 1)) return;
+		shown = value === 1;
+		driftAnimation?.cancel();
+		const from = Number(node.style.opacity || (value === 1 ? 0 : 1));
+		driftAnimation = node.animate([{ opacity: from }, { opacity: value }], {
+			duration,
+			easing: FADE_EASING,
+			fill: 'forwards'
+		});
+		driftAnimation.addEventListener('finish', () => {
+			node.style.opacity = String(value);
+			driftAnimation?.cancel();
+			driftAnimation = null;
+		});
 	}
 
 	function release() {
+		if (released) return;
+		released = true;
+		shown = true;
 		// Two independent Web Animations, not one — the fade and the rise want different
 		// curves and durations (see Hero.svelte's cascade for the same reasoning). Neither
 		// touches the CSS `transition` property, so this can never collide with a
@@ -155,10 +209,10 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 			);
 		}
 
-		fadeAnimation.addEventListener('finish', cleanup);
+		fadeAnimation.addEventListener('finish', settle);
 		// A `finish` event never fires for an animation that's never painted (e.g. the tab
 		// is backgrounded before the element is shown), so back it with a timeout.
-		cleanupTimer = setTimeout(cleanup, delay + duration + 100);
+		cleanupTimer = setTimeout(settle, delay + duration + 100);
 	}
 
 	if (trigger === 'load') {
@@ -166,21 +220,31 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 			releaseFrame = null;
 			release();
 		});
-	} else {
-		observer = new IntersectionObserver(
-			(entries) => {
-				for (const entry of entries) {
-					if (entry.isIntersecting) {
-						observer?.disconnect();
-						observer = null;
-						release();
-						break;
-					}
+	}
+
+	/* One observer for the whole life of the element, not one that fires once and
+	   disconnects. The first intersection releases the entrance; every one after that is the
+	   element crossing the band's edge, in either direction. */
+	observer = new IntersectionObserver(
+		(entries) => {
+			for (const entry of entries) {
+				if (entry.isIntersecting) {
+					if (!released) release();
+					else driftTo(1, RETURN_DURATION);
+				} else if (released) {
+					driftTo(0, EXIT_DURATION);
 				}
-			},
-			{ threshold: 0, rootMargin: '0px 0px -80px 0px' }
-		);
-		observer.observe(node);
+			}
+		},
+		{ threshold: 0, rootMargin: `${BAND_TOP} 0px ${BAND_BOTTOM} 0px` }
+	);
+	observer.observe(node);
+
+	/* An element that starts on screen never had an entrance to release, so mark it done and
+	   let the observer drive it from here. */
+	if (!armed) {
+		released = true;
+		node.style.opacity = '1';
 	}
 
 	return {
@@ -189,9 +253,10 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 			observer = null;
 			if (releaseFrame !== null) cancelAnimationFrame(releaseFrame);
 			if (cleanupTimer !== null) clearTimeout(cleanupTimer);
-			fadeAnimation?.removeEventListener('finish', cleanup);
+			fadeAnimation?.removeEventListener('finish', settle);
 			fadeAnimation?.cancel();
 			riseAnimation?.cancel();
+			driftAnimation?.cancel();
 		}
 	};
 }

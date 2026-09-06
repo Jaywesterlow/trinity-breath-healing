@@ -13,50 +13,32 @@
 	   does not tint, it fills, the way the channel's own buttons do everywhere
 	   else on the web. `ink` is the glyph drawn on that fill.
 
-	   Two sets, because no single official value works on both of this site's
-	   grounds. WhatsApp's #25D366 is 4.75:1 on the green surfaces but 1.76:1 on
-	   sand, so the light ground gets WhatsApp's own darker teal instead. Every
-	   value below is from the channel's published palette, never a tint invented
-	   here, and every glyph clears 3:1 against the fill it sits on. */
+	   ONE set, for both grounds. There used to be a second, lighter set for the
+	   footer, on the reasoning that a dark fill would not separate from the
+	   green behind it — but that gave the footer forest-coloured glyphs where
+	   the contact panel had sand ones, and the two rows of the same three icons
+	   stopped matching. The fill is a hover state; the resting icon is what has
+	   to carry contrast, and sand on the footer's green is 4.50:1. So: the same
+	   fills and the same sand glyph in both places, each clearing 3:1 against
+	   the fill it sits on.
+
+	   Every value is from the channel's published palette, never a tint invented
+	   here. */
 	type Paint = { fill: string; ink: string };
 
 	const SAND = 'var(--color-bg-sand)';
-	const FOREST = 'var(--color-fg-forest)';
-	const WHITE = '#ffffff';
 
-	const ON_LIGHT: Partial<Record<IconKey, Paint>> = {
+	const PAINT: Partial<Record<IconKey, Paint>> = {
 		whatsapp: { fill: '#128c7e', ink: SAND }, // WhatsApp "Surfie Green" — 3.68:1
-		mail: { fill: '#127cd6', ink: SAND }, // Outlook Blue — 3.83:1 fill, 3.83:1 glyph
+		mail: { fill: '#127cd6', ink: SAND }, // Outlook Blue — 3.83:1
 		instagram: {
-			// The half of Instagram's published ramp a light ground can show:
-			// sand on these three is 4.5–5.8:1, where the gold end is 1.2:1.
-			fill: 'linear-gradient(135deg, #405de6, #833ab4, #c13584)',
+			// Instagram's own ramp, bottom-left to top-right. The gold end is
+			// dropped: sand on it is 1.2:1, and the glyph would disappear into
+			// exactly the corner it sits over. These three carry it at 4.5–5.8:1.
+			fill: 'linear-gradient(45deg, #c13584 0%, #833ab4 55%, #405de6 100%)',
 			ink: SAND
 		},
 		x: { fill: '#000000', ink: SAND },
-		facebook: { fill: '#1877f2', ink: SAND }
-	};
-
-	const ON_DARK: Partial<Record<IconKey, Paint>> = {
-		whatsapp: { fill: '#25d366', ink: FOREST }, // WhatsApp primary green — 4.75:1
-		// Malibu Blue, from Outlook's own palette. Outlook Blue is 1.18:1 against
-		// --color-brand-green, so the filled circle would not separate from the
-		// footer at all; this one is 3.07:1 with a 5.70:1 glyph on it.
-		mail: { fill: '#50d9ff', ink: FOREST },
-		instagram: {
-			// Instagram's actual icon: the full ramp running bottom-left to
-			// top-right — gold, orange, magenta, purple, blue — with a white
-			// glyph, which is the combination the app icon itself uses. The half
-			// ramp that was here read as a sunset rather than as Instagram.
-			//
-			// White is 4.7–6.1:1 across the magenta/purple/blue the glyph
-			// actually sits on, and 1.35:1 only in the gold corner behind its
-			// lower-left stroke. The resting state carries the 3:1 this needs
-			// (sand on the footer's green is 4.50:1); this is the hover.
-			fill: 'linear-gradient(45deg, #feda75 0%, #fa7e1e 25%, #d62976 50%, #962fbf 75%, #4f5bd5 100%)',
-			ink: WHITE
-		},
-		x: { fill: '#ffffff', ink: FOREST },
 		facebook: { fill: '#1877f2', ink: SAND }
 	};
 
@@ -66,7 +48,6 @@
 		label,
 		color = 'currentColor',
 		background = 'transparent',
-		ground = 'light',
 		newTab = true,
 		tooltip
 	}: {
@@ -75,9 +56,6 @@
 		label: string;
 		color?: string;
 		background?: string;
-		/** Which ground this sits on, so the fill picked for hover is the variant
-		    that stays visible against it. */
-		ground?: 'light' | 'dark';
 		/** mailto: and tel: hand off to another app — opening a blank tab first
 		    leaves the visitor staring at an empty window. */
 		newTab?: boolean;
@@ -86,9 +64,7 @@
 		tooltip?: string;
 	} = $props();
 
-	const paint = $derived(
-		(ground === 'dark' ? ON_DARK : ON_LIGHT)[icon] ?? { fill: 'transparent', ink: 'currentColor' }
-	);
+	const paint = $derived(PAINT[icon] ?? { fill: 'transparent', ink: 'currentColor' });
 </script>
 
 <a
@@ -119,6 +95,7 @@
 		border-radius: 50%;
 		transition:
 			transform var(--motion-hover) var(--ease-hover),
+			background var(--motion-social) var(--ease-out),
 			color var(--motion-social) var(--ease-out);
 	}
 
@@ -139,19 +116,28 @@
 		padding: 0.4375rem; /* 7px */
 		border-radius: var(--radius-full);
 		border: 1px solid color-mix(in srgb, currentcolor 32%, transparent);
+		/* Needed: the WhatsApp glyph is drawn slightly outside its own 40-unit
+		   box. It is also why the fill cannot live on this element — an <svg>
+		   with overflow: visible does not clip its own background to its
+		   border-radius, which is what gave the Instagram circle its sheared
+		   top-right and bottom-left edges. The fill sits on the <a> instead. */
 		overflow: visible;
 		transition:
-			background var(--motion-social) var(--ease-out),
 			border-color var(--motion-social) var(--ease-out),
 			color var(--motion-social) var(--ease-out);
 	}
 
 	/* The circle fills with the channel's colour and the glyph flips to whatever
 	   reads on it — Instagram's fill is a gradient, which is why this is a CSS
-	   background rather than an SVG paint server. */
+	   background rather than an SVG paint server. The fill is on the <a>, the
+	   glyph and its hairline on the <svg> inside it. */
+	.social-icon:hover,
+	.social-icon:focus-visible {
+		background: var(--social-fill);
+	}
+
 	.social-icon:hover svg,
 	.social-icon:focus-visible svg {
-		background: var(--social-fill);
 		border-color: transparent;
 		color: var(--social-ink);
 	}

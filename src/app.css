@@ -254,6 +254,10 @@
 	--color-underline-idle: #7e7972;
 	/* How long the second stage waits, so the first one is seen at all. */
 	--underline-stage-delay: 130ms;
+	/* The FAQ's disclosure glyph, in the cursor: growing out of the arrowhead and
+	   turning + into ×. Slower than everything else the cursor does, because it
+	   is the one shape carrying a message rather than an affordance. */
+	--motion-toggle: 460ms;
 	/* The social icons taking on their channel's own colour. Slower than a plain
 	   hover because it is a hue change rather than a movement, and a fast one
 	   reads as a flicker. */

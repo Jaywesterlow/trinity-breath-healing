@@ -2,10 +2,15 @@
 	/**
 	 * The line under the treatments carousel.
 	 *
-	 * One paragraph, centred, with a lot of air around it — a breath between the
+	 * One paragraph, centred, with a lot of air around it. A breath between the
 	 * seven services above and the contact section below, and a place to say the
 	 * thing the cards cannot: that the list is not a menu to choose from on your
 	 * own.
+	 *
+	 * Two sentences, one long and one short. The first draft ran twice this
+	 * length and carried every tell going: a negative parallelism ("geen vast
+	 * programma, wel een vaste basis"), a rule of three ("rust, veiligheid en de
+	 * tijd om te landen"), and an em dash in the middle of the thought.
 	 *
 	 * Deliberately not a heading. It is body copy set large, so it reads as
 	 * something being said rather than as another section opening, and the
@@ -16,9 +21,8 @@
 
 <section class="note" aria-label="Over de behandelingen">
 	<p class="note__text" use:reveal={{ delay: 0 }}>
-		Welke behandeling bij je past, hoef je niet zelf uit te zoeken. In een eerste gesprek kijken we
-		samen wat er speelt en wat je lijf op dat moment aankan — en van daaruit kiezen we. Geen vast
-		programma, wel een vaste basis: rust, veiligheid en de tijd om te landen.
+		Je hoeft niet te weten welke behandeling je nodig hebt. Dat zoeken we in het eerste gesprek
+		samen uit.
 	</p>
 </section>
 

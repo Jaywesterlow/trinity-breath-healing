@@ -27,6 +27,10 @@ export const BRAND = {
 	/** E.164 for the tel: link; `phoneDisplay` is what a visitor reads. */
 	phone: '+31624244585',
 	phoneDisplay: '06 24 24 45 85',
+	/** PLACEHOLDER — the hours she actually wants to be called between. Shown in
+	    the cursor over the footer's phone number and nowhere else yet, so this
+	    is the one line to change. */
+	phoneHours: '09:00 en 17:00',
 
 	/** KvK and BTW, supplied 2026-08-24. Both belong on the legal pages and in
 	    the Organization JSON-LD — a Dutch business is expected to publish them,
