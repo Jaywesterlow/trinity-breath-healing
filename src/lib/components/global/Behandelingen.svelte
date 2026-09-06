@@ -2346,10 +2346,16 @@
 		--swap-x: var(--arrow-roll);
 	}
 
-	.treatments__nav:hover,
 	.treatments__nav:focus-visible {
 		background: var(--brand-border);
 		color: var(--color-bg-sand);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.treatments__nav:hover {
+			background: var(--brand-border);
+			color: var(--color-bg-sand);
+		}
 	}
 
 	.treatments__dots {

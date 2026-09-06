@@ -56,8 +56,10 @@
 		text-decoration: underline;
 	}
 
-	a:hover {
-		text-decoration: none;
+	@media (hover: hover) and (pointer: fine) {
+		a:hover {
+			text-decoration: none;
+		}
 	}
 
 	span[aria-current='page'] {

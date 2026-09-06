@@ -404,8 +404,10 @@
 		transition: background-color 150ms; /* was var(--motion-fast) */
 	}
 
-	.carousel__nav:hover {
-		background: #5f6d56; /* was var(--brand-muted) */
+	@media (hover: hover) and (pointer: fine) {
+		.carousel__nav:hover {
+			background: #5f6d56; /* was var(--brand-muted) */
+		}
 	}
 
 	.carousel__dots {

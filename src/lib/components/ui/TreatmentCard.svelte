@@ -425,18 +425,22 @@
 				box-shadow var(--motion-hover) var(--ease-hover);
 		}
 
-		.tcard:hover .tcard__arrow {
-			box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-bg-sand) 26%, transparent);
+		@media (hover: hover) and (pointer: fine) {
+			.tcard:hover .tcard__arrow {
+				box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-bg-sand) 26%, transparent);
+			}
 		}
 
 		/* Both selectors, so this out-ranks the card rule above — `.tcard:hover
 		   .tcard__arrow` is three components and `.tcard__arrow:hover` alone is
 		   only two, so on its own it lost and the ring never grew. */
-		.tcard:hover .tcard__arrow:hover,
-		.tcard__arrow:hover {
-			box-shadow: 0 0 0 9px color-mix(in srgb, var(--color-bg-sand) 22%, transparent);
-			background: var(--color-bg-sand);
-			color: var(--color-brand-green);
+		@media (hover: hover) and (pointer: fine) {
+			.tcard:hover .tcard__arrow:hover,
+			.tcard__arrow:hover {
+				box-shadow: 0 0 0 9px color-mix(in srgb, var(--color-bg-sand) 22%, transparent);
+				background: var(--color-bg-sand);
+				color: var(--color-brand-green);
+			}
 		}
 
 		.tcard__arrow svg {

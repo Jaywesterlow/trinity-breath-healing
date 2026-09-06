@@ -96,9 +96,11 @@
 			box-shadow var(--motion-hover) var(--ease-hover);
 	}
 
-	.error__cta:hover {
-		transform: translateY(var(--lift-hover));
-		box-shadow: var(--shadow-hover);
+	@media (hover: hover) and (pointer: fine) {
+		.error__cta:hover {
+			transform: translateY(var(--lift-hover));
+			box-shadow: var(--shadow-hover);
+		}
 	}
 
 	.error__link {
@@ -122,8 +124,13 @@
 		transition: transform var(--motion-hover) var(--ease-hover);
 	}
 
-	.error__link:hover::after,
 	.error__link:focus-visible::after {
 		transform: scaleX(1);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.error__link:hover::after {
+			transform: scaleX(1);
+		}
 	}
 </style>

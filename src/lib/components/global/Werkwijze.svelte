@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import WerkwijzeCard from '$lib/components/ui/WerkwijzeCard.svelte';
-	import { reveal } from '$lib/actions/reveal';
+	import { REVEAL_ROOT_MARGIN, reveal } from '$lib/actions/reveal';
 
 	// Centerline traces of the card art. Regenerate with .planning/quick/20260713-hero-draw-on/trace/.
 	//
@@ -76,7 +76,7 @@
 			(entries) => {
 				for (const entry of entries) cardsGone = !entry.isIntersecting;
 			},
-			{ threshold: 0, rootMargin: '-22% 0px -80px 0px' }
+			{ threshold: 0, rootMargin: REVEAL_ROOT_MARGIN }
 		);
 		observer.observe(row);
 		return () => observer.disconnect();

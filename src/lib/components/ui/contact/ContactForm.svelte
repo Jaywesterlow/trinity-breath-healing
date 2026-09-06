@@ -318,7 +318,6 @@
 	   An inset shadow is the one thing that paints inside the border box and
 	   follows its radius, so it covers Chrome's fill instead of fighting it. */
 	.field__input:-webkit-autofill,
-	.field__input:-webkit-autofill:hover,
 	.field__input:-webkit-autofill:focus {
 		-webkit-box-shadow: 0 0 0 3rem var(--panel-bg) inset;
 		-webkit-text-fill-color: var(--color-fg-forest);
@@ -326,9 +325,23 @@
 		transition: background-color 100000s ease-in-out 0s;
 	}
 
-	.field__input:hover,
+	@media (hover: hover) and (pointer: fine) {
+		.field__input:-webkit-autofill:hover {
+			-webkit-box-shadow: 0 0 0 3rem var(--panel-bg) inset;
+			-webkit-text-fill-color: var(--color-fg-forest);
+			caret-color: var(--color-fg-forest);
+			transition: background-color 100000s ease-in-out 0s;
+		}
+	}
+
 	.field__input:focus {
 		border-color: var(--brand-border);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.field__input:hover {
+			border-color: var(--brand-border);
+		}
 	}
 
 	.field__input:focus-visible {
@@ -369,9 +382,14 @@
 		min-height: 3rem; /* 48px — matches the other inputs */
 	}
 
-	.phone:hover,
 	.phone:focus-within {
 		border-color: var(--brand-border);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.phone:hover {
+			border-color: var(--brand-border);
+		}
 	}
 
 	.phone--invalid {
@@ -393,11 +411,18 @@
 		flex: 1 1 auto;
 	}
 
-	.phone__input:hover,
 	.phone__input:focus-visible {
 		background: transparent;
 		box-shadow: none;
 		border-color: transparent;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.phone__input:hover {
+			background: transparent;
+			box-shadow: none;
+			border-color: transparent;
+		}
 	}
 
 	/* .planner__error. */
@@ -473,9 +498,11 @@
 		transition: transform var(--motion-hover) var(--ease-hover);
 	}
 
-	.form__submit:hover:not(:disabled) {
-		transform: translateY(var(--lift-hover));
-		box-shadow: var(--shadow-hover);
+	@media (hover: hover) and (pointer: fine) {
+		.form__submit:hover:not(:disabled) {
+			transform: translateY(var(--lift-hover));
+			box-shadow: var(--shadow-hover);
+		}
 	}
 
 	.form__submit:active:not(:disabled) {

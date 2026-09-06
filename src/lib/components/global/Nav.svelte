@@ -342,9 +342,14 @@
 			background: var(--color-fg-forest);
 		}
 
-		.nav__link:hover::before,
 		.nav__link:focus-visible::before {
 			transform: scaleX(1);
+		}
+
+		@media (hover: hover) and (pointer: fine) {
+			.nav__link:hover::before {
+				transform: scaleX(1);
+			}
 		}
 
 		.nav__link--active {

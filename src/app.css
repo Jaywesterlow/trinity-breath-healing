@@ -498,17 +498,28 @@ h6 {
 	background: currentColor;
 }
 
-.link-underline:hover::after,
 .link-underline:focus-visible::after {
 	transition-delay: var(--underline-stage-delay);
 }
 
-.link-underline:hover::before,
-.link-underline:hover::after,
+@media (hover: hover) and (pointer: fine) {
+	.link-underline:hover::after {
+		transition-delay: var(--underline-stage-delay);
+	}
+}
+
 .link-underline:focus-visible::before,
 .link-underline:focus-visible::after {
 	transform: scaleX(1);
 	transform-origin: left center;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.link-underline:hover::before,
+	.link-underline:hover::after {
+		transform: scaleX(1);
+		transform-origin: left center;
+	}
 }
 
 /* Permanently drawn, and not animated: the current page in a nav, or a link in
@@ -563,18 +574,28 @@ h6 {
 	transition: transform var(--motion-arrow) var(--ease-arrow);
 }
 
-.roll-host:hover .text-roll__face,
 .roll-host:focus-visible .text-roll__face {
 	transform: translateY(calc(-1 * var(--btn-text-travel)));
 }
 
-.roll-host:hover .text-roll::after,
-.roll-host:focus-visible .text-roll::after,
+@media (hover: hover) and (pointer: fine) {
+	.roll-host:hover .text-roll__face {
+		transform: translateY(calc(-1 * var(--btn-text-travel)));
+	}
+}
+
 /* Same element carrying both classes — the pill in a contact card is its own
    hover target, so there is no wrapper for the descendant form to match. */
-.text-roll.roll-host:hover::after,
+.roll-host:focus-visible .text-roll::after,
 .text-roll.roll-host:focus-visible::after {
 	transform: translateY(0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.roll-host:hover .text-roll::after,
+	.text-roll.roll-host:hover::after {
+		transform: translateY(0);
+	}
 }
 
 /* ─── Two arrows in one circle ───────────────────────────────────────────────
@@ -611,16 +632,28 @@ h6 {
 	transform: translate(calc(-1 * var(--swap-x, 0px)), calc(-1 * var(--swap-y, 0px)));
 }
 
-.roll-host:hover .arrow-swap__glyph--out,
 .roll-host:focus-visible .arrow-swap__glyph--out {
 	opacity: 0;
 	transform: translate(var(--swap-x, 0px), var(--swap-y, 0px));
 }
 
-.roll-host:hover .arrow-swap__glyph--in,
+@media (hover: hover) and (pointer: fine) {
+	.roll-host:hover .arrow-swap__glyph--out {
+		opacity: 0;
+		transform: translate(var(--swap-x, 0px), var(--swap-y, 0px));
+	}
+}
+
 .roll-host:focus-visible .arrow-swap__glyph--in {
 	opacity: 1;
 	transform: translate(0, 0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.roll-host:hover .arrow-swap__glyph--in {
+		opacity: 1;
+		transform: translate(0, 0);
+	}
 }
 
 /* The native cursor is replaced by the arrowhead in CursorTooltip.svelte, so

@@ -131,19 +131,35 @@
 	   reads on it — Instagram's fill is a gradient, which is why this is a CSS
 	   background rather than an SVG paint server. The fill is on the <a>, the
 	   glyph and its hairline on the <svg> inside it. */
-	.social-icon:hover,
 	.social-icon:focus-visible {
 		background: var(--social-fill);
 	}
 
-	.social-icon:hover svg,
+	@media (hover: hover) and (pointer: fine) {
+		.social-icon:hover {
+			background: var(--social-fill);
+		}
+	}
+
 	.social-icon:focus-visible svg {
 		border-color: transparent;
 		color: var(--social-ink);
 	}
 
-	.social-icon:hover,
+	@media (hover: hover) and (pointer: fine) {
+		.social-icon:hover svg {
+			border-color: transparent;
+			color: var(--social-ink);
+		}
+	}
+
 	.social-icon:focus-visible {
 		transform: translateY(var(--lift-hover));
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.social-icon:hover {
+			transform: translateY(var(--lift-hover));
+		}
 	}
 </style>

@@ -380,10 +380,16 @@
 	/* The pill's own hover, not the card's: standing anywhere on the card used to
 	   light it up, which made it look pressed before the pointer had reached it.
 	   The card is still the click target — this only governs how the pill looks. */
-	.route__cta:hover,
 	.route:focus-visible .route__cta {
 		background: var(--color-bg-sand);
 		color: var(--brand-border);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.route__cta:hover {
+			background: var(--color-bg-sand);
+			color: var(--brand-border);
+		}
 	}
 
 	/* The pill answers its own pointer through .roll-host (app.css). Keyboard

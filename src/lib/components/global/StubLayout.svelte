@@ -59,7 +59,9 @@
 		text-decoration: underline;
 	}
 
-	.stub-coming-soon a:hover {
-		text-decoration: none;
+	@media (hover: hover) and (pointer: fine) {
+		.stub-coming-soon a:hover {
+			text-decoration: none;
+		}
 	}
 </style>

@@ -177,8 +177,10 @@
 		transition: background-color var(--motion-hover) var(--ease-hover);
 	}
 
-	.prefix__button:hover {
-		background: color-mix(in srgb, var(--brand-border) 8%, transparent);
+	@media (hover: hover) and (pointer: fine) {
+		.prefix__button:hover {
+			background: color-mix(in srgb, var(--brand-border) 8%, transparent);
+		}
 	}
 
 	.prefix__button:focus-visible {

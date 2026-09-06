@@ -139,15 +139,23 @@
 	/* The pill swallows the circle: same fill, same border colour, so the two
 	   stop reading as a shape plus a ring and become one shape. The -2px overlap
 	   above is what closes the seam. */
-	.btn-link:hover .btn-link__circle,
 	.btn-link:focus-visible .btn-link__circle {
 		background: var(--btn-arrow-fill, var(--brand-border));
 		color: var(--btn-arrow-ink, var(--color-bg-sand));
 	}
 
-	.btn-link:hover {
-		transform: translateY(var(--lift-hover));
-		box-shadow: var(--shadow-hover);
+	@media (hover: hover) and (pointer: fine) {
+		.btn-link:hover .btn-link__circle {
+			background: var(--btn-arrow-fill, var(--brand-border));
+			color: var(--btn-arrow-ink, var(--color-bg-sand));
+		}
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.btn-link:hover {
+			transform: translateY(var(--lift-hover));
+			box-shadow: var(--shadow-hover);
+		}
 	}
 
 	.btn-link:active {
@@ -173,9 +181,15 @@
 	   and the circle arrive at the same colour together. Its ink is the deepened
 	   forest, not the plain one: a *label* on gold-soft needs 4.5:1, which plain
 	   forest misses. */
-	.btn-link--outline:hover .btn-link__label,
 	.btn-link--outline:focus-visible .btn-link__label {
 		background: var(--color-accent-gold-soft);
 		color: var(--color-fg-forest-deep);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.btn-link--outline:hover .btn-link__label {
+			background: var(--color-accent-gold-soft);
+			color: var(--color-fg-forest-deep);
+		}
 	}
 </style>

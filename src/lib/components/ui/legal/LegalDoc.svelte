@@ -130,8 +130,10 @@
 		text-decoration: underline;
 	}
 
-	.legal__body :global(a:hover) {
-		text-decoration: none;
+	@media (hover: hover) and (pointer: fine) {
+		.legal__body :global(a:hover) {
+			text-decoration: none;
+		}
 	}
 
 	.legal__body :global(dl) {

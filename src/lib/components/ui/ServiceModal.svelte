@@ -291,14 +291,18 @@
 		transition: background-color var(--motion-fast);
 	}
 
-	.service-modal__close:hover {
-		background: var(--color-fg-forest-92);
+	@media (hover: hover) and (pointer: fine) {
+		.service-modal__close:hover {
+			background: var(--color-fg-forest-92);
+		}
 	}
 
 	/* Bare arrows, no circle/border — opacity is the only hover affordance
 	   left once the circle (and its own hover background) is gone. */
-	.service-modal__nav:hover {
-		opacity: 0.65;
+	@media (hover: hover) and (pointer: fine) {
+		.service-modal__nav:hover {
+			opacity: 0.65;
+		}
 	}
 
 	/* Vertically centred against the dialog's own left/right edge, per the plan. */

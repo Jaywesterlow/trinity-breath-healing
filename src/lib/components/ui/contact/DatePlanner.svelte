@@ -987,8 +987,10 @@
 		height: 0.9375rem;
 	}
 
-	.planner__nav:hover:not(:disabled) {
-		opacity: 0.7;
+	@media (hover: hover) and (pointer: fine) {
+		.planner__nav:hover:not(:disabled) {
+			opacity: 0.7;
+		}
 	}
 
 	.planner__nav:disabled {
@@ -1052,14 +1054,22 @@
 		cursor: default;
 	}
 
-	.planner__day--open:hover {
-		background: color-mix(in srgb, var(--brand-border) 12%, transparent);
+	@media (hover: hover) and (pointer: fine) {
+		.planner__day--open:hover {
+			background: color-mix(in srgb, var(--brand-border) 12%, transparent);
+		}
 	}
 
-	.planner__day--open.planner__day--selected,
-	.planner__day--open.planner__day--selected:hover {
+	.planner__day--open.planner__day--selected {
 		background: var(--brand-border);
 		color: var(--color-bg-sand);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.planner__day--open.planner__day--selected:hover {
+			background: var(--brand-border);
+			color: var(--color-bg-sand);
+		}
 	}
 
 	/* ─── Step 2 sheet ─── */
@@ -1168,18 +1178,27 @@
 	   class, a pseudo-class and a :not() — it outranks .planner__time--selected on its
 	   own, so without this the pressed state's brown fill was quietly overpainted by
 	   the 10% hover wash for the whole half-second it is meant to be visible. */
-	.planner__time:hover:not([aria-disabled='true']):not(.planner__time--selected) {
-		background: color-mix(in srgb, var(--brand-border) 10%, transparent);
+	@media (hover: hover) and (pointer: fine) {
+		.planner__time:hover:not([aria-disabled='true']):not(.planner__time--selected) {
+			background: color-mix(in srgb, var(--brand-border) 10%, transparent);
+		}
 	}
 
 	/* The pressed state, and the half-second the card waits on before moving to the
 	   details step: the tile fills with brown and the label inverts to sand (7.02:1),
 	   so the press is legible for as long as it is on screen. */
-	.planner__time--selected,
-	.planner__time--selected:hover {
+	.planner__time--selected {
 		background: var(--brand-border);
 		border-color: var(--brand-border);
 		color: var(--color-bg-sand);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.planner__time--selected:hover {
+			background: var(--brand-border);
+			border-color: var(--brand-border);
+			color: var(--color-bg-sand);
+		}
 	}
 
 	.planner__time--taken {
@@ -1274,7 +1293,6 @@
 	   An inset shadow is the one thing that paints inside the border box and
 	   follows its radius, so it covers Chrome's fill instead of fighting it. */
 	.planner__input:-webkit-autofill,
-	.planner__input:-webkit-autofill:hover,
 	.planner__input:-webkit-autofill:focus {
 		-webkit-box-shadow: 0 0 0 3rem var(--panel-bg) inset;
 		-webkit-text-fill-color: var(--color-fg-forest);
@@ -1282,9 +1300,23 @@
 		transition: background-color 100000s ease-in-out 0s;
 	}
 
-	.planner__input:hover,
+	@media (hover: hover) and (pointer: fine) {
+		.planner__input:-webkit-autofill:hover {
+			-webkit-box-shadow: 0 0 0 3rem var(--panel-bg) inset;
+			-webkit-text-fill-color: var(--color-fg-forest);
+			caret-color: var(--color-fg-forest);
+			transition: background-color 100000s ease-in-out 0s;
+		}
+	}
+
 	.planner__input:focus {
 		border-color: var(--brand-border);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.planner__input:hover {
+			border-color: var(--brand-border);
+		}
 	}
 
 	.planner__input--area {
@@ -1373,8 +1405,10 @@
 		transition: transform var(--motion-hover) var(--ease-hover);
 	}
 
-	.planner__proceed:hover:not(:disabled) {
-		transform: translateY(var(--lift-hover));
+	@media (hover: hover) and (pointer: fine) {
+		.planner__proceed:hover:not(:disabled) {
+			transform: translateY(var(--lift-hover));
+		}
 	}
 
 	.planner__proceed:active:not(:disabled) {

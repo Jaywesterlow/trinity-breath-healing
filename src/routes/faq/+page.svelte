@@ -50,7 +50,9 @@
 		text-decoration: underline;
 	}
 
-	.faq-intro__text a:hover {
-		text-decoration: none;
+	@media (hover: hover) and (pointer: fine) {
+		.faq-intro__text a:hover {
+			text-decoration: none;
+		}
 	}
 </style>

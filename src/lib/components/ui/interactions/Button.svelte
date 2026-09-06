@@ -41,9 +41,11 @@
 		line-height: 1;
 	}
 
-	.btn:hover {
-		transform: translateY(var(--lift-hover));
-		box-shadow: var(--shadow-hover);
+	@media (hover: hover) and (pointer: fine) {
+		.btn:hover {
+			transform: translateY(var(--lift-hover));
+			box-shadow: var(--shadow-hover);
+		}
 	}
 
 	/* Press cancels the lift — the button meets the finger instead of dodging it. */

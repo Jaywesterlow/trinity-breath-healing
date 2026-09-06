@@ -101,17 +101,30 @@ const FADE_EASING = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
 const RISE_EASING = 'cubic-bezier(0.16, 1, 0.3, 1)';
 const RISE_DURATION = 1100;
 
-/* How far in from each edge the band sits. The top is the one that matters: it is what makes
-   an element fade WHILE it is still visible on the way up rather than at the moment it
-   clips. The bottom stays close to the real edge so nothing arrives late.
+/* How far in from each edge the band sits: the strip of the viewport in which content is
+   held at full opacity. Everything outside it is faded. Both edges are percentages of the
+   viewport height, so the same band means the same thing on a 844px phone and a 1080px
+   laptop — the site is mobile-first and these were tuned there.
 
-   22% is roughly 200px on a laptop, which puts the trigger just under the fixed nav — so
-   things dim as they pass behind it rather than in the middle of the page. Note that with
-   threshold 0 the element has to leave the band ENTIRELY, so a tall section starts fading
-   later than a short one; that reads correctly, because a tall section is still mostly on
-   screen at that point. */
-const BAND_TOP = '-22%';
-const BAND_BOTTOM = '-80px';
+   The top edge is what makes an element fade WHILE it is still visible on the way up
+   rather than at the instant it clips. It was 22%, which on a phone left content sitting
+   at full strength almost until it touched the nav and then fading in a hurry; 34% starts
+   it in the upper third, so the exit reads as the page moving on rather than as a snap.
+
+   The bottom edge is the other half of the same complaint. It was a flat -80px, meaning an
+   element began fading in the moment 80px of it had cleared the bottom edge — on a phone
+   that is most of a heading, so things arrived already lit. 18% (~150px on a phone) holds
+   the fade until the element is properly on screen.
+
+   Note that with threshold 0 the element has to leave the band ENTIRELY, so a tall section
+   starts fading later than a short one; that reads correctly, because a tall section is
+   still mostly on screen at that point. */
+const BAND_TOP = '-34%';
+const BAND_BOTTOM = '-18%';
+
+/** The band as a rootMargin string, for observers outside this action that have to leave
+ *  on the same edge — Werkwijze's staggered card row is the one that does. */
+export const REVEAL_ROOT_MARGIN = `${BAND_TOP} 0px ${BAND_BOTTOM} 0px`;
 
 /* Leaving is quicker than arriving. A slow fade-out on scroll feels like lag; a slow fade-in
    feels like the section settling. */
@@ -248,18 +261,26 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 	/* One observer for the whole life of the element, not one that fires once and
 	   disconnects. The first intersection releases the entrance; every one after that is the
 	   element crossing the band's edge, in either direction. */
+	/* The observer's first callback reports where the element already is, which is not a
+	   transition — nobody scrolled anywhere. An element sitting below the band at load
+	   (visible, but in the bottom fifth of the screen) would otherwise fade out in front of
+	   the reader before it had ever faded in. Snap it instead, and animate from the second
+	   callback on, which is a real crossing. */
+	let firstReport = true;
+
 	observer = new IntersectionObserver(
 		(entries) => {
 			for (const entry of entries) {
 				if (entry.isIntersecting) {
 					if (!released) release();
-					else driftTo(1, RETURN_DURATION);
-				} else if (released) {
-					driftTo(0, EXIT_DURATION);
+					else if (exit) driftTo(1, firstReport ? 0 : RETURN_DURATION);
+				} else if (released && exit) {
+					driftTo(0, firstReport ? 0 : EXIT_DURATION);
 				}
+				firstReport = false;
 			}
 		},
-		{ threshold: 0, rootMargin: `${BAND_TOP} 0px ${BAND_BOTTOM} 0px` }
+		{ threshold: 0, rootMargin: REVEAL_ROOT_MARGIN }
 	);
 	observer.observe(node);
 
