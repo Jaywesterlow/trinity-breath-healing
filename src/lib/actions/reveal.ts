@@ -4,8 +4,9 @@
  * Companion to the hero's pure-CSS cascade (`Hero.svelte`), but the opposite mechanism on
  * purpose: below the fold, arming the hidden state has to happen from JavaScript, because the
  * element hasn't painted yet when the action runs. See the root `HANDOFF.md`, "Above the fold
- * vs below it", for the full reasoning. Never apply this to the hero — it already has its own
- * entrance.
+ * vs below it", for the full reasoning. Never give the hero an entrance from here — it
+ * already has its own. Its text column does use this action, but in `entrance: false` mode:
+ * exit fade only, nothing on the way in.
  *
  * Contract, in order:
  *   1. Under `prefers-reduced-motion: reduce`, bail before touching any style. No inline
@@ -31,7 +32,9 @@
  * point of it: something sliding off the top edge at full opacity reads as the page cutting
  * it off, and the same element easing out reads as the page moving on.
  *
- * Never applied to the hero: it has its own entrance and no exit at all.
+ * The two halves are separable. `entrance: false` is exit-only (the hero's text column);
+ * `exit: false` is entrance-only, for something whose exit is owned one level up (the
+ * Werkwijze cards, which fade as whole cards in a staggered row).
  *
  * Implementation notes:
  *
@@ -70,13 +73,28 @@ export type RevealOptions = {
 	distance?: number;
 	/** 'load' releases on the next frame; 'view' releases on first scroll-into-view. */
 	trigger?: 'load' | 'view';
+	/**
+	 * false = no entrance at all. The element is never armed, never rises and never fades
+	 * in on first sight; it starts exactly as rendered and only ever answers the exit fade
+	 * below. This is the mode the hero's text column uses — its entrance is the pure-CSS
+	 * cascade in Hero.svelte, and all it wants from here is the way out.
+	 */
+	entrance?: boolean;
+	/**
+	 * false = entrance only. The element fades in once and then stops answering the
+	 * viewport. Used where something outside this element owns the exit — a card that
+	 * fades as a whole, say, whose inner lines must not fade a second time inside it.
+	 */
+	exit?: boolean;
 };
 
 const DEFAULTS: Required<RevealOptions> = {
 	delay: 0,
 	duration: 1300,
 	distance: 10,
-	trigger: 'view'
+	trigger: 'view',
+	entrance: true,
+	exit: true
 };
 
 const FADE_EASING = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
@@ -116,14 +134,14 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 		return;
 	}
 
-	const { delay, duration, distance, trigger } = { ...DEFAULTS, ...options };
-	const hasRise = distance > 0;
+	const { delay, duration, distance, trigger, entrance, exit } = { ...DEFAULTS, ...options };
+	const hasRise = entrance && distance > 0;
 
 	/* Already on screen when this runs (hydration happens after the prerendered HTML has
 	   painted), so there is nothing to arm — showing it would only flash it. It still gets
 	   the observer below, because it will leave the viewport eventually. */
 	const rect = node.getBoundingClientRect();
-	const armed = rect.top >= window.innerHeight;
+	const armed = entrance && rect.top >= window.innerHeight;
 
 	// Arm synchronously, before the next paint. Plain property writes — independent of
 	// whatever the element's own `transition`/`animation` CSS is doing.
@@ -167,7 +185,9 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 		if (shown === (value === 1)) return;
 		shown = value === 1;
 		driftAnimation?.cancel();
-		const from = Number(node.style.opacity || (value === 1 ? 0 : 1));
+		const from = Number(
+			node.style.opacity || getComputedStyle(node).opacity || (value === 1 ? 0 : 1)
+		);
 		driftAnimation = node.animate([{ opacity: from }, { opacity: value }], {
 			duration,
 			easing: FADE_EASING,
@@ -215,7 +235,10 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 		cleanupTimer = setTimeout(settle, delay + duration + 100);
 	}
 
-	if (trigger === 'load') {
+	/* Nothing to observe: no entrance to release and no exit to answer. */
+	if (!entrance && !exit) return;
+
+	if (entrance && trigger === 'load') {
 		releaseFrame = requestAnimationFrame(() => {
 			releaseFrame = null;
 			release();
@@ -244,7 +267,10 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 	   let the observer drive it from here. */
 	if (!armed) {
 		released = true;
-		node.style.opacity = '1';
+		/* An exit-only element is left exactly as rendered — writing opacity here would
+		   override whatever its own stylesheet or entrance animation is doing to it. The
+		   first drift reads the computed value instead. */
+		if (entrance) node.style.opacity = '1';
 	}
 
 	return {

@@ -17,7 +17,7 @@
 	 * viewport height — so the 80vh cap is the design's own proportion, and every
 	 * size inside it is a clamp anchored to the Figma value at that reference.
 	 */
-	import { onMount, tick } from 'svelte';
+	import { onDestroy, onMount, tick } from 'svelte';
 	import { fade, fly, slide } from 'svelte/transition';
 	import { cubicOut } from 'svelte/easing';
 	import { BRAND } from '$lib/constants/brand';
@@ -141,6 +141,119 @@
 		viewYear = fresh.year;
 		viewMonth = fresh.month;
 	});
+
+	/**
+	 * The time sheet is a sheet, so on a touch layout it behaves like one: drag
+	 * it down and it goes away, taking you back to the calendar. Desktop has a
+	 * pointer and a "Vorige" control right below, so the handle and the gesture
+	 * are both switched off there rather than being decoration nobody can use.
+	 */
+	const COMPACT_QUERY = '(max-width: 1023px)';
+	let compact = $state(false);
+
+	onMount(() => {
+		const mq = matchMedia(COMPACT_QUERY);
+		compact = mq.matches;
+		const sync = () => (compact = mq.matches);
+		mq.addEventListener('change', sync);
+		return () => mq.removeEventListener('change', sync);
+	});
+
+	/**
+	 * Picking a time does not leave immediately. The button fills first — the
+	 * same brown a selected slot already wears, with the label inverted to sand
+	 * so it stays readable — and only then does the card move on. Without the
+	 * pause the panel is gone before the press has drawn anything, and the tap
+	 * reads as if nothing was registered.
+	 */
+	const CONFIRM_MS = 500;
+	let confirming = $state(false);
+	let confirmTimer: ReturnType<typeof setTimeout> | null = null;
+
+	function chooseSlot(slot: TimeSlot & { taken: boolean }) {
+		/* aria-disabled rather than disabled: a disabled button drops out of the
+		   tab order, so someone arriving by keyboard would skip silently past the
+		   taken slots instead of hearing that they are taken. */
+		if (slot.taken || confirming) return;
+		selectedSlot = slot;
+		if (motionless()) {
+			toDetails();
+			return;
+		}
+		confirming = true;
+		confirmTimer = setTimeout(() => {
+			confirmTimer = null;
+			confirming = false;
+			toDetails();
+		}, CONFIRM_MS);
+	}
+
+	function cancelConfirm() {
+		if (confirmTimer) clearTimeout(confirmTimer);
+		confirmTimer = null;
+		confirming = false;
+	}
+
+	onDestroy(cancelConfirm);
+
+	/** How far down the sheet has been dragged, in px. 0 = at rest. */
+	let dragY = $state(0);
+	/** True between the first qualifying move and the release, so the sheet
+	 *  follows the finger without a transition fighting it. */
+	let dragging = $state(false);
+	/** Set on release so the click that a tap-turned-drag would otherwise fire
+	 *  on a time button is swallowed. */
+	let dragged = false;
+	let dragStartY = 0;
+	let dragStartX = 0;
+	let dragPointer: number | null = null;
+
+	/* Past this the sheet is dismissed on release; short of it, it springs back. */
+	const DISMISS_PX = 72;
+	/* Movement has to be mostly downward before it counts as a drag, so a
+	   sideways scroll or a settling thumb does not start dragging the sheet. */
+	const DRAG_SLOP = 8;
+
+	function sheetPointerDown(event: PointerEvent) {
+		if (!compact || confirming) return;
+		dragPointer = event.pointerId;
+		dragStartY = event.clientY;
+		dragStartX = event.clientX;
+		dragged = false;
+	}
+
+	function sheetPointerMove(event: PointerEvent) {
+		if (dragPointer !== event.pointerId) return;
+		const dy = event.clientY - dragStartY;
+		const dx = event.clientX - dragStartX;
+		if (!dragging) {
+			if (dy < DRAG_SLOP || Math.abs(dy) <= Math.abs(dx)) return;
+			dragging = true;
+			dragged = true;
+			(event.currentTarget as HTMLElement).setPointerCapture(event.pointerId);
+		}
+		/* Resistance past the dismiss point: the sheet keeps answering the finger
+		   but stops racing it, which is what says "this is as far as it goes". */
+		dragY = dy > DISMISS_PX ? DISMISS_PX + (dy - DISMISS_PX) * 0.4 : dy;
+	}
+
+	function sheetPointerUp(event: PointerEvent) {
+		if (dragPointer !== event.pointerId) return;
+		dragPointer = null;
+		const past = dragY >= DISMISS_PX;
+		dragging = false;
+		dragY = 0;
+		if (past) goBack();
+	}
+
+	/* A drag that started on a time button still ends in a click. Caught on the
+	   way down, before the button's own handler sees it. */
+	function sheetClickCapture(event: MouseEvent) {
+		if (!dragged) return;
+		dragged = false;
+		event.stopPropagation();
+		event.preventDefault();
+	}
 
 	const daysInMonth = $derived(new Date(viewYear, viewMonth + 1, 0).getDate());
 	const monthLabel = $derived(`${MONTHS[viewMonth]!} ${viewYear}`);
@@ -286,6 +399,7 @@
 	function goBack() {
 		const previous = PREVIOUS[step];
 		if (!previous) return;
+		cancelConfirm();
 		if (previous === 'datum') {
 			selectedDate = null;
 			selectedSlot = null;
@@ -357,6 +471,7 @@
 	}
 
 	function restart() {
+		cancelConfirm();
 		direction = -1;
 		step = 'datum';
 		selectedDate = null;
@@ -632,8 +747,20 @@
 		     just picked stays visible above the times you are choosing between.
 		     Clicking a time is the way forward — there is no Volgende button. -->
 		{#if step === 'tijd'}
-			<div class="planner__sheet" transition:slide={{ duration: sheetMs, easing: cubicOut }}>
+			<!-- svelte-ignore a11y_no_static_element_interactions -->
+			<div
+				class="planner__sheet"
+				class:planner__sheet--dragging={dragging}
+				style="--sheet-drag: {dragY}px"
+				transition:slide={{ duration: sheetMs, easing: cubicOut }}
+				onpointerdown={sheetPointerDown}
+				onpointermove={sheetPointerMove}
+				onpointerup={sheetPointerUp}
+				onpointercancel={sheetPointerUp}
+				onclickcapture={sheetClickCapture}
+			>
 				<span class="planner__grabber" aria-hidden="true"></span>
+				<span class="planner__sheet-hint" aria-hidden="true">Sleep omlaag om terug te gaan</span>
 				<p class="planner__sheet-date">{sheetLabel}</p>
 				{#if slots.length > 0 && freeSlotCount > 0}
 					<div
@@ -650,15 +777,7 @@
 								aria-pressed={selectedSlot?.start === slot.start}
 								aria-disabled={slot.taken ? 'true' : undefined}
 								aria-label={slot.taken ? `${slot.label} — al bezet` : undefined}
-								onclick={() => {
-									/* aria-disabled rather than disabled: a disabled button
-									   drops out of the tab order, so someone arriving by
-									   keyboard would skip silently past the taken slots
-									   instead of hearing that they are taken. */
-									if (slot.taken) return;
-									selectedSlot = slot;
-									toDetails();
-								}}
+								onclick={() => chooseSlot(slot)}
 							>
 								{slot.label}
 							</button>
@@ -958,15 +1077,54 @@
 		backdrop-filter: blur(16px);
 		border-top: 1px solid var(--pl-line);
 		border-radius: 1.125rem 1.125rem 0 0;
+		/* --sheet-drag is written by the pointer handlers while a drag is live and
+		   set back to 0 on release; the transition is what makes a short drag
+		   spring back instead of snapping. */
+		transform: translateY(var(--sheet-drag, 0px));
+		transition: transform 260ms var(--ease-out);
 	}
 
+	/* While the finger is down the sheet has to track it exactly — a transition
+	   here would put the sheet a fifth of a second behind the thumb. */
+	.planner__sheet--dragging {
+		transition: none;
+	}
+
+	/* The handle and its line are the touch affordance and nothing else: they
+	   are hidden on desktop, where the gesture is switched off in the script and
+	   "Vorige" sits directly below. */
 	.planner__grabber {
 		display: block;
 		width: 2.375rem; /* 38px */
 		height: 4px;
 		border-radius: 2px;
 		background: rgba(124, 94, 73, 0.3);
-		margin: 0 auto 1rem; /* 16px */
+		margin: 0 auto 0.5rem; /* 8px */
+	}
+
+	.planner__sheet-hint {
+		display: block;
+		text-align: center;
+		font-size: 0.6875rem; /* 11px */
+		font-weight: var(--font-weight-light);
+		letter-spacing: 0.02em;
+		color: var(--brand-muted);
+		margin-bottom: 0.75rem; /* 12px */
+	}
+
+	@media (max-width: 1023px) {
+		/* The browser must not claim the vertical gesture for a page scroll, or
+		   the pointermove stream stops the moment the drag becomes useful. */
+		.planner__sheet {
+			touch-action: none;
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.planner__grabber,
+		.planner__sheet-hint {
+			display: none;
+		}
 	}
 
 	.planner__sheet-date,
@@ -1006,10 +1164,17 @@
 			color var(--motion-hover) var(--ease-hover);
 	}
 
-	.planner__time:hover:not([aria-disabled='true']) {
+	/* :not(--selected) is load-bearing, not tidiness. The hover selector carries a
+	   class, a pseudo-class and a :not() — it outranks .planner__time--selected on its
+	   own, so without this the pressed state's brown fill was quietly overpainted by
+	   the 10% hover wash for the whole half-second it is meant to be visible. */
+	.planner__time:hover:not([aria-disabled='true']):not(.planner__time--selected) {
 		background: color-mix(in srgb, var(--brand-border) 10%, transparent);
 	}
 
+	/* The pressed state, and the half-second the card waits on before moving to the
+	   details step: the tile fills with brown and the label inverts to sand (7.02:1),
+	   so the press is legible for as long as it is on screen. */
 	.planner__time--selected,
 	.planner__time--selected:hover {
 		background: var(--brand-border);

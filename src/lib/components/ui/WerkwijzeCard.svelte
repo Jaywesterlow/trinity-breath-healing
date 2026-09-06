@@ -58,9 +58,12 @@
 
 	<!-- Text fades; the art draws. Cards 2 and 3 sit horizontally outside the viewport until
 	     the pan brings them in, and the observer only fires on intersection — so each card's
-	     text arrives as that card does, rather than all three firing when the section opens. -->
-	<h3 class="wcard__title" use:reveal={{ delay: 0 }}>{title}</h3>
-	<p class="wcard__body" use:reveal={{ delay: 110 }}>{body}</p>
+	     text arrives as that card does, rather than all three firing when the section opens.
+	     `exit: false` because the way out belongs to the row, not to these lines: Werkwijze
+	     fades whole cards, art included, one after the other. Left here as well, they would
+	     fade a second time inside a card that is already fading. -->
+	<h3 class="wcard__title" use:reveal={{ delay: 0, exit: false }}>{title}</h3>
+	<p class="wcard__body" use:reveal={{ delay: 110, exit: false }}>{body}</p>
 
 	{#if variant === 'filled'}
 		{#if artSvg}
@@ -80,7 +83,7 @@
 	{/if}
 
 	{#if ctaHref && ctaLabel}
-		<div class="wcard__cta" use:reveal={{ delay: 220 }}>
+		<div class="wcard__cta" use:reveal={{ delay: 220, exit: false }}>
 			<ButtonLink href={ctaHref} label={ctaLabel} withArrow block />
 		</div>
 	{/if}

@@ -40,6 +40,47 @@
 	// measure how far the track has to travel.
 
 	let cardsEl: HTMLUListElement | null = $state(null);
+	let rowEl: HTMLDivElement | null = $state(null);
+
+	/**
+	 * The row's exit. Leaving the section fades the cards away one at a time in reading
+	 * order — first card first, last card last — and coming back fades them in the same
+	 * way, so the section closes and reopens like a hand of cards rather than a light
+	 * switch. The order is a per-card `transition-delay` in the markup below; all this
+	 * holds is whether the row is on its way out.
+	 *
+	 * One observer on the whole row, not `use:reveal` per card. On mobile the cards sit
+	 * horizontally outside the viewport until the pan brings them in, so a per-card
+	 * observer would report cards 2 and 3 as gone from the moment the page loads and the
+	 * stagger would never be seen. The row is always vertically where the reader is.
+	 *
+	 * The observed element is .werkwijze__row, the untransformed wrapper — never the <ul>
+	 * itself. An IntersectionObserver intersects on both axes and honours ancestor clips,
+	 * and in pinned mode the <ul> is translated up to --travel px to the left: its own
+	 * 100%-wide box ends up entirely outside .werkwijze's overflow-x clip while the cards
+	 * spilling out of it are still dead centre on screen. Observed directly, the row
+	 * therefore reported itself gone halfway through the section. The wrapper never moves.
+	 *
+	 * The band matches the one in $lib/actions/reveal, so the cards leave on the same edge
+	 * as the heading above them.
+	 */
+	let cardsGone = $state(false);
+	const CARD_STAGGER_MS = 110;
+
+	$effect(() => {
+		const row = rowEl;
+		if (!row) return;
+		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+		const observer = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) cardsGone = !entry.isIntersecting;
+			},
+			{ threshold: 0, rootMargin: '-22% 0px -80px 0px' }
+		);
+		observer.observe(row);
+		return () => observer.disconnect();
+	});
 
 	// 'native': default / desktop / reduced-motion / no scroll-timeline support / pre-hydration.
 	// Plain overflow-x: auto snap slider — every card in the initial HTML, swipeable, and smooth
@@ -131,34 +172,38 @@
 				</h2>
 			</header>
 
-			<ul class="werkwijze__cards" bind:this={cardsEl}>
-				<li>
-					<WerkwijzeCard
-						variant="filled"
-						title="Kennismaking"
-						body="Wat loskomt, laten we landen. Stap voor stap groeit er meer rust en ruimte, in je hoofd én je lijf."
-						artSvg={kennismakingArt}
-					/>
-				</li>
-				<li>
-					<WerkwijzeCard
-						variant="filled"
-						title="De sessie"
-						body="Met adem en lichaamswerk kom je in contact met wat er onder de oppervlakte leeft."
-						artSvg={sessieArt}
-					/>
-				</li>
-				<li>
-					<WerkwijzeCard
-						variant="outline"
-						title="Verdieping"
-						body="We beginnen rustig. In een eerste gesprek kijken we samen wat er speelt en wat je nodig hebt."
-						artSvg={verdiepingArt}
-						ctaHref="/contact"
-						ctaLabel="Maak een afspraak"
-					/>
-				</li>
-			</ul>
+			<!-- The wrapper exists so the exit observer has something that stays put; see the
+			     note on the observer above. It is a plain block, no styling of its own. -->
+			<div class="werkwijze__row" bind:this={rowEl}>
+				<ul class="werkwijze__cards" class:werkwijze__cards--gone={cardsGone} bind:this={cardsEl}>
+					<li style="--card-stagger: 0ms">
+						<WerkwijzeCard
+							variant="filled"
+							title="Kennismaking"
+							body="Wat loskomt, laten we landen. Stap voor stap groeit er meer rust en ruimte, in je hoofd én je lijf."
+							artSvg={kennismakingArt}
+						/>
+					</li>
+					<li style="--card-stagger: {CARD_STAGGER_MS}ms">
+						<WerkwijzeCard
+							variant="filled"
+							title="De sessie"
+							body="Met adem en lichaamswerk kom je in contact met wat er onder de oppervlakte leeft."
+							artSvg={sessieArt}
+						/>
+					</li>
+					<li style="--card-stagger: {CARD_STAGGER_MS * 2}ms">
+						<WerkwijzeCard
+							variant="outline"
+							title="Verdieping"
+							body="We beginnen rustig. In een eerste gesprek kijken we samen wat er speelt en wat je nodig hebt."
+							artSvg={verdiepingArt}
+							ctaHref="/contact"
+							ctaLabel="Maak een afspraak"
+						/>
+					</li>
+				</ul>
+			</div>
 		</div>
 	</div>
 </section>
@@ -234,6 +279,24 @@
 
 	.werkwijze__cards::-webkit-scrollbar {
 		display: none;
+	}
+
+	/* The staggered exit. --card-stagger is set per card in the markup, so the same rule
+	   drives both directions: out in reading order, back in the same order. Leaving is
+	   quicker than returning, matching $lib/actions/reveal's own two durations. */
+	.werkwijze__cards > li {
+		transition: opacity 600ms var(--ease-out) var(--card-stagger, 0ms);
+	}
+
+	.werkwijze__cards--gone > li {
+		opacity: 0;
+		transition-duration: 450ms;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.werkwijze__cards > li {
+			transition: none;
+		}
 	}
 
 	/* Mobile pin. The pinned styles are gated twice over: the JS gate (mobile +

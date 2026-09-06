@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import ButtonLink from '$lib/components/ui/interactions/ButtonLink.svelte';
+	import { reveal } from '$lib/actions/reveal';
 
 	// The hero illustration is a centerline trace of the original line art, inlined as SVG so
 	// its strokes can draw themselves on load (stroke-dashoffset, see .hero__draw below).
@@ -52,8 +53,12 @@
 			</div>
 		</div>
 
-		<!-- Content column: below image on mobile (DOM order), left on desktop (order:1) -->
-		<div class="hero__left" bind:this={leftEl}>
+		<!-- Content column: below image on mobile (DOM order), left on desktop (order:1).
+		     `entrance: false` — the arrival is the pure-CSS cascade below and nothing else;
+		     all this asks the action for is the way out, so the heading, body and CTA ease
+		     off the top edge the way every section further down the page does. The drawing
+		     above is deliberately not wrapped: it neither fades in nor fades out. -->
+		<div class="hero__left" bind:this={leftEl} use:reveal={{ entrance: false }}>
 			<div class="hero__content">
 				<h1 class="hero__heading">
 					Rust in je hoofd.<br />
