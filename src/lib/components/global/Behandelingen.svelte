@@ -1319,7 +1319,7 @@
 	// service count ever drops low enough to need duplicates again.
 	function cardElFor(serviceIndex: number): HTMLElement | null {
 		const i = nearestCopyOf(serviceIndex);
-		return pivotEls[i]?.querySelector('.tcard') ?? null;
+		return pivotEls[i]?.querySelector('a.tcard') ?? null;
 	}
 
 	let modalIndex = $state(0); // which SERVICE (0..BASE_COUNT-1) the modal is showing
@@ -1918,18 +1918,6 @@
 		if (e.target === modalDialogEl) closeModal();
 	}
 
-	/* The corner arrow is the card's OTHER destination: the service's own page.
-	   On a card that is not centred it still has to bring that card to the
-	   middle first — clicking any part of a side card means "show me this one",
-	   and navigating straight out of the section from an off-centre card is not
-	   what anyone means by it. Centred, it simply navigates. */
-	function onArrowClick(e: MouseEvent, i: number): void {
-		if (positions[i] === 0) return;
-		if (e.detail === 0) return; // keyboard: navigate directly
-		e.preventDefault();
-		jumpTo(i);
-	}
-
 	function onCardClick(e: MouseEvent, i: number): void {
 		if (positions[i] === 0) {
 			// onFanClickCapture (capture phase, runs first) already calls
@@ -1941,9 +1929,6 @@
 			// nothing left to do.
 			if (e.defaultPrevented) return;
 			e.preventDefault();
-			// The overlay link itself. It is stretched to the card's full box (see
-			// .tcard__link), so its rect is the card's rect — and unlike the
-			// <article> around it, it can take focus back when the modal closes.
 			openModal(e.currentTarget as HTMLElement, i % BASE_COUNT);
 			return;
 		}
@@ -1993,7 +1978,6 @@
 						magnetic={isVisibleSlot(positions[i]!)}
 						duplicate={item.duplicate}
 						onCardClick={(e) => onCardClick(e, i)}
-						onArrowClick={(e) => onArrowClick(e, i)}
 						{dragging}
 					/>
 				</div>

@@ -7,6 +7,7 @@ export { default as Footer } from './Footer.svelte';
 export { default as StubLayout } from './StubLayout.svelte';
 export { default as OverMij } from './OverMij.svelte';
 export { default as Behandelingen } from './Behandelingen.svelte';
+export { default as BehandelingenNote } from './BehandelingenNote.svelte';
 export { default as Contact } from './Contact.svelte';
 export { default as Faq } from './Faq.svelte';
 export { default as CursorTooltip } from './CursorTooltip.svelte';

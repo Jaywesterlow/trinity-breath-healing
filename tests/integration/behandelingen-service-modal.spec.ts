@@ -17,11 +17,7 @@ const DESKTOP = { width: 1440, height: 900 };
 const MOBILE = { width: 390, height: 844 };
 
 const PIVOT = '.treatments__pivot';
-const CARD = '.tcard';
-/* The card's own link. It is an overlay stretched across the card rather than a
-   wrapper around it, because the corner arrow is a second link now and one
-   anchor cannot contain another — so `href` and focus live here, not on .tcard. */
-const CARD_LINK = '.tcard__link';
+const CARD = 'a.tcard';
 const MODAL = 'dialog.service-modal';
 const ACTIVE_TITLE = '.service-modal__panel:not([hidden]) .service-modal__title';
 
@@ -147,7 +143,6 @@ test.describe('desktop', () => {
 	test('Esc closes the modal and returns focus to the card', async ({ page }) => {
 		const centre = await indexAt(page, 0);
 		const card = page.locator(PIVOT).nth(centre).locator(CARD);
-		const cardLink = page.locator(PIVOT).nth(centre).locator(CARD_LINK);
 		await card.click();
 		await expect(page.locator(MODAL)).toBeVisible();
 		await page.waitForTimeout(1500);
@@ -156,13 +151,12 @@ test.describe('desktop', () => {
 		await page.waitForTimeout(1000);
 
 		await expect(page.locator(MODAL)).toBeHidden();
-		await expect(cardLink).toBeFocused();
+		await expect(card).toBeFocused();
 	});
 
 	test('the close button closes the modal and returns focus to the card', async ({ page }) => {
 		const centre = await indexAt(page, 0);
 		const card = page.locator(PIVOT).nth(centre).locator(CARD);
-		const cardLink = page.locator(PIVOT).nth(centre).locator(CARD_LINK);
 		await card.click();
 		await expect(page.locator(MODAL)).toBeVisible();
 		await page.waitForTimeout(1500);
@@ -171,7 +165,7 @@ test.describe('desktop', () => {
 		await page.waitForTimeout(1000);
 
 		await expect(page.locator(MODAL)).toBeHidden();
-		await expect(cardLink).toBeFocused();
+		await expect(card).toBeFocused();
 	});
 
 	test('a backdrop click closes the modal', async ({ page }) => {
@@ -209,7 +203,7 @@ test.describe('desktop', () => {
 
 	test('every card carries a real href into /diensten/', async ({ page }) => {
 		const hrefs = await page
-			.locator(CARD_LINK)
+			.locator(CARD)
 			.evaluateAll((els) => els.map((el) => el.getAttribute('href')));
 		expect(hrefs.length).toBeGreaterThan(0);
 		for (const href of hrefs) {

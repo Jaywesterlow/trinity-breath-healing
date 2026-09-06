@@ -8,10 +8,13 @@
 	 *   default   the arrowhead alone
 	 *   breathe   the arrowhead, with a ring expanding and contracting around it
 	 *             at 4s in / 6s out — the hero, and only the hero
-	 *   link      a hand — the one shape everybody already reads as "click here".
-	 *             An arrow inside a ring is a nice effect and says nothing.
-	 *   zoom      a magnifier with a + in it, on something that opens in place
-	 *             rather than navigating (a treatment card's modal)
+	 *   link      a ring blooms around the arrowhead. A drawn hand looked like a
+	 *             drawn hand — fussy, and obviously hand-made. A circle is the
+	 *             shape this site is already built out of: every arrow button,
+	 *             every social icon, every carousel control is one.
+	 *   toggle    a filled circle with a +, on a closed FAQ row. Clicking turns
+	 *             it 45° into a ×, and clicking again turns it 45° the SAME way
+	 *             — never back — exactly like the menu button.
 	 *   text      a caret bar, because a form field needs to show where the next
 	 *             character lands and an arrow cannot
 	 *   disabled  the arrowhead, dimmed, over a control that will not respond
@@ -41,7 +44,7 @@
 	 */
 	import { onMount } from 'svelte';
 
-	type Mode = 'default' | 'breathe' | 'link' | 'zoom' | 'text' | 'disabled' | 'label';
+	type Mode = 'default' | 'breathe' | 'link' | 'toggle' | 'text' | 'disabled' | 'label';
 	type Icon = '' | 'zoom' | 'page';
 
 	const CLICKABLE =
@@ -49,7 +52,15 @@
 	const TEXT_ENTRY =
 		'textarea, [contenteditable], input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"])';
 
-	const MODES = new Set<Mode>(['default', 'breathe', 'link', 'zoom', 'text', 'disabled', 'label']);
+	const MODES = new Set<Mode>([
+		'default',
+		'breathe',
+		'link',
+		'toggle',
+		'text',
+		'disabled',
+		'label'
+	]);
 
 	let enabled = $state(false);
 	let mode = $state<Mode>('default');
@@ -58,6 +69,15 @@
 	let icon = $state<'' | 'zoom' | 'page'>('');
 	let visible = $state(false);
 	let root: HTMLDivElement | null = $state(null);
+
+	/* The disclosure glyph only ever turns one way, like the menu button: + at
+	   0°, × at 45°, + again at 90°. `turns` is that counter. It is re-based
+	   without animating whenever the pointer moves to a different row, so the
+	   shape always matches THAT row's state — and from then on every click on it
+	   adds another 45°. */
+	let turns = $state(0);
+	let rebasing = $state(false);
+	let toggleHost: Element | null = null;
 
 	/* Written straight to the node rather than through state: this runs on every
 	   frame the pointer moves, and a reactive round-trip per frame is exactly
@@ -81,6 +101,26 @@
 		mode = 'default';
 		label = '';
 		icon = '';
+		toggleHost = null;
+	}
+
+	/** Snap the glyph to the row's own state, with no turn animation. */
+	function rebaseToggle(host: Element) {
+		toggleHost = host;
+		const open = !!host.closest('details[open]');
+		/* Keep climbing rather than resetting to 0/1: coming back to a row it has
+		   already turned should not spin the glyph backwards. Any multiple of 90°
+		   is a +, any odd 45° is a ×. */
+		const next = Math.ceil(turns / 2) * 2 + (open ? 1 : 0);
+		if (next === turns) return;
+		rebasing = true;
+		turns = next;
+		requestAnimationFrame(() => requestAnimationFrame(() => (rebasing = false)));
+	}
+
+	function onToggleClick(event: MouseEvent) {
+		const host = (event.target as Element | null)?.closest?.('[data-cursor="toggle"]');
+		if (host) turns += 1;
 	}
 
 	function resolve(target: Element | null): { mode: Mode; label: string; icon: Icon } {
@@ -119,12 +159,14 @@
 					? 'link'
 					: null;
 
-		if (hasDeclared && inferredHost) {
-			const declaredIsOuter = declaredHost !== inferredHost && declaredHost!.contains(inferredHost);
-			if (!declaredIsOuter) return { mode: declared as Mode, label: '', icon: '' };
-		} else if (hasDeclared) {
+		if (
+			hasDeclared &&
+			(!inferredHost || declaredHost === inferredHost || !declaredHost!.contains(inferredHost))
+		) {
+			if (declared === 'toggle' && declaredHost !== toggleHost) rebaseToggle(declaredHost!);
 			return { mode: declared as Mode, label: '', icon: '' };
 		}
+		if (toggleHost && !declaredHost) toggleHost = null;
 
 		if (inferredMode) return { mode: inferredMode, label: '', icon: '' };
 		return { mode: 'default', label: '', icon: '' };
@@ -152,6 +194,7 @@
 		document.documentElement.classList.add('has-cursor-tooltip');
 
 		window.addEventListener('pointermove', onPointerMove, { passive: true });
+		window.addEventListener('click', onToggleClick, true);
 		/* Leaving the document, tabbing away, or switching to another tab all end
 		   with the pointer somewhere this page will never hear about again. */
 		document.addEventListener('pointerleave', clear);
@@ -162,6 +205,7 @@
 			if (frame) cancelAnimationFrame(frame);
 			document.documentElement.classList.remove('has-cursor-tooltip');
 			window.removeEventListener('pointermove', onPointerMove);
+			window.removeEventListener('click', onToggleClick, true);
 			document.removeEventListener('pointerleave', clear);
 			window.removeEventListener('blur', clear);
 			document.removeEventListener('visibilitychange', clear);
@@ -181,56 +225,14 @@
 				stroke-linejoin="round"
 			/>
 		</svg>
-		<!-- The pointing hand, drawn so its fingertip lands on (0,0) too — the
-		     shape swaps under the pointer without the hotspot moving. -->
-		<svg class="cursor__hand" width="22" height="26" viewBox="0 0 22 26" fill="none">
-			<path
-				d="M8.7 13.2V4.5a1.75 1.75 0 0 1 3.5 0v5.1a1.6 1.6 0 0 1 3.2 0v1.1a1.6 1.6 0 0 1 3.2 0v5.6c0 3.8-2.4 6.7-6.3 6.7-3.4 0-4.9-1.5-6.4-4.1l-2.1-3.7a1.7 1.7 0 0 1 2.7-2z"
-				fill="var(--color-fg-forest)"
-				stroke="var(--color-bg-sand)"
-				stroke-width="1.3"
-				stroke-linejoin="round"
-			/>
-			<path
-				d="M12.2 13.4v-3.8M15.4 13.4v-2.6"
-				stroke="var(--color-bg-sand)"
-				stroke-width="1.1"
-				stroke-linecap="round"
-				opacity="0.75"
-			/>
-		</svg>
+		<span class="cursor__ring"></span>
 		<span class="cursor__breath"></span>
 		<span class="cursor__caret"></span>
-		<!-- Opens in place rather than navigating, so: a magnifier, not a hand. -->
-		<svg class="cursor__zoom" width="30" height="30" viewBox="0 0 30 30" fill="none">
-			<circle cx="13" cy="13" r="8.4" fill="var(--color-fg-forest)" />
-			<circle
-				cx="13"
-				cy="13"
-				r="8.4"
-				stroke="var(--color-bg-sand)"
-				stroke-width="1.4"
-				opacity="0.55"
-			/>
-			<path
-				d="M13 9.6v6.8M9.6 13h6.8"
-				stroke="var(--color-bg-sand)"
-				stroke-width="1.5"
-				stroke-linecap="round"
-			/>
-			<path
-				d="M19.2 19.2 25 25"
-				stroke="var(--color-fg-forest)"
-				stroke-width="3.4"
-				stroke-linecap="round"
-			/>
-			<path
-				d="M19.2 19.2 25 25"
-				stroke="var(--color-bg-sand)"
-				stroke-width="1.4"
-				stroke-linecap="round"
-			/>
-		</svg>
+		<!-- Turns one way only, like the menu button: + at 0deg, x at 45deg. -->
+		<span class="cursor__toggle" style="--turn: {turns * 45}deg" class:is-rebasing={rebasing}>
+			<span class="cursor__bar"></span>
+			<span class="cursor__bar cursor__bar--v"></span>
+		</span>
 		<span class="cursor__card">
 			{#if icon === 'zoom'}
 				<!-- Opens in place. The magnifier says that before the words do. -->
@@ -287,10 +289,10 @@
 	   100% — which against a zero-width containing block is zero. The arrowhead
 	   computed to 0x0 until this was here. */
 	.cursor__arrow,
-	.cursor__hand,
+	.cursor__ring,
 	.cursor__breath,
 	.cursor__caret,
-	.cursor__zoom,
+	.cursor__toggle,
 	.cursor__card {
 		position: absolute;
 		top: 0;
@@ -312,35 +314,40 @@
 		opacity: 1;
 	}
 
-	.cursor--link .cursor__arrow,
-	.cursor--zoom .cursor__arrow,
+	.cursor--toggle .cursor__arrow,
 	.cursor--text .cursor__arrow,
 	.cursor--label .cursor__arrow {
 		transform: scale(0.35);
 		opacity: 0;
 	}
 
+	/* Kept, at three-quarters, inside the ring — a link still shows which way
+	   the pointer is facing. */
+	.cursor--link .cursor__arrow {
+		transform: scale(0.72);
+	}
+
 	.cursor--disabled .cursor__arrow {
 		opacity: 0.4;
 	}
 
-	/* ─── The hand, for anything clickable ───
-	   A ring around the arrowhead looked good and meant nothing. This is the one
-	   shape a visitor already knows, and it is the shape the native cursor would
-	   have shown them if it were still there. */
-	.cursor__hand {
-		display: block;
-		width: 22px;
-		height: 26px;
-		/* The fingertip sits at roughly (10.4, 2.8) in the glyph's own box, so
-		   the whole thing shifts up and left by that much to put it exactly on
-		   the pointer — the hotspot must not jump when the shape swaps. */
-		margin: -3px 0 0 -10px;
-		transform-origin: 10px 3px;
-		transform: scale(0.4);
+	/* ─── The ring, for anything clickable ───
+	   Circles are this site's own vocabulary: the CTA buttons, the carousel
+	   controls and the social icons are all a glyph inside one. A ring blooming
+	   around the arrowhead says "this is a target" in the same language, and it
+	   is two CSS rules rather than a drawn hand nobody asked to look at. */
+	.cursor__ring {
+		width: 30px;
+		height: 30px;
+		margin: -15px 0 0 -15px;
+		border-radius: 50%;
+		box-shadow:
+			inset 0 0 0 1px var(--color-fg-forest),
+			0 0 0 1px var(--color-bg-sand);
+		transform: scale(0.35);
 	}
 
-	.cursor--link .cursor__hand {
+	.cursor--link .cursor__ring {
 		transform: scale(1);
 		opacity: 1;
 	}
@@ -401,19 +408,44 @@
 		opacity: 1;
 	}
 
-	/* ─── The magnifier, for something that opens in place ─── */
-	.cursor__zoom {
-		display: block;
-		width: 30px;
-		height: 30px;
-		margin: -13px 0 0 -13px;
-		transform-origin: 13px 13px;
-		transform: scale(0.4);
+	/* ─── The disclosure glyph, on an FAQ row ───
+	   A filled circle with a +, which turns 45deg into a × on click and another
+	   45deg the same way on the next one. It never turns back, because the menu
+	   button does not either and two controls that rotate should rotate alike. */
+	.cursor__toggle {
+		width: 32px;
+		height: 32px;
+		margin: -16px 0 0 -16px;
+		border-radius: 50%;
+		background: var(--color-fg-forest);
+		box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-bg-sand) 55%, transparent);
+		transform: scale(0.35) rotate(var(--turn, 0deg));
 	}
 
-	.cursor--zoom .cursor__zoom {
-		transform: scale(1);
+	.cursor--toggle .cursor__toggle {
+		transform: scale(1) rotate(var(--turn, 0deg));
 		opacity: 1;
+	}
+
+	/* Moving to a different row snaps the glyph to THAT row's state. Turning to
+	   get there would read as the row you just left closing itself. */
+	.cursor__toggle.is-rebasing {
+		transition: opacity 130ms var(--ease-out);
+	}
+
+	.cursor__bar {
+		position: absolute;
+		top: 50%;
+		left: 50%;
+		width: 13px;
+		height: 1.5px;
+		margin: -0.75px 0 0 -6.5px;
+		border-radius: 1px;
+		background: var(--color-bg-sand);
+	}
+
+	.cursor__bar--v {
+		transform: rotate(90deg);
 	}
 
 	/* ─── The label card ─── */

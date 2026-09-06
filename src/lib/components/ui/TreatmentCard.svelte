@@ -57,10 +57,6 @@
 		 * Replaces the .treatments__jump overlay, which covered the card and
 		 * so blocked :hover from ever reaching it. */
 		onCardClick?: (e: MouseEvent) => void;
-		/** Click on the corner arrow. Same contract as onCardClick, except that
-		 *  on the centred card it lets the navigation through instead of opening
-		 *  the modal — that is the whole difference between the two targets. */
-		onArrowClick?: (e: MouseEvent) => void;
 		/** True for the repeated copies the carousel renders so its loop has
 		 * off-screen slots to recycle through. Visually identical, but taken out
 		 * of the accessibility tree and the tab order so each service is
@@ -78,35 +74,27 @@
 		magnetic: isMagnetic = false,
 		dragging = false,
 		onCardClick,
-		onArrowClick,
 		duplicate = false
 	}: Props = $props();
 </script>
 
-<!-- Two targets, not one. The card opens the service in a modal; the corner
-     arrow goes to the service's own page. They cannot be nested, so the card's
-     link is an overlay stretched across the whole card and the arrow sits above
-     it — the pattern this component used before 7c557ae, back because there are
-     genuinely two destinations again.
-
-     The overlay still carries `href`, so without JavaScript (and to a crawler)
-     the card is exactly what it always was: a link to /diensten/<slug>. -->
-<article
-	class="tcard"
+<!-- One target again. Splitting the corner arrow off as a second link to the
+     service's page gave the visitor no way to know it was one — two
+     destinations in a card that looks like a single object is a guess, not an
+     affordance. The whole card is the link, the arrow is decoration on it, and
+     one cursor label covers both. -->
+<a
+	href={buttonHref}
+	class="tcard roll-host"
+	aria-label={`${buttonLabel} over ${label}`}
+	draggable="false"
 	aria-hidden={duplicate ? 'true' : undefined}
+	tabindex={duplicate ? -1 : undefined}
+	onclick={onCardClick}
+	data-tooltip="Lees meer over {label}"
+	data-tooltip-icon="page"
 	use:magnetic={{ enabled: isMagnetic, dragging }}
 >
-	<a
-		href={buttonHref}
-		class="tcard__link"
-		aria-label={`${buttonLabel} over ${label}`}
-		draggable="false"
-		tabindex={duplicate ? -1 : undefined}
-		onclick={onCardClick}
-		data-tooltip="Bekijk in het kort"
-		data-tooltip-icon="zoom"
-	></a>
-
 	<div class="tcard__icon-wrap">
 		{#if icon}
 			<img src={icon} alt="" aria-hidden="true" class="tcard__icon" draggable="false" />
@@ -122,19 +110,11 @@
 		<div class="tcard__bottom">
 			<p class="tcard__title">{label}</p>
 
-			<!-- The second destination: the service's own page, rather than the
-			     modal the card opens. It sits above the card's overlay link (see
-			     the z-index below) so a click here goes to the page instead. -->
-			<a
-				href={buttonHref}
-				class="tcard__arrow arrow-swap roll-host"
-				aria-label={`Open de pagina over ${label}`}
-				draggable="false"
-				tabindex={duplicate ? -1 : undefined}
-				onclick={onArrowClick}
-				data-tooltip="Open de pagina"
-				data-tooltip-icon="page"
-			>
+			<!-- Decoration, not a control. It answers the CARD's hover rather than
+			     its own (see .tcard:hover below), so pointing anywhere on the card
+			     swaps the arrow and fills its circle — the arrow is part of what
+			     the card does, not a separate thing to find. -->
+			<span class="tcard__arrow arrow-swap" aria-hidden="true">
 				<!-- Two copies: the visible one leaves along the diagonal it points
 				     down, and the second arrives on that same axis from the
 				     opposite corner. .arrow-swap in app.css owns the motion; this
@@ -161,7 +141,7 @@
 						/>
 					</svg>
 				</span>
-			</a>
+			</span>
 		</div>
 
 		<!-- Always in the DOM, collapsed to zero height rather than removed —
@@ -171,7 +151,7 @@
 			<p class="tcard__description">{description}</p>
 		</div>
 	</div>
-</article>
+</a>
 
 <style>
 	.tcard {
@@ -186,6 +166,7 @@
 		background: var(--color-brand-green);
 		color: var(--color-bg-sand);
 		text-decoration: none;
+		cursor: pointer;
 		--tcard-scale: 1;
 		/* The reveal (icon fade-out, title/arrow slide-up, description
 		   fade-in) runs at half the speed of the site's base motion token —
@@ -223,22 +204,6 @@
 		   actively tracking (it used to override it to 0s, which silently
 		   removed the scale's animation entirely). */
 		transition: transform var(--tcard-transition-duration, var(--motion-fast)) var(--ease-out);
-	}
-
-	/* The card's own link, stretched across it. Not a wrapper any more: the
-	   corner arrow is a second link now, and one anchor cannot contain another.
-	   Everything visible sits in normal flow underneath this; the arrow lifts
-	   itself above it. */
-	.tcard__link {
-		position: absolute;
-		/* Negative by exactly the card's padding: an absolutely positioned child
-		   is placed against its ancestor's PADDING box, so `inset: 0` would have
-		   left a 12px dead border all round — and the modal morphs out of this
-		   element's rect, so it has to be the card's full box. */
-		inset: calc(-1 * var(--space-3));
-		z-index: 1;
-		border-radius: inherit;
-		cursor: pointer;
 	}
 
 	.tcard__icon-wrap {
@@ -429,11 +394,6 @@
 			   and glyph (the svg rule below) scale together so the arrow's
 			   proportions inside the circle hold. */
 			display: inline-flex;
-			/* Above the card's stretched link, which is what makes this a
-			   separate destination rather than a decoration sitting on one. */
-			position: relative;
-			z-index: 2;
-			cursor: pointer;
 			flex-shrink: 0;
 			width: 2.625rem;
 			height: 2.625rem;
@@ -447,13 +407,13 @@
 				color var(--motion-arrow) var(--ease-arrow);
 		}
 
-		/* The circle's own hover, not the card's: the whole card is the link, so
-		   without this the arrow would swap whenever the pointer was anywhere on
-		   it. Filling inverts the pair — sand ring on forest becomes a sand disc
-		   with a forest glyph, 8.38:1 either way round. */
-		.tcard__arrow:hover {
+		/* The CARD's hover, not the circle's. Pointing anywhere on the card fills
+		   the circle and runs the arrow swap, because the arrow is part of what
+		   the card does rather than a second thing to find. Filling inverts the
+		   pair — sand ring on green becomes a sand disc with a green glyph. */
+		.tcard:hover .tcard__arrow {
 			background: var(--color-bg-sand);
-			color: var(--color-fg-forest);
+			color: var(--color-brand-green);
 		}
 
 		.tcard__arrow svg {

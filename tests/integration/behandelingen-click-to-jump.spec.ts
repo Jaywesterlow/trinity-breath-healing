@@ -37,11 +37,7 @@ const PIVOT = '.treatments__pivot';
 // onCardClick instead, from the card's live position at click time — so these
 // tests assert the BEHAVIOUR (centres / navigates) rather than the presence
 // of a particular element, which is what let the old gate rot twice.
-const CARD = '.tcard';
-/* The card's own link. It is an overlay stretched across the card rather than a
-   wrapper around it, because the corner arrow is a second link now and one
-   anchor cannot contain another — so `href` and focus live here, not on .tcard. */
-const CARD_LINK = '.tcard__link';
+const CARD = 'a.tcard';
 
 /** Every card's current `--pos`, in DOM order. */
 async function positions(page: Page): Promise<number[]> {
@@ -113,7 +109,7 @@ test.describe('desktop', () => {
 		page
 	}) => {
 		const centre = await indexAt(page, 0);
-		const href = await page.locator(PIVOT).nth(centre).locator(CARD_LINK).getAttribute('href');
+		const href = await page.locator(PIVOT).nth(centre).locator(CARD).getAttribute('href');
 		expect(href).toBeTruthy();
 
 		await page.locator(PIVOT).nth(centre).locator(CARD).click();
@@ -166,7 +162,7 @@ test.describe('mobile', () => {
 		// (min-width: 1024px) media query; that gate is gone, this is the
 		// only behaviour left).
 		const target = await indexAt(page, 1);
-		const href = await page.locator(PIVOT).nth(target).locator(CARD_LINK).getAttribute('href');
+		const href = await page.locator(PIVOT).nth(target).locator(CARD).getAttribute('href');
 		expect(href).toBeTruthy();
 
 		await page.locator(PIVOT).nth(target).locator(CARD).click();
@@ -178,7 +174,7 @@ test.describe('mobile', () => {
 
 	test('tapping the centre card opens the modal instead of navigating', async ({ page }) => {
 		const centre = await indexAt(page, 0);
-		const href = await page.locator(PIVOT).nth(centre).locator(CARD_LINK).getAttribute('href');
+		const href = await page.locator(PIVOT).nth(centre).locator(CARD).getAttribute('href');
 		expect(href).toBeTruthy();
 
 		await page.locator(PIVOT).nth(centre).locator(CARD).click();

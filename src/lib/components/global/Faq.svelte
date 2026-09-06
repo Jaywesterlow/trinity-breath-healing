@@ -125,7 +125,9 @@
 						distance: 0
 					}}
 				>
-					<summary class="faq__question">
+					<!-- data-cursor: the pointer becomes a filled circle with a + over a
+					     closed row and turns 45deg into a × when it opens. -->
+					<summary class="faq__question" data-cursor="toggle">
 						<span>{item.question}</span>
 						<svg class="faq__chevron" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
 							<polyline
@@ -169,6 +171,11 @@
 	.faq__header {
 		margin-bottom: var(--space-8);
 	}
+
+	/* Two columns from 1024px up: the header holds the left one on its own and
+	   the questions fill the right. The header does NOT stretch to match the
+	   list — the empty space under it is the point, and a section this dense
+	   needs somewhere to breathe. See the breakpoint at the bottom. */
 
 	/* Matches the eyebrow treatment in Werkwijze/Behandelingen so all landing
 	   sections share one header rhythm. */
@@ -332,6 +339,27 @@
 	@media (min-width: 1024px) {
 		.faq {
 			padding-block: var(--space-16);
+		}
+
+		.faq__container {
+			display: grid;
+			/* 5fr/7fr rather than half and half: a question is a line of text and
+			   wants the room; a two-line heading does not. */
+			grid-template-columns: 5fr 7fr;
+			gap: var(--space-12);
+			align-items: start;
+		}
+
+		.faq__header {
+			margin-bottom: 0;
+			/* Sticks while the list scrolls past — the pairing only reads as two
+			   columns if the heading is still there at the last question. */
+			position: sticky;
+			top: calc(var(--nav-height) + var(--space-10));
+		}
+
+		.faq__eyebrow {
+			margin-bottom: var(--space-3);
 		}
 	}
 </style>
