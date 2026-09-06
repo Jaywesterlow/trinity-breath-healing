@@ -516,6 +516,7 @@
 												aria-disabled={bookableDays[day] ? undefined : 'true'}
 												aria-label={labelFor(day)}
 												aria-selected={selectedDate === isoFor(day)}
+												data-tooltip={labelFor(day)}
 												tabindex={(focusedDay || firstBookableDay) === day ? 0 : -1}
 												onclick={() => selectDay(day)}
 												onkeydown={(event) => onKeydown(event, day)}

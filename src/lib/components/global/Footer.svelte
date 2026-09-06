@@ -91,6 +91,9 @@
 									>{BRAND.practice.homeVisitNote} {BRAND.practice.remoteNote}</span
 								>
 							</li>
+							<!-- These two do not open a web page — they hand off to a mail
+							     client and to a dialler, which is the one thing the address
+							     itself cannot tell you. The cursor says it instead. -->
 							<li>
 								<TextLink
 									href="mailto:{BRAND.email}"
@@ -98,6 +101,7 @@
 									inverted={true}
 									showArrow={false}
 									size="sm"
+									tooltip="Opent je e-mailprogramma"
 								/>
 							</li>
 							{#if hasPhone}
@@ -108,6 +112,7 @@
 										inverted={true}
 										showArrow={false}
 										size="sm"
+										tooltip="Belt {BRAND.phoneDisplay}"
 									/>
 								</li>
 							{/if}

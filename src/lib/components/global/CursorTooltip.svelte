@@ -6,13 +6,14 @@
 	 * the thing under it does:
 	 *
 	 *   default   the arrowhead alone
-	 *   link      the arrowhead shrinks inside a ring that blooms around it
+	 *   breathe   the arrowhead, with a ring expanding and contracting around it
+	 *             at 4s in / 6s out — the hero, and only the hero
+	 *   link      a hand — the one shape everybody already reads as "click here".
+	 *             An arrow inside a ring is a nice effect and says nothing.
+	 *   zoom      a magnifier with a + in it, on something that opens in place
+	 *             rather than navigating (a treatment card's modal)
 	 *   text      a caret bar, because a form field needs to show where the next
 	 *             character lands and an arrow cannot
-	 *   drag      a two-headed arrow, on the carousel's fan; it compresses while
-	 *             the fan is actually being dragged
-	 *   expand    a circled +, on a closed FAQ row — the + turns 45° into a ×
-	 *   collapse  when that row is open
 	 *   disabled  the arrowhead, dimmed, over a control that will not respond
 	 *   label     the whole thing becomes a card carrying `data-tooltip` text,
 	 *             its square top-left corner where the tip was
@@ -40,37 +41,21 @@
 	 */
 	import { onMount } from 'svelte';
 
-	type Mode =
-		| 'default'
-		| 'link'
-		| 'text'
-		| 'drag'
-		| 'dragging'
-		| 'expand'
-		| 'collapse'
-		| 'disabled'
-		| 'label';
+	type Mode = 'default' | 'breathe' | 'link' | 'zoom' | 'text' | 'disabled' | 'label';
+	type Icon = '' | 'zoom' | 'page';
 
 	const CLICKABLE =
 		'a, button, [role="button"], select, label, summary, [tabindex]:not([tabindex="-1"])';
 	const TEXT_ENTRY =
 		'textarea, [contenteditable], input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"])';
 
-	const MODES = new Set<Mode>([
-		'default',
-		'link',
-		'text',
-		'drag',
-		'dragging',
-		'expand',
-		'collapse',
-		'disabled',
-		'label'
-	]);
+	const MODES = new Set<Mode>(['default', 'breathe', 'link', 'zoom', 'text', 'disabled', 'label']);
 
 	let enabled = $state(false);
 	let mode = $state<Mode>('default');
 	let label = $state('');
+	/** Optional glyph in front of the label — see `data-tooltip-icon`. */
+	let icon = $state<'' | 'zoom' | 'page'>('');
 	let visible = $state(false);
 	let root: HTMLDivElement | null = $state(null);
 
@@ -95,36 +80,54 @@
 		visible = false;
 		mode = 'default';
 		label = '';
+		icon = '';
 	}
 
-	function resolve(target: Element | null): { mode: Mode; label: string } {
-		if (!target?.closest) return { mode: 'default', label: '' };
+	function resolve(target: Element | null): { mode: Mode; label: string; icon: Icon } {
+		if (!target?.closest) return { mode: 'default', label: '', icon: '' };
 
-		const tip = target.closest('[data-tooltip]')?.getAttribute('data-tooltip');
-		if (tip) return { mode: 'label', label: tip };
-
-		/* An explicit declaration beats everything inferred — that is the whole
-		   point of it. Anything unrecognised falls through to the inference
-		   below rather than blanking the cursor. */
-		const declared = target.closest('[data-cursor]')?.getAttribute('data-cursor');
-		if (declared && MODES.has(declared as Mode)) {
-			/* A disclosure declares `expand` once and the open state is read off
-			   the <details> it lives in, so the FAQ markup never has to track
-			   which glyph the cursor should be showing. */
-			if (declared === 'expand' && target.closest('details[open]')) {
-				return { mode: 'collapse', label: '' };
-			}
-			return { mode: declared as Mode, label: '' };
+		const tipHost = target.closest('[data-tooltip]');
+		const tip = tipHost?.getAttribute('data-tooltip');
+		if (tip) {
+			const declaredIcon = tipHost?.getAttribute('data-tooltip-icon');
+			return {
+				mode: 'label',
+				label: tip,
+				icon: declaredIcon === 'zoom' || declaredIcon === 'page' ? declaredIcon : ''
+			};
 		}
+
+		/* Whichever host is DEEPER wins. A `data-cursor` on a whole section (the
+		   hero's breathing ring) must not override the hand on a button inside
+		   it, and a `data-cursor` on a control must not be overridden by the
+		   generic clickable inference around it. Comparing containment says
+		   which is which without either rule having to know about the other. */
+		const declaredHost = target.closest('[data-cursor]');
+		const declared = declaredHost?.getAttribute('data-cursor');
+		const hasDeclared = !!declared && MODES.has(declared as Mode);
 
 		const control = target.closest('button, input, select, textarea, a');
-		if (control && 'disabled' in control && (control as HTMLButtonElement).disabled) {
-			return { mode: 'disabled', label: '' };
+		const disabled = control && 'disabled' in control && (control as HTMLButtonElement).disabled;
+		const inferredHost = disabled
+			? control
+			: (target.closest(TEXT_ENTRY) ?? target.closest(CLICKABLE));
+		const inferredMode: Mode | null = disabled
+			? 'disabled'
+			: target.closest(TEXT_ENTRY)
+				? 'text'
+				: target.closest(CLICKABLE)
+					? 'link'
+					: null;
+
+		if (hasDeclared && inferredHost) {
+			const declaredIsOuter = declaredHost !== inferredHost && declaredHost!.contains(inferredHost);
+			if (!declaredIsOuter) return { mode: declared as Mode, label: '', icon: '' };
+		} else if (hasDeclared) {
+			return { mode: declared as Mode, label: '', icon: '' };
 		}
 
-		if (target.closest(TEXT_ENTRY)) return { mode: 'text', label: '' };
-		if (target.closest(CLICKABLE)) return { mode: 'link', label: '' };
-		return { mode: 'default', label: '' };
+		if (inferredMode) return { mode: inferredMode, label: '', icon: '' };
+		return { mode: 'default', label: '', icon: '' };
 	}
 
 	function onPointerMove(event: PointerEvent) {
@@ -135,6 +138,7 @@
 		const next = resolve(event.target as Element | null);
 		if (next.mode !== mode) mode = next.mode;
 		if (next.label !== label) label = next.label;
+		if (next.icon !== icon) icon = next.icon;
 		schedule();
 	}
 
@@ -177,22 +181,83 @@
 				stroke-linejoin="round"
 			/>
 		</svg>
-		<span class="cursor__ring"></span>
-		<span class="cursor__caret"></span>
-		<svg class="cursor__pan" width="34" height="14" viewBox="0 0 34 14" fill="none">
+		<!-- The pointing hand, drawn so its fingertip lands on (0,0) too — the
+		     shape swaps under the pointer without the hotspot moving. -->
+		<svg class="cursor__hand" width="22" height="26" viewBox="0 0 22 26" fill="none">
 			<path
-				d="M6 3 L2 7 L6 11 M28 3 L32 7 L28 11 M4 7 H30"
+				d="M8.7 13.2V4.5a1.75 1.75 0 0 1 3.5 0v5.1a1.6 1.6 0 0 1 3.2 0v1.1a1.6 1.6 0 0 1 3.2 0v5.6c0 3.8-2.4 6.7-6.3 6.7-3.4 0-4.9-1.5-6.4-4.1l-2.1-3.7a1.7 1.7 0 0 1 2.7-2z"
+				fill="var(--color-fg-forest)"
 				stroke="var(--color-bg-sand)"
-				stroke-width="1.6"
-				stroke-linecap="round"
+				stroke-width="1.3"
 				stroke-linejoin="round"
 			/>
+			<path
+				d="M12.2 13.4v-3.8M15.4 13.4v-2.6"
+				stroke="var(--color-bg-sand)"
+				stroke-width="1.1"
+				stroke-linecap="round"
+				opacity="0.75"
+			/>
 		</svg>
-		<span class="cursor__toggle">
-			<span class="cursor__toggle-bar"></span>
-			<span class="cursor__toggle-bar cursor__toggle-bar--v"></span>
+		<span class="cursor__breath"></span>
+		<span class="cursor__caret"></span>
+		<!-- Opens in place rather than navigating, so: a magnifier, not a hand. -->
+		<svg class="cursor__zoom" width="30" height="30" viewBox="0 0 30 30" fill="none">
+			<circle cx="13" cy="13" r="8.4" fill="var(--color-fg-forest)" />
+			<circle
+				cx="13"
+				cy="13"
+				r="8.4"
+				stroke="var(--color-bg-sand)"
+				stroke-width="1.4"
+				opacity="0.55"
+			/>
+			<path
+				d="M13 9.6v6.8M9.6 13h6.8"
+				stroke="var(--color-bg-sand)"
+				stroke-width="1.5"
+				stroke-linecap="round"
+			/>
+			<path
+				d="M19.2 19.2 25 25"
+				stroke="var(--color-fg-forest)"
+				stroke-width="3.4"
+				stroke-linecap="round"
+			/>
+			<path
+				d="M19.2 19.2 25 25"
+				stroke="var(--color-bg-sand)"
+				stroke-width="1.4"
+				stroke-linecap="round"
+			/>
+		</svg>
+		<span class="cursor__card">
+			{#if icon === 'zoom'}
+				<!-- Opens in place. The magnifier says that before the words do. -->
+				<svg class="cursor__card-icon" width="13" height="13" viewBox="0 0 14 14" fill="none">
+					<circle cx="5.8" cy="5.8" r="4.2" stroke="currentColor" stroke-width="1.4" />
+					<path
+						d="M5.8 4v3.6M4 5.8h3.6M9 9l3.4 3.4"
+						stroke="currentColor"
+						stroke-width="1.4"
+						stroke-linecap="round"
+					/>
+				</svg>
+			{:else if icon === 'page'}
+				<!-- Leaves for another page. The same up-right arrow the CTA
+				     buttons use, so the two say the same thing. -->
+				<svg class="cursor__card-icon" width="13" height="13" viewBox="0 0 14 14" fill="none">
+					<path
+						d="M3 11L11 3M11 3H6M11 3V8"
+						stroke="currentColor"
+						stroke-width="1.4"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+					/>
+				</svg>
+			{/if}
+			{label}
 		</span>
-		<span class="cursor__card">{label}</span>
 	</div>
 {/if}
 
@@ -220,12 +285,12 @@
 	   max-width: none is load-bearing. The wrapper has no size of its own (every
 	   child is absolute), and app.css's reset caps svg and img at max-width:
 	   100% — which against a zero-width containing block is zero. The arrowhead
-	   computed to 0x0 and the two-headed arrow to 10px until this was here. */
+	   computed to 0x0 until this was here. */
 	.cursor__arrow,
-	.cursor__ring,
+	.cursor__hand,
+	.cursor__breath,
 	.cursor__caret,
-	.cursor__pan,
-	.cursor__toggle,
+	.cursor__zoom,
 	.cursor__card {
 		position: absolute;
 		top: 0;
@@ -233,11 +298,11 @@
 		max-width: none;
 		opacity: 0;
 		transition:
-			transform 220ms var(--ease-arrow),
-			opacity 140ms var(--ease-out);
+			transform 200ms var(--ease-arrow),
+			opacity 130ms var(--ease-out);
 	}
 
-	/* ─── The arrowhead ─── */
+	/* ─── The arrowhead, which is the cursor at rest ─── */
 	.cursor__arrow {
 		display: block;
 		width: 17px;
@@ -247,41 +312,77 @@
 		opacity: 1;
 	}
 
+	.cursor--link .cursor__arrow,
+	.cursor--zoom .cursor__arrow,
 	.cursor--text .cursor__arrow,
-	.cursor--drag .cursor__arrow,
-	.cursor--dragging .cursor__arrow,
-	.cursor--expand .cursor__arrow,
-	.cursor--collapse .cursor__arrow,
 	.cursor--label .cursor__arrow {
-		transform: scale(0.3);
+		transform: scale(0.35);
 		opacity: 0;
-	}
-
-	/* Tucked inside the ring rather than hidden by it, so a link still shows
-	   which way the pointer is facing. */
-	.cursor--link .cursor__arrow {
-		transform: scale(0.72);
 	}
 
 	.cursor--disabled .cursor__arrow {
 		opacity: 0.4;
 	}
 
-	/* ─── The ring, for anything clickable ─── */
-	.cursor__ring {
-		width: 30px;
-		height: 30px;
-		margin: -15px 0 0 -15px;
-		border-radius: 50%;
-		box-shadow:
-			inset 0 0 0 1px var(--color-fg-forest),
-			0 0 0 1px var(--color-bg-sand);
-		transform: scale(0.3);
+	/* ─── The hand, for anything clickable ───
+	   A ring around the arrowhead looked good and meant nothing. This is the one
+	   shape a visitor already knows, and it is the shape the native cursor would
+	   have shown them if it were still there. */
+	.cursor__hand {
+		display: block;
+		width: 22px;
+		height: 26px;
+		/* The fingertip sits at roughly (10.4, 2.8) in the glyph's own box, so
+		   the whole thing shifts up and left by that much to put it exactly on
+		   the pointer — the hotspot must not jump when the shape swaps. */
+		margin: -3px 0 0 -10px;
+		transform-origin: 10px 3px;
+		transform: scale(0.4);
 	}
 
-	.cursor--link .cursor__ring {
+	.cursor--link .cursor__hand {
 		transform: scale(1);
 		opacity: 1;
+	}
+
+	/* ─── The breathing ring, in the hero ───
+	   Not a replacement for the arrowhead — it sits around it. The site teaches
+	   a longer exhale than inhale, so the ring does the same: it expands over
+	   4 of the 10 seconds and releases over the other 6, with a beat of stillness
+	   at the top. Reduced motion never reaches this: the whole cursor is off by
+	   then and the native one is back. */
+	.cursor__breath {
+		width: 44px;
+		height: 44px;
+		margin: -22px 0 0 -22px;
+		border-radius: 50%;
+		border: 1px solid color-mix(in srgb, currentcolor 34%, transparent);
+		color: var(--color-fg-forest);
+		transform: scale(0.55);
+	}
+
+	.cursor--breathe .cursor__breath {
+		opacity: 1;
+		animation: cursor-breathe 10s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+	}
+
+	@keyframes cursor-breathe {
+		0% {
+			transform: scale(0.62);
+			opacity: 0.45;
+		}
+		40% {
+			transform: scale(1);
+			opacity: 1;
+		}
+		52% {
+			transform: scale(1);
+			opacity: 1;
+		}
+		100% {
+			transform: scale(0.62);
+			opacity: 0.45;
+		}
 	}
 
 	/* ─── The caret, for text entry ─── */
@@ -300,76 +401,26 @@
 		opacity: 1;
 	}
 
-	/* ─── The two-headed arrow, for a surface you can drag ─── */
-	.cursor__pan {
+	/* ─── The magnifier, for something that opens in place ─── */
+	.cursor__zoom {
 		display: block;
-		width: 44px;
-		height: 24px;
-		margin: -12px 0 0 -22px;
-		padding: 5px;
-		border-radius: var(--radius-full);
-		background: var(--color-fg-forest);
+		width: 30px;
+		height: 30px;
+		margin: -13px 0 0 -13px;
+		transform-origin: 13px 13px;
 		transform: scale(0.4);
 	}
 
-	.cursor--drag .cursor__pan,
-	.cursor--dragging .cursor__pan {
+	.cursor--zoom .cursor__zoom {
 		transform: scale(1);
 		opacity: 1;
-	}
-
-	/* Held, it squeezes along its own axis — the same gesture the fan is making. */
-	.cursor--dragging .cursor__pan {
-		transform: scale(0.86, 0.94);
-	}
-
-	/* ─── The circled +, for a disclosure ─── */
-	.cursor__toggle {
-		display: block;
-		width: 32px;
-		height: 32px;
-		margin: -16px 0 0 -16px;
-		border-radius: 50%;
-		background: var(--color-fg-forest);
-		box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-bg-sand) 55%, transparent);
-		transform: scale(0.3);
-	}
-
-	.cursor--expand .cursor__toggle,
-	.cursor--collapse .cursor__toggle {
-		transform: scale(1);
-		opacity: 1;
-	}
-
-	.cursor__toggle-bar {
-		position: absolute;
-		top: 50%;
-		left: 50%;
-		width: 12px;
-		height: 1.5px;
-		margin: -0.75px 0 0 -6px;
-		border-radius: 1px;
-		background: var(--color-bg-sand);
-		transition: transform 260ms var(--ease-arrow);
-	}
-
-	.cursor__toggle-bar--v {
-		transform: rotate(90deg);
-	}
-
-	/* Open, the + turns into a × rather than losing a stroke — the same shape
-	   carrying both states is what makes it read as one control. */
-	.cursor--collapse .cursor__toggle-bar {
-		transform: rotate(45deg);
-	}
-
-	.cursor--collapse .cursor__toggle-bar--v {
-		transform: rotate(135deg);
 	}
 
 	/* ─── The label card ─── */
 	.cursor__card {
-		display: block;
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
 		padding: 0.375rem 0.625rem;
 		/* Square where the tip was, rounded everywhere else. */
 		border-radius: 0 var(--radius-sm) var(--radius-sm) var(--radius-sm);
@@ -390,5 +441,11 @@
 	.cursor--label .cursor__card {
 		transform: scale(1);
 		opacity: 1;
+	}
+
+	.cursor__card-icon {
+		flex: none;
+		max-width: none;
+		opacity: 0.85;
 	}
 </style>

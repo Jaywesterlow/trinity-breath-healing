@@ -57,6 +57,10 @@
 		 * Replaces the .treatments__jump overlay, which covered the card and
 		 * so blocked :hover from ever reaching it. */
 		onCardClick?: (e: MouseEvent) => void;
+		/** Click on the corner arrow. Same contract as onCardClick, except that
+		 *  on the centred card it lets the navigation through instead of opening
+		 *  the modal — that is the whole difference between the two targets. */
+		onArrowClick?: (e: MouseEvent) => void;
 		/** True for the repeated copies the carousel renders so its loop has
 		 * off-screen slots to recycle through. Visually identical, but taken out
 		 * of the accessibility tree and the tab order so each service is
@@ -74,20 +78,35 @@
 		magnetic: isMagnetic = false,
 		dragging = false,
 		onCardClick,
+		onArrowClick,
 		duplicate = false
 	}: Props = $props();
 </script>
 
-<a
-	href={buttonHref}
+<!-- Two targets, not one. The card opens the service in a modal; the corner
+     arrow goes to the service's own page. They cannot be nested, so the card's
+     link is an overlay stretched across the whole card and the arrow sits above
+     it — the pattern this component used before 7c557ae, back because there are
+     genuinely two destinations again.
+
+     The overlay still carries `href`, so without JavaScript (and to a crawler)
+     the card is exactly what it always was: a link to /diensten/<slug>. -->
+<article
 	class="tcard"
-	aria-label={`${buttonLabel} over ${label}`}
-	draggable="false"
 	aria-hidden={duplicate ? 'true' : undefined}
-	tabindex={duplicate ? -1 : undefined}
-	onclick={onCardClick}
 	use:magnetic={{ enabled: isMagnetic, dragging }}
 >
+	<a
+		href={buttonHref}
+		class="tcard__link"
+		aria-label={`${buttonLabel} over ${label}`}
+		draggable="false"
+		tabindex={duplicate ? -1 : undefined}
+		onclick={onCardClick}
+		data-tooltip="Bekijk in het kort"
+		data-tooltip-icon="zoom"
+	></a>
+
 	<div class="tcard__icon-wrap">
 		{#if icon}
 			<img src={icon} alt="" aria-hidden="true" class="tcard__icon" draggable="false" />
@@ -103,16 +122,18 @@
 		<div class="tcard__bottom">
 			<p class="tcard__title">{label}</p>
 
-			<!-- Decorative only — the whole card above is now the single <a>, so
-			     this no longer needs to be its own link or carry a stretched-link
-			     pseudo-element (simplification of what shipped in 7c557ae: with no
-			     second link inside the card there's no nested-link problem left to
-			     solve). aria-hidden since it adds no information beyond the card's
-			     own accessible name. -->
-			<span
+			<!-- The second destination: the service's own page, rather than the
+			     modal the card opens. It sits above the card's overlay link (see
+			     the z-index below) so a click here goes to the page instead. -->
+			<a
+				href={buttonHref}
 				class="tcard__arrow arrow-swap roll-host"
-				aria-hidden="true"
-				data-tooltip="Bekijk {label}"
+				aria-label={`Open de pagina over ${label}`}
+				draggable="false"
+				tabindex={duplicate ? -1 : undefined}
+				onclick={onArrowClick}
+				data-tooltip="Open de pagina"
+				data-tooltip-icon="page"
 			>
 				<!-- Two copies: the visible one leaves along the diagonal it points
 				     down, and the second arrives on that same axis from the
@@ -140,7 +161,7 @@
 						/>
 					</svg>
 				</span>
-			</span>
+			</a>
 		</div>
 
 		<!-- Always in the DOM, collapsed to zero height rather than removed —
@@ -150,7 +171,7 @@
 			<p class="tcard__description">{description}</p>
 		</div>
 	</div>
-</a>
+</article>
 
 <style>
 	.tcard {
@@ -165,7 +186,6 @@
 		background: var(--color-brand-green);
 		color: var(--color-bg-sand);
 		text-decoration: none;
-		cursor: pointer;
 		--tcard-scale: 1;
 		/* The reveal (icon fade-out, title/arrow slide-up, description
 		   fade-in) runs at half the speed of the site's base motion token —
@@ -203,6 +223,22 @@
 		   actively tracking (it used to override it to 0s, which silently
 		   removed the scale's animation entirely). */
 		transition: transform var(--tcard-transition-duration, var(--motion-fast)) var(--ease-out);
+	}
+
+	/* The card's own link, stretched across it. Not a wrapper any more: the
+	   corner arrow is a second link now, and one anchor cannot contain another.
+	   Everything visible sits in normal flow underneath this; the arrow lifts
+	   itself above it. */
+	.tcard__link {
+		position: absolute;
+		/* Negative by exactly the card's padding: an absolutely positioned child
+		   is placed against its ancestor's PADDING box, so `inset: 0` would have
+		   left a 12px dead border all round — and the modal morphs out of this
+		   element's rect, so it has to be the card's full box. */
+		inset: calc(-1 * var(--space-3));
+		z-index: 1;
+		border-radius: inherit;
+		cursor: pointer;
 	}
 
 	.tcard__icon-wrap {
@@ -393,6 +429,11 @@
 			   and glyph (the svg rule below) scale together so the arrow's
 			   proportions inside the circle hold. */
 			display: inline-flex;
+			/* Above the card's stretched link, which is what makes this a
+			   separate destination rather than a decoration sitting on one. */
+			position: relative;
+			z-index: 2;
+			cursor: pointer;
 			flex-shrink: 0;
 			width: 2.625rem;
 			height: 2.625rem;

@@ -22,6 +22,7 @@
 
 	const SAND = 'var(--color-bg-sand)';
 	const FOREST = 'var(--color-fg-forest)';
+	const WHITE = '#ffffff';
 
 	const ON_LIGHT: Partial<Record<IconKey, Paint>> = {
 		whatsapp: { fill: '#128c7e', ink: SAND }, // WhatsApp "Surfie Green" — 3.68:1
@@ -43,10 +44,17 @@
 		// footer at all; this one is 3.07:1 with a 5.70:1 glyph on it.
 		mail: { fill: '#50d9ff', ink: FOREST },
 		instagram: {
-			// The other half, for the same reason in reverse: forest on these is
-			// 3.4–7.1:1, where the blue end is 1.8:1.
-			fill: 'linear-gradient(135deg, #f77737, #fcaf45, #ffdc80)',
-			ink: FOREST
+			// Instagram's actual icon: the full ramp running bottom-left to
+			// top-right — gold, orange, magenta, purple, blue — with a white
+			// glyph, which is the combination the app icon itself uses. The half
+			// ramp that was here read as a sunset rather than as Instagram.
+			//
+			// White is 4.7–6.1:1 across the magenta/purple/blue the glyph
+			// actually sits on, and 1.35:1 only in the gold corner behind its
+			// lower-left stroke. The resting state carries the 3:1 this needs
+			// (sand on the footer's green is 4.50:1); this is the hover.
+			fill: 'linear-gradient(45deg, #feda75 0%, #fa7e1e 25%, #d62976 50%, #962fbf 75%, #4f5bd5 100%)',
+			ink: WHITE
 		},
 		x: { fill: '#ffffff', ink: FOREST },
 		facebook: { fill: '#1877f2', ink: SAND }

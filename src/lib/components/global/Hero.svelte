@@ -35,7 +35,10 @@
 	});
 </script>
 
-<section class="hero" bind:this={sectionEl}>
+<!-- data-cursor: the pointer keeps its arrowhead here but picks up a ring that
+     breathes with it, at 4s in / 6s out — the pace this practice actually
+     teaches. Any link inside still takes over with the hand. -->
+<section class="hero" bind:this={sectionEl} data-cursor="breathe">
 	<div class="hero__inner">
 		<!-- Image column: top on mobile (DOM order), right on desktop (order:2) -->
 		<div class="hero__image-col">

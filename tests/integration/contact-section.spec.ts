@@ -211,9 +211,15 @@ test.describe('Contact — date planner', () => {
 
 	/** The first day the schedule actually offers — weekends and past days are not it. */
 	const openDay = (page: Page) =>
-		pane(page).getByRole('gridcell').and(page.locator('button:not([aria-disabled="true"])')).first();
+		pane(page)
+			.getByRole('gridcell')
+			.and(page.locator('button:not([aria-disabled="true"])'))
+			.first();
 
-	const times = (page: Page) => pane(page).getByRole('group', { name: /Tijden op/ }).getByRole('button');
+	const times = (page: Page) =>
+		pane(page)
+			.getByRole('group', { name: /Tijden op/ })
+			.getByRole('button');
 
 	/** Steps crossfade: for ~160ms both panels are mounted. Wait for one. */
 	const settled = (page: Page) => expect(page.locator('.planner__step')).toHaveCount(1);

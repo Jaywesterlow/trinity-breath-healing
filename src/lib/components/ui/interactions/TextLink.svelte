@@ -6,13 +6,30 @@
 		showArrow?: boolean;
 		size?: 'lg' | 'sm';
 		tone?: 'muted' | 'gold-soft';
+		/** What the cursor says over this link — see CursorTooltip.svelte.
+		 *  Omitted, the cursor stays the plain hand. */
+		tooltip?: string;
+		/** Glyph in front of that wording: 'page' for the up-right arrow, 'zoom'
+		 *  for the magnifier. */
+		tooltipIcon?: 'page' | 'zoom';
 	}
 
-	let { label, href, inverted = false, showArrow = true, size = 'lg', tone }: Props = $props();
+	let {
+		label,
+		href,
+		inverted = false,
+		showArrow = true,
+		size = 'lg',
+		tone,
+		tooltip,
+		tooltipIcon
+	}: Props = $props();
 </script>
 
 <a
 	{href}
+	data-tooltip={tooltip}
+	data-tooltip-icon={tooltipIcon}
 	class="text-link link-underline roll-host"
 	class:text-link--inverted={inverted}
 	class:text-link--sm={size === 'sm'}
