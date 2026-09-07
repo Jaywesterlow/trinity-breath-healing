@@ -75,11 +75,10 @@
 	let turns = $state(0);
 	let toggleHost: Element | null = null;
 
-	/* Bumped on every press. The ring below is keyed on it, so each press mounts
-	   a fresh element whose CSS animation runs once from the start — restarting
-	   an animation on a node that is already playing one means fighting the
-	   engine, and the ring has to be able to fire twice in quick succession. */
-	let pulses = $state(0);
+	/* Held down. The whole cursor shrinks a little while a button is pressed and
+	   comes back on release — the same thing a physical button does. */
+	let pressed = $state(false);
+	let ringEl: HTMLSpanElement | null = $state(null);
 
 	/* Written straight to the node rather than through state: this runs on every
 	   frame the pointer moves, and a reactive round-trip per frame is exactly
@@ -100,6 +99,7 @@
 
 	function clear() {
 		visible = false;
+		pressed = false;
 		mode = 'default';
 		label = '';
 		icon = '';
@@ -120,7 +120,26 @@
 
 	function onPress(event: PointerEvent) {
 		if (event.pointerType !== 'mouse') return;
-		pulses += 1;
+		pressed = true;
+		/* Only the link shape pulses, and it is the ring itself doing it rather
+		   than a second element flying out of the pointer: it swells away to
+		   nothing and comes back at the size it started. Over a tooltip there is
+		   no ring to swell, and over a form field or a disclosure the shape is
+		   already saying something of its own. */
+		if (mode !== 'link' || !ringEl) return;
+		ringEl.animate(
+			[
+				{ transform: 'scale(1)', opacity: 1, offset: 0 },
+				{ transform: 'scale(2.1)', opacity: 0, offset: 0.5 },
+				{ transform: 'scale(1)', opacity: 0, offset: 0.52 },
+				{ transform: 'scale(1)', opacity: 1, offset: 1 }
+			],
+			{ duration: 620, easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' }
+		);
+	}
+
+	function onRelease() {
+		pressed = false;
 	}
 
 	function onToggleClick(event: MouseEvent) {
@@ -200,6 +219,8 @@
 
 		window.addEventListener('pointermove', onPointerMove, { passive: true });
 		window.addEventListener('pointerdown', onPress, { passive: true, capture: true });
+		window.addEventListener('pointerup', onRelease, { passive: true, capture: true });
+		window.addEventListener('pointercancel', onRelease, { passive: true, capture: true });
 		window.addEventListener('click', onToggleClick, true);
 		/* Leaving the document, tabbing away, or switching to another tab all end
 		   with the pointer somewhere this page will never hear about again. */
@@ -212,6 +233,8 @@
 			document.documentElement.classList.remove('has-cursor-tooltip');
 			window.removeEventListener('pointermove', onPointerMove);
 			window.removeEventListener('pointerdown', onPress, true);
+			window.removeEventListener('pointerup', onRelease, true);
+			window.removeEventListener('pointercancel', onRelease, true);
 			window.removeEventListener('click', onToggleClick, true);
 			document.removeEventListener('pointerleave', clear);
 			window.removeEventListener('blur', clear);
@@ -222,55 +245,56 @@
 
 {#if enabled}
 	<div bind:this={root} class="cursor cursor--{mode}" class:cursor--on={visible} aria-hidden="true">
-		<!-- Tip at (0,0), which is where the pointer actually is. -->
-		<svg class="cursor__arrow" width="17" height="17" viewBox="0 0 17 17" fill="none">
-			<path
-				d="M0.6 0.6 L15.4 6.3 L8.7 8.7 L6.3 15.4 Z"
-				fill="var(--color-fg-forest)"
-				stroke="var(--color-bg-sand)"
-				stroke-width="1.1"
-				stroke-linejoin="round"
-			/>
-		</svg>
-		<span class="cursor__dot"></span>
-		<span class="cursor__ring"></span>
-		{#if pulses}
-			{#key pulses}
-				<span class="cursor__pulse"></span>
-			{/key}
-		{/if}
-		<span class="cursor__caret"></span>
-		<!-- Turns one way only, like the menu button: + at 0deg, x at 45deg. -->
-		<span class="cursor__toggle" style="--turn: {turns * 45}deg">
-			<span class="cursor__bar"></span>
-			<span class="cursor__bar cursor__bar--v"></span>
-		</span>
-		<span class="cursor__card">
-			{#if icon === 'zoom'}
-				<!-- Opens in place. The magnifier says that before the words do. -->
-				<svg class="cursor__card-icon" width="13" height="13" viewBox="0 0 14 14" fill="none">
-					<circle cx="5.8" cy="5.8" r="4.2" stroke="currentColor" stroke-width="1.4" />
-					<path
-						d="M5.8 4v3.6M4 5.8h3.6M9 9l3.4 3.4"
-						stroke="currentColor"
-						stroke-width="1.4"
-						stroke-linecap="round"
-					/>
-				</svg>
-			{:else if icon === 'page'}
-				<!-- Leaves for another page. The same up-right arrow the CTA
+		<!-- One group holds every shape, so the press shrink is a single transform on
+		     a single node rather than a scale applied to each shape separately (which
+		     would fight each shape's own transform). It sits at the wrapper's origin
+		     and has no size of its own. -->
+		<span class="cursor__scale" class:cursor__scale--pressed={pressed}>
+			<!-- Tip at (0,0), which is where the pointer actually is. -->
+			<svg class="cursor__arrow" width="17" height="17" viewBox="0 0 17 17" fill="none">
+				<path
+					d="M0.6 0.6 L15.4 6.3 L8.7 8.7 L6.3 15.4 Z"
+					fill="var(--color-fg-forest)"
+					stroke="var(--color-bg-sand)"
+					stroke-width="1.1"
+					stroke-linejoin="round"
+				/>
+			</svg>
+			<span class="cursor__dot"></span>
+			<span bind:this={ringEl} class="cursor__ring"></span>
+			<span class="cursor__caret"></span>
+			<!-- Turns one way only, like the menu button: + at 0deg, x at 45deg. -->
+			<span class="cursor__toggle" style="--turn: {turns * 45}deg">
+				<span class="cursor__bar"></span>
+				<span class="cursor__bar cursor__bar--v"></span>
+			</span>
+			<span class="cursor__card">
+				{#if icon === 'zoom'}
+					<!-- Opens in place. The magnifier says that before the words do. -->
+					<svg class="cursor__card-icon" width="13" height="13" viewBox="0 0 14 14" fill="none">
+						<circle cx="5.8" cy="5.8" r="4.2" stroke="currentColor" stroke-width="1.4" />
+						<path
+							d="M5.8 4v3.6M4 5.8h3.6M9 9l3.4 3.4"
+							stroke="currentColor"
+							stroke-width="1.4"
+							stroke-linecap="round"
+						/>
+					</svg>
+				{:else if icon === 'page'}
+					<!-- Leaves for another page. The same up-right arrow the CTA
 				     buttons use, so the two say the same thing. -->
-				<svg class="cursor__card-icon" width="13" height="13" viewBox="0 0 14 14" fill="none">
-					<path
-						d="M3 11L11 3M11 3H6M11 3V8"
-						stroke="currentColor"
-						stroke-width="1.4"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					/>
-				</svg>
-			{/if}
-			{label}
+					<svg class="cursor__card-icon" width="13" height="13" viewBox="0 0 14 14" fill="none">
+						<path
+							d="M3 11L11 3M11 3H6M11 3V8"
+							stroke="currentColor"
+							stroke-width="1.4"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
+				{/if}
+				<span class="cursor__card-text">{label}</span>
+			</span>
 		</span>
 	</div>
 {/if}
@@ -291,6 +315,22 @@
 
 	.cursor--on {
 		opacity: 1;
+	}
+
+	/* No size of its own, so it does not disturb the shapes it holds — they are
+	   all absolutely positioned and resolve against this box's origin, which is
+	   the wrapper's origin, which is the pointer. */
+	.cursor__scale {
+		position: absolute;
+		top: 0;
+		left: 0;
+		transform: scale(1);
+		transform-origin: 0 0;
+		transition: transform 130ms var(--ease-out);
+	}
+
+	.cursor__scale--pressed {
+		transform: scale(0.86);
 	}
 
 	/* Every shape shares one origin — the pointer's own position — and one
@@ -377,52 +417,12 @@
 		transform: scale(0.55);
 	}
 
-	.cursor--link .cursor__ring {
+	.cursor--link .cursor__ring,
+	.cursor--label .cursor__ring {
 		transform: scale(1);
 		opacity: 1;
 		/* Behind the dot by a beat, and slower on the way in than the dot is. */
 		transition-delay: 70ms;
-	}
-
-	/* ─── The click ring ───
-	   Deliberately outside the shared block above: that block owns `opacity` and
-	   a transition on it, and this one is driven by an animation from the moment
-	   it mounts. It answers every press in every mode, because it is reporting
-	   the click itself rather than what was clicked. */
-	.cursor__pulse {
-		position: absolute;
-		top: 0;
-		left: 0;
-		width: 22px;
-		height: 22px;
-		margin: -11px 0 0 -11px;
-		border-radius: 50%;
-		/* Forest between two sand hairlines, the same sandwich the arrowhead uses:
-		   a single-colour ring vanishes on one of the two grounds this site is
-		   built from, and the ring has to read on both. */
-		border: 2px solid color-mix(in srgb, var(--color-fg-forest) 72%, transparent);
-		box-shadow:
-			0 0 0 1px color-mix(in srgb, var(--color-bg-sand) 55%, transparent),
-			inset 0 0 0 1px color-mix(in srgb, var(--color-bg-sand) 55%, transparent);
-		opacity: 0;
-		animation: cursor-pulse 560ms var(--ease-out) forwards;
-	}
-
-	@keyframes cursor-pulse {
-		0% {
-			transform: scale(0.32);
-			opacity: 1;
-		}
-		/* Holds most of its strength through the first half of the travel — with a
-		   straight fade the ring is already ghost-faint by the time it is wide
-		   enough to notice. */
-		45% {
-			opacity: 0.72;
-		}
-		100% {
-			transform: scale(2.1);
-			opacity: 0;
-		}
 	}
 
 	/* ─── The caret, for text entry ─── */
@@ -479,24 +479,35 @@
 		transform: rotate(90deg);
 	}
 
-	/* ─── The label card ─── */
+	/* ─── The label card ───
+	   The hollow the clickable shape sits in. --notch is the ring's own radius
+	   (22px across, so 11) plus 2px, so the card follows the ring at a constant
+	   hairline's distance instead of sitting in a vague gap. The corner stays
+	   square: the cut is what shapes it, and it has to be a true quarter-circle
+	   for the arc to meet the two straight edges.
+
+	   Two layers rather than a border, because a border does not survive the cut:
+	   masking the card takes the background and the border away together and
+	   leaves a raw edge along the arc. So this element IS the hairline — a solid
+	   fill, 1px of padding thick — and ::before is the card's own colour laid on
+	   top, inset by that 1px and cut by a circle 1px wider. What is left of the
+	   first layer is a 1px outline that follows every edge including the arc.
+
+	   Each layer's cut is centred on the pointer: the card's at its own origin,
+	   the fill's at (-1px, -1px), which is where the pointer sits once the fill
+	   has been inset. The hairline is sand at 40% composited onto forest by hand,
+	   since it is now painting on the page rather than over the card. */
 	.cursor__card {
-		/* The hollow the dot sits in: a circle of --notch radius centred on the
-		   pointer, cut out of the card. The corner stays square so the cut is a
-		   clean quarter-circle, and the extra left/top padding keeps the first
-		   character clear of the arc. */
-		--notch: 14px;
+		--notch: 13px;
+		--hairline: color-mix(in srgb, var(--color-bg-sand) 40%, var(--color-fg-forest));
 
 		display: flex;
 		align-items: center;
 		gap: 0.375rem;
-		padding: 0.4375rem 0.625rem 0.4375rem 1rem;
+		/* The 1px is the hairline's thickness, not spacing. */
+		padding: calc(0.4375rem + 1px) calc(0.625rem + 1px) calc(0.4375rem + 1px) calc(1rem + 1px);
 		border-radius: 0 var(--radius-sm) var(--radius-sm) var(--radius-sm);
-		mask-image: radial-gradient(circle var(--notch) at 0 0, transparent 98%, #000 100%);
-		background: var(--color-fg-forest);
-		/* The green surfaces are only 1.86:1 against the card. The hairline keeps
-		   its edge readable on those without darkening the card itself. */
-		border: 1px solid color-mix(in srgb, var(--color-bg-sand) 40%, transparent);
+		background: var(--hairline);
 		color: var(--color-bg-sand);
 		font-family: var(--font-body);
 		font-size: 0.8125rem; /* 13px */
@@ -505,6 +516,29 @@
 		white-space: nowrap;
 		transform-origin: 0 0;
 		transform: scale(0.2);
+		mask-image: radial-gradient(circle var(--notch) at 0 0, transparent 100%, #000 100%);
+		mask-repeat: no-repeat;
+	}
+
+	.cursor__card::before {
+		content: '';
+		position: absolute;
+		inset: 1px;
+		border-radius: 0 calc(var(--radius-sm) - 1px) calc(var(--radius-sm) - 1px)
+			calc(var(--radius-sm) - 1px);
+		background: var(--color-fg-forest);
+		mask-image: radial-gradient(
+			circle calc(var(--notch) + 1px) at -1px -1px,
+			transparent 100%,
+			#000 100%
+		);
+		mask-repeat: no-repeat;
+	}
+
+	/* The fill above is positioned, so it paints over ordinary inline content.
+	   Positioning the label and the glyph puts them back on top of it. */
+	.cursor__card-text {
+		position: relative;
 	}
 
 	.cursor--label .cursor__card {
@@ -513,6 +547,7 @@
 	}
 
 	.cursor__card-icon {
+		position: relative;
 		flex: none;
 		max-width: none;
 		opacity: 0.85;
