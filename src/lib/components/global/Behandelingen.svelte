@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount, onDestroy, tick } from 'svelte';
-	import { reveal } from '$lib/actions/reveal';
+	import { refreshRevealBands, reveal } from '$lib/actions/reveal';
 	import { BRAND } from '$lib/constants/brand';
 	import TreatmentCard from '$lib/components/ui/TreatmentCard.svelte';
 	import ServiceModal from '$lib/components/ui/ServiceModal.svelte';
@@ -343,6 +343,47 @@
 		return distance > 0 ? distance : null;
 	}
 
+	/**
+	 * Tells the scroll fade where this carousel actually starts and stops.
+	 *
+	 * .treatments__carousel-wrap's box is much taller than anything it draws: the fan has
+	 * to hold a rotated card at every position from -2 to 2, so its top edge sits a good
+	 * hundred pixels above the centre card and its bottom well below the controls. Faded on
+	 * that box, the cards arrived long before they were on screen and left long after they
+	 * were gone. These two custom properties give reveal the visible edges instead — the
+	 * top of the centre card, and the bottom of the controls — and nothing about the band
+	 * itself changes; see reveal.ts's note on --reveal-inset-*.
+	 */
+	function measureRevealBand(): void {
+		const wrap = fanEl?.closest<HTMLElement>('.treatments__carousel-wrap');
+		const controls = wrap?.querySelector<HTMLElement>('.treatments__controls');
+		if (!fanEl || !wrap || !controls) return;
+
+		/* The centre card's own rect, not getCardBandY's — that one is the DRAG band and
+		   pads itself by CARD_BAND_SAFE_MARGIN_PX, which would put the fade 24px early. */
+		let centre: DOMRect | null = null;
+		let nearest = Infinity;
+		fanEl.querySelectorAll<HTMLElement>('.treatments__pivot').forEach((el, i) => {
+			const distance = Math.abs(positions[i]! + offset);
+			if (distance < nearest) {
+				nearest = distance;
+				centre = el.getBoundingClientRect();
+			}
+		});
+		if (!centre) return;
+
+		const box = wrap.getBoundingClientRect();
+		wrap.style.setProperty(
+			'--reveal-inset-top',
+			`${Math.max(0, Math.round((centre as DOMRect).top - box.top))}px`
+		);
+		wrap.style.setProperty(
+			'--reveal-inset-bottom',
+			`${Math.max(0, Math.round(box.bottom - controls.getBoundingClientRect().bottom))}px`
+		);
+		refreshRevealBands();
+	}
+
 	function remeasurePxPerStep(): void {
 		if (!fanEl) return;
 		const measured = measurePxPerStep(fanEl);
@@ -352,6 +393,10 @@
 	onMount(() => {
 		remeasurePxPerStep();
 		window.addEventListener('resize', remeasurePxPerStep);
+		/* After layout: the cards are positioned from --pos, which is only correct once
+		   the first frame has been through the compositor. */
+		requestAnimationFrame(measureRevealBand);
+		window.addEventListener('resize', measureRevealBand);
 
 		// Idle auto-drift's own countdown starts here too, not only after a
 		// first real interaction — a page that loads and is never touched is
@@ -377,6 +422,7 @@
 
 		return () => {
 			window.removeEventListener('resize', remeasurePxPerStep);
+			window.removeEventListener('resize', measureRevealBand);
 			document.removeEventListener('visibilitychange', onVisibilityChange);
 			cancelMotion();
 		};
@@ -1940,8 +1986,8 @@
 
 <section class="treatments" aria-label="Behandelingen">
 	<header class="treatments__header">
-		<p class="treatments__eyebrow" use:reveal={{ delay: 0 }}>Diensten</p>
-		<h2 class="treatments__heading" use:reveal={{ delay: 120 }}>
+		<p class="treatments__eyebrow" use:reveal>Diensten</p>
+		<h2 class="treatments__heading" use:reveal>
 			Elke behandeling is uniek, met een centraal doel: jouw herstel.
 		</h2>
 	</header>
@@ -1949,7 +1995,7 @@
 	<!-- The fan and its controls fade as one unit. distance: 0 — the cards inside are
 	     positioned by their own transforms and the modal animates their faces, so this
 	     touches nothing but the wrapper's opacity. -->
-	<div class="treatments__carousel-wrap" use:reveal={{ delay: 240, distance: 0 }}>
+	<div class="treatments__carousel-wrap" use:reveal={{ distance: 0 }}>
 		<div
 			class="treatments__fan"
 			class:treatments__fan--grabbable={cursorInBand}

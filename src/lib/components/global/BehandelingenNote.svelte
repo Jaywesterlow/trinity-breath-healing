@@ -20,7 +20,7 @@
 </script>
 
 <section class="note" aria-label="Over de behandelingen">
-	<p class="note__text" use:reveal={{ delay: 0 }}>
+	<p class="note__text" use:reveal>
 		Je hoeft niet te weten welke behandeling je nodig hebt. Dat zoeken we in het eerste gesprek
 		samen uit.
 	</p>

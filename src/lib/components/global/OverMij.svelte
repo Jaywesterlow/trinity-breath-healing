@@ -23,7 +23,7 @@
 </script>
 
 {#snippet portraitCard(svg: string, modifier: string)}
-	<div class="about__card {modifier}">
+	<div class="about__card {modifier}" use:reveal={{ distance: 0 }}>
 		<DrawOn {svg} class="about__card-draw" />
 	</div>
 {/snippet}
@@ -31,17 +31,16 @@
 <section class="about" id="over-mij">
 	<div class="about__inner">
 		<header class="about__header">
-			<p class="about__eyebrow" use:reveal={{ delay: 0 }}>Over mij</p>
-			<h2 class="about__heading" use:reveal={{ delay: 120 }}>
-				Vanuit eigen ervaring weet ik wat jij doormaakt.
-			</h2>
+			<p class="about__eyebrow" use:reveal>Over mij</p>
+			<h2 class="about__heading" use:reveal>Vanuit eigen ervaring weet ik wat jij doormaakt.</h2>
 		</header>
 
-		<!-- The portrait card fades as one block, art and scrim together. distance: 0
-		     because the cards inside it are absolutely positioned against this box on
-		     desktop, and a transform here would move their containing block mid-entrance. -->
-		<div class="about__media" use:reveal={{ delay: 0, distance: 0 }}>
-			<div class="about__card about__card--mobile">
+		<!-- Each portrait card answers the band on its own edges — on desktop they are two
+		     separate cards at different heights, and fading the whole media block made them
+		     leave together. distance: 0 because their contents are positioned against these
+		     boxes, and a transform would move the containing block mid-entrance. -->
+		<div class="about__media">
+			<div class="about__card about__card--mobile" use:reveal={{ distance: 0 }}>
 				<DrawOn svg={portrait2} class="about__card-draw" />
 				<div class="about__gradient-blur" aria-hidden="true">
 					<div></div>
@@ -65,16 +64,16 @@
 		</div>
 
 		<div class="about__content">
-			<p class="about__body" use:reveal={{ delay: 240 }}>{bodyText}</p>
+			<p class="about__body" use:reveal>{bodyText}</p>
 			<ul class="about__features">
-				<li use:reveal={{ delay: 360 }}>
+				<li use:reveal>
 					<AboutFeature
 						artSvg={heartSvg}
 						title="Vanuit eigen ervaring"
 						body="Geen aangeleerde theorie, maar een aanpak die ik zelf heb doorleefd."
 					/>
 				</li>
-				<li use:reveal={{ delay: 480 }}>
+				<li use:reveal>
 					<AboutFeature
 						artSvg={sproutSvg}
 						iconScale={1.2}
@@ -86,19 +85,19 @@
 			<!-- The link is a component, so the reveal goes on a wrapper. align-self keeps
 			     the box the width of the link rather than the column, so the fade lands on
 			     the link and not on a full-width strip of nothing. -->
-			<div class="about__more" use:reveal={{ delay: 600 }}>
+			<div class="about__more" use:reveal>
 				<TextLink label="Lees meer over mij" href="/over-mij" tone="muted" />
 			</div>
 		</div>
 
 		<ul class="about__stats">
-			<li use:reveal={{ delay: 0 }}>
+			<li use:reveal>
 				<AboutStat value={BRAND.stats.yearsExperience} label="Jaren ervaring" />
 			</li>
-			<li use:reveal={{ delay: 120 }}>
+			<li use:reveal>
 				<AboutStat value={BRAND.stats.clientsHelped} label="Klachten verholpen" />
 			</li>
-			<li use:reveal={{ delay: 240 }}>
+			<li use:reveal>
 				<AboutStat iconSrc="/images/infinity.png" label="Mogelijkheden voor herstel" />
 			</li>
 		</ul>

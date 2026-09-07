@@ -62,8 +62,8 @@
 	     `exit: false` because the way out belongs to the row, not to these lines: Werkwijze
 	     fades whole cards, art included, one after the other. Left here as well, they would
 	     fade a second time inside a card that is already fading. -->
-	<h3 class="wcard__title" use:reveal={{ delay: 0, exit: false }}>{title}</h3>
-	<p class="wcard__body" use:reveal={{ delay: 110, exit: false }}>{body}</p>
+	<h3 class="wcard__title" use:reveal={{ exit: false }}>{title}</h3>
+	<p class="wcard__body" use:reveal={{ exit: false }}>{body}</p>
 
 	{#if variant === 'filled'}
 		{#if artSvg}
@@ -83,7 +83,7 @@
 	{/if}
 
 	{#if ctaHref && ctaLabel}
-		<div class="wcard__cta" use:reveal={{ delay: 220, exit: false }}>
+		<div class="wcard__cta" use:reveal={{ exit: false }}>
 			<ButtonLink href={ctaHref} label={ctaLabel} withArrow block />
 		</div>
 	{/if}

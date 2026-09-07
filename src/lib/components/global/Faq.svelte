@@ -106,8 +106,8 @@
 	<div class="faq__container">
 		{#if showHeading}
 			<header class="faq__header">
-				<p class="faq__eyebrow" use:reveal={{ delay: 0 }}>FAQ</p>
-				<h2 class="faq__heading" use:reveal={{ delay: 120 }}>Veelgestelde vragen</h2>
+				<p class="faq__eyebrow" use:reveal>FAQ</p>
+				<h2 class="faq__heading" use:reveal>Veelgestelde vragen</h2>
 			</header>
 		{/if}
 
@@ -118,11 +118,10 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div class="faq__list" onclick={onListClick}>
-			{#each faqItems as item, i (item.question)}
+			{#each faqItems as item (item.question)}
 				<details
 					class="faq__item"
 					use:reveal={{
-						delay: Math.min(240 + i * 90, 240 + 6 * 90),
 						/* No rise here: this element owns its own grid-template-rows disclosure
 						   transition (open/close, see the style block below). Animating its
 						   transform — even via Web Animations, even to a no-op offset — promotes

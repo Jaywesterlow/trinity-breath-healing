@@ -19,58 +19,79 @@ const executablePath = process.env.PLAYWRIGHT_CHROMIUM_PATH || undefined;
 const b = await chromium.launch({ executablePath });
 
 async function run(width, label, prep) {
-  // bypassCSP: the page's own Content-Security-Policy refuses injected inline
-  // script, which is correct of it and would otherwise block axe entirely.
-  const ctx = await b.newContext({ viewport: { width, height: 1000 }, bypassCSP: true });
-  const p = await ctx.newPage();
-  await p.goto(BASE, { waitUntil: 'networkidle' });
-  // Every section fades itself in when it scrolls into view, so anything never
-  // scrolled to is mid-fade when axe samples it — and a half-faded colour reads
-  // as a contrast failure that does not exist. Walk the whole page first, then
-  // let the last reveal finish.
-  await p.evaluate(async () => {
-    const step = window.innerHeight * 0.8;
-    for (let y = 0; y < document.body.scrollHeight; y += step) {
-      window.scrollTo(0, y);
-      await new Promise((r) => setTimeout(r, 250));
-    }
-    window.scrollTo(0, 0);
-  });
-  await p.waitForTimeout(3000);
-  if (prep) await prep(p);
-  await p.addScriptTag({ content: axe });
-  const r = await p.evaluate((t) => axe.run(document, { runOnly: { type: 'tag', values: t } }), TAGS);
-  console.log(`\n=== ${label} (${width}px) — ${r.violations.length} violation type(s) ===`);
-  for (const v of r.violations) {
-    console.log(`  [${v.impact}] ${v.id}: ${v.help}  (${v.nodes.length} node(s))`);
-    for (const n of v.nodes.slice(0, 5)) {
-      console.log(`      ${n.target.join(' ')}`);
-      const m = (n.any[0]?.message || n.all[0]?.message || '').split('\n')[0];
-      if (m) console.log(`      -> ${m}`);
-    }
-  }
-  await ctx.close();
-  return r.violations.length;
+	// bypassCSP: the page's own Content-Security-Policy refuses injected inline
+	// script, which is correct of it and would otherwise block axe entirely.
+	const ctx = await b.newContext({ viewport: { width, height: 1000 }, bypassCSP: true });
+	const p = await ctx.newPage();
+	await p.goto(BASE, { waitUntil: 'networkidle' });
+	// Every section fades itself in when it scrolls into view, so anything never
+	// scrolled to is mid-fade when axe samples it — and a half-faded colour reads
+	// as a contrast failure that does not exist. Walk the whole page first, then
+	// let the last reveal finish.
+	await p.evaluate(async () => {
+		const step = window.innerHeight * 0.8;
+		for (let y = 0; y < document.body.scrollHeight; y += step) {
+			window.scrollTo(0, y);
+			await new Promise((r) => setTimeout(r, 250));
+		}
+		window.scrollTo(0, 0);
+	});
+	await p.waitForTimeout(3000);
+	if (prep) await prep(p);
+	// Every fade is now per element, so a section can hold several blocks at
+	// different points of their own fade at the instant axe samples. Opacity is
+	// not what this audit is testing — pin every revealed element to 1 and let it
+	// measure the colours as authored.
+	await p.evaluate(() => {
+		// cancel() first: the fade runs through the Web Animations API with
+		// fill: 'forwards', and a filled animation outranks an inline style, so
+		// setting opacity without cancelling changes nothing.
+		document.getAnimations().forEach((a) => a.cancel());
+		for (const el of document.querySelectorAll('[style*="opacity"]')) {
+			el.style.opacity = '1';
+		}
+	});
+	await p.waitForTimeout(200);
+	await p.addScriptTag({ content: axe });
+	const r = await p.evaluate(
+		(t) => axe.run(document, { runOnly: { type: 'tag', values: t } }),
+		TAGS
+	);
+	console.log(`\n=== ${label} (${width}px) — ${r.violations.length} violation type(s) ===`);
+	for (const v of r.violations) {
+		console.log(`  [${v.impact}] ${v.id}: ${v.help}  (${v.nodes.length} node(s))`);
+		for (const n of v.nodes.slice(0, 5)) {
+			console.log(`      ${n.target.join(' ')}`);
+			const m = (n.any[0]?.message || n.all[0]?.message || '').split('\n')[0];
+			if (m) console.log(`      -> ${m}`);
+		}
+	}
+	await ctx.close();
+	return r.violations.length;
 }
 
 const openForm = async (p) => {
-  await p.locator('.route', { hasText: 'Stuur een bericht' }).click();
-  await p.waitForTimeout(600);
+	await p.locator('.route', { hasText: 'Stuur een bericht' }).click();
+	await p.waitForTimeout(600);
 };
 const openPlanner = async (p) => {
-  await p.locator('.route', { hasText: 'Plan een kennismaking' }).click();
-  await p.waitForTimeout(600);
+	await p.locator('.route', { hasText: 'Plan een kennismaking' }).click();
+	await p.waitForTimeout(600);
 };
 
 // Step 3 of the planner is where its own submit button lives, and a violation
 // there is invisible to a sweep that only ever sees the calendar — which is
 // exactly how a 2.1:1 submit survived the first pass.
 const openPlannerStep3 = async (p) => {
-  await openPlanner(p);
-  await p.getByRole('gridcell').and(p.locator('button:not([aria-disabled="true"])')).first().click();
-  await p.waitForTimeout(500);
-  await p.locator('.planner__time:not([aria-disabled="true"])').first().click();
-  await p.waitForTimeout(800);
+	await openPlanner(p);
+	await p
+		.getByRole('gridcell')
+		.and(p.locator('button:not([aria-disabled="true"])'))
+		.first()
+		.click();
+	await p.waitForTimeout(500);
+	await p.locator('.planner__time:not([aria-disabled="true"])').first().click();
+	await p.waitForTimeout(800);
 };
 
 let total = 0;
@@ -84,7 +105,7 @@ await b.close();
 
 console.log(`\nTOTAL violation types across all states: ${total}`);
 if (total > 0) {
-  console.error('\nA11y audit failed.');
-  process.exit(1);
+	console.error('\nA11y audit failed.');
+	process.exit(1);
 }
 console.log('A11y audit passed.');

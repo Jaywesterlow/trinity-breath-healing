@@ -137,6 +137,47 @@ const BAND_BOTTOM = 0.18;
 export const REVEAL_ROOT_MARGIN = `${-BAND_TOP * 100}% 0px ${-BAND_BOTTOM * 100}% 0px`;
 
 /**
+ * Some boxes are much bigger than what they draw. The treatments carousel is the one that
+ * forced this: its track is tall enough to hold a rotated card at every fan position, so the
+ * box's top edge is over a hundred pixels above anything the reader can see, and it was
+ * fading in long before the cards arrived.
+ *
+ * `--reveal-inset-top` / `--reveal-inset-bottom`, in px on the element itself, say how far
+ * inside the box the visible content actually starts and ends. This corrects the ELEMENT,
+ * not the band: the two lines stay exactly where they are for everything on the page, and
+ * what changes is which edge of this element is measured against them. Read from computed
+ * style rather than passed as an option so the correction lives in CSS beside the geometry
+ * it is correcting, and is re-read whenever the observer is rebuilt.
+ */
+function insetsOf(node: HTMLElement): { top: number; bottom: number } {
+	const style = getComputedStyle(node);
+	return {
+		top: parseFloat(style.getPropertyValue('--reveal-inset-top')) || 0,
+		bottom: parseFloat(style.getPropertyValue('--reveal-inset-bottom')) || 0
+	};
+}
+
+/**
+ * The rootMargin for one element.
+ *
+ * With no inset this is the shared percentage band, so a viewport resize needs no rebuild.
+ * With one, the whole thing has to be resolved to px — an inset is a length and cannot be
+ * added to a percentage inside rootMargin — and the element then depends on the rebuild that
+ * the document-height watcher below triggers.
+ *
+ * Intersection begins when `rect.top < rootBottom` and ends when `rect.bottom <= rootTop`, so
+ * pushing rootBottom UP by the top inset delays the entrance until the visible top has
+ * crossed, and pushing rootTop DOWN by the bottom inset delays the exit until the visible
+ * bottom has.
+ */
+function rootMarginFor(node: HTMLElement): string {
+	const { top, bottom } = insetsOf(node);
+	if (!top && !bottom) return REVEAL_ROOT_MARGIN;
+	const vh = window.innerHeight;
+	return `${-(vh * BAND_TOP + bottom)}px 0px ${-(vh * BAND_BOTTOM + top)}px 0px`;
+}
+
+/**
  * True when this element can never reach the fade-in line, however far the page is
  * scrolled — i.e. it sits inside the last screenful, below the line even at maximum
  * scroll. The footer's legal row (privacy statement, terms, copyright) is exactly that,
@@ -160,6 +201,12 @@ function unreachable(node: HTMLElement): boolean {
    the viewport rotating — moves every element's ceiling at once. */
 const heightListeners = new Set<() => void>();
 let heightWatcher: ResizeObserver | null = null;
+
+/** For a component that has just measured and written its own --reveal-inset-*: the vars
+ *  did not exist when the action first read them, so ask every band to be re-read. */
+export function refreshRevealBands() {
+	for (const listener of heightListeners) listener();
+}
 
 function watchDocumentHeight(fn: () => void) {
 	heightListeners.add(fn);
@@ -319,20 +366,19 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 	   instead, and animate from the second callback on. */
 	let firstReport = true;
 
-	observer = new IntersectionObserver(
-		(entries) => {
-			for (const entry of entries) {
-				if (entry.isIntersecting) {
-					if (!released) release();
-					else if (exit) driftTo(1, firstReport ? 0 : RETURN_DURATION);
-				} else if (released && exit) {
-					driftTo(0, firstReport ? 0 : EXIT_DURATION);
-				}
-				firstReport = false;
+	const onCross: IntersectionObserverCallback = (entries) => {
+		for (const entry of entries) {
+			if (entry.isIntersecting) {
+				if (!released) release();
+				else if (exit) driftTo(1, firstReport ? 0 : RETURN_DURATION);
+			} else if (released && exit) {
+				driftTo(0, firstReport ? 0 : EXIT_DURATION);
 			}
-		},
-		{ threshold: 0, rootMargin: REVEAL_ROOT_MARGIN }
-	);
+			firstReport = false;
+		}
+	};
+
+	observer = new IntersectionObserver(onCross, { threshold: 0, rootMargin: rootMarginFor(node) });
 	observer.observe(node);
 
 	/* The last-screenful fallback described on unreachable() above. A second observer on the
@@ -361,8 +407,24 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 		tail.observe(node);
 	}
 
+	/* A rebuild, because an element carrying an inset resolves its band in px and both the
+	   inset and the viewport height can have moved. Cheap: the string is compared first and
+	   the observer is only replaced when it actually differs. */
+	let margin = rootMarginFor(node);
+
+	function resync() {
+		const next = rootMarginFor(node);
+		if (next !== margin) {
+			margin = next;
+			observer?.disconnect();
+			observer = new IntersectionObserver(onCross, { threshold: 0, rootMargin: margin });
+			observer.observe(node);
+		}
+		syncTail();
+	}
+
 	syncTail();
-	const unwatch = watchDocumentHeight(syncTail);
+	const unwatch = watchDocumentHeight(resync);
 
 	/* An element that starts on screen never had an entrance to release, so mark it done and
 	   let the observer drive it from here. */

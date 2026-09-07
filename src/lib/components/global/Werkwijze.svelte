@@ -166,10 +166,8 @@
 	<div class="werkwijze__pin">
 		<div class="werkwijze__sticky">
 			<header class="werkwijze__header">
-				<p class="werkwijze__eyebrow" use:reveal={{ delay: 0 }}>Werkwijze</p>
-				<h2 class="werkwijze__heading" use:reveal={{ delay: 120 }}>
-					Rustig, persoonlijk en op jouw tempo.
-				</h2>
+				<p class="werkwijze__eyebrow" use:reveal>Werkwijze</p>
+				<h2 class="werkwijze__heading" use:reveal>Rustig, persoonlijk en op jouw tempo.</h2>
 			</header>
 
 			<!-- The wrapper exists so the exit observer has something that stays put; see the

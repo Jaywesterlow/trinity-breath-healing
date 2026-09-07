@@ -51,22 +51,24 @@
 		</div>
 
 		<!-- Content column: below image on mobile (DOM order), left on desktop (order:1).
-		     `entrance: false` — the arrival is the pure-CSS cascade below and nothing else;
-		     all this asks the action for is the way out, so the heading, body and CTA ease
-		     off the top edge the way every section further down the page does. The drawing
-		     above is deliberately not wrapped: it neither fades in nor fades out. -->
-		<div class="hero__left" bind:this={leftEl} use:reveal={{ entrance: false }}>
+		     The heading, the body and the CTA each answer the band on their own edges —
+		     grouped on this column they left together, which is not what three lines of
+		     different heights should do. `entrance: false` on all three: the arrival is
+		     the pure-CSS cascade below and nothing else, so all they ask the action for is
+		     the way out. The drawing above is deliberately not wrapped: it neither fades
+		     in nor fades out. -->
+		<div class="hero__left" bind:this={leftEl}>
 			<div class="hero__content">
-				<h1 class="hero__heading">
+				<h1 class="hero__heading" use:reveal={{ entrance: false }}>
 					Rust in je hoofd.<br />
 					Ontspanning in je lichaam.
 				</h1>
-				<p class="hero__body">
+				<p class="hero__body" use:reveal={{ entrance: false }}>
 					Ik weet hoe het voelt om vast te lopen, fysiek, mentaal en emotioneel. Via
 					lichaamsgerichte therapie, ademwerk en energetische behandelingen help ik jou terug naar
 					rust, herstel en jezelf.
 				</p>
-				<div class="hero__cta">
+				<div class="hero__cta" use:reveal={{ entrance: false }}>
 					<ButtonLink href="/contact" label="Maak een afspraak" />
 				</div>
 			</div>

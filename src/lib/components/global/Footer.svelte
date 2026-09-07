@@ -76,24 +76,24 @@
 	<div class="footer__inner">
 		<div class="footer__main">
 			<!-- Brand: logo + contact -->
-			<ul class="footer__brand" use:reveal={{ delay: 0 }}>
-				<li><NavLogo inverted={true} footer={true} /></li>
+			<ul class="footer__brand">
+				<li use:reveal><NavLogo inverted={true} footer={true} /></li>
 				<li>
 					<address class="footer__contact">
 						<ul>
 							<li>
-								{BRAND.workArea.label}
+								<span use:reveal>{BRAND.workArea.label}</span>
 								<!-- The region, then how she works. One without the other is
 								     misleading in both directions: a place with no note reads
 								     as a clinic you can walk into, and a note with no place
 								     leaves a visitor unable to tell whether she covers them. -->
-								<br /><span class="footer__note"
+								<br /><span class="footer__note" use:reveal
 									>{BRAND.practice.homeVisitNote} {BRAND.practice.remoteNote}</span
 								>
 							</li>
 							<!-- Neither of these opens a web page. The cursor says what they
 							     actually do, in her own voice rather than the browser's. -->
-							<li>
+							<li use:reveal>
 								<TextLink
 									href="mailto:{BRAND.email}"
 									label={BRAND.email}
@@ -104,7 +104,7 @@
 								/>
 							</li>
 							{#if hasPhone}
-								<li>
+								<li use:reveal>
 									<TextLink
 										href={telHref}
 										label={BRAND.phoneDisplay}
@@ -121,10 +121,10 @@
 			</ul>
 
 			<!-- Social icons — row on mobile, vertical column on desktop (order: 3) -->
-			<nav class="footer__social" aria-label="Sociale media links" use:reveal={{ delay: 110 }}>
+			<nav class="footer__social" aria-label="Sociale media links">
 				<ul class="footer__social-list">
 					{#each SOCIAL_LINKS as social (social.icon)}
-						<li>
+						<li use:reveal>
 							<SocialIcon
 								icon={social.icon}
 								href={social.href}
@@ -139,7 +139,7 @@
 			</nav>
 
 			<!-- Nav columns — order: 2 on desktop, after social on mobile -->
-			<nav class="footer__nav" aria-label="Footer navigatie" use:reveal={{ delay: 220 }}>
+			<nav class="footer__nav" aria-label="Footer navigatie">
 				{#each NAV_COLUMNS as col (col.heading)}
 					<FooterNavColumn heading={col.heading} links={[...col.links]} />
 				{/each}
@@ -148,12 +148,12 @@
 
 		<hr class="footer__divider" />
 
-		<div class="footer__bottom" use:reveal={{ delay: 330 }}>
+		<div class="footer__bottom">
 			<nav class="footer__legal" aria-label="Juridische links">
-				<a class="link-underline" href="/privacyverklaring">Privacyverklaring</a>
-				<a class="link-underline" href="/algemene-voorwaarden">Algemene voorwaarden</a>
+				<a class="link-underline" href="/privacyverklaring" use:reveal>Privacyverklaring</a>
+				<a class="link-underline" href="/algemene-voorwaarden" use:reveal>Algemene voorwaarden</a>
 			</nav>
-			<p class="footer__copyright">
+			<p class="footer__copyright" use:reveal>
 				©Copyright 2026 Trinity Breath &amp; Healing, alle rechten voorbehouden
 			</p>
 		</div>

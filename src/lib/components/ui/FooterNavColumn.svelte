@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { reveal } from '$lib/actions/reveal';
+
 	let {
 		heading,
 		links
@@ -9,10 +11,13 @@
 </script>
 
 <section class="col">
-	<h2 class="col__heading">{heading}</h2>
+	<!-- The column heading and every link answer the band on their own edges: stacked in a
+	     column they sit at different heights, and revealing the whole nav at once made a
+	     link near the bottom fade on an edge two hundred pixels above itself. -->
+	<h2 class="col__heading" use:reveal>{heading}</h2>
 	<ul class="col__links">
 		{#each links as link (link.href)}
-			<li><a class="link-underline" href={link.href}>{link.label}</a></li>
+			<li use:reveal><a class="link-underline" href={link.href}>{link.label}</a></li>
 		{/each}
 	</ul>
 </section>
