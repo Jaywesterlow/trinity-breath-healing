@@ -326,3 +326,25 @@ situation is pinned down. Before spending time on a "failing" carousel test, fir
 spec at `a482f4e` — if it fails there too, it is this, not your change. Worth fixing properly by
 pinning a known-good browser in a committed Playwright config so the suite means the same thing
 on every machine, but nobody has done that yet.
+
+## Scroll fade skips a block during a fast flick
+
+Reported by the owner, seen most often in the FAQ list. Scrolling slowly, every
+item fades out on the line as it should. Flicking fast, a block can cross the
+fade-out line without fading; if the scroll then stops abruptly, that block
+finally fades — so one item is left blank in the middle of a list that is
+otherwise fully drawn.
+
+Cause: IntersectionObserver delivers on the main thread and coalesces, while
+the scroll itself runs on the compositor. Under a fast flick several crossings
+land in one delivery and the observer reports only the final state, so a block
+that crossed the line and came back never hears about it; one that crossed and
+stopped hears about it late.
+
+Not fixed on purpose — the owner asked for it to be recorded rather than
+chased, and it is hard to reproduce deliberately. If it is picked up: the fix
+is not a scroll handler (see the note at the top of $lib/actions/reveal.ts).
+The candidates are a scroll-driven CSS animation with `animation-timeline:
+view()`, which is compositor-resident and cannot desync, or a `scrollend`
+reconciliation pass that re-reads every revealed element's rect once the scroll
+settles.

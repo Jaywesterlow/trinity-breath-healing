@@ -244,7 +244,12 @@
 	   The wipe always travels the same way: in from the left, and out to the
 	   right, so it continues rather than rewinding. That is what the origin
 	   flip in .link-underline below does. */
-	--underline-height: 1.5px;
+	/* A whole pixel, and this is not cosmetic. At 1.5px the line is rasterised on
+	   its own compositing layer for the duration of the scaleX wipe, where it
+	   rounds up to 2px, and then snaps back to 1.5px the instant the animation
+	   settles — so every footer link's underline visibly thinned at the end of
+	   its own reveal. An integral height renders the same mid-wipe as at rest. */
+	--underline-height: 2px;
 	--motion-underline: 260ms;
 	/* The underline arrives in two stages: a neutral line first, then the link's
 	   own colour sweeping over it. --brand-muted used to play the first part and

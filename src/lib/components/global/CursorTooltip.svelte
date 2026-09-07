@@ -18,7 +18,8 @@
 	 *             character lands and an arrow cannot
 	 *   disabled  the arrowhead, dimmed, over a control that will not respond
 	 *   label     a card carrying `data-tooltip` text, with a circle carved out
-	 *             of its top-left corner and the dot sitting in that hollow.
+	 *             of its top-left corner and the dot — the dot alone, no ring —
+	 *             sitting in that hollow.
 	 *             The card alone read as the cursor having vanished — the dot
 	 *             is what keeps the pointer's own position on screen.
 	 *
@@ -130,11 +131,15 @@
 		ringEl.animate(
 			[
 				{ transform: 'scale(1)', opacity: 1, offset: 0 },
-				{ transform: 'scale(2.1)', opacity: 0, offset: 0.5 },
-				{ transform: 'scale(1)', opacity: 0, offset: 0.52 },
+				/* Draws in against the dot first. A ring that only ever expands reads as
+				   something leaving; the small gather before it goes is what makes it read
+				   as a press being answered. */
+				{ transform: 'scale(0.72)', opacity: 1, offset: 0.22 },
+				{ transform: 'scale(2.2)', opacity: 0, offset: 0.72 },
+				{ transform: 'scale(1)', opacity: 0, offset: 0.74 },
 				{ transform: 'scale(1)', opacity: 1, offset: 1 }
 			],
-			{ duration: 620, easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' }
+			{ duration: 680, easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)' }
 		);
 	}
 
@@ -417,8 +422,7 @@
 		transform: scale(0.55);
 	}
 
-	.cursor--link .cursor__ring,
-	.cursor--label .cursor__ring {
+	.cursor--link .cursor__ring {
 		transform: scale(1);
 		opacity: 1;
 		/* Behind the dot by a beat, and slower on the way in than the dot is. */
@@ -481,10 +485,8 @@
 
 	/* ─── The label card ───
 	   The hollow the clickable shape sits in. --notch is the ring's own radius
-	   (22px across, so 11) plus 2px, so the card follows the ring at a constant
-	   hairline's distance instead of sitting in a vague gap. The corner stays
-	   square: the cut is what shapes it, and it has to be a true quarter-circle
-	   for the arc to meet the two straight edges.
+	   The corner stays square: the cut is what shapes it, and it has to be a true
+	   quarter-circle for the arc to meet the two straight edges.
 
 	   Two layers rather than a border, because a border does not survive the cut:
 	   masking the card takes the background and the border away together and
@@ -498,8 +500,14 @@
 	   has been inset. The hairline is sand at 40% composited onto forest by hand,
 	   since it is now painting on the page rather than over the card. */
 	.cursor__card {
-		--notch: 13px;
-		--hairline: color-mix(in srgb, var(--color-bg-sand) 40%, var(--color-fg-forest));
+		/* The dot's own outer edge (4.5px of dot plus its 1.4px outline) with 2px of
+		   air, so the card follows the shape the pointer has become. The ring is not
+		   shown in this mode — the card is the thing being read, and a ring around a
+		   dot inside a hollow inside a card is three outlines saying one thing. */
+		--notch: 8px;
+		/* The same cream the dot's outline is, and for the same reason: on the footer's
+		   green a grey-green hairline is not a hairline. */
+		--hairline: color-mix(in srgb, var(--color-bg-sand) 88%, var(--color-fg-forest));
 
 		display: flex;
 		align-items: center;

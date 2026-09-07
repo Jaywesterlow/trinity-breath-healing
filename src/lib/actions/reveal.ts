@@ -125,12 +125,15 @@ const RISE_DURATION = 1100;
    a scroll listener on top of it — each of those reintroduces the drift this replaced.
 
    Percentages rather than pixels so the band means the same thing on a 844px phone as on a
-   1080px laptop; the site is mobile-first and these were tuned there. 34% starts the exit
-   in the upper third, so leaving reads as the page moving on rather than as a snap. 18%
-   (~150px on a phone) holds the entrance until the element is properly on screen — at the
-   flat 80px this used to be, most of a heading was already showing before it began. */
-const BAND_TOP = 0.34;
-const BAND_BOTTOM = 0.18;
+   1080px laptop; the site is mobile-first and these were tuned there.
+
+   Both edges have been walked in twice now. 22%/80px read as leaving too late and arriving
+   already lit; 34%/18% overcorrected — with a third of the screen spent fading at the top
+   and a fifth at the bottom, too little of the page was ever at full strength at once.
+   28%/12% is the settled pair: the exit still begins while the element is comfortably on
+   screen, and the entrance still waits until it properly is. */
+const BAND_TOP = 0.28;
+const BAND_BOTTOM = 0.12;
 
 /** The band as a rootMargin string. Exported so observers outside this action arrive on the
  *  same two lines — Werkwijze's staggered card row is the one that does. */

@@ -318,14 +318,18 @@
 			transition: color var(--motion-fast);
 		}
 
+		/* Wider than the word by 0.5rem at each end — the link's own padding is
+		   0.375rem, so -0.125rem puts the line half a rem clear of the first and
+		   last glyph. And 1px, not the shared 2px: at nav size a heavier rule
+		   reads as a border under the item rather than as an underline. */
 		.nav__link::before,
 		.nav__link::after {
 			content: '';
 			position: absolute;
-			left: 0.375rem; /* inside the link's own padding, so the two agree */
-			right: 0.375rem;
+			left: -0.125rem;
+			right: -0.125rem;
 			bottom: 0;
-			height: var(--underline-height);
+			height: 1px;
 			transform: scaleX(0);
 			transform-origin: center;
 			transition: transform var(--motion-underline) var(--ease-out);

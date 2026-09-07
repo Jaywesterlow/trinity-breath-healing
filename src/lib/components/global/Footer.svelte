@@ -82,7 +82,7 @@
 					<address class="footer__contact">
 						<ul>
 							<li>
-								<span use:reveal>{BRAND.workArea.label}</span>
+								<span class="footer__area" use:reveal>{BRAND.workArea.label}</span>
 								<!-- The region, then how she works. One without the other is
 								     misleading in both directions: a place with no note reads
 								     as a clinic you can walk into, and a note with no place
@@ -198,19 +198,29 @@
 		line-height: var(--line-height-normal);
 	}
 
-	/* The "only on Saturdays" line sits under the address and must read as a
-	   caveat rather than part of it — smaller and quieter, but not so faint
-	   that someone planning a visit skips it. */
+	/* The region is the heading of this block, so it is set like one: the display
+	   face at nav size, a step up from the lines under it. It was the same 16px as
+	   the address rows below and read as one more row rather than as their title. */
+	.footer__area {
+		font-size: var(--font-size-xl); /* 20px */
+		font-weight: var(--font-weight-medium);
+		line-height: var(--line-height-snug);
+	}
+
+	/* The "only on Saturdays" line sits under the region and must read as a caveat
+	   rather than part of it — smaller and lighter, but not so faint that someone
+	   planning a visit skips it. */
 	.footer__note {
 		display: inline-block;
-		margin-top: 0.35rem;
+		margin-top: 0.5rem;
 		font-family: var(--font-body);
 		font-size: 0.8125rem;
+		font-weight: var(--font-weight-light);
 		line-height: 1.5;
-		/* Was 0.75. The footer's ground is --color-brand-green now, which carries
-		   full sand at exactly 4.50:1 — fading it at all drops this 13px line
-		   under AA (0.75 computes to 3.30:1). The size difference alone is what
-		   marks it as secondary here. */
+		/* Weight, not opacity. The footer's ground is --color-brand-green, which
+		   carries full sand at exactly 4.50:1 — fading this 13px line at all drops
+		   it under AA (0.75 computes to 3.30:1), so the lighter face and the size
+		   are what mark it as secondary. */
 	}
 
 	.footer__contact ul {
