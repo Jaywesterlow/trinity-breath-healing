@@ -17,11 +17,10 @@
 	 *   text      a caret bar, because a form field needs to show where the next
 	 *             character lands and an arrow cannot
 	 *   disabled  the arrowhead, dimmed, over a control that will not respond
-	 *   label     a card carrying `data-tooltip` text, with a circle carved out
-	 *             of its top-left corner and the dot — the dot alone, no ring —
-	 *             sitting in that hollow.
-	 *             The card alone read as the cursor having vanished — the dot
-	 *             is what keeps the pointer's own position on screen.
+	 *   label     a card carrying `data-tooltip` text. Its top-left corner is a
+	 *             hard point where every other corner is rounded, and it grows
+	 *             out of that corner, so the corner reads as the pointer itself
+	 *             rather than needing a second marker beside it.
 	 *
 	 * Any click, in any mode, sends a ring out from the pointer and fades it —
 	 * the click's own acknowledgement, independent of whatever the page does
@@ -337,6 +336,11 @@
 	/* The wrapper is the only thing that tracks. Its children never move
 	   relative to it, so a frame costs one transform write on one node. */
 	.cursor {
+		/* The cream the arrowhead is stroked in. Everything that needs an edge on
+		   this site's two grounds uses it: forest on --color-brand-green is 1.9:1,
+		   so an unstroked shape disappears on half the page. */
+		--cursor-hairline: color-mix(in srgb, var(--color-bg-sand) 88%, var(--color-fg-forest));
+
 		position: fixed;
 		top: 0;
 		left: 0;
@@ -429,12 +433,11 @@
 		/* The arrowhead's sand stroke, as a ring. Forest on --color-brand-green is
 		   1.9:1 — on the contact cards and the filled Werkwijze cards the bare dot
 		   all but disappeared, exactly where a lot of the clickable things are. */
-		box-shadow: 0 0 0 1.4px color-mix(in srgb, var(--color-bg-sand) 88%, transparent);
+		box-shadow: 0 0 0 1.4px var(--cursor-hairline);
 		transform: scale(0.4);
 	}
 
-	.cursor--link .cursor__dot,
-	.cursor--label .cursor__dot {
+	.cursor--link .cursor__dot {
 		transform: scale(1);
 		opacity: 1;
 	}
@@ -513,38 +516,24 @@
 	}
 
 	/* ─── The label card ───
-	   The hollow the clickable shape sits in. --notch is the ring's own radius
-	   The corner stays square: the cut is what shapes it, and it has to be a true
-	   quarter-circle for the arc to meet the two straight edges.
+	   Its top-left corner is the pointer. Every other corner is rounded and that
+	   one is not, so the sharp point is where the tip was — no dot beside it, no
+	   circle carved out of it, nothing added to the card at all. That was the
+	   whole problem with the earlier versions: each of them answered "where is
+	   the cursor" by putting another object on screen next to the answer.
 
-	   Two layers rather than a border, because a border does not survive the cut:
-	   masking the card takes the background and the border away together and
-	   leaves a raw edge along the arc. So this element IS the hairline — a solid
-	   fill, 1px of padding thick — and ::before is the card's own colour laid on
-	   top, inset by that 1px and cut by a circle 1px wider. What is left of the
-	   first layer is a 1px outline that follows every edge including the arc.
-
-	   Each layer's cut is centred on the pointer: the card's at its own origin,
-	   the fill's at (-1px, -1px), which is where the pointer sits once the fill
-	   has been inset. The hairline is sand at 40% composited onto forest by hand,
-	   since it is now painting on the page rather than over the card. */
+	   It grows out of that corner (transform-origin: 0 0, scale 0.14 to 1) and
+	   takes noticeably longer than the other shapes to do it. The card is the one
+	   shape big enough that the reader can watch it arrive, and watching it come
+	   out of a single point is what says which point that is. */
 	.cursor__card {
-		/* The dot's own outer edge (4.5px of dot plus its 1.4px outline) with 2px of
-		   air, so the card follows the shape the pointer has become. The ring is not
-		   shown in this mode — the card is the thing being read, and a ring around a
-		   dot inside a hollow inside a card is three outlines saying one thing. */
-		--notch: 8px;
-		/* The same cream the dot's outline is, and for the same reason: on the footer's
-		   green a grey-green hairline is not a hairline. */
-		--hairline: color-mix(in srgb, var(--color-bg-sand) 88%, var(--color-fg-forest));
-
 		display: flex;
 		align-items: center;
 		gap: 0.375rem;
-		/* The 1px is the hairline's thickness, not spacing. */
-		padding: calc(0.4375rem + 1px) calc(0.625rem + 1px) calc(0.4375rem + 1px) calc(1rem + 1px);
+		padding: 0.375rem 0.625rem;
+		border: 1px solid var(--cursor-hairline);
 		border-radius: 0 var(--radius-sm) var(--radius-sm) var(--radius-sm);
-		background: var(--hairline);
+		background: var(--color-fg-forest);
 		color: var(--color-bg-sand);
 		font-family: var(--font-body);
 		font-size: 0.8125rem; /* 13px */
@@ -555,30 +544,15 @@
 		line-height: 16px;
 		white-space: nowrap;
 		transform-origin: 0 0;
-		transform: scale(0.2);
-		mask-image: radial-gradient(circle var(--notch) at 0 0, transparent 100%, #000 100%);
-		mask-repeat: no-repeat;
-	}
-
-	.cursor__card::before {
-		content: '';
-		position: absolute;
-		inset: 1px;
-		border-radius: 0 calc(var(--radius-sm) - 1px) calc(var(--radius-sm) - 1px)
-			calc(var(--radius-sm) - 1px);
-		background: var(--color-fg-forest);
-		mask-image: radial-gradient(
-			circle calc(var(--notch) + 1px) at -1px -1px,
-			transparent 100%,
-			#000 100%
-		);
-		mask-repeat: no-repeat;
-	}
-
-	/* The fill above is positioned, so it paints over ordinary inline content.
-	   Positioning the label and the glyph puts them back on top of it. */
-	.cursor__card-text {
-		position: relative;
+		transform: scale(0.14);
+		/* Its own curve, not --ease-out. That one is cubic-bezier(0.16, 1, 0.3, 1),
+		   which is nearly finished in the first fifth of its duration — the card
+		   snapped to full size and then crept, so there was nothing to watch and
+		   no way to see which corner it had come from. This one accelerates and
+		   decelerates evenly, so the whole 300ms is spent growing. */
+		transition:
+			transform 300ms cubic-bezier(0.4, 0, 0.2, 1),
+			opacity 200ms cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
 	.cursor--label .cursor__card {
@@ -587,7 +561,6 @@
 	}
 
 	.cursor__card-icon {
-		position: relative;
 		flex: none;
 		max-width: none;
 		opacity: 0.85;
