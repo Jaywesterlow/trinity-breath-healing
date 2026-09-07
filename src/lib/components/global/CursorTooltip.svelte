@@ -80,6 +80,35 @@
 	   comes back on release — the same thing a physical button does. */
 	let pressed = $state(false);
 	let ringEl: HTMLSpanElement | null = $state(null);
+	let cardEl: HTMLSpanElement | null = $state(null);
+
+	/**
+	 * Rounds the card up to a whole pixel.
+	 *
+	 * Its hairline is one CSS pixel on every edge, but an edge only renders as one
+	 * DEVICE pixel when it lands on a whole one. The card's natural size is set by
+	 * a 13px string and 8px of padding, i.e. fractional in both directions, so the
+	 * top and left edges (which start at the pointer, an integer) came out crisp
+	 * and the right and bottom ones were spread across two rows and read heavier.
+	 * The height is fixed in the stylesheet; the width depends on the label, so it
+	 * is measured here, once, whenever the label changes.
+	 */
+	$effect(() => {
+		void label;
+		const el = cardEl;
+		if (!el) return;
+		el.style.width = '';
+		if (mode !== 'label') return;
+		const frame = requestAnimationFrame(() => {
+			/* offsetWidth, not getBoundingClientRect: the card is mid-transition from
+			   scale(0.2) when this runs, and the rect is the SCALED width — pinning that
+			   left the label clipped to a fifth of itself. offsetWidth is layout, so a
+			   transform cannot reach it. +1 because it rounds to nearest and rounding
+			   down would shave the last glyph's edge. */
+			if (cardEl) cardEl.style.width = `${cardEl.offsetWidth + 1}px`;
+		});
+		return () => cancelAnimationFrame(frame);
+	});
 
 	/* Written straight to the node rather than through state: this runs on every
 	   frame the pointer moves, and a reactive round-trip per frame is exactly
@@ -273,7 +302,7 @@
 				<span class="cursor__bar"></span>
 				<span class="cursor__bar cursor__bar--v"></span>
 			</span>
-			<span class="cursor__card">
+			<span bind:this={cardEl} class="cursor__card">
 				{#if icon === 'zoom'}
 					<!-- Opens in place. The magnifier says that before the words do. -->
 					<svg class="cursor__card-icon" width="13" height="13" viewBox="0 0 14 14" fill="none">
@@ -520,7 +549,10 @@
 		font-family: var(--font-body);
 		font-size: 0.8125rem; /* 13px */
 		font-weight: var(--font-weight-light);
-		line-height: 1.2;
+		/* A whole number, not 1.2 — see the width rounding in the script. 13 x 1.2 is
+		   15.6px, which put the card's bottom edge on a fractional device pixel and
+		   spread its hairline across two rows while the top edge stayed crisp. */
+		line-height: 16px;
 		white-space: nowrap;
 		transform-origin: 0 0;
 		transform: scale(0.2);
