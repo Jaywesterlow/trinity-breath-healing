@@ -6,11 +6,10 @@
 	 * the thing under it does:
 	 *
 	 *   default   the arrowhead alone
-	 *   breathe   the arrowhead, with a ring expanding and contracting around it
-	 *             at 4s in / 6s out — the hero, and only the hero
 	 *   link      the arrowhead becomes a small filled dot, and a faint ring
-	 *             fades in around it a beat later. One colour, low opacity —
-	 *             a hint, not a badge.
+	 *             fades in around it a beat later. The dot carries the same sand
+	 *             outline the arrowhead's stroke gives it, so it stays findable
+	 *             on the green grounds; the ring stays one colour and quiet.
 	 *   toggle    a filled circle with a +, on an FAQ row. Clicking turns it 45°
 	 *             into a ×, the way the menu button turns. Moving to a row in
 	 *             the other state takes the SHORT way round instead, so an ×
@@ -18,8 +17,14 @@
 	 *   text      a caret bar, because a form field needs to show where the next
 	 *             character lands and an arrow cannot
 	 *   disabled  the arrowhead, dimmed, over a control that will not respond
-	 *   label     the whole thing becomes a card carrying `data-tooltip` text,
-	 *             its square top-left corner where the tip was
+	 *   label     a card carrying `data-tooltip` text, with a circle carved out
+	 *             of its top-left corner and the dot sitting in that hollow.
+	 *             The card alone read as the cursor having vanished — the dot
+	 *             is what keeps the pointer's own position on screen.
+	 *
+	 * Any click, in any mode, sends a ring out from the pointer and fades it —
+	 * the click's own acknowledgement, independent of whatever the page does
+	 * with it.
 	 *
 	 * Everything is one wrapper that tracks and a handful of small children that
 	 * never move relative to it, so a frame costs a single transform write. The
@@ -44,7 +49,7 @@
 	 */
 	import { onMount } from 'svelte';
 
-	type Mode = 'default' | 'breathe' | 'link' | 'toggle' | 'text' | 'disabled' | 'label';
+	type Mode = 'default' | 'link' | 'toggle' | 'text' | 'disabled' | 'label';
 	type Icon = '' | 'zoom' | 'page';
 
 	const CLICKABLE =
@@ -52,15 +57,7 @@
 	const TEXT_ENTRY =
 		'textarea, [contenteditable], input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"])';
 
-	const MODES = new Set<Mode>([
-		'default',
-		'breathe',
-		'link',
-		'toggle',
-		'text',
-		'disabled',
-		'label'
-	]);
+	const MODES = new Set<Mode>(['default', 'link', 'toggle', 'text', 'disabled', 'label']);
 
 	let enabled = $state(false);
 	let mode = $state<Mode>('default');
@@ -77,6 +74,12 @@
 	   forward; re-aiming takes whichever way is nearer. */
 	let turns = $state(0);
 	let toggleHost: Element | null = null;
+
+	/* Bumped on every press. The ring below is keyed on it, so each press mounts
+	   a fresh element whose CSS animation runs once from the start — restarting
+	   an animation on a node that is already playing one means fighting the
+	   engine, and the ring has to be able to fire twice in quick succession. */
+	let pulses = $state(0);
 
 	/* Written straight to the node rather than through state: this runs on every
 	   frame the pointer moves, and a reactive round-trip per frame is exactly
@@ -115,6 +118,11 @@
 		turns += open ? 1 : -1;
 	}
 
+	function onPress(event: PointerEvent) {
+		if (event.pointerType !== 'mouse') return;
+		pulses += 1;
+	}
+
 	function onToggleClick(event: MouseEvent) {
 		const host = (event.target as Element | null)?.closest?.('[data-cursor="toggle"]');
 		if (host) turns += 1;
@@ -134,9 +142,9 @@
 			};
 		}
 
-		/* Whichever host is DEEPER wins. A `data-cursor` on a whole section (the
-		   hero's breathing ring) must not override the hand on a button inside
-		   it, and a `data-cursor` on a control must not be overridden by the
+		/* Whichever host is DEEPER wins. A `data-cursor` on a whole section must
+		   not override the shape a button inside it asks for, and a `data-cursor`
+		   on a control must not be overridden by the
 		   generic clickable inference around it. Comparing containment says
 		   which is which without either rule having to know about the other. */
 		const declaredHost = target.closest('[data-cursor]');
@@ -191,6 +199,7 @@
 		document.documentElement.classList.add('has-cursor-tooltip');
 
 		window.addEventListener('pointermove', onPointerMove, { passive: true });
+		window.addEventListener('pointerdown', onPress, { passive: true, capture: true });
 		window.addEventListener('click', onToggleClick, true);
 		/* Leaving the document, tabbing away, or switching to another tab all end
 		   with the pointer somewhere this page will never hear about again. */
@@ -202,6 +211,7 @@
 			if (frame) cancelAnimationFrame(frame);
 			document.documentElement.classList.remove('has-cursor-tooltip');
 			window.removeEventListener('pointermove', onPointerMove);
+			window.removeEventListener('pointerdown', onPress, true);
 			window.removeEventListener('click', onToggleClick, true);
 			document.removeEventListener('pointerleave', clear);
 			window.removeEventListener('blur', clear);
@@ -224,7 +234,11 @@
 		</svg>
 		<span class="cursor__dot"></span>
 		<span class="cursor__ring"></span>
-		<span class="cursor__breath"></span>
+		{#if pulses}
+			{#key pulses}
+				<span class="cursor__pulse"></span>
+			{/key}
+		{/if}
 		<span class="cursor__caret"></span>
 		<!-- Turns one way only, like the menu button: + at 0deg, x at 45deg. -->
 		<span class="cursor__toggle" style="--turn: {turns * 45}deg">
@@ -289,7 +303,6 @@
 	.cursor__arrow,
 	.cursor__dot,
 	.cursor__ring,
-	.cursor__breath,
 	.cursor__caret,
 	.cursor__toggle,
 	.cursor__card {
@@ -339,10 +352,15 @@
 		margin: -4.5px 0 0 -4.5px;
 		border-radius: 50%;
 		background: var(--color-fg-forest);
+		/* The arrowhead's sand stroke, as a ring. Forest on --color-brand-green is
+		   1.9:1 — on the contact cards and the filled Werkwijze cards the bare dot
+		   all but disappeared, exactly where a lot of the clickable things are. */
+		box-shadow: 0 0 0 1.4px color-mix(in srgb, var(--color-bg-sand) 88%, transparent);
 		transform: scale(0.4);
 	}
 
-	.cursor--link .cursor__dot {
+	.cursor--link .cursor__dot,
+	.cursor--label .cursor__dot {
 		transform: scale(1);
 		opacity: 1;
 	}
@@ -353,6 +371,9 @@
 		margin: -11px 0 0 -11px;
 		border-radius: 50%;
 		border: 1px solid color-mix(in srgb, var(--color-fg-forest) 38%, transparent);
+		/* A single faint sand halo on the outside — enough to separate the ring
+		   from a green ground, not enough to read as a second ring. */
+		box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-bg-sand) 32%, transparent);
 		transform: scale(0.55);
 	}
 
@@ -363,43 +384,44 @@
 		transition-delay: 70ms;
 	}
 
-	/* ─── The breathing ring, in the hero ───
-	   Not a replacement for the arrowhead — it sits around it. The site teaches
-	   a longer exhale than inhale, so the ring does the same: it expands over
-	   4 of the 10 seconds and releases over the other 6, with a beat of stillness
-	   at the top. Reduced motion never reaches this: the whole cursor is off by
-	   then and the native one is back. */
-	.cursor__breath {
-		width: 44px;
-		height: 44px;
-		margin: -22px 0 0 -22px;
+	/* ─── The click ring ───
+	   Deliberately outside the shared block above: that block owns `opacity` and
+	   a transition on it, and this one is driven by an animation from the moment
+	   it mounts. It answers every press in every mode, because it is reporting
+	   the click itself rather than what was clicked. */
+	.cursor__pulse {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 22px;
+		height: 22px;
+		margin: -11px 0 0 -11px;
 		border-radius: 50%;
-		border: 1px solid color-mix(in srgb, currentcolor 34%, transparent);
-		color: var(--color-fg-forest);
-		transform: scale(0.55);
+		/* Forest between two sand hairlines, the same sandwich the arrowhead uses:
+		   a single-colour ring vanishes on one of the two grounds this site is
+		   built from, and the ring has to read on both. */
+		border: 2px solid color-mix(in srgb, var(--color-fg-forest) 72%, transparent);
+		box-shadow:
+			0 0 0 1px color-mix(in srgb, var(--color-bg-sand) 55%, transparent),
+			inset 0 0 0 1px color-mix(in srgb, var(--color-bg-sand) 55%, transparent);
+		opacity: 0;
+		animation: cursor-pulse 560ms var(--ease-out) forwards;
 	}
 
-	.cursor--breathe .cursor__breath {
-		opacity: 1;
-		animation: cursor-breathe 10s cubic-bezier(0.45, 0, 0.55, 1) infinite;
-	}
-
-	@keyframes cursor-breathe {
+	@keyframes cursor-pulse {
 		0% {
-			transform: scale(0.62);
-			opacity: 0.45;
-		}
-		40% {
-			transform: scale(1);
+			transform: scale(0.32);
 			opacity: 1;
 		}
-		52% {
-			transform: scale(1);
-			opacity: 1;
+		/* Holds most of its strength through the first half of the travel — with a
+		   straight fade the ring is already ghost-faint by the time it is wide
+		   enough to notice. */
+		45% {
+			opacity: 0.72;
 		}
 		100% {
-			transform: scale(0.62);
-			opacity: 0.45;
+			transform: scale(2.1);
+			opacity: 0;
 		}
 	}
 
@@ -459,12 +481,18 @@
 
 	/* ─── The label card ─── */
 	.cursor__card {
+		/* The hollow the dot sits in: a circle of --notch radius centred on the
+		   pointer, cut out of the card. The corner stays square so the cut is a
+		   clean quarter-circle, and the extra left/top padding keeps the first
+		   character clear of the arc. */
+		--notch: 14px;
+
 		display: flex;
 		align-items: center;
 		gap: 0.375rem;
-		padding: 0.375rem 0.625rem;
-		/* Square where the tip was, rounded everywhere else. */
+		padding: 0.4375rem 0.625rem 0.4375rem 1rem;
 		border-radius: 0 var(--radius-sm) var(--radius-sm) var(--radius-sm);
+		mask-image: radial-gradient(circle var(--notch) at 0 0, transparent 98%, #000 100%);
 		background: var(--color-fg-forest);
 		/* The green surfaces are only 1.86:1 against the card. The hairline keeps
 		   its edge readable on those without darkening the card itself. */

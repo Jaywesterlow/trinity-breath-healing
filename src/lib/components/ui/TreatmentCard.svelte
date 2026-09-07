@@ -417,7 +417,9 @@
 		   nothing in markup and it animates from the circle's own edge. */
 		.tcard__arrow {
 			/* Sand, not currentcolor: the glyph's colour flips to green when the
-			   circle fills, and a green ring on a green card is no ring at all. */
+			   circle fills, and a green ring on a green card is no ring at all.
+			   At 26%/22% the ring was technically present and effectively invisible
+			   against --color-brand-green — measured on screen, not guessed. */
 			box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-bg-sand) 0%, transparent);
 			transition:
 				background-color var(--motion-arrow) var(--ease-arrow),
@@ -427,7 +429,7 @@
 
 		@media (hover: hover) and (pointer: fine) {
 			.tcard:hover .tcard__arrow {
-				box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-bg-sand) 26%, transparent);
+				box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-bg-sand) 48%, transparent);
 			}
 		}
 
@@ -437,7 +439,7 @@
 		@media (hover: hover) and (pointer: fine) {
 			.tcard:hover .tcard__arrow:hover,
 			.tcard__arrow:hover {
-				box-shadow: 0 0 0 9px color-mix(in srgb, var(--color-bg-sand) 22%, transparent);
+				box-shadow: 0 0 0 9px color-mix(in srgb, var(--color-bg-sand) 38%, transparent);
 				background: var(--color-bg-sand);
 				color: var(--color-brand-green);
 			}

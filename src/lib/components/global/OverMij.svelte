@@ -37,7 +37,10 @@
 			</h2>
 		</header>
 
-		<div class="about__media">
+		<!-- The portrait card fades as one block, art and scrim together. distance: 0
+		     because the cards inside it are absolutely positioned against this box on
+		     desktop, and a transform here would move their containing block mid-entrance. -->
+		<div class="about__media" use:reveal={{ delay: 0, distance: 0 }}>
 			<div class="about__card about__card--mobile">
 				<DrawOn svg={portrait2} class="about__card-draw" />
 				<div class="about__gradient-blur" aria-hidden="true">
@@ -80,7 +83,12 @@
 					/>
 				</li>
 			</ul>
-			<TextLink label="Lees meer over mij" href="/over-mij" tone="muted" />
+			<!-- The link is a component, so the reveal goes on a wrapper. align-self keeps
+			     the box the width of the link rather than the column, so the fade lands on
+			     the link and not on a full-width strip of nothing. -->
+			<div class="about__more" use:reveal={{ delay: 600 }}>
+				<TextLink label="Lees meer over mij" href="/over-mij" tone="muted" />
+			</div>
 		</div>
 
 		<ul class="about__stats">
@@ -375,6 +383,10 @@
 		font-size: var(--fs-body);
 		color: var(--color-text-subtle);
 		line-height: var(--line-height-normal);
+	}
+
+	.about__more {
+		align-self: flex-start;
 	}
 
 	.about__features {

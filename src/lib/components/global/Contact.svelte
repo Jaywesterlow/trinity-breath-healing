@@ -8,6 +8,7 @@
 	/* The carousel's own magnet, not a copy of it: same action, same tuning, so
 	   the two cards pull toward the cursor exactly the way a treatment card does. */
 	import { magnetic } from '$lib/actions/magnetic';
+	import { reveal } from '$lib/actions/reveal';
 
 	/* null is the rest state: neither route chosen, both cards on offer. Picking
 	   one replaces the pair with that panel, and the switch link above it goes
@@ -66,11 +67,13 @@
 <section id="contact" class="contact" aria-labelledby="contact-heading">
 	<div class="contact__inner">
 		<header class="contact__header">
-			<p class="contact__eyebrow">Contact</p>
-			<h2 id="contact-heading" class="contact__heading">Hoe wil je contact opnemen?</h2>
+			<p class="contact__eyebrow" use:reveal={{ delay: 0 }}>Contact</p>
+			<h2 id="contact-heading" class="contact__heading" use:reveal={{ delay: 120 }}>
+				Hoe wil je contact opnemen?
+			</h2>
 			<!-- Desktop shows this in the right-hand column, under its own small
 			     title; on mobile it belongs under the heading. -->
-			<p class="contact__intro contact__intro--mobile">
+			<p class="contact__intro contact__intro--mobile" use:reveal={{ delay: 240 }}>
 				Vul het formulier in of plan een kennismaking, wanneer het jou uitkomt.
 			</p>
 		</header>
@@ -92,6 +95,7 @@
 					onpointerenter={() => (over = 'meeting')}
 					onpointerleave={() => (over = null)}
 					onclick={() => choose('meeting')}
+					use:reveal={{ delay: 0, distance: 0 }}
 				>
 					<span class="route__title">Plan een kennismaking</span>
 					<span class="route__body"
@@ -113,6 +117,7 @@
 					onpointerenter={() => (over = 'form')}
 					onpointerleave={() => (over = null)}
 					onclick={() => choose('form')}
+					use:reveal={{ delay: 120, distance: 0 }}
 				>
 					<span class="route__title">Stuur een bericht</span>
 					<span class="route__body">
@@ -134,6 +139,7 @@
 					type="button"
 					class="contact__switch"
 					onclick={() => choose(active === 'form' ? 'meeting' : 'form')}
+					use:reveal={{ delay: 0, distance: 0 }}
 				>
 					<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
 						<path
@@ -146,7 +152,7 @@
 					</svg>
 					{active === 'form' ? 'Liever een afspraak plannen' : 'Liever een bericht sturen'}
 				</button>
-				<div class="contact__panel">
+				<div class="contact__panel" use:reveal={{ delay: 100, distance: 0 }}>
 					<div class="contact__pane" hidden={active === 'meeting'}>
 						<ContactForm />
 					</div>
@@ -159,14 +165,14 @@
 			<div class="contact__aside">
 				<!-- Same shape as the two blocks under it: a small title, then its
 				     content. It read as a loose sentence without one. -->
-				<div class="contact__block contact__block--intro">
+				<div class="contact__block contact__block--intro" use:reveal={{ delay: 0 }}>
 					<p class="contact__block-title">Hoe het werkt</p>
 					<p class="contact__intro contact__intro--desktop">
 						Vul het formulier in of plan een kennismaking, wanneer het jou uitkomt.
 					</p>
 				</div>
 
-				<div class="contact__block">
+				<div class="contact__block" use:reveal={{ delay: 120 }}>
 					<p class="contact__block-title">Wat je kunt verwachten</p>
 					<ul class="contact__checks">
 						{#each CHECKS as check (check)}
@@ -189,7 +195,7 @@
 
 				<div class="contact__rule"></div>
 
-				<div class="contact__block contact__block--socials">
+				<div class="contact__block contact__block--socials" use:reveal={{ delay: 240 }}>
 					<p class="contact__block-title">Of rechtstreeks</p>
 					<nav aria-label="Sociale media">
 						<!-- A row of bare icons. The channel names used to sit beside

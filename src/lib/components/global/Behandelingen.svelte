@@ -1946,7 +1946,10 @@
 		</h2>
 	</header>
 
-	<div class="treatments__carousel-wrap">
+	<!-- The fan and its controls fade as one unit. distance: 0 — the cards inside are
+	     positioned by their own transforms and the modal animates their faces, so this
+	     touches nothing but the wrapper's opacity. -->
+	<div class="treatments__carousel-wrap" use:reveal={{ delay: 240, distance: 0 }}>
 		<div
 			class="treatments__fan"
 			class:treatments__fan--grabbable={cursorInBand}

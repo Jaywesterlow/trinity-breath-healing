@@ -101,30 +101,82 @@ const FADE_EASING = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
 const RISE_EASING = 'cubic-bezier(0.16, 1, 0.3, 1)';
 const RISE_DURATION = 1100;
 
-/* How far in from each edge the band sits: the strip of the viewport in which content is
-   held at full opacity. Everything outside it is faded. Both edges are percentages of the
-   viewport height, so the same band means the same thing on a 844px phone and a 1080px
-   laptop — the site is mobile-first and these were tuned there.
+/* THE RULE, and it is the same for every revealed element on the site — one band, no
+   per-element exceptions, because content fading at slightly different scroll positions is
+   what makes the whole effect read as a bug rather than as a decision.
 
-   The top edge is what makes an element fade WHILE it is still visible on the way up
-   rather than at the instant it clips. It was 22%, which on a phone left content sitting
-   at full strength almost until it touched the nav and then fading in a hurry; 34% starts
-   it in the upper third, so the exit reads as the page moving on rather than as a snap.
+   Two horizontal lines are drawn across the viewport and never move:
 
-   The bottom edge is the other half of the same complaint. It was a flat -80px, meaning an
-   element began fading in the moment 80px of it had cleared the bottom edge — on a phone
-   that is most of a heading, so things arrived already lit. 18% (~150px on a phone) holds
-   the fade until the element is properly on screen.
+     the fade-in line    BAND_BOTTOM of the viewport height ABOVE the bottom edge
+     the fade-out line   BAND_TOP of the viewport height BELOW the top edge
 
-   Note that with threshold 0 the element has to leave the band ENTIRELY, so a tall section
-   starts fading later than a short one; that reads correctly, because a tall section is
-   still mostly on screen at that point. */
-const BAND_TOP = '-34%';
-const BAND_BOTTOM = '-18%';
+   An element fades IN when its TOP crosses the fade-in line, and fades OUT when its BOTTOM
+   crosses the fade-out line. Top on the way in and bottom on the way out is the part that
+   matters: measure from an element's middle and a 500px block starts fading 250px into the
+   screen while a 100px block starts 50px in, so nothing ever lines up. Measure from the
+   leading edge in each direction and a heading, a card and a whole form all begin at the
+   same instant regardless of how tall they are.
 
-/** The band as a rootMargin string, for observers outside this action that have to leave
- *  on the same edge — Werkwijze's staggered card row is the one that does. */
-export const REVEAL_ROOT_MARGIN = `${BAND_TOP} 0px ${BAND_BOTTOM} 0px`;
+   This is precisely what one IntersectionObserver with threshold 0 and a negative
+   rootMargin computes, which is why it is an observer and not a scroll handler: the root
+   rect is inset to [BAND_TOP, viewportHeight - BAND_BOTTOM], intersection begins when
+   `rect.top < viewportHeight - BAND_BOTTOM` and ends when `rect.bottom <= BAND_TOP`. The
+   two conditions ARE the two rules above. Do not add a threshold, a per-element margin or
+   a scroll listener on top of it — each of those reintroduces the drift this replaced.
+
+   Percentages rather than pixels so the band means the same thing on a 844px phone as on a
+   1080px laptop; the site is mobile-first and these were tuned there. 34% starts the exit
+   in the upper third, so leaving reads as the page moving on rather than as a snap. 18%
+   (~150px on a phone) holds the entrance until the element is properly on screen — at the
+   flat 80px this used to be, most of a heading was already showing before it began. */
+const BAND_TOP = 0.34;
+const BAND_BOTTOM = 0.18;
+
+/** The band as a rootMargin string. Exported so observers outside this action arrive on the
+ *  same two lines — Werkwijze's staggered card row is the one that does. */
+export const REVEAL_ROOT_MARGIN = `${-BAND_TOP * 100}% 0px ${-BAND_BOTTOM * 100}% 0px`;
+
+/**
+ * True when this element can never reach the fade-in line, however far the page is
+ * scrolled — i.e. it sits inside the last screenful, below the line even at maximum
+ * scroll. The footer's legal row (privacy statement, terms, copyright) is exactly that,
+ * and it was invisible: armed at 0, waiting for a crossing that cannot happen.
+ *
+ * The answer is NOT to give those elements their own band — that is the inconsistency
+ * this file exists to avoid. They get the band like everything else, plus the fallback
+ * below, which reveals them when they enter the viewport at all. They also never fade out,
+ * correctly: an element already at its highest possible position cannot rise past the
+ * fade-out line either.
+ */
+function unreachable(node: HTMLElement): boolean {
+	const vh = window.innerHeight;
+	const maxScroll = Math.max(0, document.documentElement.scrollHeight - vh);
+	const highestTop = node.getBoundingClientRect().top + window.scrollY - maxScroll;
+	return highestTop >= vh * (1 - BAND_BOTTOM);
+}
+
+/* One height watcher for the whole page rather than one per revealed element (there are
+   ~50 of them). A document that grows or shrinks — a font swapping in, an image landing,
+   the viewport rotating — moves every element's ceiling at once. */
+const heightListeners = new Set<() => void>();
+let heightWatcher: ResizeObserver | null = null;
+
+function watchDocumentHeight(fn: () => void) {
+	heightListeners.add(fn);
+	if (!heightWatcher && typeof ResizeObserver !== 'undefined') {
+		heightWatcher = new ResizeObserver(() => {
+			for (const listener of heightListeners) listener();
+		});
+		heightWatcher.observe(document.documentElement);
+	}
+	return () => {
+		heightListeners.delete(fn);
+		if (heightListeners.size === 0) {
+			heightWatcher?.disconnect();
+			heightWatcher = null;
+		}
+	};
+}
 
 /* Leaving is quicker than arriving. A slow fade-out on scroll feels like lag; a slow fade-in
    feels like the section settling. */
@@ -262,10 +314,9 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 	   disconnects. The first intersection releases the entrance; every one after that is the
 	   element crossing the band's edge, in either direction. */
 	/* The observer's first callback reports where the element already is, which is not a
-	   transition — nobody scrolled anywhere. An element sitting below the band at load
-	   (visible, but in the bottom fifth of the screen) would otherwise fade out in front of
-	   the reader before it had ever faded in. Snap it instead, and animate from the second
-	   callback on, which is a real crossing. */
+	   crossing — nobody scrolled anywhere. An element sitting below the fade-in line at load
+	   would otherwise fade out in front of the reader before it had ever faded in. Snap it
+	   instead, and animate from the second callback on. */
 	let firstReport = true;
 
 	observer = new IntersectionObserver(
@@ -284,6 +335,35 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 	);
 	observer.observe(node);
 
+	/* The last-screenful fallback described on unreachable() above. A second observer on the
+	   real viewport, attached only to elements the band cannot reach, and only ever used to
+	   show them. */
+	let tail: IntersectionObserver | null = null;
+
+	function syncTail() {
+		const needed = unreachable(node);
+		if (needed === !!tail) return;
+		if (!needed) {
+			tail?.disconnect();
+			tail = null;
+			return;
+		}
+		tail = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					if (!entry.isIntersecting) continue;
+					if (!released) release();
+					else driftTo(1, RETURN_DURATION);
+				}
+			},
+			{ threshold: 0 }
+		);
+		tail.observe(node);
+	}
+
+	syncTail();
+	const unwatch = watchDocumentHeight(syncTail);
+
 	/* An element that starts on screen never had an entrance to release, so mark it done and
 	   let the observer drive it from here. */
 	if (!armed) {
@@ -296,6 +376,9 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 
 	return {
 		destroy() {
+			unwatch();
+			tail?.disconnect();
+			tail = null;
 			observer?.disconnect();
 			observer = null;
 			if (releaseFrame !== null) cancelAnimationFrame(releaseFrame);
