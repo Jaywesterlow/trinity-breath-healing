@@ -2,8 +2,18 @@
 	interface Props {
 		label: string;
 		href: string;
+		/**
+		 * The circle-and-arrow. Defaults to on, because this component is an <a>
+		 * and the arrow is what says the press leaves the page or the section —
+		 * see the button rule in app.css. An in-place action is a <button> and
+		 * uses Button.svelte, which never has one. Pass false only where a link
+		 * genuinely should not read as navigation.
+		 */
 		withArrow?: boolean;
-		variant?: 'filled' | 'outline';
+		/** See the button rule in app.css. `outline` is gone: it was a third
+		 *  colour scheme for one button on one card, which is the inconsistency
+		 *  the rule exists to remove. */
+		variant?: 'primary' | 'secondary';
 		/** Stretch to the container's width — the pill takes the slack, the arrow
 		 *  circle keeps its 40px and lands on the far edge. */
 		block?: boolean;
@@ -13,8 +23,8 @@
 	let {
 		label,
 		href,
-		withArrow = false,
-		variant = 'filled',
+		withArrow = true,
+		variant = 'primary',
 		block = false,
 		onclick
 	}: Props = $props();
@@ -23,14 +33,17 @@
 <a
 	{href}
 	{onclick}
-	class="btn-link roll-host"
+	class="btn-link roll-host btn-host"
 	class:btn-link--arrow={withArrow}
-	class:btn-link--outline={variant === 'outline'}
 	class:btn-link--block={block}
 >
 	<!-- data-label feeds the second copy of the word, which .text-roll draws as a
 	     pseudo-element rather than a second node — see app.css. -->
-	<span class="btn-link__label text-roll" data-label={label}>
+	<span
+		class="btn-link__label btn-pill text-roll"
+		class:btn-pill--secondary={variant === 'secondary'}
+		data-label={label}
+	>
 		<span class="text-roll__face">{label}</span>
 	</span>
 	{#if withArrow}
@@ -103,16 +116,11 @@
 		height: var(--space-10);
 		padding: 0 var(--space-6);
 		border-radius: var(--radius-full);
-		background: var(--brand-border);
-		color: var(--color-bg-sand);
 		font-family: var(--font-display);
 		font-size: var(--btn-label-size, var(--font-size-xl)); /* overridable per context */
 		font-weight: 400;
 		line-height: 1;
-		transition:
-			background-color var(--motion-arrow) var(--ease-arrow),
-			border-color var(--motion-arrow) var(--ease-arrow),
-			color var(--motion-arrow) var(--ease-arrow);
+		/* Fill, edge, ink and the hover swap are .btn-pill's — see app.css. */
 	}
 
 	.btn-link--arrow .btn-link__label {
@@ -121,33 +129,36 @@
 
 	/* Straight down, against the label's roll upward. Positioning, clipping and
 	   the swap itself come from .arrow-swap in app.css. */
+	/* The circle is built from the pill's own two colours, which is what makes the
+	   arrow a modifier rather than a variant. It fills with whatever the LABEL
+	   currently is: an empty brown ring while the label is sand on brown, and a
+	   filled brown disc with a sand arrow once the pill has inverted and the label
+	   has gone brown. Filling it with the pill's own fill instead would be
+	   invisible — that fill is sand on hover, and so is the page. */
 	.btn-link__circle {
 		--swap-x: 0px;
 		--swap-y: var(--arrow-roll);
 		width: var(--space-10);
 		height: var(--space-10);
 		border-radius: 50%;
-		border: 2px solid var(--btn-arrow-fill, var(--brand-border));
+		border: 2px solid var(--btn-fill);
 		background: transparent;
-		color: var(--btn-arrow-fill, var(--brand-border));
+		color: var(--btn-fill);
 		flex-shrink: 0;
 		transition:
 			background-color var(--motion-arrow) var(--ease-arrow),
 			color var(--motion-arrow) var(--ease-arrow);
 	}
 
-	/* The pill swallows the circle: same fill, same border colour, so the two
-	   stop reading as a shape plus a ring and become one shape. The -2px overlap
-	   above is what closes the seam. */
 	.btn-link:focus-visible .btn-link__circle {
-		background: var(--btn-arrow-fill, var(--brand-border));
-		color: var(--btn-arrow-ink, var(--color-bg-sand));
+		background: var(--btn-fill);
+		color: var(--btn-ink);
 	}
 
 	@media (hover: hover) and (pointer: fine) {
 		.btn-link:hover .btn-link__circle {
-			background: var(--btn-arrow-fill, var(--brand-border));
-			color: var(--btn-arrow-ink, var(--color-bg-sand));
+			background: var(--btn-fill);
+			color: var(--btn-ink);
 		}
 	}
 
@@ -161,35 +172,5 @@
 	.btn-link:active {
 		transform: translateY(0);
 		box-shadow: none;
-	}
-
-	.btn-link--outline .btn-link__label {
-		background: transparent;
-		border: 2px solid var(--color-accent-gold-soft);
-		color: var(--color-bg-sand);
-	}
-
-	/* Outline sits on the dark portrait card, where --brand-border has nothing to
-	   read against. Forest on gold-soft is 3.98:1 — the arrow is a graphic, and
-	   WCAG 1.4.11 asks 3:1 of it. */
-	.btn-link--outline {
-		--btn-arrow-fill: var(--color-accent-gold-soft);
-		--btn-arrow-ink: var(--color-fg-forest);
-	}
-
-	/* The outline button fills on hover as well as rolling its label, so the pill
-	   and the circle arrive at the same colour together. Its ink is the deepened
-	   forest, not the plain one: a *label* on gold-soft needs 4.5:1, which plain
-	   forest misses. */
-	.btn-link--outline:focus-visible .btn-link__label {
-		background: var(--color-accent-gold-soft);
-		color: var(--color-fg-forest-deep);
-	}
-
-	@media (hover: hover) and (pointer: fine) {
-		.btn-link--outline:hover .btn-link__label {
-			background: var(--color-accent-gold-soft);
-			color: var(--color-fg-forest-deep);
-		}
 	}
 </style>

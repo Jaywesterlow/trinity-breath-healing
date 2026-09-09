@@ -8,8 +8,8 @@
 	let { label, type = 'button', onclick }: Props = $props();
 </script>
 
-<button {type} class="btn" {onclick}>
-	<span class="btn__label">{label}</span>
+<button {type} class="btn btn-host" {onclick}>
+	<span class="btn__label btn-pill">{label}</span>
 </button>
 
 <style>
@@ -26,14 +26,14 @@
 		border-radius: var(--radius-full);
 	}
 
+	/* Geometry only — fill, edge, ink and the hover swap are .btn-pill's, see the
+	   button rule in app.css. No arrow here, ever: this is an in-place action. */
 	.btn__label {
 		display: flex;
 		align-items: center;
 		height: 40px;
 		padding: 0 24px;
 		border-radius: var(--radius-full);
-		background: var(--brand-border);
-		color: var(--color-bg-sand);
 		font-family: var(--font-display);
 		font-size: var(--font-size-xl);
 		font-weight: 400;

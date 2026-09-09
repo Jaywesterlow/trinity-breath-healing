@@ -202,7 +202,7 @@
 				{statusMessage}
 			</p>
 			<button
-				class="form__submit text-roll"
+				class="form__submit btn-pill btn-host text-roll"
 				class:roll-host={!sending}
 				type="submit"
 				disabled={sending}
@@ -481,15 +481,12 @@
 		   padding instead of leaving the button. */
 		height: var(--space-10);
 		padding: 0 1.875rem; /* 30px */
-		border: none;
 		border-radius: var(--radius-full);
-		/* Was --color-accent-gold-soft, which put sand on #c7a27a at 2.1:1 — the
-		   worst contrast on the page, on its primary action. No gold in the palette
-		   works here: forest on gold-soft is 3.98:1 and on the brighter gold 4.34:1,
-		   both under the 4.5:1 this 16px label needs. --brand-border carries sand at
-		   5.25:1 and is what every other primary button on the site already uses. */
-		background: var(--brand-border);
-		color: var(--color-bg-sand);
+		/* Fill, edge, ink and the hover swap are .btn-pill's — see the button rule
+		   in app.css. Kept from when this button owned its own colours: no gold in
+		   the palette works here, forest on gold-soft is 3.98:1 and on the brighter
+		   gold 4.34:1, both under the 4.5:1 this label needs. --brand-border carries
+		   sand at 5.25:1, which is why the rule is built on it. */
 		font-family: var(--font-display);
 		font-size: var(--font-size-xl); /* 20px */
 		font-weight: 400;

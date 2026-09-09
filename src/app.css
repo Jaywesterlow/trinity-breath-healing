@@ -603,6 +603,83 @@ h6 {
 	}
 }
 
+/* ─── The button rule ────────────────────────────────────────────────────────
+   Every call to action on the site is the same thing: a 2px brown edge and a
+   fill, and hovering swaps which side is brown. Nothing gains or loses a
+   border, and nothing changes size — box-sizing is border-box, so the edge
+   costs no height.
+
+   Two tiers, and they are the same two colours in opposite order:
+
+     primary    brown fill, sand label   ->  sand fill, brown label
+     secondary  no fill, brown label     ->  brown fill, sand label
+
+   The edge is always brown, which is what makes the swap safe: a primary
+   button on the sand ground turns sand on hover, and without the edge it would
+   vanish into the page at exactly the moment the pointer is on it.
+
+   Only colour lives here. Every button keeps its own geometry — one is 40px
+   with 24px of padding, another stretches the full width of a card — and the
+   thing they have to agree on is what happens when you point at them.
+
+   Put `btn-host` on whatever receives the hover, `btn-pill` on the box that is
+   painted. They are the same element on a plain <button>, and different ones on
+   ButtonLink, where the <a> is the target and a span inside it is the pill —
+   hence both forms of every selector below, the same shape .roll-host uses.
+
+   :not(:disabled) throughout: a disabled <button> still matches :hover, and a
+   greyed-out submit that inverts under the pointer is telling the reader it is
+   about to do something. */
+/* Declared on the host as well as the pill so anything else inside the button —
+   ButtonLink's arrow circle — can be built from the same two colours instead of
+   naming them again. */
+.btn-host,
+.btn-pill {
+	--btn-fill: var(--brand-border);
+	--btn-ink: var(--color-bg-sand);
+}
+
+.btn-pill {
+	border: 2px solid var(--btn-fill);
+	background: var(--btn-fill);
+	color: var(--btn-ink);
+	transition:
+		background-color var(--motion-arrow) var(--ease-arrow),
+		color var(--motion-arrow) var(--ease-arrow),
+		border-color var(--motion-arrow) var(--ease-arrow);
+}
+
+.btn-pill--secondary {
+	background: transparent;
+	color: var(--btn-fill);
+}
+
+.btn-host:not(:disabled):focus-visible .btn-pill,
+.btn-pill.btn-host:not(:disabled):focus-visible {
+	background: var(--btn-ink);
+	color: var(--btn-fill);
+}
+
+.btn-host:not(:disabled):focus-visible .btn-pill--secondary,
+.btn-pill--secondary.btn-host:not(:disabled):focus-visible {
+	background: var(--btn-fill);
+	color: var(--btn-ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.btn-host:not(:disabled):hover .btn-pill,
+	.btn-pill.btn-host:not(:disabled):hover {
+		background: var(--btn-ink);
+		color: var(--btn-fill);
+	}
+
+	.btn-host:not(:disabled):hover .btn-pill--secondary,
+	.btn-pill--secondary.btn-host:not(:disabled):hover {
+		background: var(--btn-fill);
+		color: var(--btn-ink);
+	}
+}
+
 /* ─── Two arrows in one circle ───────────────────────────────────────────────
    The same gesture wherever an arrow sits inside a ring: the one you can see
    leaves along an axis, and a second copy arrives on that axis from the

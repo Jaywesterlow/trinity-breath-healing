@@ -99,7 +99,10 @@
 					<span class="route__body"
 						>Kies zelf een moment. Dertig minuten, online, vrijblijvend.</span
 					>
-					<span class="route__cta text-roll roll-host" data-label="Kies een datum">
+					<span
+						class="route__cta btn-pill btn-host text-roll roll-host"
+						data-label="Kies een datum"
+					>
 						<span class="text-roll__face">Kies een datum</span>
 					</span>
 				</button>
@@ -121,7 +124,10 @@
 					<span class="route__body">
 						Liever eerst een vraag stellen? Mailen en appen kan de hele dag.
 					</span>
-					<span class="route__cta text-roll roll-host" data-label="Schrijf een bericht">
+					<span
+						class="route__cta btn-pill btn-host text-roll roll-host"
+						data-label="Schrijf een bericht"
+					>
 						<span class="text-roll__face">Schrijf een bericht</span>
 					</span>
 				</button>
@@ -370,30 +376,25 @@
 		margin-top: var(--space-2);
 		padding: 0 var(--space-6);
 		border-radius: var(--radius-full);
-		background: var(--brand-border);
-		color: var(--color-bg-sand);
 		font-family: var(--font-display);
 		font-size: var(--font-size-xl); /* 20px */
 		line-height: 1;
 		white-space: nowrap;
-		transition:
-			background-color var(--motion-hover) var(--ease-hover),
-			color var(--motion-hover) var(--ease-hover);
+		/* Fill, edge, ink and the hover swap are .btn-pill's — see app.css. */
 	}
 
 	/* The pill's own hover, not the card's: standing anywhere on the card used to
 	   light it up, which made it look pressed before the pointer had reached it.
 	   The card is still the click target — this only governs how the pill looks. */
+	/* Keyboard focus lands on the card, never on the pill, so the card drives the
+	   swap that .btn-pill would otherwise do for itself. Deliberately not by
+	   putting btn-host on the card: that would also invert the pill on hovering
+	   anywhere in the card, which is what made it look pressed before the pointer
+	   had reached it. --btn-ink and --btn-fill are the pill's own, declared on it
+	   by .btn-pill, so this cannot drift from the rule. */
 	.route:focus-visible .route__cta {
-		background: var(--color-bg-sand);
-		color: var(--brand-border);
-	}
-
-	@media (hover: hover) and (pointer: fine) {
-		.route__cta:hover {
-			background: var(--color-bg-sand);
-			color: var(--brand-border);
-		}
+		background: var(--btn-ink);
+		color: var(--btn-fill);
 	}
 
 	/* The pill answers its own pointer through .roll-host (app.css). Keyboard

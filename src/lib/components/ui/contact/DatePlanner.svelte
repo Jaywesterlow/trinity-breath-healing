@@ -798,7 +798,7 @@
 		<div class="planner__footer">
 			{#if step === 'klaar'}
 				<button
-					class="planner__proceed text-roll roll-host"
+					class="planner__proceed btn-pill btn-host text-roll roll-host"
 					type="button"
 					onclick={restart}
 					data-label="Nog een moment plannen"
@@ -829,7 +829,7 @@
 
 				{#if step === 'gegevens'}
 					<button
-						class="planner__proceed text-roll"
+						class="planner__proceed btn-pill btn-host text-roll"
 						class:roll-host={detailsReady && !sending}
 						type="button"
 						disabled={!detailsReady || sending}
@@ -1393,10 +1393,7 @@
 		   .form__submit: the roll clips at the padding edge. */
 		height: var(--space-10);
 		padding: 0 1.875rem; /* 30px */
-		border: none;
 		border-radius: var(--radius-full);
-		background: var(--brand-border);
-		color: var(--color-bg-sand);
 		font-family: var(--font-display);
 		font-size: var(--font-size-xl); /* 20px */
 		font-weight: 400;

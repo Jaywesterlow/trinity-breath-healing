@@ -51,7 +51,7 @@
 					<div></div>
 				</div>
 				<div class="about__pill">
-					<ButtonLink label="Plan een kennismaking" href="/contact" variant="outline" />
+					<ButtonLink label="Plan een kennismaking" href="/contact" />
 				</div>
 				<div class="about__scrim">
 					<p class="about__scrim-body">{bodyText}</p>
