@@ -19,7 +19,7 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
-<Breadcrumbs items={data.crumbs} wide />
+<Breadcrumbs items={data.crumbs} />
 
 <article class="contact-intro contact-page-intro">
 	<PageTitle>Contact</PageTitle>

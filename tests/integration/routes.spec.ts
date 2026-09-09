@@ -93,12 +93,30 @@ test.describe.parallel('every route — SEO scaffolding', () => {
 					stub.title
 				);
 			}
-			// The full title must be at least 50 chars (base title minimum) and not more than 120
-			// (base 60 + ' | TRINITY Breath & Healing' suffix 27 = max ~87)
+			/* 48–62 rendered. The upper bound is the real one: Google renders roughly
+			   600px of title, which is about 60 characters, and everything past that
+			   is cut. Eleven routes used to ship 76–88 because their own TITLE ended
+			   in the practice name and Head.svelte appended it a second time —
+			   "Spinal Touch in Amsterdam – Trinity Breath & Healing | TRINITY Breath
+			   & Healing". Head now refuses to double it, and this is what stops a
+			   route from quietly growing back past the cut. The floor is 48 rather
+			   than a round 50 because "BRTT Body in Amsterdam – TRINITY Breath &
+			   Healing" is 49 and says everything it needs to; padding a good title
+			   to clear a round number is not an improvement. */
 			expect(
 				titleText.length,
-				`${path}: <title> should be at least 50 chars`
-			).toBeGreaterThanOrEqual(50);
+				`${path}: <title> is ${titleText.length} chars, want 48–62 — "${titleText}"`
+			).toBeGreaterThanOrEqual(48);
+			expect(
+				titleText.length,
+				`${path}: <title> is ${titleText.length} chars, want 48–62 — "${titleText}"`
+			).toBeLessThanOrEqual(62);
+
+			/* The brand goes on exactly once, in one spelling. Three different ones
+			   were in the tree at once: "Trinity Healing BnH", a bare "| Trinity",
+			   and "TRINITY Breath & Healing NL". */
+			const brandCount = titleText.match(/Trinity Breath & Healing/gi)?.length ?? 0;
+			expect(brandCount, `${path}: brand should appear once in "${titleText}"`).toBe(1);
 
 			// 4. meta description matches STUB_META and is 150-160 chars
 			const metaDesc = root.querySelector('meta[name="description"]');

@@ -16,7 +16,7 @@ import { makeServiceNode } from '$lib/schema/services';
 export const prerender = true;
 
 const PATH = '/diensten/goldhealing';
-const TITLE = 'Goldhealing in Amsterdam – Trinity Breath & Healing';
+const TITLE = 'Goldhealing in Amsterdam – TRINITY Breath & Healing';
 const DESCRIPTION =
 	'Gouden lichtenergie die negativiteit omzet, beschermt en vooral op het psychische vlak werkt. Bij Trinity Breath & Healing in Amsterdam en omgeving.';
 

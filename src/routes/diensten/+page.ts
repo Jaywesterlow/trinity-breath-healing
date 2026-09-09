@@ -15,7 +15,7 @@ import { allServiceNodes } from '$lib/schema/services';
 export const prerender = true;
 
 const PATH = '/diensten';
-const TITLE = 'Diensten – alle behandelingen | Trinity Breath & Healing';
+const TITLE = 'Diensten – alle behandelingen | TRINITY Breath & Healing';
 const DESCRIPTION =
 	'Alle zeven behandelingen van Trinity Breath & Healing op een rij: ademwerk, ' +
 	'lichaamsgericht werk en energetische sessies in Amsterdam, Zaandam en omgeving.';

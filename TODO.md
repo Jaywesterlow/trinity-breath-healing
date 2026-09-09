@@ -8,8 +8,13 @@ brief, and the open threads were living in three different places.
 - `.planning/` — the GSD phase artifacts.
 - **This file** — what is still open, and who can do it.
 
-Branch: `claude/trinity-contact-hover-t7xsrf`. Last verified green: lint, 0 type
-errors, 186 unit, 324 integration, HTML + JSON-LD audits.
+Branch: `claude/trinity-redesign-frames`.
+
+**Test counts and route lists used to be written out here and went stale within a
+week.** They are not repeated any more: `npm test` reports the counts, and
+`tests/unit/todo-freshness.test.ts` fails if the published-route list below stops
+matching `src/lib/constants/routes.ts`. The rule for this file is that anything a
+machine can check is checked, and anything it cannot is dated.
 
 ---
 
@@ -19,10 +24,12 @@ errors, 186 unit, 324 integration, HTML + JSON-LD audits.
 |---|---|
 | **Homepage contact form + date planner** | **Finished and pushed.** Three-step wizard, square tiles at every width, both panels locked to one height, mobile-first. Cal.com dropped; the site owns booking. Nothing outstanding in the component itself. |
 | **Pre-launch audit** | **Done.** CSP, security headers, self-hosted fonts, stubs out of the sitemap and noindexed, custom 404. |
-| **Page list / sitemap** | **Settled.** 20 routes in `src/lib/constants/routes.ts`. Published: `/`, `/faq`, `/privacyverklaring`, `/algemene-voorwaarden`, `/disclaimer`. The rest are reserved stubs, noindexed and out of the sitemap. |
+| **Page list / sitemap** | **20 routes** in `src/lib/constants/routes.ts`, **16 published** as of 2026-09-09. Eleven graduated that day: the seven modalities under `/diensten/`, their `/diensten` index, `/behandelingen`, `/werkwijze` and `/contact`. Four are still stubs — `/over-mij`, `/blog`, `/artikelen`, `/reviews` — noindexed and out of the sitemap until they carry something. |
 | **Legal pages + OG image + favicons + Plausible** | **Done and pushed.** |
 | **Booking approval + slot blocking** | **Live.** A requested slot greys out at once; she approves or declines from her inbox; approval sends a calendar invite, a decline reopens the slot. Supabase holds only date, time and status — no name, e-mail or klachten. |
 | **Homepage redesign** | **Recorded below, not started.** Waiting on an approved layout. |
+| **Subpage grid** | **Done 2026-09-09.** Every page's breadcrumb and `<h1>` now share a left edge with the footer; the reading measure moved to the children. `tests/integration/page-grid.spec.ts` holds it. |
+| **Page titles** | **Fixed 2026-09-09.** Eleven shipped the brand name twice (76–88 chars, of which Google shows ~60) because `Head.svelte` appended it to a title that already had it. All 20 are now 48–62 with the brand once, in one spelling. |
 
 **Live since 2026-08-24** on `trinitybreathhealing.nl`, with mail wired through Resend. What is left is content, not plumbing.
 
@@ -169,7 +176,7 @@ modal image animation.
 - [ ] Paste a permanent Google Meet room link for the confirmation e-mail
 - [x] Verify the Resend sending domain — DKIM, SPF and MX in TransIP, region `eu-west-1` (Ireland), which is what the privacy statement promises
 - [ ] Sign the Resend verwerkersovereenkomst (named in the privacy statement)
-- [x] **Done 30-08.** Google Search Console: `trinitybreathhealing.nl` added as a **Domain** property, verified by DNS TXT in TransIP, and `https://trinitybreathhealing.nl/sitemap.xml` submitted. One snag worth remembering: TransIP refuses a second TXT on `@` at a different TTL, so the Google record had to match the existing SPF record's 1-hour TTL. GSC also rejected the bare `sitemap.xml` and took the absolute URL. Only five URLs are in the sitemap — home, FAQ and the three legal pages. The rest are stubs and stay out until they carry content (see §2 and §4). See `Insights/manual-steps.md` §2.
+- [x] **Done 30-08.** Google Search Console: `trinitybreathhealing.nl` added as a **Domain** property, verified by DNS TXT in TransIP, and `https://trinitybreathhealing.nl/sitemap.xml` submitted. One snag worth remembering: TransIP refuses a second TXT on `@` at a different TTL, so the Google record had to match the existing SPF record's 1-hour TTL. GSC also rejected the bare `sitemap.xml` and took the absolute URL. At the time only five URLs were in the sitemap; it is 16 since 2026-09-09, so the sitemap wants resubmitting in GSC. See `Insights/manual-steps.md` §2.
 - [ ] Create the Plausible account, then set `PUBLIC_PLAUSIBLE_DOMAIN` in Vercel
 - [x] Supabase booking store — project created, migration run, `DATABASE_URL` (transaction pooler, IPv4) and `BOOKING_TOKEN_SECRET` set in Vercel
 - [ ] **Sign the Supabase verwerkersovereenkomst** and add Supabase to the processor table in `/privacyverklaring`. Lower stakes than Resend's — the table holds no personal data — but it is still a processor and the statement currently does not name it.
@@ -183,10 +190,15 @@ modal image animation.
 
 ## 4. Pages I can build next
 
+- [x] **`/behandelingen`, `/diensten`, `/werkwijze`, `/contact` — built 2026-09-09.**
+      `/behandelingen` is organised by complaint rather than by modality
+      (`src/lib/content/klachten.ts`), so it and `/diensten` answer different
+      questions instead of being two orderings of one list.
+- [x] **Service page template — built 2026-09-09**, one `ServicePage.svelte` for all
+      seven, copy taken from `BRAND.services` rather than written fresh.
 - [ ] `/reviews` — needs her reviews first; carries Review + AggregateRating JSON-LD
-- [ ] Service page template — **owner is doing this one**, six variants already progressed
-- [ ] `/behandelingen`, `/diensten`, `/werkwijze`, `/contact` as real pages
 - [ ] `/blog`, `/artikelen` — only worth it once there is something to put in them
+- [ ] Resubmit the sitemap in Search Console — it went from 5 URLs to 16
 
 ---
 

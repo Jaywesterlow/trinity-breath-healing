@@ -16,7 +16,7 @@ import { makeServiceNode } from '$lib/schema/services';
 export const prerender = true;
 
 const PATH = '/diensten/trb-breathwork';
-const TITLE = 'Trauma Release Breathwork – Trinity Breath & Healing';
+const TITLE = 'Trauma Release Breathwork – TRINITY Breath & Healing';
 const DESCRIPTION =
 	'Zeven ademtechnieken die de poort naar je onderbewuste openen en oude lading loslaten. Bij Trinity Breath & Healing in Amsterdam en omgeving, thuis of op afstand.';
 

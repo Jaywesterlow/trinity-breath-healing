@@ -16,7 +16,7 @@ import { makeServiceNode } from '$lib/schema/services';
 export const prerender = true;
 
 const PATH = '/diensten/cranio-fascia-unwinding';
-const TITLE = 'Cranio & Fascia Unwinding – Trinity Breath & Healing';
+const TITLE = 'Cranio & Fascia Unwinding – TRINITY Breath & Healing';
 const DESCRIPTION =
 	'Zacht lichaamswerk waarbij je lichaam zelf het tempo bepaalt en opgeslagen spanning loslaat. Trinity Breath & Healing, Amsterdam en omgeving en Zaandam.';
 

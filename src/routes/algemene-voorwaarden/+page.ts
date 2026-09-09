@@ -8,7 +8,7 @@ import { LEGAL_LAST_UPDATED } from '$lib/legal/meta';
 export const prerender = true;
 
 const PATH = '/algemene-voorwaarden';
-const TITLE = 'Algemene voorwaarden voor sessies en behandelingen';
+const TITLE = 'Algemene voorwaarden voor sessies';
 const DESCRIPTION =
 	'De afspraken rond een sessie bij Trinity Breath & Healing: hoe een afspraak tot stand ' +
 	'komt, tarieven, annuleren en verzetten, aansprakelijkheid en klachten.';

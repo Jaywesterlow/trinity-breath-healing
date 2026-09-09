@@ -31,7 +31,7 @@
 
 	<nav class="error__links" aria-label="Verder op de site">
 		<a class="error__cta" href="/">Naar de homepage</a>
-		<a class="error__link" href="/#contact">Contact opnemen</a>
+		<a class="error__link" href="/contact">Contact opnemen</a>
 	</nav>
 </main>
 

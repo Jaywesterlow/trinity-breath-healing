@@ -14,7 +14,7 @@ import { buildWebPage } from '$lib/schema/webpage';
 export const prerender = true;
 
 const PATH = '/behandelingen';
-const TITLE = 'Behandelingen – waar kom je mee? | Trinity Breath & Healing';
+const TITLE = 'Behandelingen – waar kom je mee? | TRINITY Breath & Healing';
 const DESCRIPTION =
 	'Stress, slecht slapen, angst, trauma of pijn: vind bij welke klacht welke ' +
 	'behandeling past. Ademwerk en energetisch werk in Amsterdam, Zaandam en omgeving.';

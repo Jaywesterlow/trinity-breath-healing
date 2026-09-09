@@ -16,7 +16,7 @@ import { makeServiceNode } from '$lib/schema/services';
 export const prerender = true;
 
 const PATH = '/diensten/spinal-touch';
-const TITLE = 'Spinal Touch in Amsterdam – Trinity Breath & Healing';
+const TITLE = 'Spinal Touch in Amsterdam – TRINITY Breath & Healing';
 const DESCRIPTION =
 	'Zachte methode langs de wervelkolom die je centrale zenuwstelsel weer laat doorstromen. Bij Trinity Breath & Healing in Amsterdam en omgeving, ook op afstand.';
 

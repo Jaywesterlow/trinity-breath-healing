@@ -33,7 +33,7 @@
 	}
 
 	.note__text {
-		max-width: 46rem; /* ~736px — a comfortable measure at this size */
+		max-width: var(--content-max-width);
 		margin-inline: auto;
 		padding-inline: var(--space-6);
 		text-align: center;

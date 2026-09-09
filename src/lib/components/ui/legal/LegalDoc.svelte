@@ -54,11 +54,23 @@
 </article>
 
 <style>
+	/* Every page sits in the same box as the landing page's sections and the
+	   footer below it, so a heading never starts 256px to the right of the logo
+	   directly underneath it. The gutter is added to the max-width rather than
+	   taken out of it (box-sizing is border-box), so the content box is exactly
+	   --container-max. Reading measure is restored on the children, not by
+	   narrowing the box — otherwise the whole page slides right again. */
 	.legal {
-		max-width: var(--content-max-width);
+		max-width: calc(var(--container-max) + 3rem);
 		margin: 0 auto;
-		padding: clamp(1.5rem, 6vw, 3rem) var(--space-6) clamp(3rem, 10vw, 5rem);
+		padding: clamp(1.5rem, 6vw, 3rem) 1.5rem clamp(3rem, 10vw, 5rem);
 		color: var(--color-fg-forest, #3a4530);
+	}
+
+	/* Reading measure. Direct children only, so a section can opt out by
+	   nesting if it ever needs the full container. */
+	.legal > * {
+		max-width: var(--content-max-width);
 	}
 
 	.legal__header {

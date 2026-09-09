@@ -145,7 +145,7 @@ export const actions: Actions = {
 							clientName: token.voornaam,
 							spokenDate: spoken,
 							start: token.start,
-							bookingUrl: `${SITE_URL}/#contact`
+							bookingUrl: `${SITE_URL}/contact`
 						},
 						fetch
 					);

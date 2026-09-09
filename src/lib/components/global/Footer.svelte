@@ -40,15 +40,17 @@
 	/* tel: needs the digits unspaced; the visible label keeps the spacing. */
 	const telHref = `tel:${BRAND.phone.replace(/[^+\d]/g, '')}`;
 
+	/* Reading order, left to right, on every screen. This used to be the reverse
+	   and desktop flipped it back with `flex-direction: row-reverse`, so the two
+	   breakpoints showed the columns in opposite orders and neither matched the
+	   order a screen reader read them in. The array is now the order you see. */
 	const NAV_COLUMNS = [
 		{
-			heading: 'DIENSTEN',
+			heading: 'LEZEN',
 			links: [
-				{ href: '/diensten/mahatma-healing', label: 'Mahatma Healing' },
-				{ href: '/diensten/goldhealing', label: 'Goldhealing' },
-				{ href: '/diensten/raster-energie', label: 'Raster Energie' },
-				{ href: '/diensten/spinal-touch', label: 'Spinal Touch' },
-				{ href: '/diensten', label: 'Meer diensten' }
+				{ href: '/blog', label: 'Blog' },
+				{ href: '/artikelen', label: 'Artikelen' },
+				{ href: '/faq', label: 'FAQ' }
 			]
 		},
 		{
@@ -62,11 +64,13 @@
 			]
 		},
 		{
-			heading: 'LEZEN',
+			heading: 'DIENSTEN',
 			links: [
-				{ href: '/blog', label: 'Blog' },
-				{ href: '/artikelen', label: 'Artikelen' },
-				{ href: '/faq', label: 'FAQ' }
+				{ href: '/diensten/mahatma-healing', label: 'Mahatma Healing' },
+				{ href: '/diensten/goldhealing', label: 'Goldhealing' },
+				{ href: '/diensten/raster-energie', label: 'Raster Energie' },
+				{ href: '/diensten/spinal-touch', label: 'Spinal Touch' },
+				{ href: '/diensten', label: 'Meer diensten' }
 			]
 		}
 	] as const;
@@ -341,11 +345,13 @@
 			align-items: flex-start;
 		}
 
-		/* nav columns land in the middle; row-reverse flips array order to LEZEN→MENU→DIENSTEN */
+		/* Nav columns land in the middle. Plain `row` — the array is already in
+		   LEZEN→MENU→DIENSTEN order, so what you read in the source, what a screen
+		   reader announces and what both breakpoints show are one order. */
 		.footer__nav {
 			order: 2;
 			display: flex;
-			flex-direction: row-reverse;
+			flex-direction: row;
 			gap: 5.44rem; /* Figma spec 87px; nearest token --space-16 is 64px — deviation too large to round to token */
 			align-self: flex-start;
 		}

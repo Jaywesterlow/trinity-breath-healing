@@ -13,16 +13,10 @@
 	 * SCH-06: BreadcrumbList enters the page graph via buildBreadcrumb() called in +page.ts,
 	 * not via a second <JsonLd> script in this component.
 	 */
-	let {
-		items,
-		/** Match the page below. Text pages take the default measure; the card grid
-		 *  on /diensten is the container width, and a narrow crumb above a wide grid
-		 *  reads as a misalignment rather than as a choice. */
-		wide = false
-	}: { items: { name: string; path: string }[]; wide?: boolean } = $props();
+	let { items }: { items: { name: string; path: string }[] } = $props();
 </script>
 
-<nav class:nav--wide={wide} aria-label="Breadcrumb">
+<nav aria-label="Breadcrumb">
 	<ol>
 		{#each items as item, i (item.path)}
 			<li>
@@ -39,13 +33,16 @@
 
 <style>
 	/* Was flush against the viewport edge on every subpage, because this sits
-	   outside the page's own container and had no width of its own. It has to
-	   agree with whatever follows it, hence the variable rather than a literal:
-	   text pages take the default, the card grid on /diensten passes `wide`. */
+	   outside the page's own container and had no width of its own. One box for
+	   every page: the same one the landing page's sections and the footer use,
+	   with the gutter added to the max-width rather than eaten out of it
+	   (box-sizing is border-box), so the content box is exactly --container-max.
+	   This used to be switchable per page and the two settings disagreed by
+	   256px, which is how a crumb ended up 256px right of the logo below it. */
 	nav {
-		max-width: var(--content-max-width);
+		max-width: calc(var(--container-max) + 3rem);
 		margin: 0 auto;
-		padding: var(--space-4) var(--space-6) 0;
+		padding: var(--space-4) 1.5rem 0;
 		font-size: 0.875rem;
 		color: var(--color-text-subtle);
 	}
@@ -81,16 +78,6 @@
 		a:hover {
 			text-decoration: none;
 		}
-	}
-
-	/* The wide pages put their gutter OUTSIDE the container (the landing page's
-	   sections do, and /contact and /faq reuse those sections), so matching them
-	   means the same: a content box of exactly --container-max, with the gutter
-	   added to the max-width rather than eaten out of it. box-sizing is
-	   border-box, hence the + 3rem. */
-	.nav--wide {
-		max-width: calc(var(--container-max) + 3rem);
-		padding-inline: 1.5rem;
 	}
 
 	span[aria-current='page'] {

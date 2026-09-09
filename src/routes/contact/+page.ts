@@ -7,7 +7,7 @@ import { buildWebPage } from '$lib/schema/webpage';
 export const prerender = true;
 
 const PATH = '/contact';
-const TITLE = 'Contact en afspraak maken | Trinity Breath & Healing';
+const TITLE = 'Contact en afspraak maken | TRINITY Breath & Healing';
 const DESCRIPTION =
 	'Plan een vrijblijvende kennismaking van dertig minuten, stuur een bericht of ' +
 	'app gerust. Trinity Breath & Healing, Amsterdam-Zuidoost en de hele regio.';

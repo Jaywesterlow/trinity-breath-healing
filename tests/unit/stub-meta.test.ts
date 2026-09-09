@@ -1,7 +1,8 @@
 /**
  * stub-meta.test.ts — TDD gate for Plan 05 Task 1
  * Tests: STUB_META map — 16 entries, title/description length, crumb structure, uniqueness
- * Requirements: FND-08 (14 reserved stubs, 13 remaining), SEO-01 (50-60 char titles),
+ * Requirements: FND-08 (14 reserved stubs, 13 remaining), SEO-01 (48-62 char
+ * RENDERED titles — base plus the suffix Head.svelte adds; see Test 3),
  * SEO-01 (150-160 char descriptions)
  * Pitfall #7: no duplicate meta content across stub routes
  *
@@ -22,6 +23,7 @@
  */
 import { describe, it, expect } from 'vitest';
 import { STUB_META } from '$lib/seo/stub-meta';
+import { BRAND } from '../../src/lib/constants/brand';
 import { ALL_ROUTES } from '$lib/constants/routes';
 
 const EXPECTED_PATHS = ALL_ROUTES.filter((r) => r.kind === 'stub' || r.kind === 'service-stub').map(
@@ -42,17 +44,34 @@ describe('STUB_META — one entry per non-landing route', () => {
 		expect(keys).toEqual(expected);
 	});
 
-	it('Test 3: every title is between 50-60 chars inclusive', () => {
+	/* This used to require 50–60 on the base title, and that requirement is what
+	   caused the bug it was meant to prevent: the only way to pad a two-word page
+	   name to 50 characters is to append the practice name, which Head.svelte then
+	   appended a second time. The length that matters is the rendered one, so
+	   measure that — base plus the suffix Head adds. */
+	const SUFFIX = ` | ${BRAND.shortName}`;
+
+	it('Test 3: every rendered title is between 48-62 chars inclusive', () => {
 		for (const [path, meta] of Object.entries(STUB_META)) {
-			const len = meta.title.length;
+			const rendered = meta.title + SUFFIX;
+			const len = rendered.length;
 			expect(
 				len,
-				`title for ${path} is ${len} chars (must be 50-60): "${meta.title}"`
-			).toBeGreaterThanOrEqual(50);
+				`rendered title for ${path} is ${len} chars (must be 48-62): "${rendered}"`
+			).toBeGreaterThanOrEqual(48);
 			expect(
 				len,
-				`title for ${path} is ${len} chars (must be 50-60): "${meta.title}"`
-			).toBeLessThanOrEqual(60);
+				`rendered title for ${path} is ${len} chars (must be 48-62): "${rendered}"`
+			).toBeLessThanOrEqual(62);
+		}
+	});
+
+	it('Test 3b: no base title carries the brand — Head.svelte owns the suffix', () => {
+		for (const [path, meta] of Object.entries(STUB_META)) {
+			expect(
+				meta.title.toLowerCase(),
+				`title for ${path} should not carry the brand: "${meta.title}"`
+			).not.toContain('breath & healing');
 		}
 	});
 

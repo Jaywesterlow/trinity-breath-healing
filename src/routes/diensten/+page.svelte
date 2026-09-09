@@ -21,11 +21,10 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
-<Breadcrumbs items={data.crumbs} wide />
+<Breadcrumbs items={data.crumbs} />
 
 <article class="index">
 	<header class="index__head">
-		<p class="index__eyebrow" use:reveal>Diensten</p>
 		<PageTitle>Alle behandelingen</PageTitle>
 		<p class="index__lead" use:reveal>
 			Zeven behandelingen, elk met een eigen ingang. De ene werkt via de adem, de andere via
@@ -60,7 +59,7 @@
 </article>
 
 <style>
-	/* See <Breadcrumbs>'s .nav--wide: the gutter is added to the max-width, not
+	/* Same box as <Breadcrumbs> and the footer: the gutter is added to the max-width, not
 	   taken out of it, so the content box is exactly --container-max and starts
 	   on the same vertical line as every section on the landing page. */
 	.index {
@@ -70,16 +69,8 @@
 	}
 
 	.index__head {
-		max-width: 42rem;
+		max-width: var(--content-max-width);
 		margin-bottom: var(--space-10);
-	}
-
-	.index__eyebrow {
-		font-family: var(--font-body);
-		font-size: var(--font-size-xl);
-		font-weight: var(--font-weight-light);
-		color: var(--brand-muted);
-		margin-bottom: var(--space-2);
 	}
 
 	.index__lead {
@@ -159,7 +150,7 @@
 	}
 
 	.index__cta {
-		max-width: 42rem;
+		max-width: var(--content-max-width);
 		margin-top: var(--space-16);
 	}
 

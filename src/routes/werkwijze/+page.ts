@@ -7,7 +7,7 @@ import { buildWebPage } from '$lib/schema/webpage';
 export const prerender = true;
 
 const PATH = '/werkwijze';
-const TITLE = 'Werkwijze – zo verloopt een sessie | Trinity Breath & Healing';
+const TITLE = 'Werkwijze – zo verloopt een sessie | TRINITY Breath & Healing';
 const DESCRIPTION =
 	'Van kennismaking tot de dagen na een behandeling: wat er gebeurt, hoe lang ' +
 	'het duurt en wat je zelf moet doen. Amsterdam, bij jou thuis of op afstand.';

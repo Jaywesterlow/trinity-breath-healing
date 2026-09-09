@@ -2,8 +2,15 @@
  * SEO stub metadata — single source of truth for all remaining stub routes.
  *
  * Each entry provides:
- *   title:       50–60 chars (SEO-01 audit gate target)
- *   description: 150–160 chars (SEO-01 audit gate target)
+ *   title:       WITHOUT the brand. Head.svelte appends " | TRINITY Breath &
+ *                Healing" and is the only place that decides the suffix, so a
+ *                title that carries the name itself ships it twice. These four
+ *                each used to, in three different spellings — "Trinity Healing
+ *                BnH", "| Trinity", "TRINITY Breath & Healing NL". Aim for 25–35
+ *                here, which lands the rendered title at 50–62.
+ *   description: 148–162 chars (the audit gate's own bounds, decoded). Second
+ *                person, "je" not "uw" — this is the sentence in the search
+ *                result, and the site does not address anyone formally.
  *   crumbs:      BreadcrumbList input — starts [{name:'Home',path:'/'}],
  *                ends with {name:<page>,path:<routePath>}
  *
@@ -22,7 +29,7 @@
  */
 
 export interface StubMeta {
-	/** The <title> tag. Written for a search result, suffix and all. */
+	/** The <title> tag, without the brand suffix — Head.svelte adds that. */
 	title: string;
 	/**
 	 * The on-page <h1>. Separate from `title` on purpose: the two are read in
@@ -40,9 +47,8 @@ export interface StubMeta {
 
 export const STUB_META: Record<string, StubMeta> = {
 	// ─── /over-mij ──────────────────────────────────────────────────────────────
-	// title: 52 chars ✓  desc: 154 chars ✓
 	'/over-mij': {
-		title: 'Over mij – Ervaringsdeskundige | Trinity Healing BnH',
+		title: 'Over mij – wie je tegenover je hebt',
 		heading: 'Over mij',
 		description:
 			'De therapeut achter Trinity Breath & Healing begeleidt vanuit eigen ervaring bij ademwerk en lichaamsgerichte therapie en alle energetische behandelingen.',
@@ -54,12 +60,11 @@ export const STUB_META: Record<string, StubMeta> = {
 	},
 
 	// ─── /blog ──────────────────────────────────────────────────────────────────
-	// title: 50 chars ✓  desc: 155 chars ✓
 	'/blog': {
-		title: 'Blog – Inzichten over ademwerk en heling | Trinity',
+		title: 'Blog over ademwerk en herstel',
 		heading: 'Blog',
 		description:
-			'Lees artikelen van Trinity Breath & Healing over ademwerk, trauma-verwerking en energetische therapie voor uw lichamelijk en geestelijk welzijn en herstel.',
+			'Lees artikelen van Trinity Breath & Healing over ademwerk, traumaverwerking en energetische therapie voor je lichamelijk en geestelijk welzijn en herstel.',
 		lead: 'Stukken over ademwerk, spanning en herstel. Er staat nog niets: als er iets is, komt het hier.',
 		crumbs: [
 			{ name: 'Home', path: '/' },
@@ -68,12 +73,11 @@ export const STUB_META: Record<string, StubMeta> = {
 	},
 
 	// ─── /artikelen ─────────────────────────────────────────────────────────────
-	// title: 50 chars ✓  desc: 152 chars ✓
 	'/artikelen': {
-		title: 'Artikelen en kennisbank | Trinity Breath & Healing',
+		title: 'Artikelen en kennisbank',
 		heading: 'Artikelen',
 		description:
-			'Verdiep uw kennis met artikelen van Trinity Breath & Healing over ademtherapie, lichaamsgerichte methoden en energetisch werken als weg naar uw herstel.',
+			'Verdiep je kennis met artikelen van Trinity Breath & Healing over ademtherapie, lichaamsgerichte methoden en energetisch werken als weg naar je herstel.',
 		lead: 'Langere stukken over de methodes waar ik mee werk. Nog in de maak.',
 		crumbs: [
 			{ name: 'Home', path: '/' },
@@ -86,10 +90,10 @@ export const STUB_META: Record<string, StubMeta> = {
 	// +page.ts.
 
 	'/reviews': {
-		title: 'Reviews en ervaringen | TRINITY Breath & Healing NL',
+		title: 'Reviews en ervaringen van cliënten',
 		heading: 'Reviews',
 		description:
-			'Ervaringen van mensen die bij TRINITY Breath & Healing in Almere een sessie volgden. Lees wat ademwerk en energetische behandeling voor hen betekende.',
+			'Ervaringen van mensen die bij Trinity Breath & Healing in Amsterdam een sessie volgden. Lees wat ademwerk en energetische behandeling voor hen betekende.',
 		lead: 'Ervaringen van mensen die een sessie volgden. Ik verzamel ze nog, dus deze pagina is voorlopig leeg.',
 		crumbs: [
 			{ name: 'Home', path: '/' },

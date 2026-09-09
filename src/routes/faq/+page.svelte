@@ -18,7 +18,7 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
-<Breadcrumbs items={data.crumbs} wide />
+<Breadcrumbs items={data.crumbs} />
 
 <article class="faq-intro">
 	<PageTitle>Veelgestelde vragen</PageTitle>

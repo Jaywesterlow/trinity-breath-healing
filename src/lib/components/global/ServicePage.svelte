@@ -35,6 +35,9 @@
 
 <article class="service">
 	<header class="service__head">
+		<!-- The one eyebrow left on a subpage. Everywhere else it repeated the word
+		     directly above it in the breadcrumb; here the crumb says the treatment's
+		     name and this says what kind of page it is, so it carries something. -->
 		<p class="service__eyebrow" use:reveal>Behandeling</p>
 		<PageTitle>{service.name}</PageTitle>
 		<p class="service__teaser" use:reveal>{service.teaser}</p>
@@ -104,10 +107,22 @@
 </article>
 
 <style>
+	/* Every page sits in the same box as the landing page's sections and the
+	   footer below it, so a heading never starts 256px to the right of the logo
+	   directly underneath it. The gutter is added to the max-width rather than
+	   taken out of it (box-sizing is border-box), so the content box is exactly
+	   --container-max. Reading measure is restored on the children, not by
+	   narrowing the box — otherwise the whole page slides right again. */
 	.service {
-		max-width: var(--content-max-width);
+		max-width: calc(var(--container-max) + 3rem);
 		margin: 0 auto;
-		padding: var(--space-8) var(--space-6) var(--space-16);
+		padding: var(--space-8) 1.5rem var(--space-16);
+	}
+
+	/* Reading measure. Direct children only, so a section can opt out by
+	   nesting if it ever needs the full container. */
+	.service > * {
+		max-width: var(--content-max-width);
 	}
 
 	.service__head {

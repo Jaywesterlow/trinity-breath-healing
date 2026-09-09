@@ -32,6 +32,46 @@ Four routes stayed stubs on purpose: `/over-mij` is waiting on her words, and
 `noindex` and out of the sitemap until they carry something. Writing filler for
 them would be the thin-content problem the exclusion exists to avoid.
 
+**Shipped 2026-09-09 — one grid line for every page**
+
+Every subpage used to pick one of two boxes: the container width (`/`, `/diensten`,
+`/contact`, `/faq`) or a centred reading measure (everything else). At 1440px the two
+disagreed by 256px, so on half the site the breadcrumb and the `<h1>` started a quarter
+of the screen right of the logo in the footer directly below them. Now every page sits
+in the container box and the reading measure is applied to the children instead, so
+crumb, heading and footer share one left edge on all fourteen routes. `Breadcrumbs`
+lost its `wide` prop — with one box there is nothing to choose.
+
+The section eyebrow came off `/diensten`, `/werkwijze`, `/behandelingen` and
+`/over-mij` in the same pass: it repeated, in smaller type, the exact word the
+breadcrumb directly above it already said. `ServicePage` keeps its "Behandeling"
+eyebrow, which names the kind of page rather than echoing the crumb.
+
+**Shipped 2026-09-09 — page titles stopped shipping the brand twice**
+
+`Head.svelte` appended " | TRINITY Breath & Healing" unconditionally, and eleven
+routes had already put the practice name in their own TITLE, so they rendered it
+twice: "Spinal Touch in Amsterdam – Trinity Breath & Healing | TRINITY Breath &
+Healing", 79 characters where Google shows about 60. Three more spellings were in
+use elsewhere — "Trinity Healing BnH", a bare "| Trinity", "TRINITY Breath &
+Healing NL". All twenty routes now render 48–62 characters with the brand once, in
+one spelling; `routes.spec.ts` asserts both. The stub-title rule that caused it —
+"the base title must be 50–60" — was itself the bug, since the only way to pad a
+two-word page name to 50 is to append the brand; it now measures the rendered
+title instead.
+
+`/reviews` also stopped claiming the practice is in Almere, and the four stub
+descriptions stopped addressing the reader as "u" while the rest of the site says
+"je".
+
+**Flaky, not broken — carousel momentum**
+
+`behandelingen-momentum.spec.ts:79` failed once in a full parallel run on
+2026-09-09 and passed on its own immediately after, twice. It measures deceleration
+against wall-clock timings, so it loses under load. Nothing in that run touched the
+carousel. Worth a real fix (assert on the physics rather than on elapsed time)
+before it wastes someone's afternoon.
+
 **Blocked on the owner — cannot ship without these**
 1. **Domain.** TransIP domain is linked to Vercel; the login is still needed from her.
    `PUBLIC_SITE_URL` is read from the environment (`src/lib/seo/defaults.ts`) and the

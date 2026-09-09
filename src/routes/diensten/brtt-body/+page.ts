@@ -16,7 +16,7 @@ import { makeServiceNode } from '$lib/schema/services';
 export const prerender = true;
 
 const PATH = '/diensten/brtt-body';
-const TITLE = 'BRTT Body in Amsterdam – Trinity Breath & Healing';
+const TITLE = 'BRTT Body in Amsterdam – TRINITY Breath & Healing';
 const DESCRIPTION =
 	'Lichaamsgericht proces dat via de psoas — de spier van de ziel — opgeslagen trauma bevrijdt. Trinity Breath & Healing, Amsterdam en omgeving en Zaandam.';
 

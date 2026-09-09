@@ -15,7 +15,7 @@ import { LEGAL_LAST_UPDATED } from '$lib/legal/meta';
 export const prerender = true;
 
 const PATH = '/privacyverklaring';
-const TITLE = 'Privacyverklaring — zo ga ik met jouw gegevens om';
+const TITLE = 'Privacyverklaring en jouw gegevens';
 const DESCRIPTION =
 	'Welke persoonsgegevens Trinity Breath & Healing verwerkt, waarom, hoe lang ze bewaard ' +
 	'blijven en welke rechten je hebt onder de AVG. Ook wie ze nog meer ziet.';

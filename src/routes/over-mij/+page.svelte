@@ -31,7 +31,6 @@
 
 <article class="about-page">
 	<header class="about-page__header">
-		<p class="about-page__eyebrow">Over mij</p>
 		<PageTitle>Vanuit eigen ervaring weet ik wat jij doormaakt.</PageTitle>
 		<p class="about-page__lead">{ABOUT_INTRO}</p>
 	</header>
@@ -139,25 +138,28 @@
 			Een kennismaking duurt 30 minuten, is kosteloos en verplicht je tot niets. We kijken samen of
 			dit werk bij je past.
 		</p>
-		<ButtonLink label="Plan een kennismaking" href="/#contact" />
+		<ButtonLink label="Plan een kennismaking" href="/contact" />
 	</aside>
 </article>
 
 <style>
+	/* Every page sits in the same box as the landing page's sections and the
+	   footer below it, so a heading never starts 256px to the right of the logo
+	   directly underneath it. The gutter is added to the max-width rather than
+	   taken out of it (box-sizing is border-box), so the content box is exactly
+	   --container-max. Reading measure is restored on the children, not by
+	   narrowing the box — otherwise the whole page slides right again. */
 	.about-page {
-		max-width: var(--content-max-width);
+		max-width: calc(var(--container-max) + 3rem);
 		margin: 0 auto;
-		padding: clamp(1.5rem, 6vw, 3rem) var(--space-6) clamp(3rem, 10vw, 5rem);
+		padding: clamp(1.5rem, 6vw, 3rem) 1.5rem clamp(3rem, 10vw, 5rem);
 		color: var(--color-fg-forest);
 	}
 
-	.about-page__eyebrow {
-		font-family: var(--font-body);
-		font-size: 0.8125rem;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-		color: var(--brand-muted);
-		margin-bottom: 0.5rem;
+	/* Reading measure. Direct children only, so a section can opt out by
+	   nesting if it ever needs the full container. */
+	.about-page > * {
+		max-width: var(--content-max-width);
 	}
 
 	.about-page__lead {
@@ -262,24 +264,31 @@
 		margin-bottom: 0;
 	}
 
+	/* Left, like everything above it and like the closing CTA on every other page.
+	   This block was centred, which on a page of left-aligned prose reads as a
+	   fragment from somewhere else rather than as emphasis. The rule above it
+	   stays: that one does mark an ending. */
 	.about-page__cta {
 		margin-top: clamp(2.5rem, 8vw, 3.5rem);
 		padding-top: clamp(1.5rem, 5vw, 2rem);
 		border-top: 1px solid var(--brand-border);
-		text-align: center;
 	}
 
 	.about-page__cta h2 {
 		font-family: var(--font-display);
-		font-size: clamp(1.25rem, 4vw, 1.5rem);
-		margin-bottom: 0.5rem;
+		font-size: var(--fs-h2);
+		font-weight: var(--font-weight-medium);
+		line-height: var(--line-height-tight);
+		color: var(--color-fg-forest);
+		margin-bottom: var(--space-4);
 	}
 
 	.about-page__cta p {
-		font-size: 1rem;
-		line-height: 1.7;
-		color: var(--brand-muted);
-		margin: 0 auto 1.25rem;
-		max-width: 34rem;
+		font-family: var(--font-body);
+		font-size: var(--fs-body);
+		font-weight: var(--font-weight-light);
+		line-height: var(--line-height-normal);
+		color: var(--color-text-subtle);
+		margin: 0 0 var(--space-6);
 	}
 </style>

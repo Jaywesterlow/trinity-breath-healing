@@ -28,7 +28,6 @@
 
 <article class="klachten">
 	<header class="klachten__head">
-		<p class="klachten__eyebrow" use:reveal>Behandelingen</p>
 		<PageTitle>Waar kom je mee?</PageTitle>
 		<p class="klachten__lead" use:reveal>
 			De meeste mensen komen niet binnen met de naam van een behandeling, maar met een klacht.
@@ -71,22 +70,26 @@
 </article>
 
 <style>
+	/* Every page sits in the same box as the landing page's sections and the
+	   footer below it, so a heading never starts 256px to the right of the logo
+	   directly underneath it. The gutter is added to the max-width rather than
+	   taken out of it (box-sizing is border-box), so the content box is exactly
+	   --container-max. Reading measure is restored on the children, not by
+	   narrowing the box — otherwise the whole page slides right again. */
 	.klachten {
-		max-width: var(--content-max-width);
+		max-width: calc(var(--container-max) + 3rem);
 		margin: 0 auto;
-		padding: var(--space-8) var(--space-6) var(--space-16);
+		padding: var(--space-8) 1.5rem var(--space-16);
+	}
+
+	/* Reading measure. Direct children only, so a section can opt out by
+	   nesting if it ever needs the full container. */
+	.klachten > * {
+		max-width: var(--content-max-width);
 	}
 
 	.klachten__head {
 		margin-bottom: var(--space-10);
-	}
-
-	.klachten__eyebrow {
-		font-family: var(--font-body);
-		font-size: var(--font-size-xl);
-		font-weight: var(--font-weight-light);
-		color: var(--brand-muted);
-		margin-bottom: var(--space-2);
 	}
 
 	.klachten__lead {
