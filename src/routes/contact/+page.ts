@@ -2,23 +2,26 @@ import type { PageLoad } from './$types';
 import { buildGraph } from '$lib/schema/buildGraph';
 import { buildBreadcrumb } from '$lib/schema/breadcrumb';
 import { buildWebPage } from '$lib/schema/webpage';
-import { STUB_META } from '$lib/seo/stub-meta';
 
+/** /contact — real content as of 2026-09-09, indexed and in the sitemap. */
 export const prerender = true;
 
-export const load: PageLoad = async ({ url }) => {
-	const stub = STUB_META[url.pathname];
-	if (!stub) throw new Error(`no STUB_META entry for ${url.pathname}`);
-	/* Placeholder content: keep it out of the index until it says something. */
-	const meta = {
-		title: stub.title,
-		description: stub.description,
-		path: url.pathname,
-		noindex: true
-	};
+const PATH = '/contact';
+const TITLE = 'Contact en afspraak maken | Trinity Breath & Healing';
+const DESCRIPTION =
+	'Plan een vrijblijvende kennismaking van dertig minuten, stuur een bericht of ' +
+	'app gerust. Trinity Breath & Healing, Amsterdam-Zuidoost en de hele regio.';
+
+const CRUMBS = [
+	{ name: 'Home', path: '/' },
+	{ name: 'Contact', path: PATH }
+];
+
+export const load: PageLoad = async () => {
+	const meta = { title: TITLE, description: DESCRIPTION, path: PATH };
 	const pageSpecific = [
-		buildBreadcrumb(stub.crumbs),
-		buildWebPage({ title: stub.title, description: stub.description, path: url.pathname })
+		buildBreadcrumb(CRUMBS),
+		buildWebPage({ title: TITLE, description: DESCRIPTION, path: PATH })
 	];
-	return { meta, graph: buildGraph({ pageSpecific, path: url.pathname }) };
+	return { meta, crumbs: CRUMBS, graph: buildGraph({ pageSpecific, path: PATH }) };
 };

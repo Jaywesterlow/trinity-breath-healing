@@ -174,10 +174,14 @@
 		--faq-ease: cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
+	/* The gutter is added to the max-width rather than taken out of it, so the
+	   content box is exactly --container-max. It used to be taken out, which put
+	   every question 24px to the right of every other section on the landing page
+	   — including the contact cards directly above it. */
 	.faq__container {
-		max-width: var(--container-max); /* 1200px — same cap as nav/footer/hero, so edges line up */
+		max-width: calc(var(--container-max) + 3rem);
 		margin-inline: auto;
-		padding-inline: var(--space-6);
+		padding-inline: 1.5rem;
 	}
 
 	.faq__header {

@@ -16,6 +16,18 @@
  * coverage requirements (FAQPage JSON-LD, `<time>`-free but otherwise not stub-shaped)
  * that don't fit this generic stub-route contract. See src/routes/faq/+page.ts.
  *
+ * 2026-09-09: eleven more graduated — the seven modalities, /diensten, /behandelingen,
+ * /werkwijze and /contact. This file now has two contracts instead of one, and the
+ * lists are derived from ALL_ROUTES rather than typed out, so the next graduation
+ * moves a route between them without an edit here:
+ *
+ *   every route      200, one <h1>, a title, a description, a canonical, one JSON-LD
+ *                    block with a BreadcrumbList in it
+ *   stubs only       title/description/crumbs come from STUB_META, and noindex is
+ *                    present — the whole point of a stub is that it is not indexed
+ *   real pages only  robots must NOT say noindex, or the page is invisible to the
+ *                    thing the site is judged on
+ *
  * Playwright config: tests/integration/ dir, webServer: pnpm preview on port 4173.
  * Run AFTER: PUBLIC_SITE_URL=https://trinitybreathhealing.nl pnpm build
  *
@@ -25,28 +37,18 @@
 import { test, expect } from '@playwright/test';
 import { parse } from 'node-html-parser';
 import { STUB_META } from '../../src/lib/seo/stub-meta';
+import { ALL_ROUTES } from '../../src/lib/constants/routes';
 
 /* Follows whatever the build used, so pointing PUBLIC_SITE_URL at the real
    domain does not silently break every canonical assertion here. */
 const SITE_URL = process.env.PUBLIC_SITE_URL ?? 'https://trinitybreathhealing.nl';
 
-const STUB_PATHS = [
-	'/werkwijze',
-	'/over-mij',
-	'/behandelingen',
-	'/contact',
-	'/diensten',
-	'/diensten/mahatma-healing',
-	'/diensten/goldhealing',
-	'/diensten/raster-energie',
-	'/diensten/cranio-fascia-unwinding',
-	'/diensten/spinal-touch',
-	'/diensten/brtt-body',
-	'/diensten/trb-breathwork',
-	'/blog',
-	'/artikelen',
-	'/reviews'
-] as const;
+const STUB_PATHS = ALL_ROUTES.filter((r) => r.kind === 'stub' || r.kind === 'service-stub').map(
+	(r) => r.path
+);
+
+/** Everything that carries real content, landing page aside — it has its own suite. */
+const PAGE_PATHS = ALL_ROUTES.filter((r) => r.kind === 'page').map((r) => r.path);
 
 // 260810-mdl: 4 -> 7 real services (BRTT Body and Trauma Release Breathwork ship separate).
 const SERVICE_SLUGS = [
@@ -59,8 +61,10 @@ const SERVICE_SLUGS = [
 	'trb-breathwork'
 ] as const;
 
-test.describe.parallel('reserved stub routes — SEO scaffolding', () => {
-	for (const path of STUB_PATHS) {
+test.describe.parallel('every route — SEO scaffolding', () => {
+	for (const path of [...STUB_PATHS, ...PAGE_PATHS]) {
+		const isStub = STUB_PATHS.includes(path);
+
 		test(`GET ${path} returns 200 with correct SEO scaffolding`, async ({ page }) => {
 			const response = await page.goto(path);
 
@@ -69,7 +73,7 @@ test.describe.parallel('reserved stub routes — SEO scaffolding', () => {
 
 			const html = await page.content();
 			const root = parse(html);
-			const stub = STUB_META[path]!;
+			const stub = STUB_META[path];
 
 			// 2. Exactly one <h1> matching the route's expected title text fragment
 			const h1s = root.querySelectorAll('h1');
@@ -84,9 +88,11 @@ test.describe.parallel('reserved stub routes — SEO scaffolding', () => {
 			const titleEl = root.querySelector('title');
 			expect(titleEl, `${path}: should have <title>`).not.toBeNull();
 			const titleText = titleEl!.text.trim();
-			expect(titleText, `${path}: <title> should start with STUB_META base title`).toContain(
-				stub.title
-			);
+			if (stub) {
+				expect(titleText, `${path}: <title> should start with STUB_META base title`).toContain(
+					stub.title
+				);
+			}
 			// The full title must be at least 50 chars (base title minimum) and not more than 120
 			// (base 60 + ' | TRINITY Breath & Healing' suffix 27 = max ~87)
 			expect(
@@ -98,27 +104,40 @@ test.describe.parallel('reserved stub routes — SEO scaffolding', () => {
 			const metaDesc = root.querySelector('meta[name="description"]');
 			expect(metaDesc, `${path}: should have meta description`).not.toBeNull();
 			const descContent = metaDesc!.getAttribute('content') ?? '';
-			expect(descContent, `${path}: meta description should match STUB_META`).toBe(
-				stub.description
-			);
+			if (stub) {
+				expect(descContent, `${path}: meta description should match STUB_META`).toBe(
+					stub.description
+				);
+			}
+			/* The same window scripts/check-html.ts enforces on the built output, so a
+			   description that would fail the launch gate fails here first. */
 			expect(
 				descContent.length,
-				`${path}: meta description should be 150-160 chars`
-			).toBeGreaterThanOrEqual(150);
+				`${path}: meta description should be 148-162 chars`
+			).toBeGreaterThanOrEqual(148);
 			expect(
 				descContent.length,
-				`${path}: meta description should be 150-160 chars`
-			).toBeLessThanOrEqual(160);
+				`${path}: meta description should be 148-162 chars`
+			).toBeLessThanOrEqual(162);
 
 			// 4b. Stubs are placeholders: they must carry noindex so Google never
 			// indexes an empty page under this domain. They stay `follow` so link
 			// equity still flows to the landing page.
 			const robots = root.querySelector('meta[name="robots"]');
-			expect(robots, `${path}: stub should have a robots meta tag`).not.toBeNull();
-			expect(
-				robots!.getAttribute('content') ?? '',
-				`${path}: stub robots meta should be noindex`
-			).toContain('noindex');
+			if (isStub) {
+				expect(robots, `${path}: stub should have a robots meta tag`).not.toBeNull();
+				expect(
+					robots!.getAttribute('content') ?? '',
+					`${path}: stub robots meta should be noindex`
+				).toContain('noindex');
+			} else {
+				/* The inverse matters just as much: a page that graduated in routes.ts but
+				   kept noindex in its +page.ts is in the sitemap and uncrawlable at once. */
+				expect(
+					robots?.getAttribute('content') ?? '',
+					`${path}: a real page must not be noindex`
+				).not.toContain('noindex');
+			}
 
 			// 5. Canonical link href === SITE_URL + path
 			const canonical = root.querySelector('link[rel="canonical"]');
@@ -139,13 +158,20 @@ test.describe.parallel('reserved stub routes — SEO scaffolding', () => {
 			const breadcrumb = graph.find((n) => n['@type'] === 'BreadcrumbList');
 			expect(breadcrumb, `${path}: @graph should contain BreadcrumbList`).not.toBeUndefined();
 			const items = (breadcrumb!['itemListElement'] as Array<Record<string, unknown>>) ?? [];
-			expect(items.length, `${path}: BreadcrumbList should have ${stub.crumbs.length} items`).toBe(
-				stub.crumbs.length
-			);
-			// Verify crumb names match
-			stub.crumbs.forEach((crumb, i) => {
-				expect(items[i]!['name'], `${path}: crumb[${i}].name`).toBe(crumb.name);
-			});
+			expect(
+				items.length,
+				`${path}: BreadcrumbList should have at least Home + self`
+			).toBeGreaterThanOrEqual(2);
+			expect(items[0]!['name'], `${path}: first crumb should be Home`).toBe('Home');
+			if (stub) {
+				expect(
+					items.length,
+					`${path}: BreadcrumbList should have ${stub.crumbs.length} items`
+				).toBe(stub.crumbs.length);
+				stub.crumbs.forEach((crumb, i) => {
+					expect(items[i]!['name'], `${path}: crumb[${i}].name`).toBe(crumb.name);
+				});
+			}
 
 			// 7. Service-stub routes contain a Service node by @id
 			const slug = path.replace('/diensten/', '');
@@ -159,11 +185,13 @@ test.describe.parallel('reserved stub routes — SEO scaffolding', () => {
 			}
 
 			// 9. Stubs do NOT render <time datetime> (SEO-09 is landing-only in Phase 0)
-			const timeEls = root.querySelectorAll('time[datetime]');
-			expect(
-				timeEls.length,
-				`${path}: stubs must NOT contain <time datetime> (SEO-09 is landing-only)`
-			).toBe(0);
+			if (isStub) {
+				const timeEls = root.querySelectorAll('time[datetime]');
+				expect(
+					timeEls.length,
+					`${path}: stubs must NOT contain <time datetime> (SEO-09 is landing-only)`
+				).toBe(0);
+			}
 		});
 	}
 

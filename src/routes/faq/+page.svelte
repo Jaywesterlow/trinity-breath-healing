@@ -18,7 +18,7 @@
 	let { data }: { data: PageData } = $props();
 </script>
 
-<Breadcrumbs items={data.crumbs} />
+<Breadcrumbs items={data.crumbs} wide />
 
 <article class="faq-intro">
 	<PageTitle>Veelgestelde vragen</PageTitle>
@@ -33,10 +33,17 @@
 <Faq showHeading={false} />
 
 <style>
+	/* <Faq> below is a full-width section whose inner content is --container-max,
+	   so this has to be the same box or the h1 sits to the right of the questions
+	   it introduces. Gutter added to the max-width, not taken out of it. */
 	.faq-intro {
-		max-width: var(--content-max-width, 42rem);
+		max-width: calc(var(--container-max) + 3rem);
 		margin: 0 auto;
-		padding: var(--space-8, 2rem) var(--space-4, 1rem) 0;
+		padding: var(--space-8) 1.5rem 0;
+	}
+
+	.faq-intro__text {
+		max-width: var(--content-max-width);
 	}
 
 	.faq-intro__text {

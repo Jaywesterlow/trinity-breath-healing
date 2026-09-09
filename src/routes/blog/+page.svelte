@@ -6,4 +6,4 @@
 	const stub = $derived(STUB_META[data.meta.path]!);
 </script>
 
-<StubLayout title={data.meta.title} description={data.meta.description} crumbs={stub.crumbs} />
+<StubLayout heading={stub.heading} lead={stub.lead} crumbs={stub.crumbs} />

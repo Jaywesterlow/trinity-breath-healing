@@ -41,9 +41,20 @@ describe('BRAND.services (260810-mdl)', () => {
 		}
 	});
 
-	it('every service slug has a matching STUB_META entry', () => {
+	it('every service slug has a page that carries its own metadata', () => {
+		/* Was "a matching STUB_META entry". The seven modality routes graduated on
+		   2026-09-09; each now holds its own title and description in its own
+		   +page.ts, next to the copy it describes, and is out of STUB_META by
+		   design. What still has to hold is that none of them is left behind in
+		   the stub map while its route says it is a real page. */
 		for (const s of BRAND.services) {
-			expect(STUB_META[`/diensten/${s.slug}`], `missing STUB_META for ${s.slug}`).toBeDefined();
+			const route = ALL_ROUTES.find((r) => r.path === `/diensten/${s.slug}`);
+			expect(route, `missing route for ${s.slug}`).toBeDefined();
+			expect(route!.kind, `${s.slug} should be a real page`).toBe('page');
+			expect(
+				STUB_META[`/diensten/${s.slug}`],
+				`${s.slug} is a real page but still has a STUB_META entry`
+			).toBeUndefined();
 		}
 	});
 

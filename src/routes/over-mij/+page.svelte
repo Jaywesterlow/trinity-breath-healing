@@ -145,9 +145,9 @@
 
 <style>
 	.about-page {
-		max-width: var(--content-max-width, 42rem);
+		max-width: var(--content-max-width);
 		margin: 0 auto;
-		padding: clamp(1.5rem, 6vw, 3rem) clamp(1rem, 5vw, 1.5rem) clamp(3rem, 10vw, 5rem);
+		padding: clamp(1.5rem, 6vw, 3rem) var(--space-6) clamp(3rem, 10vw, 5rem);
 		color: var(--color-fg-forest);
 	}
 

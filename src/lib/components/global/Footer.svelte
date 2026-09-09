@@ -287,6 +287,15 @@
 		line-height: var(--line-height-normal);
 	}
 
+	/* 24px tall, which the 12px type alone does not reach. These sit in a <nav>,
+	   not in a sentence, so WCAG 2.5.8's inline exception does not cover them.
+	   Vertical padding only — the underline is drawn on the text box, so adding
+	   horizontal padding would push the line out past the word. */
+	.footer__legal a {
+		display: inline-block;
+		padding-block: 0.1875rem;
+	}
+
 	/* Plain text links get the underline reveal rather than the lift: moving a
 	   line of running text is noisy, an underline arriving is not. The wipe
 	   itself is .link-underline in app.css — it used to be redeclared here at

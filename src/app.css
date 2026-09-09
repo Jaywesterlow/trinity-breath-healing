@@ -275,6 +275,12 @@
 	--shadow-hover: none;
 
 	/* --- Layout --- */
+	/* The measure every text page is set to. It was --content-max-width with a
+	   42rem fallback and the variable was never actually defined, so four
+	   components were each quietly using their own fallback and the breadcrumbs
+	   above them used none at all. 46rem is the width the treatments note and the
+	   new content pages were already built to. */
+	--content-max-width: 46rem;
 	--container-max: 1200px;
 	--nav-height: 80px; /* mobile: 20px padding × 2 + 40px logo */
 }

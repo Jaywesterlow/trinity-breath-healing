@@ -54,6 +54,11 @@
 	   pulled too — two cards leaning at a cursor that is already resting on one
 	   of them. Only the card under the pointer keeps its magnet; if the pointer
 	   is on neither, both are live so they can lean on approach. */
+	/** /contact renders its own <h1>; a second "Hoe wil je contact opnemen?"
+	 *  directly under it would be a repeat, not a hierarchy. Same prop and the
+	 *  same reason as Faq.svelte's. */
+	let { showHeading = true }: { showHeading?: boolean } = $props();
+
 	let over = $state<'form' | 'meeting' | null>(null);
 
 	const CHECKS = [
@@ -64,11 +69,23 @@
 	];
 </script>
 
-<section id="contact" class="contact" aria-labelledby="contact-heading">
+<!-- aria-labelledby only when the heading it names is actually rendered; pointing at
+     a missing id names the section after nothing. On /contact the page h1 above it
+     does that job, so an aria-label repeats it in the accessibility tree. -->
+<section
+	id="contact"
+	class="contact"
+	aria-labelledby={showHeading ? 'contact-heading' : undefined}
+	aria-label={showHeading ? undefined : 'Contact'}
+>
 	<div class="contact__inner">
 		<header class="contact__header">
-			<p class="contact__eyebrow" use:reveal>Contact</p>
-			<h2 id="contact-heading" class="contact__heading" use:reveal>Hoe wil je contact opnemen?</h2>
+			{#if showHeading}
+				<p class="contact__eyebrow" use:reveal>Contact</p>
+				<h2 id="contact-heading" class="contact__heading" use:reveal>
+					Hoe wil je contact opnemen?
+				</h2>
+			{/if}
 			<!-- Desktop shows this in the right-hand column, under its own small
 			     title; on mobile it belongs under the heading. -->
 			<p class="contact__intro contact__intro--mobile" use:reveal>

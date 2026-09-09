@@ -1,49 +1,77 @@
 # Known Issues — deferred, not fixed yet
 
-Last updated: **2026-08-09**
+Last updated: **2026-09-09**
 
 Read the date above before answering "what issues are still open?" — anything here
 was true as of that date and may have been fixed since.
+
+**Every item in the at-a-glance list below was re-checked against the working tree on
+2026-09-09, not carried forward on trust.** The list had drifted a month: it still
+claimed the phone number was missing (it is in `brand.ts`), that the contact section
+was placeholders (the form, the planner and three API routes all exist), and that the
+carousel rebuild was an unmerged PR (it is on main and has been rewritten twice since).
+If you are reading this more than a few weeks later, re-check before repeating it.
 
 ---
 
 ## Open, at a glance
 
-Everything still outstanding. Detail for each is further down.
+Detail for the older items is further down. Anything marked **closed** stays listed
+only so a future reader does not re-open it.
 
-**Before launch**
-1. Pick the real domain — three conflicting ones; set `PUBLIC_SITE_URL` in Vercel. Owner decision.
-2. ~~Fill in `TODO_PRACTITIONER_NAME`, `TODO_PHONE`, `TODO_INSTAGRAM_HANDLE`~~ — **name and
-   Instagram done 2026-08-01** (Brigitte Grohe, @trinitybreath.and.healing — commit `4cd9b08`).
-   `TODO_PHONE` still open, still needed from the owner.
-3. ~~Fix 128 contrast failures~~ — **done 2026-08-01** (commit `4cd9b08`): darkened
-   `--brand-muted` and `--brand-border` tokens plus two hardcoded `NavLogo.svelte` colors, all
-   now ≥4.9:1 against their background. See "Site-wide WCAG 2.2 AA color-contrast failures"
-   below, updated with the fix.
+**Shipped 2026-09-09 — eleven routes graduated from stub to real content**
 
-**Deferred by the owner**
-4. Contact section is placeholders — no form, no send, no Cal.com.
-5. ~~Behandelingen transitions are janky~~ — **rebuilt from scratch 2026-08-07** on
-   `claude/accessible-work-repos-kb67gy` (PR #10, **open, not merged**). Old Embla version and
-   its `[carousel-debug]` logs are gone entirely. See root `HANDOFF.md` → "The Behandelingen
-   carousel rebuild" for the mechanism and what's still open on it (desktop click-to-index
-   never implemented; swipe feel untested on a real device). Detail below has been updated to
-   match — do not trust anything under "Services / Behandelingen section" further down that
-   isn't marked superseded.
+The seven modality pages under `/diensten/`, their `/diensten` index, plus
+`/behandelingen`, `/werkwijze` and `/contact`. The sitemap went from 5 URLs to 16.
+Copy for the seven comes from `BRAND.services`, which is the practitioner's own;
+`/behandelingen` is organised by complaint rather than by modality (see
+`src/lib/content/klachten.ts`) so it is not a duplicate of `/diensten`.
 
-**Small but real**
-6. PRF-03 lazy loading unimplemented — needs an exclusion list first (the pinned pan would pop in).
-7. Hero waits 1.43s before text — check Search Console LCP after launch.
+Four routes stayed stubs on purpose: `/over-mij` is waiting on her words, and
+`/blog`, `/artikelen` and `/reviews` have no posts and no reviews. They are
+`noindex` and out of the sitemap until they carry something. Writing filler for
+them would be the thin-content problem the exclusion exists to avoid.
+
+**Blocked on the owner — cannot ship without these**
+1. **Domain.** TransIP domain is linked to Vercel; the login is still needed from her.
+   `PUBLIC_SITE_URL` is read from the environment (`src/lib/seo/defaults.ts`) and the
+   build throws without it, so this is a Vercel env var, not a code change.
+2. **E-mail provider.** Left off at contacting their customer support. Blocks the
+   `<Todo>e-mailprovider</Todo>` / `<Todo>land</Todo>` rows in the privacy statement.
+3. **Terms content.** Rate per session, payment moment and method, VAT yes/no,
+   cancellation window, late-cancellation fee, complaints body. All `<Todo>` in
+   `/algemene-voorwaarden`.
+4. **Her own words for `/over-mij`** — two paragraphs plus whether she is a member of
+   a professional association. `<Todo>` markers in `src/routes/over-mij/+page.svelte`.
+5. **Disclaimer list** — the conditions she does not treat, to be confirmed by her.
+
+Run `npm run audit:placeholders` for the live list; it greps every `<Todo>` in the tree.
+
+**Closed since the last edit of this file**
+- ~~Phone number~~ — **closed.** `BRAND.phone` is `+31624244585`, displayed as
+  `06 24 24 45 85`. It renders in the footer and the contact section.
+- ~~Contact section is placeholders~~ — **closed.** There is a real e-mail form, a
+  date planner with its own booking flow, and three API routes under `src/routes/api/`
+  (`contact`, `booking`, `availability`).
+- ~~Behandelingen carousel PR #10 unmerged~~ — **closed.** On the mainline and rebuilt
+  since; the fan, the drag band, the momentum and the modal are all covered by their own
+  Playwright specs.
+- ~~128 contrast failures~~ — **closed** 2026-08-01, and the axe gate
+  (`npm run audit:a11y`) has reported zero violations across six states on every run
+  since.
+
+**Small but real, mine to do**
+6. PRF-03 lazy loading unimplemented — needs an exclusion list first (the pinned pan
+   would pop in). Detail below.
+7. Hero waits 1.43s before text — check Search Console LCP after launch. Detail below.
 8. Favicon soft at a true 16px — needs a simplified small-size mark from the designer.
 9. Draw-on parked — ~0.2% edge-pixel difference remains.
+10. Scroll fade skips a block during a fast flick. Detail at the bottom of this file.
 
 **Housekeeping**
-10. ~~2 GB stale worktrees in `.claude/worktrees/`~~ — checked 2026-08-01, does not exist in this
-    checkout. Nothing to delete.
 11. Contact copy assertions commented out in `check-copy.sh`.
-12. ~~The teacup `--section` invocation lives only in a commit message.~~ Clarified 2026-08-01:
-    it was never recorded anywhere, not just in a commit — see detail below. A guarded script
-    now exists so future invocations get saved.
+12. Six `behandelingen-*` Playwright specs fail on the owner's Windows machine — a local
+    browser mismatch, not a component bug. Detail below.
 
 ---
 
