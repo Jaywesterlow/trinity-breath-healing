@@ -174,7 +174,7 @@
 	}
 
 	.klachten__cta {
-		margin-top: var(--space-16);
+		margin-top: var(--block-gap);
 	}
 
 	.klachten__h2 {

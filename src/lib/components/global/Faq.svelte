@@ -161,7 +161,7 @@
 <style>
 	.faq {
 		background: var(--color-bg-sand);
-		padding-block: var(--space-12);
+		padding-block: var(--section-pad);
 
 		/* Local to this section rather than the global motion tokens: --motion-base (250ms) with
 		   --ease-out (a steep expo curve, ~80% travelled in its first quarter) put nearly all of
@@ -354,10 +354,6 @@
 	}
 
 	@media (min-width: 1024px) {
-		.faq {
-			padding-block: var(--space-16);
-		}
-
 		.faq__container {
 			display: grid;
 			/* 5fr/7fr rather than half and half: a question is a line of text and

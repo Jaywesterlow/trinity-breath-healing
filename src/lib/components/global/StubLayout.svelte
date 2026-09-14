@@ -96,7 +96,7 @@
 	}
 
 	.stub__empty {
-		margin-top: var(--space-12);
+		margin-top: var(--block-gap);
 	}
 
 	.stub__h2 {

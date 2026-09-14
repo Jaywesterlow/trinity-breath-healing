@@ -150,7 +150,7 @@
 	.service__block,
 	.service__cta,
 	.service__more {
-		margin-top: var(--space-12);
+		margin-top: var(--block-gap);
 	}
 
 	.service__h2 {

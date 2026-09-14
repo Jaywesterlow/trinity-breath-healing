@@ -29,7 +29,7 @@
 <style>
 	.note {
 		background: var(--color-bg-sand);
-		padding-block: var(--space-12);
+		padding-block: var(--section-pad);
 	}
 
 	.note__text {
@@ -45,11 +45,5 @@
 		line-height: 1.55;
 		color: var(--color-fg-forest);
 		text-wrap: balance;
-	}
-
-	@media (min-width: 1024px) {
-		.note {
-			padding-block: var(--space-16);
-		}
 	}
 </style>

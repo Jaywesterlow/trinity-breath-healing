@@ -246,7 +246,7 @@
 <style>
 	.contact {
 		background: var(--color-bg-sand);
-		padding: var(--space-16) 1.5rem; /* 24px gutter */
+		padding: var(--section-pad) 1.5rem; /* 24px gutter */
 	}
 
 	.contact__inner {
@@ -565,7 +565,11 @@
 	/* ─── Desktop ─── */
 	@media (min-width: 1024px) {
 		.contact {
-			padding: clamp(3rem, 7vh, 7rem) var(--space-8);
+			/* Vertical comes from --section-pad like every other section; this used to
+			   be its own clamp on 7vh, which made the gap depend on how tall the
+			   browser window was and landed at 63px where its neighbours had 96. Only
+			   the wider desktop gutter is kept. */
+			padding: var(--section-pad) var(--space-8);
 		}
 
 		/* Header centred over both columns, per the design. */

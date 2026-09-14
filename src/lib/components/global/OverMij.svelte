@@ -112,7 +112,7 @@
 	.about__inner {
 		max-width: var(--container-max); /* 1200px — same cap as nav/footer/hero/werkwijze */
 		margin: 0 auto;
-		padding: var(--space-16) 0;
+		padding: var(--section-pad) 0;
 	}
 
 	.about__header {
@@ -474,7 +474,7 @@
 			column-gap: 7.5rem; /* ~126px Figma gap between media and text column; matches this file's existing 1440px lock value */
 			row-gap: var(--space-6);
 			align-items: start;
-			padding: var(--space-16) 0; /* horizontal is 0 — max-width + centering sets the edge */
+			padding: var(--section-pad) 0; /* horizontal is 0 — max-width + centering sets the edge */
 		}
 
 		.about__header {

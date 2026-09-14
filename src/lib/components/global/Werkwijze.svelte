@@ -209,7 +209,7 @@
 <style>
 	.werkwijze {
 		background: var(--color-bg-sand);
-		padding: var(--space-16) 0;
+		padding: var(--section-pad) 0;
 		/* overflow-x: clip, NOT overflow: hidden. `overflow: hidden` on an ancestor turns it
 		   into a scroll container, which silently breaks `position: sticky` on every
 		   descendant (including .werkwijze__sticky below) — the sticky element would just

@@ -151,7 +151,7 @@
 
 	.index__cta {
 		max-width: var(--content-max-width);
-		margin-top: var(--space-16);
+		margin-top: var(--block-gap);
 	}
 
 	.index__h2 {

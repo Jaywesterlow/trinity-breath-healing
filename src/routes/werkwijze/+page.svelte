@@ -189,7 +189,7 @@
 
 	.ww__facts,
 	.ww__cta {
-		margin-top: var(--space-16);
+		margin-top: var(--block-gap);
 	}
 
 	.ww__h2 {

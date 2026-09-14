@@ -164,6 +164,25 @@
 	--space-12: 3rem;
 	--space-16: 4rem;
 
+	/* One number for the air between sections, because it was nine before: --space-16
+	   on the landing sections, --space-12 on the FAQ and the note, --space-8 on the
+	   carousel's bottom edge, and a media query flipping two of those back to 16 at
+	   the breakpoint. Adjacent sections butt up against each other — the whitespace a
+	   reader sees is this value twice.
+
+	   Clamped rather than fixed: 96px of padding on a 390px phone eats a fifth of the
+	   screen, and 64px on a 1440px desktop reads as cramped. The vw term hits the 6rem
+	   ceiling at about 1370px wide. Gaps land at 128px on a phone and 192px on a
+	   desktop, against 112 and 128 before. */
+	--section-pad: clamp(4rem, 7vw, 6rem);
+
+	/* The same job one level down: the gap between the <section>s inside a single
+	   subpage article. Not --section-pad — those separate full-bleed bands of the
+	   landing page, and 192px between "Wat het is" and "Waar het bij kan helpen"
+	   would read as two documents rather than two headings in one. It was 4rem on
+	   three route files and 3rem on two components, for the same job. */
+	--block-gap: clamp(3.5rem, 5vw, 5rem);
+
 	/* --- Typography --- */
 	--font-size-xs: 0.75rem;
 	--font-size-sm: 0.875rem;
