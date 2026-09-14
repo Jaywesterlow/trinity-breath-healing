@@ -64,13 +64,17 @@ title instead.
 descriptions stopped addressing the reader as "u" while the rest of the site says
 "je".
 
-**Flaky, not broken — carousel momentum**
+**~~Flaky, not broken — carousel momentum~~ — closed 2026-09-14**
 
 `behandelingen-momentum.spec.ts:79` failed once in a full parallel run on
 2026-09-09 and passed on its own immediately after, twice. It measures deceleration
 against wall-clock timings, so it loses under load. Nothing in that run touched the
 carousel. Worth a real fix (assert on the physics rather than on elapsed time)
 before it wastes someone's afternoon.
+
+**Closed 2026-09-14.** The spec now marks release from inside the page at the pointerup
+event and slices everything by animation frame; the failing run's "early" window had
+been stationary frames taken before the pointer had actually lifted.
 
 **Shipped 2026-09-14 — the scroll reveal stopped blinking, and the band is symmetric**
 
