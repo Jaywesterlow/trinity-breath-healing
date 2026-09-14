@@ -276,7 +276,10 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 	let released = false;
 	let shown = !armed;
 
-	/** Ends the entrance: strips the transform, keeps opacity under our control. */
+	/** Ends the entrance: strips the transform, keeps opacity under our control. Also called
+	 *  from driftTo when the element crosses the band mid-entrance; the `opacity: 1` written
+	 *  here is harmless there, because the drift started in the same tick outranks it while
+	 *  running and writes the real end value when it finishes. */
 	function settle() {
 		if (cleanupTimer !== null) {
 			clearTimeout(cleanupTimer);
@@ -299,10 +302,20 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 	function driftTo(value: number, duration: number) {
 		if (shown === (value === 1)) return;
 		shown = value === 1;
+		/* Start from what is on screen, never from the inline style. While the entrance (or an
+		   earlier drift) is still running, the inline value is whatever was written before that
+		   animation began — `0` for an armed element — and a drift started from it animated
+		   0 -> 0 on top of the entrance instead of replacing it. Nothing showed while that
+		   no-op ran, and the moment it finished the entrance underneath was uncovered
+		   mid-flight: a pop from 0 to ~0.65 in one frame, with no scroll, on an element
+		   already above the viewport. Read BEFORE anything is cancelled, because cancelling an
+		   animation drops the computed value straight back to that stale inline one. */
+		const rendered = Number(getComputedStyle(node).opacity);
+		const from = Number.isNaN(rendered) ? (value === 1 ? 0 : 1) : rendered;
 		driftAnimation?.cancel();
-		const from = Number(
-			node.style.opacity || getComputedStyle(node).opacity || (value === 1 ? 0 : 1)
-		);
+		/* The entrance is over the moment the element crosses the band. Left running, it keeps
+		   animating underneath this drift and wins again the instant the drift ends. */
+		if (fadeAnimation || riseAnimation) settle();
 		driftAnimation = node.animate([{ opacity: from }, { opacity: value }], {
 			duration,
 			easing: FADE_EASING,

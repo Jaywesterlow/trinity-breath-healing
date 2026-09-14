@@ -1,6 +1,6 @@
 # Known Issues — deferred, not fixed yet
 
-Last updated: **2026-09-09**
+Last updated: **2026-09-14**
 
 Read the date above before answering "what issues are still open?" — anything here
 was true as of that date and may have been fixed since.
@@ -71,6 +71,26 @@ descriptions stopped addressing the reader as "u" while the rest of the site say
 against wall-clock timings, so it loses under load. Nothing in that run touched the
 carousel. Worth a real fix (assert on the physics rather than on elapsed time)
 before it wastes someone's afternoon.
+
+**Shipped 2026-09-14 — the scroll reveal stopped blinking, and the band is symmetric**
+
+The owner's "blink": scroll fast, stop, and a moment later a block that had already
+left through the top popped from invisible to two-thirds lit in one frame. Traced
+per frame in `src/lib/actions/reveal.ts`: an element that entered the band and left
+it again inside its 1300ms entrance had `driftTo(0)` read its start value off the
+inline style, which the still-running entrance had not written yet, so the exit
+animated 0 -> 0 on top of the entrance instead of replacing it. When that no-op
+finished 450ms later the entrance underneath was uncovered mid-flight. Now the
+entrance is ended the moment the band is crossed, and every drift starts from the
+rendered opacity. `reveal.spec.ts` scrolls ten screens in ten frames, freezes, and
+samples every revealed element per frame for three seconds: nothing may move by
+more than half its range between two frames.
+
+The band itself moved in the same pass. The fade-out line sat 28% of the viewport
+below the top edge against a fade-in line 12% above the bottom, so a block was
+leaving a quarter-screen before it clipped while arriving almost at the edge.
+Both lines are now 12% in. The history of the earlier pairs stays in the comment
+above the constants.
 
 **Blocked on the owner — cannot ship without these**
 1. **Domain.** TransIP domain is linked to Vercel; the login is still needed from her.

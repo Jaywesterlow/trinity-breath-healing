@@ -98,6 +98,77 @@ test.describe('reveal: armed then revealed (JS)', () => {
 	});
 });
 
+/* A fast scroll, then a dead stop — and nothing may move.
+ *
+ * This is the "blink" the owner saw: scroll quickly enough that a block enters the band
+ * and leaves it again inside the 1300ms entrance fade, stop, and a moment later that block
+ * pops from invisible to two-thirds lit in a single frame while sitting above the viewport.
+ * The cause was in `driftTo`: it read `from` off the inline style, which the still-running
+ * entrance animation had not written yet, so it animated 0 -> 0 on top of the entrance
+ * instead of ending it; when that no-op finished 450ms later the entrance was uncovered
+ * mid-flight. The fix ends the entrance the moment the band is crossed and starts the drift
+ * from the rendered opacity, so every change is a fade and never a jump.
+ *
+ * Sampled per animation frame with the scroll position asserted frozen: the only thing that
+ * may change an opacity here is a running animation, and a fade of 450ms or more can never
+ * move more than half its range between two consecutive frames. The viewport matches the
+ * reproduction; the bug is not specific to it, but this is the size it was traced at. */
+test.describe('reveal: a fast scroll then a stop never jumps', () => {
+	test.use({ viewport: { width: 1440, height: 900 } });
+
+	test('no revealed element changes opacity by more than 0.5 between two frames', async ({
+		page
+	}) => {
+		await page.goto('/', { waitUntil: 'networkidle' });
+
+		const jumps: string[] = await page.evaluate(async () => {
+			const frame = () => new Promise<void>((r) => requestAnimationFrame(() => r()));
+			const log: string[] = [];
+
+			/* Everything the action has touched: an inline opacity or a running animation. */
+			const watched = [...document.querySelectorAll<HTMLElement>('h1,h2,h3,p,li,a,div')].filter(
+				(el) =>
+					(el.getAttribute('style') ?? '').includes('opacity') || el.getAnimations().length > 0
+			);
+
+			/* Ten screens in ten frames, so blocks enter and leave the band well inside the
+			   entrance's 1300ms — then stop dead. */
+			for (let i = 0; i < 10; i++) {
+				window.scrollBy(0, 700);
+				await frame();
+			}
+			const frozenY = window.scrollY;
+
+			const last = new Map(watched.map((el) => [el, parseFloat(getComputedStyle(el).opacity)]));
+			const t0 = performance.now();
+
+			while (performance.now() - t0 < 3000) {
+				await frame();
+				if (window.scrollY !== frozenY) {
+					log.push(`scroll drifted from ${frozenY} to ${window.scrollY}`);
+					break;
+				}
+				for (const el of watched) {
+					const now = parseFloat(getComputedStyle(el).opacity);
+					const was = last.get(el)!;
+					if (Math.abs(now - was) > 0.5) {
+						const r = el.getBoundingClientRect();
+						log.push(
+							`t=${Math.round(performance.now() - t0)}ms ${was.toFixed(2)} -> ${now.toFixed(2)} ` +
+								`rect.top=${Math.round(r.top)} <${el.tagName.toLowerCase()}.${(el.className || '').split(' ')[0]}> ` +
+								`"${(el.textContent ?? '').trim().slice(0, 32)}"`
+						);
+					}
+					last.set(el, now);
+				}
+			}
+			return log;
+		});
+
+		expect(jumps, jumps.join('\n')).toEqual([]);
+	});
+});
+
 test.describe('reveal: prefers-reduced-motion', () => {
 	test('faq__heading is opacity 1 immediately, with no inline style at all', async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: 'reduce' });
