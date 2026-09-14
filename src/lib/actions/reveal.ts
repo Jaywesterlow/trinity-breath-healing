@@ -130,9 +130,14 @@ const RISE_DURATION = 1100;
    Both edges have been walked in twice now. 22%/80px read as leaving too late and arriving
    already lit; 34%/18% overcorrected — with a third of the screen spent fading at the top
    and a fifth at the bottom, too little of the page was ever at full strength at once.
-   28%/12% is the settled pair: the exit still begins while the element is comfortably on
-   screen, and the entrance still waits until it properly is. */
-const BAND_TOP = 0.28;
+   28%/12% was the settled pair for a while: the exit still began while the element was
+   comfortably on screen, and the entrance still waited until it properly was.
+
+   2026-09-14: 12%/12%. The owner asked for both lines closer to the edges, and what actually
+   read wrong was the lopsidedness — the exit line sat 2.3x further in than the entrance line,
+   so a block was leaving a quarter-screen before it clipped while arriving almost at the
+   edge. Symmetric now, at the value the bottom edge had already settled on. */
+const BAND_TOP = 0.12;
 const BAND_BOTTOM = 0.12;
 
 /** The band as a rootMargin string. Exported so observers outside this action arrive on the
