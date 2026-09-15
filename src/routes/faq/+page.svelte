@@ -13,6 +13,7 @@
 	 */
 	import { Breadcrumbs, PageTitle } from '$lib/components/ui';
 	import { Faq } from '$lib/components/global';
+	import { reveal } from '$lib/actions/reveal';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -20,7 +21,8 @@
 
 <Breadcrumbs items={data.crumbs} />
 
-<article class="faq-intro">
+<!-- Title and lead fade as one block, as on every other subpage. -->
+<article class="faq-intro" use:reveal>
 	<PageTitle>Veelgestelde vragen</PageTitle>
 	<p class="faq-intro__text">
 		Antwoorden op de vragen die we het vaakst horen over ademwerk, de energetische behandelingen en

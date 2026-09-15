@@ -24,9 +24,11 @@
 <Breadcrumbs items={data.crumbs} />
 
 <article class="index">
-	<header class="index__head">
+	<!-- Title and lead fade as one block. Each card below keeps its own reveal: the grid
+	     is 834px on desktop and 1619px on a phone. -->
+	<header class="index__head" use:reveal>
 		<PageTitle>Alle behandelingen</PageTitle>
-		<p class="index__lead" use:reveal>
+		<p class="index__lead">
 			Zeven behandelingen, elk met een eigen ingang. De ene werkt via de adem, de andere via
 			aanraking of energie. Welke bij jou past hoeft je niet zelf uit te zoeken.
 		</p>
@@ -45,14 +47,19 @@
 		{/each}
 	</ul>
 
+	<!-- The ask (heading, body, button) as one, the note on its own: together they are
+	     306px on a phone, just over the one-third line. The wrapper is a plain block; the
+	     spacing is the children's own margins, which collapse through it. -->
 	<section class="index__cta" aria-labelledby="hulp">
-		<h2 id="hulp" class="index__h2" use:reveal>Weet je niet welke je nodig hebt?</h2>
-		<p class="index__body" use:reveal>
-			Dat hoeft ook niet. In een kennismaking van dertig minuten kijken we samen wat er speelt en
-			wat daarbij past. Vrijblijvend, online.
-		</p>
-		<div class="index__button" use:reveal>
-			<ButtonLink label="Plan een kennismaking" href="/contact" />
+		<div class="index__cta-main" use:reveal>
+			<h2 id="hulp" class="index__h2">Weet je niet welke je nodig hebt?</h2>
+			<p class="index__body">
+				Dat hoeft ook niet. In een kennismaking van dertig minuten kijken we samen wat er speelt en
+				wat daarbij past. Vrijblijvend, online.
+			</p>
+			<div class="index__button">
+				<ButtonLink label="Plan een kennismaking" href="/contact" />
+			</div>
 		</div>
 		<p class="index__note" use:reveal>{BRAND.disclaimer}</p>
 	</section>

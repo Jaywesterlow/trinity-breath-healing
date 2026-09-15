@@ -21,9 +21,10 @@
 
 <Breadcrumbs items={data.crumbs} />
 
-<article class="contact-intro contact-page-intro">
+<!-- Title and lead fade as one block. -->
+<article class="contact-intro contact-page-intro" use:reveal>
 	<PageTitle>Contact</PageTitle>
-	<p class="contact-intro__text" use:reveal>
+	<p class="contact-intro__text">
 		Plan een kennismaking van dertig minuten, stuur een bericht, of app gerust. Je hoeft nog niet te
 		weten wat je nodig hebt.
 	</p>

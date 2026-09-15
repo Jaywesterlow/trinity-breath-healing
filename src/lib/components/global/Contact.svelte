@@ -79,16 +79,17 @@
 	aria-label={showHeading ? undefined : 'Contact'}
 >
 	<div class="contact__inner">
-		<header class="contact__header">
+		<!-- One reveal for the whole header block; on /contact at desktop it is empty
+		     (the page's own h1 does the job and the mobile intro is hidden), and an empty
+		     block fades nothing. -->
+		<header class="contact__header" use:reveal>
 			{#if showHeading}
-				<p class="contact__eyebrow" use:reveal>Contact</p>
-				<h2 id="contact-heading" class="contact__heading" use:reveal>
-					Hoe wil je contact opnemen?
-				</h2>
+				<p class="contact__eyebrow">Contact</p>
+				<h2 id="contact-heading" class="contact__heading">Hoe wil je contact opnemen?</h2>
 			{/if}
 			<!-- Desktop shows this in the right-hand column, under its own small
 			     title; on mobile it belongs under the heading. -->
-			<p class="contact__intro contact__intro--mobile" use:reveal>
+			<p class="contact__intro contact__intro--mobile">
 				Vul het formulier in of plan een kennismaking, wanneer het jou uitkomt.
 			</p>
 		</header>
@@ -97,6 +98,11 @@
 			<!-- Whole card is the control, so the visible pill inside it is a span,
 			     not a nested button — one target, and the pill is still free to
 			     answer the hover on its own. -->
+			<!-- The two cards reveal one each rather than the pair as one: this container
+			     owns the swap fade above (.is-leaving sets its opacity through a class,
+			     and the reveal action leaves an inline opacity behind that would outrank
+			     it), and stacked on mobile the pair is 408px anyway, over a third of the
+			     screen. -->
 			<div class="contact__routes" class:is-leaving={phase !== 'idle'} hidden={active !== null}>
 				<button
 					type="button"
@@ -155,12 +161,14 @@
 			     prerendered HTML entirely, which is the one thing this site cannot
 			     trade away: no crawler, and nobody without JS, would have found a
 			     contact form at all. -->
+			<!-- No scroll reveal in here: the chosen panel arrives through the swap fade
+			     above, and the form card itself is far taller than anything that may fade
+			     on scroll. -->
 			<div class="contact__chosen" class:is-leaving={phase !== 'idle'} hidden={active === null}>
 				<button
 					type="button"
 					class="contact__switch"
 					onclick={() => choose(active === 'form' ? 'meeting' : 'form')}
-					use:reveal={{ distance: 0 }}
 				>
 					<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
 						<path
@@ -173,7 +181,7 @@
 					</svg>
 					{active === 'form' ? 'Liever een afspraak plannen' : 'Liever een bericht sturen'}
 				</button>
-				<div class="contact__panel" use:reveal={{ distance: 0 }}>
+				<div class="contact__panel">
 					<div class="contact__pane" hidden={active === 'meeting'}>
 						<ContactForm />
 					</div>
@@ -186,18 +194,21 @@
 			<div class="contact__aside">
 				<!-- Same shape as the two blocks under it: a small title, then its
 				     content. It read as a loose sentence without one. -->
-				<div class="contact__block contact__block--intro">
-					<p class="contact__block-title" use:reveal>Hoe het werkt</p>
-					<p class="contact__intro contact__intro--desktop" use:reveal>
+				<!-- One reveal per block — title and content together — and not one for the
+				     whole aside, which is 457px on desktop. The rule between the blocks is
+				     a hairline and never fades on its own. -->
+				<div class="contact__block contact__block--intro" use:reveal>
+					<p class="contact__block-title">Hoe het werkt</p>
+					<p class="contact__intro contact__intro--desktop">
 						Vul het formulier in of plan een kennismaking, wanneer het jou uitkomt.
 					</p>
 				</div>
 
-				<div class="contact__block">
-					<p class="contact__block-title" use:reveal>Wat je kunt verwachten</p>
+				<div class="contact__block" use:reveal>
+					<p class="contact__block-title">Wat je kunt verwachten</p>
 					<ul class="contact__checks">
 						{#each CHECKS as check (check)}
-							<li class="contact__check" use:reveal>
+							<li class="contact__check">
 								<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
 									<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" />
 									<path
@@ -214,17 +225,17 @@
 					</ul>
 				</div>
 
-				<div class="contact__rule" use:reveal></div>
+				<div class="contact__rule"></div>
 
-				<div class="contact__block contact__block--socials">
-					<p class="contact__block-title" use:reveal>Of rechtstreeks</p>
+				<div class="contact__block contact__block--socials" use:reveal>
+					<p class="contact__block-title">Of rechtstreeks</p>
 					<nav aria-label="Sociale media">
 						<!-- A row of bare icons. The channel names used to sit beside
 						     them; the cursor now carries that wording instead, which is
 						     what makes the row work at all. -->
 						<ul class="contact__socials">
 							{#each CONTACT_SOCIALS as social (social.icon)}
-								<li use:reveal>
+								<li>
 									<SocialIcon
 										icon={social.icon}
 										href={social.href}

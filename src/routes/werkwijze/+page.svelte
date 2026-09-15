@@ -60,9 +60,11 @@
 <Breadcrumbs items={data.crumbs} />
 
 <article class="ww">
-	<header class="ww__head">
+	<!-- Title and lead fade as one block. The steps below keep a reveal per step: the list
+	     is 742px on desktop and 966px on a phone, over the one-third line by a distance. -->
+	<header class="ww__head" use:reveal>
 		<PageTitle>Zo verloopt een sessie</PageTitle>
-		<p class="ww__lead" use:reveal>
+		<p class="ww__lead">
 			Van het eerste bericht tot de dagen na een behandeling. Geen verrassingen, want dat is nou net
 			wat niet helpt als je al gespannen binnenkomt.
 		</p>
@@ -80,6 +82,7 @@
 		{/each}
 	</ol>
 
+	<!-- Heading, then a row per fact: the list alone is 364px on desktop. -->
 	<section class="ww__facts" aria-labelledby="praktisch">
 		<h2 id="praktisch" class="ww__h2" use:reveal>Praktisch</h2>
 		<dl class="facts">
@@ -92,16 +95,17 @@
 		</dl>
 	</section>
 
-	<section class="ww__cta" aria-labelledby="beginnen">
-		<h2 id="beginnen" class="ww__h2" use:reveal>Beginnen bij het begin</h2>
-		<p class="ww__body" use:reveal>
+	<!-- The whole closing block as one: heading, body, button and note fit in 276px. -->
+	<section class="ww__cta" aria-labelledby="beginnen" use:reveal>
+		<h2 id="beginnen" class="ww__h2">Beginnen bij het begin</h2>
+		<p class="ww__body">
 			De kennismaking is er om te kijken of het klikt, niet om je iets te verkopen. Kies zelf een
 			moment dat je uitkomt.
 		</p>
-		<div class="ww__button" use:reveal>
+		<div class="ww__button">
 			<ButtonLink label="Plan een kennismaking" href="/contact" />
 		</div>
-		<p class="ww__note" use:reveal>{BRAND.disclaimer}</p>
+		<p class="ww__note">{BRAND.disclaimer}</p>
 	</section>
 </article>
 

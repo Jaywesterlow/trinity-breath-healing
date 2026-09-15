@@ -105,9 +105,12 @@
 <section class="faq" id="faq">
 	<div class="faq__container">
 		{#if showHeading}
-			<header class="faq__header">
-				<p class="faq__eyebrow" use:reveal>FAQ</p>
-				<h2 class="faq__heading" use:reveal>Veelgestelde vragen</h2>
+			<!-- Eyebrow and heading fade as one block. The questions below keep a reveal
+			     each: the list is 650px and more at either width, far over the one-third
+			     line, and a row is the smallest thing that reads as a unit. -->
+			<header class="faq__header" use:reveal>
+				<p class="faq__eyebrow">FAQ</p>
+				<h2 class="faq__heading">Veelgestelde vragen</h2>
 			</header>
 		{/if}
 

@@ -78,26 +78,30 @@
 
 <footer class="footer">
 	<div class="footer__inner">
+		<!-- Three reveals in the whole footer, since the 2026-09-15 audit: the brand column,
+		     the nav columns as one, and the legal row (which reaches the reader through the
+		     last-screenful fallback in reveal.ts). The social icons are icons alone and do
+		     not fade by themselves. -->
 		<div class="footer__main">
 			<!-- Brand: logo + contact -->
-			<ul class="footer__brand">
-				<li use:reveal><NavLogo inverted={true} footer={true} /></li>
+			<ul class="footer__brand" use:reveal>
+				<li><NavLogo inverted={true} footer={true} /></li>
 				<li>
 					<address class="footer__contact">
 						<ul>
 							<li>
-								<span class="footer__area" use:reveal>{BRAND.workArea.label}</span>
+								<span class="footer__area">{BRAND.workArea.label}</span>
 								<!-- The region, then how she works. One without the other is
 								     misleading in both directions: a place with no note reads
 								     as a clinic you can walk into, and a note with no place
 								     leaves a visitor unable to tell whether she covers them. -->
-								<br /><span class="footer__note" use:reveal
+								<br /><span class="footer__note"
 									>{BRAND.practice.homeVisitNote} {BRAND.practice.remoteNote}</span
 								>
 							</li>
 							<!-- Neither of these opens a web page. The cursor says what they
 							     actually do, in her own voice rather than the browser's. -->
-							<li use:reveal>
+							<li>
 								<TextLink
 									href="mailto:{BRAND.email}"
 									label={BRAND.email}
@@ -108,7 +112,7 @@
 								/>
 							</li>
 							{#if hasPhone}
-								<li use:reveal>
+								<li>
 									<TextLink
 										href={telHref}
 										label={BRAND.phoneDisplay}
@@ -128,7 +132,7 @@
 			<nav class="footer__social" aria-label="Sociale media links">
 				<ul class="footer__social-list">
 					{#each SOCIAL_LINKS as social (social.icon)}
-						<li use:reveal>
+						<li>
 							<SocialIcon
 								icon={social.icon}
 								href={social.href}
@@ -143,7 +147,7 @@
 			</nav>
 
 			<!-- Nav columns — order: 2 on desktop, after social on mobile -->
-			<nav class="footer__nav" aria-label="Footer navigatie">
+			<nav class="footer__nav" aria-label="Footer navigatie" use:reveal>
 				{#each NAV_COLUMNS as col (col.heading)}
 					<FooterNavColumn heading={col.heading} links={[...col.links]} />
 				{/each}
@@ -152,12 +156,12 @@
 
 		<hr class="footer__divider" />
 
-		<div class="footer__bottom">
+		<div class="footer__bottom" use:reveal>
 			<nav class="footer__legal" aria-label="Juridische links">
-				<a class="link-underline" href="/privacyverklaring" use:reveal>Privacyverklaring</a>
-				<a class="link-underline" href="/algemene-voorwaarden" use:reveal>Algemene voorwaarden</a>
+				<a class="link-underline" href="/privacyverklaring">Privacyverklaring</a>
+				<a class="link-underline" href="/algemene-voorwaarden">Algemene voorwaarden</a>
 			</nav>
-			<p class="footer__copyright" use:reveal>
+			<p class="footer__copyright">
 				©Copyright 2026 Trinity Breath &amp; Healing, alle rechten voorbehouden
 			</p>
 		</div>

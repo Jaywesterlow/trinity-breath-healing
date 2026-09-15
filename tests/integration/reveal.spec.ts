@@ -1,6 +1,8 @@
 /**
  * reveal.spec.ts — the below-the-fold scroll reveal in `src/lib/actions/reveal.ts`,
- * applied to `Faq.svelte` and `OverMij.svelte`.
+ * applied to `Faq.svelte` and `OverMij.svelte`. Since the 2026-09-15 audit the action sits
+ * on each section's header block (eyebrow and heading together), not on the heading itself,
+ * so that is what these tests read.
  *
  * The contract that matters most for this site (see CLAUDE.md — SEO/AEO is the primary
  * success metric): the prerendered HTML must be complete with JavaScript disabled, because
@@ -41,11 +43,11 @@ test.describe('reveal: prerendered HTML (no JS)', () => {
 });
 
 test.describe('reveal: armed then revealed (JS)', () => {
-	test('faq__heading is armed below the fold, then reaches opacity 1 once scrolled into view', async ({
+	test('faq__header is armed below the fold, then reaches opacity 1 once scrolled into view', async ({
 		page
 	}) => {
 		await page.goto('/');
-		const heading = page.locator('.faq__heading');
+		const heading = page.locator('.faq__header');
 
 		// Below the fold at load, on a 390x844 viewport — armed, not yet revealed.
 		const armedOpacity = await heading.evaluate((el) => parseFloat(getComputedStyle(el).opacity));
@@ -68,7 +70,7 @@ test.describe('reveal: armed then revealed (JS)', () => {
 		page
 	}) => {
 		await page.goto('/');
-		const heading = page.locator('.faq__heading');
+		const heading = page.locator('.faq__header');
 		await heading.scrollIntoViewIfNeeded();
 
 		await expect(async () => {
@@ -86,7 +88,7 @@ test.describe('reveal: armed then revealed (JS)', () => {
 	test('fades out when scrolled past, and back in on the way down', async ({ page }) => {
 		test.skip(!EXIT_FADE, 'EXIT_FADE is off in reveal.ts: nothing fades out by design');
 		await page.goto('/');
-		const heading = page.locator('.about__heading');
+		const heading = page.locator('.about__header');
 		await heading.evaluate((el) => el.scrollIntoView({ block: 'center' }));
 
 		const opacity = () => heading.evaluate((el) => parseFloat(getComputedStyle(el).opacity));
@@ -186,10 +188,10 @@ test.describe('reveal: a fast scroll then a stop never jumps', () => {
 });
 
 test.describe('reveal: prefers-reduced-motion', () => {
-	test('faq__heading is opacity 1 immediately, with no inline style at all', async ({ page }) => {
+	test('faq__header is opacity 1 immediately, with no inline style at all', async ({ page }) => {
 		await page.emulateMedia({ reducedMotion: 'reduce' });
 		await page.goto('/');
-		const heading = page.locator('.faq__heading');
+		const heading = page.locator('.faq__header');
 
 		const opacity = await heading.evaluate((el) => parseFloat(getComputedStyle(el).opacity));
 		expect(opacity).toBe(1);

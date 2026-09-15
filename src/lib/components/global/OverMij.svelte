@@ -23,24 +23,26 @@
 </script>
 
 {#snippet portraitCard(svg: string, modifier: string)}
-	<div class="about__card {modifier}" use:reveal={{ distance: 0 }}>
+	<div class="about__card {modifier}">
 		<DrawOn {svg} class="about__card-draw" />
 	</div>
 {/snippet}
 
 <section class="about" id="over-mij">
 	<div class="about__inner">
-		<header class="about__header">
-			<p class="about__eyebrow" use:reveal>Over mij</p>
-			<h2 class="about__heading" use:reveal>Vanuit eigen ervaring weet ik wat jij doormaakt.</h2>
+		<header class="about__header" use:reveal>
+			<p class="about__eyebrow">Over mij</p>
+			<h2 class="about__heading">Vanuit eigen ervaring weet ik wat jij doormaakt.</h2>
 		</header>
 
-		<!-- Each portrait card answers the band on its own edges — on desktop they are two
-		     separate cards at different heights, and fading the whole media block made them
-		     leave together. distance: 0 because their contents are positioned against these
-		     boxes, and a transform would move the containing block mid-entrance. -->
+		<!-- The portrait cards do not fade. At 459px (desktop) and 579px (mobile) each is well
+		     over a third of the viewport, and a box that tall stays lit long after its top has
+		     left the screen while the heading beside it has already gone — the inconsistency
+		     the 2026-09-15 audit removed. The portraits draw their own strokes (DrawOn), which
+		     is an entrance of its own; on mobile the scrim — the only text on the card — fades
+		     as one block, and the pill goes with the card it sits on. -->
 		<div class="about__media">
-			<div class="about__card about__card--mobile" use:reveal={{ distance: 0 }}>
+			<div class="about__card about__card--mobile">
 				<DrawOn svg={portrait2} class="about__card-draw" />
 				<div class="about__gradient-blur" aria-hidden="true">
 					<div></div>
@@ -53,7 +55,7 @@
 				<div class="about__pill">
 					<ButtonLink label="Plan een kennismaking" href="/contact" />
 				</div>
-				<div class="about__scrim">
+				<div class="about__scrim" use:reveal>
 					<p class="about__scrim-body">{bodyText}</p>
 					<TextLink label="Lees meer over mij" href="/over-mij" tone="gold-soft" size="sm" />
 				</div>
@@ -64,16 +66,19 @@
 		</div>
 
 		<div class="about__content">
+			<!-- Three reveals in this column, not one: together the body, the feature list and
+			     the link are 379px on desktop, over the one-third line, so the column is split
+			     at its natural seams. The feature list fades as a list, not per item. -->
 			<p class="about__body" use:reveal>{bodyText}</p>
-			<ul class="about__features">
-				<li use:reveal>
+			<ul class="about__features" use:reveal>
+				<li>
 					<AboutFeature
 						artSvg={heartSvg}
 						title="Vanuit eigen ervaring"
 						body="Geen aangeleerde theorie, maar een aanpak die ik zelf heb doorleefd."
 					/>
 				</li>
-				<li use:reveal>
+				<li>
 					<AboutFeature
 						artSvg={sproutSvg}
 						iconScale={1.2}
@@ -90,14 +95,15 @@
 			</div>
 		</div>
 
-		<ul class="about__stats">
-			<li use:reveal>
+		<!-- The three stats are one row and fade as one. -->
+		<ul class="about__stats" use:reveal>
+			<li>
 				<AboutStat value={BRAND.stats.yearsExperience} label="Jaren ervaring" />
 			</li>
-			<li use:reveal>
+			<li>
 				<AboutStat value={BRAND.stats.clientsHelped} label="Klachten verholpen" />
 			</li>
-			<li use:reveal>
+			<li>
 				<AboutStat iconSrc="/images/infinity.png" label="Mogelijkheden voor herstel" />
 			</li>
 		</ul>

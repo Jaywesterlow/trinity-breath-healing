@@ -51,25 +51,30 @@
 		</div>
 
 		<!-- Content column: below image on mobile (DOM order), left on desktop (order:1).
-		     The heading, the body and the CTA each answer the band on their own edges —
-		     grouped on this column they left together, which is not what three lines of
-		     different heights should do. `entrance: false` on all three: the arrival is
-		     the pure-CSS cascade below and nothing else, so all they ask the action for is
-		     the way out. The drawing above is deliberately not wrapped: it neither fades
-		     in nor fades out. -->
+		     Two exit fades, not one and not three. The whole column is 365px, over a third
+		     of either viewport, so faded as one block the heading would sit well above the
+		     screen while the button kept it lit; the heading therefore answers the band on
+		     its own bottom edge, and the body and the button leave together, since a button
+		     never fades alone. `entrance: false` on both: the arrival is the pure-CSS cascade
+		     below and nothing else, so all they ask the action for is the way out. The
+		     wrapper is a plain block — the spacing is the children's own margins, which
+		     collapse through it. The drawing above is deliberately not wrapped: it neither
+		     fades in nor fades out. -->
 		<div class="hero__left" bind:this={leftEl}>
 			<div class="hero__content">
 				<h1 class="hero__heading" use:reveal={{ entrance: false }}>
 					Rust in je hoofd.<br />
 					Ontspanning in je lichaam.
 				</h1>
-				<p class="hero__body" use:reveal={{ entrance: false }}>
-					Ik weet hoe het voelt om vast te lopen, fysiek, mentaal en emotioneel. Via
-					lichaamsgerichte therapie, ademwerk en energetische behandelingen help ik jou terug naar
-					rust, herstel en jezelf.
-				</p>
-				<div class="hero__cta" use:reveal={{ entrance: false }}>
-					<ButtonLink href="/contact" label="Maak een afspraak" />
+				<div class="hero__text" use:reveal={{ entrance: false }}>
+					<p class="hero__body">
+						Ik weet hoe het voelt om vast te lopen, fysiek, mentaal en emotioneel. Via
+						lichaamsgerichte therapie, ademwerk en energetische behandelingen help ik jou terug naar
+						rust, herstel en jezelf.
+					</p>
+					<div class="hero__cta">
+						<ButtonLink href="/contact" label="Maak een afspraak" />
+					</div>
 				</div>
 			</div>
 		</div>

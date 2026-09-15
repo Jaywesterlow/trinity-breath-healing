@@ -165,9 +165,11 @@
 >
 	<div class="werkwijze__pin">
 		<div class="werkwijze__sticky">
-			<header class="werkwijze__header">
-				<p class="werkwijze__eyebrow" use:reveal>Werkwijze</p>
-				<h2 class="werkwijze__heading" use:reveal>Rustig, persoonlijk en op jouw tempo.</h2>
+			<!-- One reveal for the header block: eyebrow and heading arrive and leave as one
+			     line of thought, not as two. -->
+			<header class="werkwijze__header" use:reveal>
+				<p class="werkwijze__eyebrow">Werkwijze</p>
+				<h2 class="werkwijze__heading">Rustig, persoonlijk en op jouw tempo.</h2>
 			</header>
 
 			<!-- The wrapper exists so the exit observer has something that stays put; see the

@@ -34,20 +34,24 @@
 <Breadcrumbs items={crumbs} />
 
 <article class="service">
-	<header class="service__head">
+	<!-- Reveals on this page, since the 2026-09-15 audit: one per block where the block fits
+	     in a third of the viewport, and one per row where a list does not. Never one per
+	     line. -->
+	<header class="service__head" use:reveal>
 		<!-- The one eyebrow left on a subpage. Everywhere else it repeated the word
 		     directly above it in the breadcrumb; here the crumb says the treatment's
 		     name and this says what kind of page it is, so it carries something. -->
-		<p class="service__eyebrow" use:reveal>Behandeling</p>
+		<p class="service__eyebrow">Behandeling</p>
 		<PageTitle>{service.name}</PageTitle>
-		<p class="service__teaser" use:reveal>{service.teaser}</p>
+		<p class="service__teaser">{service.teaser}</p>
 	</header>
 
-	<section class="service__block" aria-labelledby="wat">
-		<h2 id="wat" class="service__h2" use:reveal>Wat het is</h2>
-		<p class="service__body" use:reveal>{service.intro}</p>
+	<section class="service__block" aria-labelledby="wat" use:reveal>
+		<h2 id="wat" class="service__h2">Wat het is</h2>
+		<p class="service__body">{service.intro}</p>
 	</section>
 
+	<!-- Heading, then a row per item: the list alone is over 300px at both widths. -->
 	<section class="service__block" aria-labelledby="helpt">
 		<h2 id="helpt" class="service__h2" use:reveal>Waar het bij kan helpen</h2>
 		<ul class="service__list">
@@ -69,28 +73,34 @@
 		</ul>
 	</section>
 
+	<!-- Heading and body together, the note on its own: all three are 309px on a phone,
+	     just over the line. The wrapper is a plain block; the spacing is the children's own
+	     margins, which collapse through it. -->
 	<section class="service__block" aria-labelledby="sessie">
-		<h2 id="sessie" class="service__h2" use:reveal>Hoe een sessie verloopt</h2>
-		<p class="service__body" use:reveal>
-			We beginnen met een gesprek over waar je op dit moment tegenaan loopt. Daarna werk ik met
-			{service.name}, afgestemd op wat jij nodig hebt. Je hoeft niets te presteren en niets te
-			vertellen wat je niet wilt vertellen. Na afloop is er tijd om te landen en na te praten. Een
-			sessie duurt ongeveer een uur en kan bij jou thuis of op afstand.
-		</p>
+		<div class="service__text" use:reveal>
+			<h2 id="sessie" class="service__h2">Hoe een sessie verloopt</h2>
+			<p class="service__body">
+				We beginnen met een gesprek over waar je op dit moment tegenaan loopt. Daarna werk ik met
+				{service.name}, afgestemd op wat jij nodig hebt. Je hoeft niets te presteren en niets te
+				vertellen wat je niet wilt vertellen. Na afloop is er tijd om te landen en na te praten. Een
+				sessie duurt ongeveer een uur en kan bij jou thuis of op afstand.
+			</p>
+		</div>
 		<p class="service__note" use:reveal>{BRAND.disclaimer}</p>
 	</section>
 
-	<section class="service__cta" aria-labelledby="afspraak">
-		<h2 id="afspraak" class="service__h2" use:reveal>Een afspraak maken</h2>
-		<p class="service__body" use:reveal>
+	<section class="service__cta" aria-labelledby="afspraak" use:reveal>
+		<h2 id="afspraak" class="service__h2">Een afspraak maken</h2>
+		<p class="service__body">
 			Je hoeft niet te weten of dit de juiste behandeling voor je is. Dat zoeken we in het eerste
 			gesprek samen uit.
 		</p>
-		<div class="service__button" use:reveal>
+		<div class="service__button">
 			<ButtonLink label="Plan een kennismaking" href="/contact" />
 		</div>
 	</section>
 
+	<!-- Heading, then a row per link: six of them are 431px on desktop and 742px on a phone. -->
 	<nav class="service__more" aria-labelledby="andere">
 		<h2 id="andere" class="service__h2" use:reveal>Andere behandelingen</h2>
 		<ul class="service__others">

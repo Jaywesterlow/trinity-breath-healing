@@ -43,21 +43,22 @@
 <Breadcrumbs items={crumbs} />
 
 <article class="stub">
-	<header class="stub__head">
+	<!-- Two reveals on a stub: the title block, and the notice as one. -->
+	<header class="stub__head" use:reveal>
 		<PageTitle>{heading}</PageTitle>
-		<p class="stub__lead" use:reveal>{lead}</p>
+		<p class="stub__lead">{lead}</p>
 	</header>
 
-	<section class="stub__empty" aria-labelledby="binnenkort">
-		<h2 id="binnenkort" class="stub__h2" use:reveal>Nog niets te lezen</h2>
-		<p class="stub__body" use:reveal>
+	<section class="stub__empty" aria-labelledby="binnenkort" use:reveal>
+		<h2 id="binnenkort" class="stub__h2">Nog niets te lezen</h2>
+		<p class="stub__body">
 			Deze pagina bestaat al, maar staat nog leeg. Er is intussen genoeg te vinden over de
 			behandelingen en hoe een sessie verloopt.
 		</p>
-		<div class="stub__buttons" use:reveal>
+		<div class="stub__buttons">
 			<ButtonLink label="Bekijk de behandelingen" href="/behandelingen" />
 		</div>
-		<p class="stub__alt" use:reveal>
+		<p class="stub__alt">
 			Of ga <a href={parent.path}>terug naar {parent.name.toLowerCase()}</a>.
 		</p>
 	</section>

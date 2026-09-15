@@ -27,9 +27,11 @@
 <Breadcrumbs items={data.crumbs} />
 
 <article class="klachten">
-	<header class="klachten__head">
+	<!-- Title and lead fade as one block. Each complaint below keeps its own reveal: the
+	     list is 1381px on desktop and 1853px on a phone. -->
+	<header class="klachten__head" use:reveal>
 		<PageTitle>Waar kom je mee?</PageTitle>
-		<p class="klachten__lead" use:reveal>
+		<p class="klachten__lead">
 			De meeste mensen komen niet binnen met de naam van een behandeling, maar met een klacht.
 			Hieronder staat waar mensen mee komen en welke behandelingen daarbij horen. Je hoeft zelf niet
 			te kiezen.
@@ -52,20 +54,28 @@
 		{/each}
 	</ul>
 
+	<!-- Two reveals, not one and not five: the whole block is 364px on a phone, over the
+	     one-third line, so it splits into the ask (heading, body, button) and the two lines
+	     that follow it. The wrappers are plain blocks — the spacing is the children's own
+	     margins, which collapse through them. -->
 	<section class="klachten__cta" aria-labelledby="verder">
-		<h2 id="verder" class="klachten__h2" use:reveal>Staat jouw klacht er niet bij?</h2>
-		<p class="klachten__body" use:reveal>
-			Dat komt vaker voor dan je denkt, en het betekent niet dat er niets te doen is. In een
-			kennismaking van dertig minuten kijken we samen wat er speelt.
-		</p>
-		<div class="klachten__buttons" use:reveal>
-			<ButtonLink label="Plan een kennismaking" href="/contact" />
+		<div class="klachten__cta-main" use:reveal>
+			<h2 id="verder" class="klachten__h2">Staat jouw klacht er niet bij?</h2>
+			<p class="klachten__body">
+				Dat komt vaker voor dan je denkt, en het betekent niet dat er niets te doen is. In een
+				kennismaking van dertig minuten kijken we samen wat er speelt.
+			</p>
+			<div class="klachten__buttons">
+				<ButtonLink label="Plan een kennismaking" href="/contact" />
+			</div>
 		</div>
-		<p class="klachten__alt" use:reveal>
-			Liever eerst lezen wat elke behandeling precies is?
-			<a href="/diensten">Bekijk alle diensten op naam</a>.
-		</p>
-		<p class="klachten__note" use:reveal>{BRAND.disclaimer}</p>
+		<div class="klachten__cta-aside" use:reveal>
+			<p class="klachten__alt">
+				Liever eerst lezen wat elke behandeling precies is?
+				<a href="/diensten">Bekijk alle diensten op naam</a>.
+			</p>
+			<p class="klachten__note">{BRAND.disclaimer}</p>
+		</div>
 	</section>
 </article>
 
