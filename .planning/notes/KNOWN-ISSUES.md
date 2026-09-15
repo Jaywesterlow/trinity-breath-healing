@@ -1,6 +1,6 @@
 # Known Issues — deferred, not fixed yet
 
-Last updated: **2026-09-14**
+Last updated: **2026-09-15**
 
 Read the date above before answering "what issues are still open?" — anything here
 was true as of that date and may have been fixed since.
@@ -95,6 +95,44 @@ below the top edge against a fade-in line 12% above the bottom, so a block was
 leaving a quarter-screen before it clipped while arriving almost at the edge.
 Both lines are now 12% in. The history of the earlier pairs stays in the comment
 above the constants.
+
+**Shipped 2026-09-15 — the scroll reveal fades fewer things, faster, and has an off switch**
+
+The owner's verdict on the effect was "iffy", and the diagnosis was three things at
+once. Too much faded: 93 `use:reveal` call sites, and on `/` at 1440x900 that was 82
+independently fading elements after a full scroll — every heading, paragraph, list row,
+icon and hairline on its own. The entrance was slow, at 1300ms. And tall blocks
+lingered: the rule is top-in, bottom-out, so the 608px carousel box stayed lit while
+its top half was off screen, right next to a 30px heading that had already gone —
+consistent by the rule, inconsistent to the eye.
+
+The audit, applied everywhere: one reveal per section header (eyebrow, heading and
+lead together), one per list or grid where the container fits in a third of the
+viewport and one per row where it does not, body copy and buttons with the block they
+belong to, nothing on hairlines or icons alone, three in the whole footer. Nothing
+taller than a third of the viewport at 390x844 or 1440x900 carries the action any
+more: the carousel wrap, the two about cards and the contact form card lost theirs.
+Measured, not guessed — a Playwright walk lists every revealed element with its
+height at both widths, and `reveal-audit.spec.ts` now holds that line per route.
+Counts after a full scroll, before -> after (mobile / desktop): `/` 71/82 -> 33/37,
+`/werkwijze` 43 -> 16, `/behandelingen` 40 -> 13, `/diensten` 39 -> 13,
+`/diensten/spinal-touch` 54 -> 25, `/contact` 36/42 -> 8/9, `/faq` 37 -> 14. The
+tallest revealed element on `/` went from 608px to 279px.
+
+The target for `/` was 25. What keeps it above that is the ten FAQ rows and the seven
+text lines inside the Werkwijze cards, seventeen between them, both kept on purpose:
+the FAQ list is 650px and more at either width, so the rows are the smallest thing
+that can carry the fade, and the card lines own the `exit: false` mechanism the row
+above them depends on. On the subpages it is the same story — every list is over the
+line at both widths, so each row keeps its own reveal. Relaxing either is the owner's
+call after he has seen it, not a bug.
+
+Speeds in `reveal.ts`: entrance 1300 -> 600ms, rise 1100 -> 800, exit 450 -> 300,
+return 600 -> 400. The leaving/arriving asymmetry stays. And a kill switch:
+`export const EXIT_FADE = true` at the top of `reveal.ts` — set it to `false` and every
+element keeps its entrance but never fades out. One line, nothing else to touch; the
+reveal spec passes in both positions, its exit test skipping itself when the switch
+is off.
 
 **Blocked on the owner — cannot ship without these**
 1. **Domain.** TransIP domain is linked to Vercel; the login is still needed from her.
