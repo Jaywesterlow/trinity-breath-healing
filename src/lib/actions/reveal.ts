@@ -64,6 +64,12 @@
  * module scope.
  */
 
+/** Set false and every element keeps its entrance but never fades out; the owner may want
+ *  this after judging the effect. One line to flip, nothing else to touch: with it off every
+ *  call is treated as `exit: false` — nothing drifts to 0, not on the way out and not on the
+ *  return path either — and the entrance is exactly what it was. */
+export const EXIT_FADE = true;
+
 export type RevealOptions = {
 	/** Delay before the release transition starts, in ms. */
 	delay?: number;
@@ -90,7 +96,7 @@ export type RevealOptions = {
 
 const DEFAULTS: Required<RevealOptions> = {
 	delay: 0,
-	duration: 1300,
+	duration: 600,
 	distance: 10,
 	trigger: 'view',
 	entrance: true,
@@ -99,7 +105,11 @@ const DEFAULTS: Required<RevealOptions> = {
 
 const FADE_EASING = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
 const RISE_EASING = 'cubic-bezier(0.16, 1, 0.3, 1)';
-const RISE_DURATION = 1100;
+/* Longer than the fade on purpose, but not by much. The rise's curve is an expo-out that has
+   done most of its travel by the time the fade ends; the tail is what keeps the last pixels
+   from stopping dead. 2026-09-15: 1100 -> 800 alongside the fade's 1300 -> 600, so the two
+   still end within 200ms of each other rather than the rise running on for half a second. */
+const RISE_DURATION = 800;
 
 /* THE RULE, and it is the same for every revealed element on the site — one band, no
    per-element exceptions, because content fading at slightly different scroll positions is
@@ -148,7 +158,9 @@ export const REVEAL_ROOT_MARGIN = `${-BAND_TOP * 100}% 0px ${-BAND_BOTTOM * 100}
  * Some boxes are much bigger than what they draw. The treatments carousel is the one that
  * forced this: its track is tall enough to hold a rotated card at every fan position, so the
  * box's top edge is over a hundred pixels above anything the reader can see, and it was
- * fading in long before the cards arrived.
+ * fading in long before the cards arrived. (Since the 2026-09-15 audit that wrap carries no
+ * reveal at all — its header does — so nothing on the site sets these at the moment. The
+ * correction stays, because any box bigger than what it draws will need it again.)
  *
  * `--reveal-inset-top` / `--reveal-inset-bottom`, in px on the element itself, say how far
  * inside the box the visible content actually starts and ends. This corrects the ELEMENT,
@@ -205,7 +217,7 @@ function unreachable(node: HTMLElement): boolean {
 }
 
 /* One height watcher for the whole page rather than one per revealed element (there are
-   ~50 of them). A document that grows or shrinks — a font swapping in, an image landing,
+   a few dozen of them). A document that grows or shrinks — a font swapping in, an image landing,
    the viewport rotating — moves every element's ceiling at once. */
 const heightListeners = new Set<() => void>();
 let heightWatcher: ResizeObserver | null = null;
@@ -234,9 +246,11 @@ function watchDocumentHeight(fn: () => void) {
 }
 
 /* Leaving is quicker than arriving. A slow fade-out on scroll feels like lag; a slow fade-in
-   feels like the section settling. */
-const EXIT_DURATION = 450;
-const RETURN_DURATION = 600;
+   feels like the section settling. 2026-09-15: everything got faster together — the owner's
+   verdict on the 1300/450/600 set was that the entrance dragged — but the asymmetry is kept:
+   a first arrival at 600, a return at 400, and the way out quickest of all at 300. */
+const EXIT_DURATION = 300;
+const RETURN_DURATION = 400;
 
 export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 	// matchMedia is guarded, not assumed. Svelte actions do not run during SSR, but they DO run
@@ -254,7 +268,17 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 		return;
 	}
 
-	const { delay, duration, distance, trigger, entrance, exit } = { ...DEFAULTS, ...options };
+	const {
+		delay,
+		duration,
+		distance,
+		trigger,
+		entrance,
+		exit: wantsExit
+	} = { ...DEFAULTS, ...options };
+	/* The kill switch at the top of the file wins over any option: with it off, this is
+	   `exit: false` for everyone, and the rest of the action never learns the difference. */
+	const exit = EXIT_FADE && wantsExit;
 	const hasRise = entrance && distance > 0;
 
 	/* Already on screen when this runs (hydration happens after the prerendered HTML has

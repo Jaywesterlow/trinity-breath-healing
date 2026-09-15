@@ -15,6 +15,9 @@
 import { test, expect } from '@playwright/test';
 import { readFileSync } from 'fs';
 import path from 'path';
+/* The kill switch, read from the action itself so this file cannot disagree with it. The
+   module touches nothing browser-only at import time, so it loads fine under Node here. */
+import { EXIT_FADE } from '../../src/lib/actions/reveal';
 
 test.use({ viewport: { width: 390, height: 844 } });
 
@@ -78,8 +81,10 @@ test.describe('reveal: armed then revealed (JS)', () => {
 	/* The exit half of the same action: an element that has been revealed fades out again as
 	   it leaves through the top of the viewport, and fades back in on the way down. Both
 	   directions, because a one-way fade would leave the top of the page blank after any
-	   scroll back up. */
+	   scroll back up. Guarded by the kill switch: with EXIT_FADE off there is no exit to
+	   test, and the entrance tests above are the whole contract. */
 	test('fades out when scrolled past, and back in on the way down', async ({ page }) => {
+		test.skip(!EXIT_FADE, 'EXIT_FADE is off in reveal.ts: nothing fades out by design');
 		await page.goto('/');
 		const heading = page.locator('.about__heading');
 		await heading.evaluate((el) => el.scrollIntoView({ block: 'center' }));
@@ -101,18 +106,23 @@ test.describe('reveal: armed then revealed (JS)', () => {
 /* A fast scroll, then a dead stop — and nothing may move.
  *
  * This is the "blink" the owner saw: scroll quickly enough that a block enters the band
- * and leaves it again inside the 1300ms entrance fade, stop, and a moment later that block
- * pops from invisible to two-thirds lit in a single frame while sitting above the viewport.
- * The cause was in `driftTo`: it read `from` off the inline style, which the still-running
- * entrance animation had not written yet, so it animated 0 -> 0 on top of the entrance
- * instead of ending it; when that no-op finished 450ms later the entrance was uncovered
- * mid-flight. The fix ends the entrance the moment the band is crossed and starts the drift
- * from the rendered opacity, so every change is a fade and never a jump.
+ * and leaves it again inside the entrance fade (1300ms at the time, 600ms now), stop, and a
+ * moment later that block pops from invisible to two-thirds lit in a single frame while
+ * sitting above the viewport. The cause was in `driftTo`: it read `from` off the inline
+ * style, which the still-running entrance animation had not written yet, so it animated
+ * 0 -> 0 on top of the entrance instead of ending it; when that no-op finished (450ms
+ * then, 300ms now) the entrance was uncovered mid-flight. The fix ends the entrance the
+ * moment the band is crossed and starts the drift from the rendered opacity, so every
+ * change is a fade and never a jump.
  *
  * Sampled per animation frame with the scroll position asserted frozen: the only thing that
- * may change an opacity here is a running animation, and a fade of 450ms or more can never
- * move more than half its range between two consecutive frames. The viewport matches the
- * reproduction; the bug is not specific to it, but this is the size it was traced at. */
+ * may change an opacity here is a running animation. The shortest fade is 300ms, and its
+ * easing never moves more than about 1.9x linear, so between two frames 16ms apart it can
+ * move at most a tenth of its range; it takes a frame of 80ms or more before a legitimate
+ * fade can cross half. A loaded test runner does stall frames that long, so the allowance
+ * scales with the measured frame time instead of being a flat half — a stalled frame is
+ * not a blink. The viewport matches the reproduction; the bug is not specific to it, but
+ * this is the size it was traced at. */
 test.describe('reveal: a fast scroll then a stop never jumps', () => {
 	test.use({ viewport: { width: 1440, height: 900 } });
 
@@ -132,7 +142,7 @@ test.describe('reveal: a fast scroll then a stop never jumps', () => {
 			);
 
 			/* Ten screens in ten frames, so blocks enter and leave the band well inside the
-			   entrance's 1300ms — then stop dead. */
+			   entrance's 600ms — then stop dead. */
 			for (let i = 0; i < 10; i++) {
 				window.scrollBy(0, 700);
 				await frame();
@@ -141,9 +151,15 @@ test.describe('reveal: a fast scroll then a stop never jumps', () => {
 
 			const last = new Map(watched.map((el) => [el, parseFloat(getComputedStyle(el).opacity)]));
 			const t0 = performance.now();
+			let prev = t0;
 
 			while (performance.now() - t0 < 3000) {
 				await frame();
+				const t = performance.now();
+				/* What the shortest (300ms) fade could legitimately move in a frame this long;
+				   never below half, which is the jump the bug produced at 60fps. */
+				const allowed = Math.max(0.5, (1.9 * (t - prev)) / 300);
+				prev = t;
 				if (window.scrollY !== frozenY) {
 					log.push(`scroll drifted from ${frozenY} to ${window.scrollY}`);
 					break;
@@ -151,7 +167,7 @@ test.describe('reveal: a fast scroll then a stop never jumps', () => {
 				for (const el of watched) {
 					const now = parseFloat(getComputedStyle(el).opacity);
 					const was = last.get(el)!;
-					if (Math.abs(now - was) > 0.5) {
+					if (Math.abs(now - was) > allowed) {
 						const r = el.getBoundingClientRect();
 						log.push(
 							`t=${Math.round(performance.now() - t0)}ms ${was.toFixed(2)} -> ${now.toFixed(2)} ` +
