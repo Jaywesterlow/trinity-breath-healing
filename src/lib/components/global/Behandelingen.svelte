@@ -2556,20 +2556,37 @@
 	   the radius to its centre is the longer one). Raising the radius while
 	   lowering the angle by the matching amount therefore holds the cards
 	   where they already were left-to-right and changes only how far they
-	   dive: measured spacing stays 362px (unchanged from the 1024px
-	   breakpoint) while slot ±3 gains 76px of bottom clearance instead of
-	   overflowing by 127px. 76px is deliberately not a round number — it's
-	   the same clearance slot ±2, the outermost card at 1440px, already
-	   has, so the widest layout keeps the safety margin the design was
-	   signed off with. Verified by bounding-box readout at 1600, 1920,
-	   2560 and 3440px; as everywhere else in this file the numbers come
-	   from measuring rendered boxes, never from trig on one reference
-	   point (see the file-level comment). --pivot-baseline, the fan's
-	   height and .treatments__controls' margin all stay untouched: the
-	   centre card never moves, and every other card only moves UP. */
+	   dive: at 6.5deg on this radius the measured spacing stayed 362px
+	   (unchanged from the 1024px breakpoint) while slot ±3 gained 76px of
+	   bottom clearance instead of overflowing by 127px — the same clearance
+	   slot ±2, the outermost card at 1440px, has, so the widest layout kept
+	   the safety margin the design was signed off with. Verified by
+	   bounding-box readout at 1600, 1920, 2560 and 3440px; as everywhere
+	   else in this file the numbers come from measuring rendered boxes,
+	   never from trig on one reference point (see the file-level comment).
+	   --pivot-baseline, the fan's height and .treatments__controls' margin
+	   all stay untouched: the centre card never moves, and every other card
+	   only moves UP.
+
+	   2026-09-16: 6.5deg -> 8deg, a quarter more per slot, at the owner's
+	   "a little more" on the curve; the radius is deliberately left alone,
+	   which is the one way to change the curve by one number. On a fixed
+	   radius the angle also sets the spread, so the outer cards moved out
+	   with it — measured at 1600/1920/2560 after the change, identical at
+	   all three: slot ±1's centre 362 -> 445px from the centre line, slot
+	   ±2 719 -> 881px, slot ±3 1067 -> 1300px; slot ±2's bottom clearance
+	   184 -> 139px and slot ±3's 76 -> -20px (it clips the fan box by 20px,
+	   fully behind the edge fade below, whose solid part starts at 890px
+	   and slot ±3 at 1111px). The fade is still anchored at --fade-start
+	   800px, which slot ±2 (now 712..1050px) crosses, so from 1776px up
+	   the outer 250px of that card sit under the fade's ramp and its
+	   solid part; and at 1600px only 88px of slot ±2 is inside the
+	   viewport, against 242px before. If the owner wanted the dive
+	   without the spread, the radius is the other number: ~2420px at this
+	   angle holds the 362px spacing. */
 	@media (min-width: 1536px) {
 		.treatments__fan {
-			--tilt-step: 6.5deg;
+			--tilt-step: 8deg;
 		}
 
 		.treatments__pivot {

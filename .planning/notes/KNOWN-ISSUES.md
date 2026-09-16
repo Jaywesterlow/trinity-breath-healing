@@ -134,9 +134,9 @@ element keeps its entrance but never fades out. One line, nothing else to touch;
 reveal spec passes in both positions, its exit test skipping itself when the switch
 is off.
 
-**Shipped 2026-09-16 — the site widens with the screen, Over mij is a ledger, the note closes the carousel**
+**Shipped 2026-09-16 — the site widens with the screen, Over mij is a ledger, the note closes the carousel; then the hero's type back to size, the Werkwijze staircase, more curve on the fan**
 
-Three approved design changes to the landing page, three commits.
+Six approved design changes to the landing page over the day, six commits.
 
 The container was a fixed 1200px, and the owner measured what that meant on his
 three screens: on the 1600x770 laptop the hero ends 6px above the fold and feels
@@ -145,14 +145,50 @@ ultrawide 316px under and 1360px beside. `--container-max` is now
 `clamp(1200px, 72vw, 1840px)` — 1200 / 1382 / 1840 on those three — and every
 box that read it follows. Beside it `--site-scale` is the same growth as a plain
 number (1 / 1.152 / 1.533, via `tan(atan2(72vw, 1200px))`, the one way CSS can
-divide two lengths). The hero's title, body, measures, spacing and drawing
-multiply by it, as do the nav's wordmark and links. The two buttons scale as one
-thing through `zoom` on the wrapper each already had; nothing inside `ButtonLink`
-changed. The hero is at least the viewport minus the nav, with the drawing on its
-bottom edge, so the river meets the fold on the laptop and on 1920 and runs 38px
-under it on the ultrawide. Measured against the previous build at 1600x770, the
-one difference is the drawing sitting 6px lower — 3.3% of pixels, all inside its
-box; text, nav, button and edges are pixel-identical.
+divide two lengths). The hero is at least the viewport minus the nav, with the
+drawing on its bottom edge, so the river meets the fold on every screen.
+
+The first build of that also multiplied the hero's title, body, measures and
+spacing, the nav's wordmark and links, and the two buttons (through `zoom`) by
+`--site-scale`. The owner's verdict on the ultrawide: "too big, revert"; on 1920:
+"same as before, just grow hero image". So the scale is off everything but the
+drawing. Title 48px, body 16px, links 20px, button 234x40 at every width again,
+`ButtonLink` untouched in both directions. The drawing is the one thing that
+grows with the container, and it is capped: `--hero-img-max-w: 950px`, written
+into the height it is sized from at the artwork's own ratio (a `max-width` on the
+svg would letterbox the art inside its box). Measured: 721 / 831 / 950px wide on
+1600 / 1920 / 2560, where the uncapped version was 1106 on the ultrawide. Against
+a build of f7a7384 at 1600x770, 3.3% of pixels differ, all inside the drawing's
+column (it sits on the fold, 6px lower); title lines, measure, body, nav, button
+are pixel-identical.
+
+Werkwijze on desktop (≥ 1024px) is a staircase, from a mockup the owner approved.
+As the section's top reaches the bottom of the viewport the cards stand at rest /
++306px / +612px; the lower ones move up faster than the page (1 + 306/vh, 1 +
+612/vh) and land on one line when the section has scrolled through one viewport.
+Then the row keeps rising 240px more than the page over the next 0.4 viewport,
+overtaking the heading, and fades to 0 over the same range; fully faded it is
+`visibility: hidden`, which is what keeps the Verdieping button out of the tab
+order. Scroll-linked and damped (~95% of a jump in 0.25s), reversible, transforms
+and a non-inherited `@property --stair-fade` only, `will-change` while the section
+is near, no library. Reduced motion: aligned, opacity 1, nothing moves. The
+section drops its bottom padding in this mode, so the gap from the aligned row to
+Over mij's portrait is one `--section-pad` (96px at 1440). The mobile pin is as it
+was. `werkwijze-staircase.spec.ts` covers the five states at 1440x900; the reveal
+audit's count is unchanged because nothing writes an inline `opacity`.
+
+The fan's desktop breakpoint (≥ 1536px, the one all three of the owner's screens
+use) goes from 6.5deg per slot to 8deg, a quarter more, "a little more" curve. The
+radius stays at 3000px, as asked, and on a fixed radius the angle also sets the
+spread — measured, identical at 1600/1920/2560: slot ±1 362 → 445px from the
+centre line, slot ±2 719 → 881px (its span 712..1050px, so at 1600 only 88px of
+it is on screen, against 242 before), slot ±3 1067 → 1300px, and slot ±3's bottom
+clearance 76 → -20px (it clips the fan box, entirely behind the edge fade). The
+edge fade is still anchored at 800px from the centre line, which slot ±2 now
+crosses, so from 1776px up the outer part of that card sits under the ramp.
+**To watch on the owner's screens.** If it is the dive he wants and not the
+spread, the radius is the other number: ~2420px at 8deg holds the 362px spacing.
+The momentum, drag, recycle and click specs all pass unchanged.
 
 Over mij is design "A, grootboek": on desktop a `4fr 5fr 3fr` grid — the portrait
 drawn straight onto the sand in forest ink (no card, second portrait gone), the
