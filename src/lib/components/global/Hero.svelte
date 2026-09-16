@@ -307,10 +307,25 @@
 			   content column and the illustration each read it, and neither is measured
 			   from the other, so there is no loop to feed. 38.5rem is what .hero__left
 			   measured before the service cards were removed; the 42vw term keeps it under
-			   the image track's own width on narrow desktops. Multiplied by --site-scale
-			   (app.css) so the drawing grows with the container on wide screens: 616px on
-			   the laptop as before, 710 at 1920 and 944 on an ultrawide. */
-			--hero-col-h: min(calc(38.5rem * var(--site-scale)), 42vw);
+			   the image track's own width on narrow desktops.
+
+			   The drawing grows with its column, and stops. --site-scale (app.css) is the
+			   container's growth as a plain number, so the first term is the drawing's
+			   height at 1200px times that growth: 616px on the 1600px laptop as before,
+			   710 at 1920. The third term is a ceiling on its WIDTH, written as the height
+			   that width works out to at the artwork's own ratio (the height is what the
+			   drawing is sized from, see .hero__img below; a max-width on the svg itself
+			   would cap the box and leave the art letterboxed inside it, lifted off the
+			   hero's bottom edge). The owner's verdict on the uncapped version was that the
+			   1106px drawing on his 2560px ultrawide was a little too big; 950 is the size
+			   he asked for there, and it is the only screen of his three the cap touches:
+			   721 / 831 / 950 wide on 1600 / 1920 / 2560. */
+			--hero-img-max-w: 950px;
+			--hero-col-h: min(
+				calc(38.5rem * var(--site-scale)),
+				42vw,
+				calc(var(--hero-img-max-w) * 1721 / 2015)
+			);
 			/* align-items: start (not the grid default, stretch) is load-bearing: .hero__left
 			   must report its own intrinsic content height to the ResizeObserver in the
 			   script block, unaffected by the row's track height. Stretch would make it
@@ -340,9 +355,7 @@
 		}
 
 		.hero__content {
-			/* Vertical space comes from centring in --hero-col-h; the right-hand gap to the
-			   drawing grows with the site scale like everything else in this column. */
-			padding: 0 calc(var(--space-10) * var(--site-scale)) 0 0;
+			padding: 0 var(--space-10) 0 0; /* vertical space now comes from centring in --hero-col-h */
 			--btn-label-size: var(--font-size-xl); /* 20px on desktop */
 		}
 
@@ -350,16 +363,13 @@
 			font-size: var(
 				--fs-title-sm
 			); /* tablet 768–1023: smaller token; ≥1024 restores full --fs-title */
-			/* The measure scales with the type, so the title keeps its three lines on an
-			   ultrawide instead of the same 25rem box holding fewer, longer lines of bigger
-			   type. Same for the body below. */
-			max-width: calc(25rem * var(--site-scale));
-			margin-bottom: calc(var(--space-4) * var(--site-scale));
+			max-width: 25rem;
+			margin-bottom: var(--space-4);
 		}
 
 		.hero__body {
-			max-width: calc(27.5rem * var(--site-scale));
-			margin-bottom: calc(var(--space-6) * var(--site-scale));
+			max-width: 27.5rem;
+			margin-bottom: var(--space-6);
 		}
 
 		/* Image column sits in the right grid track (col 2), which spans exactly from the content's
@@ -373,7 +383,7 @@
 			display: flex;
 			align-items: flex-start;
 			justify-content: center; /* centre the illustration in the right zone (content-right ↔ screen-right) */
-			padding-top: calc(var(--space-12) * var(--site-scale));
+			padding-top: var(--space-12);
 			overflow: hidden; /* clip only if the art is wider than the track — never a horizontal scrollbar */
 		}
 
@@ -434,24 +444,13 @@
 			align-self: end;
 		}
 
+		/* The type does NOT grow with the screen. One build scaled the title, the body,
+		   their measures and the two buttons by --site-scale, and the owner's verdict on
+		   his 2560px ultrawide was "too big, revert": 48px in a 1840px container reads as
+		   a title, 74px reads as a poster. So the hero keeps its 1200-container sizes at
+		   every width and only the drawing beside it grows (see --hero-col-h). */
 		.hero__heading {
-			/* Full 36→48 above the tablet range, times the site scale: 48px on the
-			   laptop, 55 at 1920, 74 on an ultrawide. */
-			font-size: calc(var(--fs-title) * var(--site-scale));
-		}
-
-		.hero__body {
-			font-size: calc(var(--fs-body-xs) * var(--site-scale));
-		}
-
-		/* The button scales as a whole — pill, label, ring and arrow together, ratio
-		   kept — and nothing inside ButtonLink changes. `zoom` rather than transform:
-		   zoom is layout-affecting, so the box the column reserves for the button grows
-		   with it and no margin has to be corrected for a transform's phantom size. It is
-		   Baseline in every engine since Firefox 126 (2024). This wrapper carries the
-		   entrance animation above and nothing else. */
-		.hero__cta {
-			zoom: var(--site-scale);
+			font-size: var(--fs-title); /* full 36→48 above the tablet range */
 		}
 	}
 </style>

@@ -309,11 +309,14 @@
 	   `calc(var(--container-max) + 3rem)` boxes on the subpages — follows on its own. */
 	--container-max: clamp(1200px, 72vw, 1840px);
 	/* The same growth as a plain number: container / 1200, so 1 on the laptop, 1.152
-	   at 1920 and 1.533 at the 1840px ceiling. The hero's type, measures and drawing,
-	   and the nav's logo, links and button, all multiply by it, so the fold holds its
-	   composition instead of the same 48px title floating in more and more sand.
-	   tan(atan2(a, b)) is the one way to divide two lengths into a <number> in CSS
-	   today; `calc(72vw / 1200px)` is not valid in any shipping engine. */
+	   at 1920 and 1.533 at the 1840px ceiling. Only the hero's drawing reads it now
+	   (Hero.svelte, --hero-col-h, where it is also capped). It once scaled the hero's
+	   type and measures and the nav's wordmark, links and button as well, and the
+	   owner's verdict on the ultrawide was that all of that got too big — type keeps
+	   its 1200-container size at every width; the drawing is the one thing that
+	   grows with the container. tan(atan2(a, b)) is the one way to divide two lengths
+	   into a <number> in CSS today; `calc(72vw / 1200px)` is not valid in any
+	   shipping engine. */
 	--site-scale: clamp(1, tan(atan2(72vw, 1200px)), 1.533);
 	--nav-height: 80px; /* mobile: 20px padding × 2 + 40px logo */
 }

@@ -27,13 +27,6 @@
 		align-items: center;
 	}
 
-	/* In the nav the wordmark grows with the site scale (app.css) as one thing —
-	   icon, name and subtitle together — so it keeps its size against the wider
-	   container on a big screen. The footer keeps its own fixed sizes below. */
-	.logo:not(.logo--footer) {
-		zoom: var(--site-scale);
-	}
-
 	/* Clipping wrapper matches Figma: 50×40 box, image slightly overflows and is cropped */
 	.logo__icon {
 		position: relative;

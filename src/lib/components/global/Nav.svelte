@@ -310,9 +310,7 @@
 			position: relative;
 			font-family: var(--font-display);
 			font-weight: 500;
-			/* 20px, times the site scale (app.css): the links grow with the logo and the
-			   button beside them rather than shrinking against a wider container. */
-			font-size: calc(var(--font-size-xl) * var(--site-scale));
+			font-size: var(--font-size-xl);
 			color: var(--brand-muted);
 			text-decoration: none;
 			padding: var(--space-1) 0.375rem;
