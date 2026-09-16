@@ -181,7 +181,7 @@
 	.hero__inner {
 		display: flex;
 		flex-direction: column;
-		max-width: var(--container-max); /* 1200px — same cap as nav/footer, so content edges line up */
+		max-width: var(--container-max); /* same cap as nav/footer, so content edges line up */
 		margin: 0 auto;
 	}
 
@@ -307,8 +307,10 @@
 			   content column and the illustration each read it, and neither is measured
 			   from the other, so there is no loop to feed. 38.5rem is what .hero__left
 			   measured before the service cards were removed; the 42vw term keeps it under
-			   the image track's own width on narrow desktops. */
-			--hero-col-h: min(38.5rem, 42vw);
+			   the image track's own width on narrow desktops. Multiplied by --site-scale
+			   (app.css) so the drawing grows with the container on wide screens: 616px on
+			   the laptop as before, 710 at 1920 and 944 on an ultrawide. */
+			--hero-col-h: min(calc(38.5rem * var(--site-scale)), 42vw);
 			/* align-items: start (not the grid default, stretch) is load-bearing: .hero__left
 			   must report its own intrinsic content height to the ResizeObserver in the
 			   script block, unaffected by the row's track height. Stretch would make it
@@ -338,7 +340,9 @@
 		}
 
 		.hero__content {
-			padding: 0 var(--space-10) 0 0; /* vertical space now comes from centring in --hero-col-h */
+			/* Vertical space comes from centring in --hero-col-h; the right-hand gap to the
+			   drawing grows with the site scale like everything else in this column. */
+			padding: 0 calc(var(--space-10) * var(--site-scale)) 0 0;
 			--btn-label-size: var(--font-size-xl); /* 20px on desktop */
 		}
 
@@ -346,13 +350,16 @@
 			font-size: var(
 				--fs-title-sm
 			); /* tablet 768–1023: smaller token; ≥1024 restores full --fs-title */
-			max-width: 25rem;
-			margin-bottom: var(--space-4);
+			/* The measure scales with the type, so the title keeps its three lines on an
+			   ultrawide instead of the same 25rem box holding fewer, longer lines of bigger
+			   type. Same for the body below. */
+			max-width: calc(25rem * var(--site-scale));
+			margin-bottom: calc(var(--space-4) * var(--site-scale));
 		}
 
 		.hero__body {
-			max-width: 27.5rem;
-			margin-bottom: var(--space-6);
+			max-width: calc(27.5rem * var(--site-scale));
+			margin-bottom: calc(var(--space-6) * var(--site-scale));
 		}
 
 		/* Image column sits in the right grid track (col 2), which spans exactly from the content's
@@ -366,7 +373,7 @@
 			display: flex;
 			align-items: flex-start;
 			justify-content: center; /* centre the illustration in the right zone (content-right ↔ screen-right) */
-			padding-top: var(--space-12);
+			padding-top: calc(var(--space-12) * var(--site-scale));
 			overflow: hidden; /* clip only if the art is wider than the track — never a horizontal scrollbar */
 		}
 
@@ -408,8 +415,43 @@
 
 	/* ─── Desktop (≥ 1024px) — restore the full-size hero title (tablet uses --fs-title-sm) ─── */
 	@media (min-width: 1024px) {
+		/* The fold rule. The hero used to be a fixed 764px (100px nav + 48px padding +
+		   616px drawing), which the owner measured on his three screens: 6px above the
+		   fold on the 1600x770 laptop, and a 196px band of empty sand under it on
+		   1920x960, 316px on 2560x1080. The hero is now at least the viewport minus the
+		   nav, and the drawing sits on its bottom edge (align-self below), so the river
+		   at the foot of the illustration meets the fold on every screen rather than
+		   only on the one it happened to fit. svh, not vh: on a browser with a
+		   collapsing toolbar the small viewport is the one that is always there. */
+		.hero__inner {
+			min-height: calc(100svh - var(--nav-height));
+		}
+
+		/* Anchored to the hero's bottom edge, and only this column: .hero__left keeps
+		   the top alignment the ResizeObserver depends on (see the ≥768 rule), so the
+		   text column's intrinsic height is still what it reports. */
+		.hero__image-col {
+			align-self: end;
+		}
+
 		.hero__heading {
-			font-size: var(--fs-title); /* full 36→48 above the tablet range */
+			/* Full 36→48 above the tablet range, times the site scale: 48px on the
+			   laptop, 55 at 1920, 74 on an ultrawide. */
+			font-size: calc(var(--fs-title) * var(--site-scale));
+		}
+
+		.hero__body {
+			font-size: calc(var(--fs-body-xs) * var(--site-scale));
+		}
+
+		/* The button scales as a whole — pill, label, ring and arrow together, ratio
+		   kept — and nothing inside ButtonLink changes. `zoom` rather than transform:
+		   zoom is layout-affecting, so the box the column reserves for the button grows
+		   with it and no margin has to be corrected for a transform's phantom size. It is
+		   Baseline in every engine since Firefox 126 (2024). This wrapper carries the
+		   entrance animation above and nothing else. */
+		.hero__cta {
+			zoom: var(--site-scale);
 		}
 	}
 </style>

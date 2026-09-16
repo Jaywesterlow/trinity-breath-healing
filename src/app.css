@@ -300,7 +300,21 @@
 	   above them used none at all. 46rem is the width the treatments note and the
 	   new content pages were already built to. */
 	--content-max-width: 46rem;
-	--container-max: 1200px;
+	/* The page container, and it grows with the screen. It was a fixed 1200px, which
+	   the owner measured on his own three screens: on the 1600px laptop it fits, on
+	   1920 it leaves 360px of side space and on the 2560px ultrawide 1360px. 72vw is
+	   what 1200px is at 1667px wide, so the laptop is pixel-for-pixel what it was
+	   (1152 < 1200, so the floor holds), 1920 gives 1382px and 2560 gives the 1840px
+	   ceiling. Everything that reads this token — nav, hero, sections, footer, the
+	   `calc(var(--container-max) + 3rem)` boxes on the subpages — follows on its own. */
+	--container-max: clamp(1200px, 72vw, 1840px);
+	/* The same growth as a plain number: container / 1200, so 1 on the laptop, 1.152
+	   at 1920 and 1.533 at the 1840px ceiling. The hero's type, measures and drawing,
+	   and the nav's logo, links and button, all multiply by it, so the fold holds its
+	   composition instead of the same 48px title floating in more and more sand.
+	   tan(atan2(a, b)) is the one way to divide two lengths into a <number> in CSS
+	   today; `calc(72vw / 1200px)` is not valid in any shipping engine. */
+	--site-scale: clamp(1, tan(atan2(72vw, 1200px)), 1.533);
 	--nav-height: 80px; /* mobile: 20px padding × 2 + 40px logo */
 }
 

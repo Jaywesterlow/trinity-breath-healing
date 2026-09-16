@@ -154,7 +154,7 @@
 		transition: background var(--motion-base) var(--ease-out);
 	}
 
-	/* Content row, capped at the same --container-max (1200px) as the footer so every
+	/* Content row, capped at the same --container-max as the footer so every
 	   section's content lines up at the same edges once the viewport outgrows it. .nav
 	   itself stays full-bleed (background spans edge-to-edge); this is what centers. */
 	.nav__inner {
@@ -310,7 +310,9 @@
 			position: relative;
 			font-family: var(--font-display);
 			font-weight: 500;
-			font-size: var(--font-size-xl);
+			/* 20px, times the site scale (app.css): the links grow with the logo and the
+			   button beside them rather than shrinking against a wider container. */
+			font-size: calc(var(--font-size-xl) * var(--site-scale));
 			color: var(--brand-muted);
 			text-decoration: none;
 			padding: var(--space-1) 0.375rem;
