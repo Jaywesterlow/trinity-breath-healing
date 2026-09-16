@@ -23,7 +23,13 @@ import { test, expect } from '@playwright/test';
 
 /* Measured after the audit, then rounded up: '/' 33 (mobile) / 37 (desktop), '/werkwijze' 16,
    '/behandelingen' 13, '/diensten' 13, '/diensten/spinal-touch' 25, '/contact' 8 / 9,
-   '/faq' 14. */
+   '/faq' 14.
+
+   2026-09-16, the Over mij ledger: '/' is 35 (mobile) / 37 (desktop). The section fades
+   in five pieces on both widths now — header, body-and-button, and one per ledger row,
+   since three rows of 64px numerals are 391px and over the third — where the phone used
+   to have three (header, scrim, stats). The note under the carousel is still one. The
+   ceiling holds. */
 const CEILING: Record<string, number> = {
 	'/': 42,
 	'/werkwijze': 20,

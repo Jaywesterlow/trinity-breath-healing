@@ -1,28 +1,43 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 
+	/**
+	 * One row of the Over mij ledger: a large numeral, its "+" set small and brown
+	 * beside it, and a short label underneath. The row's hairlines and padding belong
+	 * to the list in OverMij.svelte; this is only the figure and its label.
+	 *
+	 * Was a circle with the number inside it (three of them, 125px, count-up). The
+	 * ledger design of 2026-09-16 drops the circles and keeps the count-up.
+	 */
 	interface Props {
-		value?: string;
-		iconSrc?: string;
+		/** "8+", "65+", "∞" — the leading digits count up; a value with none is shown as-is. */
+		value: string;
 		label: string;
 	}
 
-	let { value, iconSrc, label }: Props = $props();
+	let { value, label }: Props = $props();
 
-	// Split "65+" into target number (65) and suffix ("+"). Values with no leading
-	// digits (shouldn't occur for numeric stats — icon-based stats like infinity don't
-	// pass `value` at all) skip animation entirely and just render as-is.
+	// Split "65+" into target number (65) and suffix ("+"). A value with no leading
+	// digits ("∞") skips animation entirely and just renders as-is, with no suffix.
 	const parsed = $derived.by(() => {
-		const m = value?.match(/^(\d+)(.*)$/);
+		const m = value.match(/^(\d+)(.*)$/);
 		const numStr = m?.[1];
 		return { target: numStr ? parseInt(numStr, 10) : null, suffix: m?.[2] ?? '' };
 	});
 
 	// SSR/initial paint renders the real final value (SEO/AEO — crawlers and no-JS
 	// users must see "65+", never "0+"). Only after mount + scrolling into view does
-	// this reset to 0 and count up client-side.
-	let displayValue = $state(value ?? '');
-	let badgeEl: HTMLDivElement | null = $state(null);
+	// this reset to 0 and count up client-side. The suffix is rendered from `parsed`
+	// and never changes; only the digits move.
+	// Capturing the initial `value` is the point: it is the server-rendered figure,
+	// and the prop never changes after mount. Hence the ignore.
+	// svelte-ignore state_referenced_locally
+	let displayNum = $state(leadingDigits(value));
+
+	function leadingDigits(v: string): string {
+		return v.match(/^(\d+)/)?.[1] ?? v;
+	}
+	let valueEl: HTMLElement | null = $state(null);
 
 	// Cubic, not quint. Quint front-loads so hard that ~95% of the count lands in the first
 	// third of the run: the number appears to snap to its target and then sit there, which
@@ -33,16 +48,16 @@
 	}
 
 	onMount(() => {
-		const { target, suffix } = parsed;
-		if (target === null || !badgeEl) return;
+		const { target } = parsed;
+		if (target === null || !valueEl) return;
 		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
 
 		// SSR renders the real final value (SEO/no-JS need "8+", never "0+" — see the
-		// comment on displayValue's declaration above), but once JS has hydrated it
+		// comment on displayNum's declaration above), but once JS has hydrated it
 		// should rest at 0 immediately, not sit showing "8+" until the user happens to
 		// scroll to it. The count-up itself still waits for scroll-into-view + the
 		// delay below.
-		displayValue = `0${suffix}`;
+		displayNum = '0';
 
 		// Same for every stat — see the comment below on why one shared duration is enough.
 		// 700ms was too short for the ease to be legible at all; the count was over before
@@ -59,8 +74,7 @@
 				// an odd power (any ease-out-cubic/quint curve) yields a negative eased
 				// value — visible as "-1+"/"-4+" for a frame, worse the steeper the curve.
 				const progress = Math.min(Math.max((now - start) / duration, 0), 1);
-				const current = Math.round(easeOutCubic(progress) * (target as number));
-				displayValue = `${current}${suffix}`;
+				displayNum = String(Math.round(easeOutCubic(progress) * (target as number)));
 				if (progress < 1) requestAnimationFrame(tick);
 			}
 
@@ -88,7 +102,7 @@
 			},
 			{ threshold: 0.4 }
 		);
-		observer.observe(badgeEl);
+		observer.observe(valueEl);
 
 		return () => {
 			observer.disconnect();
@@ -98,75 +112,50 @@
 </script>
 
 <div class="stat">
-	<div class="stat__badge" bind:this={badgeEl}>
-		{#if iconSrc}
-			<img src={iconSrc} alt="" aria-hidden="true" class="stat__icon" />
-		{:else}
-			<span class="stat__value">{displayValue}</span>
-		{/if}
-	</div>
+	<!-- One text node for a crawler ("65+"), two spans for the type: the digits are
+	     tabular so the count-up does not shuffle the "+" sideways, and the "+" is the
+	     small brown glyph set against the numeral's top. -->
+	<p class="stat__value" bind:this={valueEl}>
+		<span class="stat__num">{displayNum}</span>{#if parsed.suffix}<span class="stat__plus"
+				>{parsed.suffix}</span
+			>{/if}
+	</p>
 	<p class="stat__label">{label}</p>
 </div>
 
 <style>
 	.stat {
 		display: flex;
-		align-items: center;
-		gap: var(--space-4);
-	}
-
-	.stat__badge {
-		flex-shrink: 0;
-		width: 4.813rem; /* 77px — Figma spec, no token match */
-		height: 4.813rem;
-		border-radius: 50%;
-		background: var(--color-card-warm);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-
-	.stat__icon {
-		/* infinity.png is 69x42 (aspect ~1.64, wider than tall) — object-fit:contain on a
-		   wider-than-tall image always renders at the box's own width. 100% left it
-		   flush against the circle's edge with zero margin (unlike the number stats,
-		   which sit at ~0.44-0.66 of the badge width) — 60% lands in that same range. */
-		width: 55%;
-		height: 55%;
-		max-width: none; /* global.css's img reset caps all <img> at max-width:100% of their own natural size context; this keeps the percentage above authoritative */
-		object-fit: contain;
+		flex-direction: column;
+		gap: var(--space-1);
 	}
 
 	.stat__value {
-		font-family: var(--font-body); /* the other font token — was --font-display (Cormorant serif) */
-		/* --font-weight-bold (700) is the heaviest real face hosted for DM Sans (only
-		   Regular/Bold woff2 files exist) — 900 goes past that, so the browser
-		   synthetically emboldens beyond the actual 700 file. No heavier weight token
-		   exists to reach for instead. */
-		font-weight: 900;
-		font-size: var(
-			--fs-h2
-		); /* bumped up from --fs-h3 (22→32) to 28→40 — was too small for the circle */
+		font-family: var(--font-display);
+		font-weight: var(--font-weight-medium);
+		font-size: 4rem; /* 64px — the ledger's one fixed size, no token at this scale */
+		line-height: 1;
 		color: var(--color-fg-forest);
+		font-variant-numeric: tabular-nums;
+	}
+
+	/* Superscript-ish rather than a real <sup>: a 40px "+" whose top sits on the
+	   numeral's cap line, in the site's brown so it reads as an accent on the figure
+	   rather than as part of it. */
+	.stat__plus {
+		display: inline-block;
+		font-size: 2.5rem; /* 40px */
+		line-height: 1;
+		vertical-align: top;
+		margin-left: 0.04em;
+		color: var(--brand-border);
 	}
 
 	.stat__label {
-		min-width: 0; /* flex children default to min-width:auto, which refuses to shrink below the unwrapped text width — needed now that the parent .stat is a fixed 150px box (see OverMij's .about__stats li) */
 		font-family: var(--font-body);
-		font-size: var(--fs-body);
-		color: var(--color-fg-forest);
-	}
-
-	@media (min-width: 1024px) {
-		.stat {
-			flex-direction: column;
-			align-items: center;
-			text-align: center;
-		}
-
-		.stat__badge {
-			width: 7.813rem; /* 125px — Figma spec */
-			height: 7.813rem;
-		}
+		font-size: 0.875rem; /* 14px */
+		letter-spacing: 0.06em;
+		line-height: var(--line-height-normal);
+		color: var(--color-text-subtle);
 	}
 </style>
