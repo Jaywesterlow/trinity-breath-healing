@@ -41,6 +41,12 @@
 
 	let cardsEl: HTMLUListElement | null = $state(null);
 	let rowEl: HTMLDivElement | null = $state(null);
+	let sectionEl: HTMLElement | null = $state(null);
+
+	// The desktop staircase's two states; the staircase itself is further down. `stairs`
+	// is decided in onMount with the other modes, `stairsFaded` by the staircase's loop.
+	let stairs = $state(false);
+	let stairsFaded = $state(false);
 
 	/**
 	 * The row's exit. Leaving the section fades the cards away one at a time in reading
@@ -71,6 +77,9 @@
 		const row = rowEl;
 		if (!row) return;
 		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+		// On desktop the staircase below owns the cards' opacity; this observer would only
+		// fight it. The CSS is gated the same way, so a stale `cardsGone` cannot show through.
+		if (stairs) return;
 
 		const observer = new IntersectionObserver(
 			(entries) => {
@@ -80,6 +89,174 @@
 		);
 		observer.observe(row);
 		return () => observer.disconnect();
+	});
+
+	// ── Desktop staircase (≥ 1024px, not under reduced motion) ──────────────────────
+	//
+	// The three cards do not sit on one line as the section arrives. At the moment the
+	// section's top reaches the bottom of the viewport they stand in a staircase: card 1
+	// at its rest position, card 2 two thirds of a card (306px) below it, card 3 twice
+	// that (612px). As the reader scrolls, the lower cards move up faster than the page so
+	// they catch up: with the offsets spent over exactly one viewport of travel, their
+	// speeds relative to the page are 1 + 306/vh and 1 + 612/vh (1.34 and 1.68 on a 900px
+	// viewport), left slowest, right fastest, and they land on one line at the instant the
+	// section has been scrolled through a full viewport height. Structured, but uneven.
+	//
+	// Past that point the row does not stop. Over the next 0.4 viewport of scroll all three
+	// keep rising a further 240px faster than the page — so they visibly overtake the
+	// heading, which scrolls at the page's own speed — and fade from 1 to 0 over that same
+	// range. Once fully faded they are also `visibility: hidden` (the --faded class): an
+	// invisible card with a link in it is a keyboard trap, and visibility is what takes
+	// the link out of the tab order and out of the accessibility tree. Scrolling back up
+	// undoes every step of this, because position and opacity are pure functions of the
+	// scroll position, damped: each frame the row closes a fixed fraction of the distance
+	// to where the scroll says it should be (STAIR_SETTLE_S is how long that takes), so a
+	// wheel step glides instead of snapping. Longer than ~0.4s reads as lag.
+	//
+	// Transforms and one non-inherited custom property only, never layout: the transform is
+	// written inline per card, and the fade is a registered property (`@property
+	// --stair-fade`, `inherits: false`, in the styles below) so writing it per frame does
+	// not invalidate the cascade across the ~490 inlined SVG paths inside the cards.
+	// `will-change: transform` is on the cards only while the section is within a viewport
+	// of the screen. The row's own exit fade (cardsGone, above) is switched off in this mode;
+	// the staircase owns the cards' opacity. The lines inside each card keep their entrance
+	// reveals (WerkwijzeCard.svelte), and nothing writes `opacity` inline on a card, so the
+	// reveal audit still counts only what it counted before.
+	//
+	// Not a scroll-driven CSS animation like the mobile pan, deliberately: three subjects
+	// with three different progress curves and a shared damping cannot be expressed as one
+	// view-timeline, and the damping is the point. Reduced motion: no staircase, no fade,
+	// the cards simply sit aligned on their line as the static layout has them.
+	/** px card 2 starts below its rest at entry; card 3 starts at twice this. Two thirds of
+	 *  a card's 459px height. */
+	const STAIR_STEP = 306;
+	/** px the aligned row rises past its rest while it fades out. */
+	const STAIR_LIFT = 240;
+	/** The scroll the lift and the fade take, as a fraction of the viewport height. */
+	const STAIR_FADE_SPAN = 0.4;
+	/** s for the row to close ~95% of the gap to its scroll-given target (three time
+	 *  constants of the exponential lerp in `frame`). */
+	const STAIR_SETTLE_S = 0.25;
+
+	$effect(() => {
+		if (!stairs) return;
+		const section = sectionEl;
+		const list = cardsEl;
+		if (!section || !list) return;
+
+		const items = Array.from(list.children).filter(
+			(el): el is HTMLElement => el instanceof HTMLElement
+		);
+		const rest = items.map((_, i) => i * STAIR_STEP);
+		const targetY = rest.slice();
+		let targetFade = 1;
+		const y = rest.slice();
+		let fade = 1;
+		let raf: number | null = null;
+		let last = 0;
+		let near = false;
+
+		/** Where the scroll says the row should be. p is the section's progress into the
+		 *  viewport: 0 with its top at the bottom edge, 1 once it has travelled one full
+		 *  viewport height, 1.4 when the lift and fade are done. */
+		function targets() {
+			const vh = window.innerHeight;
+			const p = (vh - section!.getBoundingClientRect().top) / vh;
+			const fall = 1 - Math.min(Math.max(p, 0), 1);
+			const rise = Math.min(Math.max((p - 1) / STAIR_FADE_SPAN, 0), 1);
+			for (let i = 0; i < rest.length; i++) targetY[i] = rest[i]! * fall - STAIR_LIFT * rise;
+			targetFade = 1 - rise;
+		}
+
+		function paint() {
+			for (let i = 0; i < items.length; i++) {
+				items[i]!.style.transform = `translate3d(0, ${y[i]!.toFixed(2)}px, 0)`;
+				items[i]!.style.setProperty('--stair-fade', fade.toFixed(3));
+			}
+			stairsFaded = fade <= 0.001;
+		}
+
+		function frame(now: number) {
+			raf = null;
+			const dt = Math.min(0.1, (now - last) / 1000);
+			last = now;
+			const k = 1 - Math.exp((-3 * dt) / STAIR_SETTLE_S);
+			let settled = true;
+			for (let i = 0; i < y.length; i++) {
+				const d = targetY[i]! - y[i]!;
+				if (Math.abs(d) < 0.05) y[i] = targetY[i]!;
+				else {
+					y[i] = y[i]! + d * k;
+					settled = false;
+				}
+			}
+			const df = targetFade - fade;
+			if (Math.abs(df) < 0.001) fade = targetFade;
+			else {
+				fade += df * k;
+				settled = false;
+			}
+			paint();
+			if (!settled) raf = requestAnimationFrame(frame);
+		}
+
+		/** Re-aim, and start the damped approach if it is not already running. */
+		function sync() {
+			targets();
+			if (raf === null) {
+				last = performance.now();
+				raf = requestAnimationFrame(frame);
+			}
+		}
+
+		/** Snap straight to the target, for when nobody is watching the approach. */
+		function snap() {
+			if (raf !== null) cancelAnimationFrame(raf);
+			raf = null;
+			targets();
+			for (let i = 0; i < y.length; i++) y[i] = targetY[i]!;
+			fade = targetFade;
+			paint();
+		}
+
+		function onScroll() {
+			if (near) sync();
+		}
+
+		// One viewport of margin either side: the cards are promoted and aimed before the
+		// section is in view, and dropped once it is a screen away. Leaving the band snaps
+		// to the final state, so a jump that skips the whole approach (an anchor link to the
+		// footer, say) still leaves the row where the scroll says it belongs.
+		const watcher = new IntersectionObserver(
+			(entries) => {
+				for (const entry of entries) {
+					near = entry.isIntersecting;
+					for (const item of items) {
+						if (near) item.style.willChange = 'transform';
+						else item.style.removeProperty('will-change');
+					}
+					if (near) sync();
+					else snap();
+				}
+			},
+			{ threshold: 0, rootMargin: '100% 0px 100% 0px' }
+		);
+		watcher.observe(section);
+		window.addEventListener('scroll', onScroll, { passive: true });
+		window.addEventListener('resize', onScroll);
+
+		return () => {
+			watcher.disconnect();
+			window.removeEventListener('scroll', onScroll);
+			window.removeEventListener('resize', onScroll);
+			if (raf !== null) cancelAnimationFrame(raf);
+			for (const item of items) {
+				item.style.removeProperty('transform');
+				item.style.removeProperty('--stair-fade');
+				item.style.removeProperty('will-change');
+			}
+			stairsFaded = false;
+		};
 	});
 
 	// 'native': default / desktop / reduced-motion / no scroll-timeline support / pre-hydration.
@@ -120,6 +297,9 @@
 		// native snap slider, which simply scrolls like any other content.
 		const mobileMq = window.matchMedia('(max-width: 1023.98px) and (min-height: 640px)');
 		const motionMq = window.matchMedia('(prefers-reduced-motion: reduce)');
+		// The staircase's own gate: the desktop layout (the static row, not the pin) and
+		// motion allowed. Same breakpoint as the desktop styles below.
+		const desktopMq = window.matchMedia('(min-width: 1024px)');
 
 		// Mirrors the @supports guard on the pinned styles. Without scroll-driven animations the
 		// pin would have nothing driving it, so those browsers keep the native snap slider —
@@ -129,6 +309,7 @@
 			typeof CSS !== 'undefined' && CSS.supports?.('animation-timeline', 'view()');
 
 		function evaluate() {
+			stairs = desktopMq.matches && !motionMq.matches;
 			const shouldPin = mobileMq.matches && !motionMq.matches && hasScrollTimeline;
 			if (shouldPin && mode !== 'pinned') {
 				measure();
@@ -146,11 +327,13 @@
 		evaluate();
 		mobileMq.addEventListener('change', evaluate);
 		motionMq.addEventListener('change', evaluate);
+		desktopMq.addEventListener('change', evaluate);
 		window.addEventListener('resize', onResize);
 
 		return () => {
 			mobileMq.removeEventListener('change', evaluate);
 			motionMq.removeEventListener('change', evaluate);
+			desktopMq.removeEventListener('change', evaluate);
 			window.removeEventListener('resize', onResize);
 		};
 	});
@@ -160,8 +343,10 @@
 	class="werkwijze"
 	id="werkwijze"
 	class:werkwijze--pinned={mode === 'pinned'}
+	class:werkwijze--stairs={stairs}
 	data-scroll-mode={mode}
 	style:--travel="{travel}px"
+	bind:this={sectionEl}
 >
 	<div class="werkwijze__pin">
 		<div class="werkwijze__sticky">
@@ -175,7 +360,12 @@
 			<!-- The wrapper exists so the exit observer has something that stays put; see the
 			     note on the observer above. It is a plain block, no styling of its own. -->
 			<div class="werkwijze__row" bind:this={rowEl}>
-				<ul class="werkwijze__cards" class:werkwijze__cards--gone={cardsGone} bind:this={cardsEl}>
+				<ul
+					class="werkwijze__cards"
+					class:werkwijze__cards--gone={cardsGone}
+					class:werkwijze__cards--faded={stairsFaded}
+					bind:this={cardsEl}
+				>
 					<li style="--card-stagger: 0ms">
 						<WerkwijzeCard
 							variant="filled"
@@ -355,7 +545,9 @@
 		}
 	}
 
-	/* Desktop: static row, all cards visible — matches Figma exactly, no accordion/JS needed */
+	/* Desktop: one static row of three, the Figma layout. The staircase (see the script)
+	   only ever moves the cards by transform from this rest position, so this is also
+	   exactly what reduced motion gets. */
 	@media (min-width: 1024px) {
 		.werkwijze__header {
 			max-width: none;
@@ -367,6 +559,42 @@
 			gap: 4.688rem; /* 75px — Figma spec; --space-16 (64px) is 11px off, too large to round */
 			overflow-x: visible;
 			scroll-snap-type: none;
+		}
+
+		/* The staircase's fade, as a registered property so that writing it per frame
+		   costs a style recalc on the card alone: `inherits: false` stops the write from
+		   invalidating the hundreds of SVG paths inside. It is set on each <li> by the
+		   script; the initial value is what the cards have before it runs. */
+		@property --stair-fade {
+			syntax: '<number>';
+			inherits: false;
+			initial-value: 1;
+		}
+
+		/* In staircase mode the script owns both the transform and the opacity of each
+		   card. The row's own exit transition and --gone rule (above) are switched off here:
+		   a 600ms transition on a scrubbed value would trail the scroll by that much, and
+		   the two fades would fight over the same property. */
+		.werkwijze--stairs .werkwijze__cards > li {
+			transition: none;
+			opacity: var(--stair-fade, 1);
+		}
+
+		/* Fully faded is also gone from the tab order and the accessibility tree; see the
+		   script's note on the keyboard trap. */
+		.werkwijze--stairs .werkwijze__cards--faded > li {
+			visibility: hidden;
+		}
+
+		/* The compensation. The cards leave their box 240px early and are gone by the time
+		   the reader has scrolled 0.4 viewport past the section's top, so the section's own
+		   bottom padding would only add sand to the band the vacated box already leaves.
+		   With it gone the gap from the aligned row to the next section's first content is
+		   the next section's top padding alone — one --section-pad (96px at 1440), where
+		   every other pair of sections has two. Measured at 1440x900 with the row aligned:
+		   the cards' bottom edge to the Over mij header is 96px. */
+		.werkwijze--stairs {
+			padding-bottom: 0;
 		}
 	}
 </style>

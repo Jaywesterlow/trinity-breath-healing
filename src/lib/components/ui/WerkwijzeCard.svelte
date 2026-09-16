@@ -60,8 +60,10 @@
 	     the pan brings them in, and the observer only fires on intersection — so each card's
 	     text arrives as that card does, rather than all three firing when the section opens.
 	     `exit: false` because the way out belongs to the row, not to these lines: Werkwijze
-	     fades whole cards, art included, one after the other. Left here as well, they would
-	     fade a second time inside a card that is already fading. -->
+	     fades whole cards, art included — one after the other on mobile, and as one row that
+	     rises past the heading on desktop (the staircase). Left here as well, they would fade
+	     a second time inside a card that is already fading. Nothing in this file writes
+	     `opacity` on the card itself; the <li> around it is the one element that fades. -->
 	<h3 class="wcard__title" use:reveal={{ exit: false }}>{title}</h3>
 	<p class="wcard__body" use:reveal={{ exit: false }}>{body}</p>
 
