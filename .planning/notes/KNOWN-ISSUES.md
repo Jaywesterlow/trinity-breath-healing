@@ -1,6 +1,6 @@
 # Known Issues — deferred, not fixed yet
 
-Last updated: **2026-09-15**
+Last updated: **2026-09-16**
 
 Read the date above before answering "what issues are still open?" — anything here
 was true as of that date and may have been fixed since.
@@ -133,6 +133,45 @@ return 600 -> 400. The leaving/arriving asymmetry stays. And a kill switch:
 element keeps its entrance but never fades out. One line, nothing else to touch; the
 reveal spec passes in both positions, its exit test skipping itself when the switch
 is off.
+
+**Shipped 2026-09-16 — the site widens with the screen, Over mij is a ledger, the note closes the carousel**
+
+Three approved design changes to the landing page, three commits.
+
+The container was a fixed 1200px, and the owner measured what that meant on his
+three screens: on the 1600x770 laptop the hero ends 6px above the fold and feels
+right; on 1920x960 there is a 196px band of empty sand under it; on the 2560x1080
+ultrawide 316px under and 1360px beside. `--container-max` is now
+`clamp(1200px, 72vw, 1840px)` — 1200 / 1382 / 1840 on those three — and every
+box that read it follows. Beside it `--site-scale` is the same growth as a plain
+number (1 / 1.152 / 1.533, via `tan(atan2(72vw, 1200px))`, the one way CSS can
+divide two lengths). The hero's title, body, measures, spacing and drawing
+multiply by it, as do the nav's wordmark and links. The two buttons scale as one
+thing through `zoom` on the wrapper each already had; nothing inside `ButtonLink`
+changed. The hero is at least the viewport minus the nav, with the drawing on its
+bottom edge, so the river meets the fold on the laptop and on 1920 and runs 38px
+under it on the ultrawide. Measured against the previous build at 1600x770, the
+one difference is the drawing sitting 6px lower — 3.3% of pixels, all inside its
+box; text, nav, button and edges are pixel-identical.
+
+Over mij is design "A, grootboek": on desktop a `4fr 5fr 3fr` grid — the portrait
+drawn straight onto the sand in forest ink (no card, second portrait gone), the
+words with a secondary "Lees meer over mij" button, and a ledger of three figures
+(8+, 65+, ∞) between hairlines, the count-up kept from the circles it replaces.
+The two feature bullets are parked in a comment in `OverMij.svelte` with what they
+need to come back. Reveals: header, body-and-button, and one per ledger row — the
+three rows are 391px, over the audit's third-of-the-viewport line, so the list
+fades by row as the audit's own rule says. `/` is 35 (mobile) / 37 (desktop) after
+a full scroll, against 33 / 37 before; the ceiling in `reveal-audit.spec.ts` holds
+and its comment records the new figures.
+
+The sentence under the carousel is no longer a section of its own. It is the
+closing block of the treatments section, an h2 at 42px with a hand break after
+"nodig" from 1024px up, the shared disclaimer under it with the brown left rule
+the service pages use, and no button. 112px from the pagination to the heading,
+64px from the disclaimer to the section's end — more above than below, the owner's
+ask. The section's bottom padding went from `--section-pad` to a flat 64px for
+that; on a phone the two were already equal.
 
 **Blocked on the owner — cannot ship without these**
 1. **Domain.** TransIP domain is linked to Vercel; the login is still needed from her.

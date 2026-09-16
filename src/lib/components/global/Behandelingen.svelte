@@ -4,6 +4,7 @@
 	import { BRAND } from '$lib/constants/brand';
 	import TreatmentCard from '$lib/components/ui/TreatmentCard.svelte';
 	import ServiceModal from '$lib/components/ui/ServiceModal.svelte';
+	import BehandelingenNote from './BehandelingenNote.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 
 	// Only 3 of the 7 real services have art (260810-mdl) — Raster Energie's old
@@ -2075,6 +2076,12 @@
 		</div>
 	</div>
 
+	<!-- The section's closing block: the sentence under the carousel and the
+	     disclaimer. Mounted here since 2026-09-16 rather than as a section of its
+	     own, so it sits on this band with 112px above it and the section's 64px
+	     below — more air above than below, which was the owner's ask. -->
+	<BehandelingenNote />
+
 	<!-- Rendered once, always — every service's full body is prerendered
 	     inside it (see ServiceModal.svelte), inactive ones carrying `hidden`.
 	     Nothing here is built by JS at open time; showModal()/close() only
@@ -2102,7 +2109,12 @@
 		min-height: 70vh; /* 30% less than desktop's 100vh on mobile */
 		display: flex;
 		flex-direction: column;
-		padding: var(--section-pad) 0;
+		/* Top is the shared section pad; bottom is a flat 64px. The note block
+		   (BehandelingenNote) closes this section now, and the owner asked for more
+		   air above it than below: 112px from the pagination to its heading, 64px
+		   from its disclaimer to the section's end. On a phone --section-pad is 64px
+		   anyway, so only desktop changes. */
+		padding: var(--section-pad) 0 var(--space-16);
 	}
 
 	.treatments__header {

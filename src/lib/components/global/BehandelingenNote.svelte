@@ -1,49 +1,84 @@
 <script lang="ts">
 	/**
-	 * The line under the treatments carousel.
-	 *
-	 * One paragraph, centred, with a lot of air around it. A breath between the
-	 * seven services above and the contact section below, and a place to say the
-	 * thing the cards cannot: that the list is not a menu to choose from on your
-	 * own.
+	 * The closing block of the treatments section: the line under the carousel,
+	 * and the disclaimer under that.
 	 *
 	 * Two sentences, one long and one short. The first draft ran twice this
 	 * length and carried every tell going: a negative parallelism ("geen vast
 	 * programma, wel een vaste basis"), a rule of three ("rust, veiligheid en de
 	 * tijd om te landen"), and an em dash in the middle of the thought.
 	 *
-	 * Deliberately not a heading. It is body copy set large, so it reads as
-	 * something being said rather than as another section opening, and the
-	 * page's h2 rhythm is untouched.
+	 * Was its own <section> with a --section-pad band of air on either side. Since
+	 * 2026-09-16 it is rendered inside Behandelingen.svelte after the carousel
+	 * controls, on the section's own background, with more air above it than
+	 * below: 112px from the pagination to the heading, 64px from the disclaimer to
+	 * the section's end. The sentence is an h2 now, set large and centred, and on
+	 * desktop it breaks by hand after "nodig" so the two lines are the two halves
+	 * of the thought rather than wherever the measure happened to fall.
+	 *
+	 * The disclaimer is BRAND.disclaimer, the same constant every treatment page
+	 * shows, set the way ServicePage sets it: small, left-aligned, a brown rule
+	 * down its left edge. No button: the contact section is directly below.
 	 */
+	import { BRAND } from '$lib/constants/brand';
 	import { reveal } from '$lib/actions/reveal';
 </script>
 
-<section class="note" aria-label="Over de behandelingen">
-	<p class="note__text" use:reveal>
-		Je hoeft niet te weten welke behandeling je nodig hebt. Dat zoeken we in het eerste gesprek
-		samen uit.
-	</p>
-</section>
+<!-- One reveal for the block: heading and disclaimer together are 285px at
+     1440x900 and 232px at 390x844, inside the third of the viewport the
+     2026-09-15 audit allows a fading box. -->
+<div class="note" use:reveal>
+	<h2 class="note__heading">
+		Je hoeft niet te weten welke behandeling je nodig<br class="note__br" />
+		hebt. Dat zoeken we in het eerste gesprek samen uit.
+	</h2>
+	<p class="note__disclaimer">{BRAND.disclaimer}</p>
+</div>
 
 <style>
 	.note {
-		background: var(--color-bg-sand);
-		padding-block: var(--section-pad);
+		margin-top: 7rem; /* 112px from the carousel's pagination to the heading */
+		padding-inline: var(--space-6);
 	}
 
-	.note__text {
-		max-width: var(--content-max-width);
-		margin-inline: auto;
-		padding-inline: var(--space-6);
+	.note__heading {
+		max-width: none;
+		margin: 0 auto;
 		text-align: center;
 		font-family: var(--font-display);
-		/* Between the section headings (--fs-h2) and body copy: large enough to
-		   carry the whole width on its own, quiet enough not to read as a title. */
-		font-size: clamp(1.375rem, 1.1rem + 1.2vw, 1.875rem); /* 22 → 30px */
-		font-weight: var(--font-weight-light);
-		line-height: 1.55;
+		/* 42px from the desktop breakpoint up, 28px on a phone: the same slope as the
+		   site's --fs-h2 tokens (390px -> 1024px), one step larger at the top. */
+		font-size: clamp(1.75rem, 1.213rem + 2.208vw, 2.625rem);
+		font-weight: var(--font-weight-medium);
+		line-height: var(--line-height-tight);
 		color: var(--color-fg-forest);
-		text-wrap: balance;
+	}
+
+	/* The hand break only exists on desktop; below that the sentence wraps as the
+	   width dictates and the <br> is simply not rendered. */
+	.note__br {
+		display: none;
+	}
+
+	/* Set apart from the heading without being a warning box, the way the service
+	   pages set the same line: a rule down the left, small light type. Left-aligned
+	   text in a block that is itself centred under the heading. */
+	.note__disclaimer {
+		max-width: 60ch;
+		margin: var(--space-8) auto 0;
+		padding-left: var(--space-4);
+		border-left: 2px solid var(--brand-border);
+		text-align: left;
+		font-family: var(--font-body);
+		font-size: 0.875rem; /* 14px */
+		font-weight: var(--font-weight-light);
+		line-height: var(--line-height-normal);
+		color: var(--color-text-subtle);
+	}
+
+	@media (min-width: 1024px) {
+		.note__br {
+			display: inline;
+		}
 	}
 </style>
