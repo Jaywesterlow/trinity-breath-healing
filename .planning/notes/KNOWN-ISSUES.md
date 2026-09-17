@@ -210,9 +210,9 @@ the service pages use, and no button. 112px from the pagination to the heading,
 ask. The section's bottom padding went from `--section-pad` to a flat 64px for
 that; on a phone the two were already equal.
 
-**Shipped 2026-09-17 — the fan's edge fade follows the screen, the note held to its break, the staircase past the heading, tablets are mobile, no card cut on any width**
+**Shipped 2026-09-17 — the fan's edge fade follows the screen, the note held to its break, the staircase past the heading, tablets are mobile, no card cut on any width, Over mij centred on small screens**
 
-Five fixes from the owner's review of the live preview, five commits.
+Six fixes from the owner's review of the live preview, six commits.
 
 The fan. "The last card doesn't disappear, the first card visibly appears, every
 time" and "the blur isn't visible on some cards, it's just a cut-off". Measured,
@@ -321,6 +321,22 @@ cuts the hovered centre card until the description closes. Pre-existing (the
 card's position did not move), touch never hovers, and none of the thirteen
 widths hits it; left alone rather than reaching into `TreatmentCard` in this
 pass.
+
+Over mij below the desktop grid is one centred stack. The header and the
+portrait were centred and the paragraph, the button and the ledger rows hugged
+the left edge under them. Now `.about__text` centres its items and its text,
+the button's wrapper centres the button (`ButtonLink` itself untouched), the
+heading block sits on the header's axis with `margin-inline: auto` rather than
+only centring its text, and each ledger row is `text-align: center`, so number
+and label sit on the same line as everything above. The section's desktop grid
+starts at **1100px** instead of 1024, the hero's and Werkwijze's line since
+b827984, so a 1024px iPad Pro gets the stacked, centred section between a
+mobile hero and a pinned track rather than the three-column grid; the grid's
+rules reset each of the centring rules to the left-aligned reading column they
+were. Measured at 390x844, 768x1024 and 1024x1366: eyebrow, heading, paragraph,
+button, portrait and the six ledger lines all share one centre x, spread 0.0px.
+At 1100 and 1440 the grid is as it was. `reveal-audit.spec.ts` and
+`reveal.spec.ts` pass unchanged.
 
 **Blocked on the owner — cannot ship without these**
 1. **Domain.** TransIP domain is linked to Vercel; the login is still needed from her.

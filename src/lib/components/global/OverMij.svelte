@@ -24,7 +24,8 @@
 
      DOM order is the reading order on every width: eyebrow and heading, portrait,
      body and button, ledger. Desktop places the same four blocks on a grid (see the
-     ≥1024 rules); below that they simply stack in this order. -->
+     ≥1100 rules); below that they simply stack in this order, everything centred on
+     one axis (2026-09-17). -->
 <section class="about" id="over-mij">
 	<div class="about__inner">
 		<header class="about__header" use:reveal>
@@ -131,6 +132,10 @@
 		line-height: var(--line-height-tight);
 		color: var(--color-fg-forest);
 		max-width: 38ch;
+		/* The block itself sits on the header's centre line, not only its text: with
+		   a max-width narrower than the header, a left-hugging block would put the
+		   heading's centre off the paragraph's and the button's below it. */
+		margin-inline: auto;
 	}
 
 	/* --- Portrait --- */
@@ -159,12 +164,18 @@
 	}
 
 	/* --- Body + button --- */
+	/* Below the desktop grid (< 1100px, phones and tablets alike since 2026-09-17)
+	   the whole column reads as one centred stack: eyebrow, heading, portrait,
+	   paragraph, button, ledger, all on the same axis. The header above was
+	   already centred; the paragraph, the button and the ledger rows used to hug
+	   the left edge under a centred heading and a centred portrait. */
 	.about__text {
 		display: flex;
 		flex-direction: column;
-		align-items: flex-start;
+		align-items: center;
 		gap: var(--space-6);
 		margin-bottom: var(--space-10);
+		text-align: center;
 	}
 
 	.about__body {
@@ -175,8 +186,11 @@
 		max-width: 38ch; /* the same measure as the heading — see .about__heading */
 	}
 
+	/* The wrapper is what centres the button; ButtonLink itself is untouched. */
 	.about__more {
-		align-self: flex-start;
+		align-self: center;
+		display: flex;
+		justify-content: center;
 	}
 
 	/* --- Ledger --- */
@@ -189,20 +203,26 @@
 	.about__ledger li {
 		padding: var(--space-5) 0;
 		border-top: 1px solid var(--about-hairline);
+		text-align: center; /* number and label on the column's axis, like everything above */
 	}
 
 	.about__ledger li:last-child {
 		border-bottom: 1px solid var(--about-hairline);
 	}
 
-	/* --- Desktop (>=1024px) --- */
-	/* Portrait, words, ledger: 4fr 5fr 3fr on a 64px gutter, everything centred on the
+	/* --- Desktop (>=1100px) --- */
+	/* 1100, not 1024, since 2026-09-17: the owner's rule is that tablets render as
+	   mobile, and the hero and the Werkwijze pin switch at 1100px (b827984), so this
+	   section switches on the same line rather than giving a 1024px iPad Pro the
+	   desktop grid between a mobile hero and a pinned track.
+
+	   Portrait, words, ledger: 4fr 5fr 3fr on a 64px gutter, everything centred on the
 	   row. The header and the text block are separate siblings (the phone puts the
 	   portrait between them), so they take the two rows of the middle column and hug
 	   the seam between them — header at the end of its row, text at the start of the
 	   next — which centres the pair as a unit against the portrait and the ledger,
 	   each of which spans both rows. */
-	@media (min-width: 1024px) {
+	@media (min-width: 1100px) {
 		.about__inner {
 			display: grid;
 			grid-template-columns: 4fr 5fr 3fr;
@@ -223,20 +243,37 @@
 			text-align: left;
 		}
 
+		.about__heading {
+			margin-inline: 0; /* left-aligned in its column; the base rule's auto is the stack's */
+		}
+
 		.about__portrait {
 			grid-area: portrait;
 			max-width: none;
 			margin: 0;
 		}
 
+		/* The grid's middle column is a left-aligned reading column: text, button
+		   and ledger go back to the left edge the base rules centre below 1100. */
 		.about__text {
 			grid-area: text;
 			align-self: start;
+			align-items: flex-start;
 			margin: 0;
+			text-align: left;
+		}
+
+		.about__more {
+			align-self: flex-start;
+			justify-content: flex-start;
 		}
 
 		.about__ledger {
 			grid-area: ledger;
+		}
+
+		.about__ledger li {
+			text-align: left;
 		}
 	}
 </style>
