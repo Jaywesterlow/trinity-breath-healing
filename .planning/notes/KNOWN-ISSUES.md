@@ -188,7 +188,8 @@ edge fade is still anchored at 800px from the centre line, which slot ±2 now
 crosses, so from 1776px up the outer part of that card sits under the ramp.
 **To watch on the owner's screens.** If it is the dive he wants and not the
 spread, the radius is the other number: ~2420px at 8deg holds the 362px spacing.
-The momentum, drag, recycle and click specs all pass unchanged.
+The momentum, drag, recycle and click specs all pass unchanged. (Watched, and
+seen: the edge, not the recycle — see 2026-09-17 below.)
 
 Over mij is design "A, grootboek": on desktop a `4fr 5fr 3fr` grid — the portrait
 drawn straight onto the sand in forest ink (no card, second portrait gone), the
@@ -208,6 +209,74 @@ the service pages use, and no button. 112px from the pagination to the heading,
 64px from the disclaimer to the section's end — more above than below, the owner's
 ask. The section's bottom padding went from `--section-pad` to a flat 64px for
 that; on a phone the two were already equal.
+
+**Shipped 2026-09-17 — the fan's edge fade follows the screen, the note held to its break, the staircase past the heading, tablets are mobile**
+
+Four fixes from the owner's review of the live preview, four commits.
+
+The fan. "The last card doesn't disappear, the first card visibly appears, every
+time" and "the blur isn't visible on some cards, it's just a cut-off". Measured,
+the recycle itself was never in view: one pivot forced to slots ±2.5, ±3, ±3.5 and
+±4 and pixel-diffed against the same frame with it hidden gives zero differing
+pixels at 1536, 1600, 1920, 2560 and 3440. What he saw is the edge: the fade only
+existed from 1776px, so on the 1600 laptop the outer cards were cut by the
+viewport with no fade at all, and at 1920 its solid part was a 70px strip. The
+fade's inner edge is now `min(1040px from the centre line, 50vw - 180px)`, with a
+100px ramp, from 1536px up — the first rule puts a fade under every card that
+reaches the screen edge at any width, the second holds the edge between slot
+±2's outermost corner (1050px) and slot ±3's innermost (1111px) on screens wide
+enough to show the recycle slot. Measured inner edge / solid from, at the fan's
+mid-height: 588 / 692 at 1536, 620 / 724 at 1600, 780 / 884 at 1920, 1040 / 1144
+at 2560 and 3440. The 180 and 100 come from the strip's 16deg lean, which puts
+the edge 66px further out at the top corner of the cards that reach the screen
+edge on the narrowest screens. **The cost is on the laptop**: at 1600 the 88px of
+slot ±2 that were cut off by the screen are now inside the ramp, so that screen
+shows three cards and two fades where it showed three cards and two slivers. At
+1920 the inner edge is 780 against the old 800. The fan box is 3rem taller from
+1536px, with the pivot baseline and the controls' tuck moving by the same 3rem,
+so slot ±3's bottom clearance is +28px instead of -20 and nothing else moves;
+the transient ±3.5 / ±4 positions still cross the box edge, behind the solid
+fade. Checked by dragging through two recycles at each width while sampling the
+viewport's outermost columns and the box's bottom row: sand only. Every
+`behandelingen-*` spec passes unchanged. Below 1536px (the 14deg geometry) the
+viewport still cuts the outer cards as it always did; none of the owner's
+screens is there.
+
+The note under the carousel: 42px to 38px on desktop, same clamp shape, and a
+max-width of 44ch. Not the 30-odd it looks like it should be: line 1 ("Je hoeft
+... je nodig") is 40.0ch of this display face and line 2 42.4ch, measured off
+the rendered line boxes, so anything narrower wraps line 2 into a third line
+or moves the break off "nodig". Verified at 1024/1440/1920/2560: line 1 ends
+"nodig", line 2 starts "hebt.", box 798px. 112 above / 64 below untouched.
+
+The staircase. "Card 1 is already in place, not animating at all" and "I want
+it to slide past the title; now it all stops at the title". At entry the cards
+now stand 200 / 506 / 812px below rest (card 1 too), and they align when the
+row's rest top reaches the middle of the viewport, not a viewport after the
+section's top enters. Progress is `(rowTop - vh/2) / (vh/2 + rowOffset)` with
+rowOffset the row's 214px below the section's top, so the drop is spent over
+664px of scroll at 1440x900 and 694 at 1920x960; speeds 1.30 / 1.76 / 2.22 times
+the page at 1440x900 (1.29 / 1.73 / 2.17 at 1920x960). After alignment the row
+rises past the page by the header block + the gap + half a card, measured live
+(86 + 32 + 229.5 = 348px at 1440), over 0.4 viewport, fading to 0; the cards
+clear the heading's bottom after ~30px of scroll and its top after ~120, and end
+229px above it. Damping, `visibility: hidden` and the reduced-motion static row
+unchanged. Compensation padding re-measured with the row aligned on the centre
+line: 96px to the Over mij portrait, one `--section-pad`. The spec carries the
+new numbers, the ±80px-of-centre assertion and the past-the-header assertion.
+
+Tablets. The two-column hero started at 768px, so every iPad in portrait got it,
+and at 1024 (iPad Pro 12.9 portrait) the fold rule stretched the hero to 1266px
+with 460px of sand between the text and the drawing. The hero's desktop layout
+now starts at **1100px**; below it the stacked mobile hero, with the phone's
+fold-fill margin switched off from 768 (it is calibrated to a ~333px drawing and
+would add 582px of sand at 1024x1366) and the intro capped at 40rem. Werkwijze's
+pin moves to the same 1100px, since at 1024 the desktop row of three was 14px
+from the screen's edges and the owner's rule is tablets = mobile; the
+`werkwijze-scrolljack` spec pins 1024x1366 down as "pinned". Checked and left
+alone at 1024: the nav (links fit), the carousel, Over mij's ledger and the FAQ's
+two columns — none of them break. 1180x820 landscape is a laptop and stays
+desktop. `--fs-title-sm`, which only the 768-1023 hero used, is gone.
 
 **Blocked on the owner — cannot ship without these**
 1. **Domain.** TransIP domain is linked to Vercel; the login is still needed from her.

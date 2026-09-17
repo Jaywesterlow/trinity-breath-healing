@@ -1,6 +1,6 @@
 /**
  * werkwijze-staircase.spec.ts — the desktop staircase in
- * src/lib/components/global/Werkwijze.svelte (≥ 1024px, motion allowed).
+ * src/lib/components/global/Werkwijze.svelte (≥ 1100px, motion allowed).
  *
  * The three cards arrive as a staircase and leave as one row. With the section's top at
  * the bottom of the viewport all three stand below their rest position — card 1 200px

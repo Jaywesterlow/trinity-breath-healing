@@ -92,7 +92,7 @@
 		return () => observer.disconnect();
 	});
 
-	// ── Desktop staircase (≥ 1024px, not under reduced motion) ──────────────────────
+	// ── Desktop staircase (≥ 1100px, not under reduced motion) ──────────────────────
 	//
 	// The three cards do not sit on one line as the section arrives. At the moment the
 	// section's top reaches the bottom of the viewport all three stand below their rest
@@ -317,11 +317,17 @@
 		// makes sense when a viewport can actually hold what gets pinned into it, so the height
 		// is a condition of pinning, not an afterthought. Below it the section falls back to the
 		// native snap slider, which simply scrolls like any other content.
-		const mobileMq = window.matchMedia('(max-width: 1023.98px) and (min-height: 640px)');
+		//
+		// 1100px, not 1024: tablets are mobile (2026-09-17, the owner's rule for every
+		// tablet screen). An iPad Pro 12.9 in portrait is 1024px wide, and at that width the
+		// desktop row of three 282px cards and two 75px gaps is 996px, 14px from either edge
+		// of the screen. Same breakpoint as the hero's two-column layout, so a tablet gets
+		// the stacked hero and the pinned track together rather than one of each.
+		const mobileMq = window.matchMedia('(max-width: 1099.98px) and (min-height: 640px)');
 		const motionMq = window.matchMedia('(prefers-reduced-motion: reduce)');
 		// The staircase's own gate: the desktop layout (the static row, not the pin) and
 		// motion allowed. Same breakpoint as the desktop styles below.
-		const desktopMq = window.matchMedia('(min-width: 1024px)');
+		const desktopMq = window.matchMedia('(min-width: 1100px)');
 
 		// Mirrors the @supports guard on the pinned styles. Without scroll-driven animations the
 		// pin would have nothing driving it, so those browsers keep the native snap slider —
@@ -569,8 +575,8 @@
 
 	/* Desktop: one static row of three, the Figma layout. The staircase (see the script)
 	   only ever moves the cards by transform from this rest position, so this is also
-	   exactly what reduced motion gets. */
-	@media (min-width: 1024px) {
+	   exactly what reduced motion gets. 1100px, not 1024 — see mobileMq in the script. */
+	@media (min-width: 1100px) {
 		.werkwijze__header {
 			max-width: none;
 		}

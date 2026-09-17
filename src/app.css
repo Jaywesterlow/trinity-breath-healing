@@ -199,7 +199,6 @@
 	/* Range: 375px → 1440px (1065px denominator). All values in px.             */
 	--fs-display: clamp(36px, calc(24.74px + 3.005vw), 68px); /* hero H1        36→68 */
 	--fs-title: clamp(36px, calc(31.77px + 1.127vw), 48px); /* hero H1 (Figma) 36→48 */
-	--fs-title-sm: clamp(30px, 4vw, 36px); /* hero H1, tablet 768–1023 (smaller than --fs-title) */
 	--fs-h2: clamp(
 		28px,
 		calc(23.77px + 1.127vw),

@@ -97,7 +97,7 @@
 	   turn comes.
 
 	   Ordered by where things sit on screen, not by DOM order — the two columns swap sides at
-	   1024px. The illustration is left out on purpose: its draw-on stroke animation is already
+	   1100px. The illustration is left out on purpose: its draw-on stroke animation is already
 	   its entrance, and fading it in on top of that would be two entrances for one element.
 
 	   The whole cascade waits for the illustration to finish drawing itself, so the two
@@ -209,6 +209,25 @@
 		}
 	}
 
+	/* Tablets (768px up to the 1100px desktop breakpoint) get this same stacked layout, since
+	   2026-09-17 — the owner's rule is that every tablet renders as mobile, and the two-column
+	   hero used to start at 768px. The fold-fill margin above is calibrated to a phone, where
+	   the drawing is width-bound at ~333px and the whole hero is a fixed ~808px; on a tablet
+	   the drawing is 640-875px tall by itself (it is still width-bound, and the width is 768
+	   to 1024), so the content already reaches the fold and the formula would only add
+	   empty sand — 582px of it on an iPad Pro 12.9 in portrait. Plain --space-6 instead. */
+	@media (min-width: 768px) and (max-width: 1099.98px) {
+		.hero__image-col {
+			margin-top: var(--space-6);
+		}
+
+		/* A phone never needs a measure on the intro; a tablet does, or the paragraph runs
+		   the full 976px of an iPad Pro at ~120 characters a line. 40rem is ~85. */
+		.hero__body {
+			max-width: 40rem;
+		}
+	}
+
 	/* The illustration is injected via {@html}, so Svelte's scoping classes never land on it —
 	   :global() under the (scoped) parent reaches it without leaking outside the hero.
 	   Every sizing rule below is carried over unchanged from the <img> this replaced, with one
@@ -298,11 +317,28 @@
 		margin-bottom: var(--space-4);
 	}
 
-	/* ─── Desktop / tablet (≥ 768px) — two-column, image beside text ─── */
-	@media (min-width: 768px) {
+	/* ─── Desktop (≥ 1100px) — two-column, image beside text ───
+	   1100px, not 768 and not 1024. It was 768, which handed every iPad in portrait (768,
+	   810, 820, 834) the two-column hero, and 1024 would still hand it to an iPad Pro 12.9
+	   in portrait, where the fold rule below stretched the hero to 1266px with the text
+	   at the top and the drawing on the bottom edge, 460px of sand between them. The
+	   owner's rule (2026-09-17) is that every tablet renders as mobile; 1100 is the first
+	   width that is a laptop and not a portrait tablet. Werkwijze's pin uses the same
+	   number, so a tablet gets the stacked hero and the pinned track together. */
+	@media (min-width: 1100px) {
 		.hero__inner {
 			display: grid;
 			grid-template-columns: 44% 1fr; /* content keeps its reserved 44% share; image gets the rest */
+			/* The fold rule. The hero used to be a fixed 764px (100px nav + 48px padding +
+			   616px drawing), which the owner measured on his three screens: 6px above the
+			   fold on the 1600x770 laptop, and a 196px band of empty sand under it on
+			   1920x960, 316px on 2560x1080. The hero is now at least the viewport minus the
+			   nav, and the drawing sits on its bottom edge (align-self on the image column
+			   below), so the river at the foot of the illustration meets the fold on every
+			   screen rather than only on the one it happened to fit. svh, not vh: on a
+			   browser with a collapsing toolbar the small viewport is the one that is always
+			   there. */
+			min-height: calc(100svh - var(--nav-height));
 			/* The height both columns agree on. A constant expression, deliberately: the
 			   content column and the illustration each read it, and neither is measured
 			   from the other, so there is no loop to feed. 38.5rem is what .hero__left
@@ -359,10 +395,14 @@
 			--btn-label-size: var(--font-size-xl); /* 20px on desktop */
 		}
 
+		/* The type does NOT grow with the screen. One build scaled the title, the body,
+		   their measures and the two buttons by --site-scale, and the owner's verdict on
+		   his 2560px ultrawide was "too big, revert": 48px in a 1840px container reads as
+		   a title, 74px reads as a poster. So the hero keeps its 1200-container sizes at
+		   every width and only the drawing beside it grows (see --hero-col-h). The smaller
+		   --fs-title-sm the 768-1023 range used to get is gone with that range. */
 		.hero__heading {
-			font-size: var(
-				--fs-title-sm
-			); /* tablet 768–1023: smaller token; ≥1024 restores full --fs-title */
+			font-size: var(--fs-title); /* 36→48 */
 			max-width: 25rem;
 			margin-bottom: var(--space-4);
 		}
@@ -380,6 +420,10 @@
 			grid-row: 1;
 			min-width: 0;
 			margin-top: 0;
+			/* Anchored to the hero's bottom edge, and only this column: .hero__left keeps
+			   the top alignment the ResizeObserver depends on (align-items: start on the
+			   grid above), so the text column's intrinsic height is still what it reports. */
+			align-self: end;
 			display: flex;
 			align-items: flex-start;
 			justify-content: center; /* centre the illustration in the right zone (content-right ↔ screen-right) */
@@ -411,46 +455,6 @@
 			);
 			max-width: none; /* width follows aspect */
 			max-height: none; /* cancels the mobile-base max-height, which otherwise keeps cascading through */
-		}
-	}
-
-	/* Tablet only (768–1023px): row is too narrow for content to breathe flush against
-	   the edge the way it can once max-width takes over at 1024px+, or the way the
-	   true-mobile stacked layout can below 768px. */
-	@media (min-width: 768px) and (max-width: 1023.98px) {
-		.hero__content {
-			padding-left: var(--space-6);
-		}
-	}
-
-	/* ─── Desktop (≥ 1024px) — restore the full-size hero title (tablet uses --fs-title-sm) ─── */
-	@media (min-width: 1024px) {
-		/* The fold rule. The hero used to be a fixed 764px (100px nav + 48px padding +
-		   616px drawing), which the owner measured on his three screens: 6px above the
-		   fold on the 1600x770 laptop, and a 196px band of empty sand under it on
-		   1920x960, 316px on 2560x1080. The hero is now at least the viewport minus the
-		   nav, and the drawing sits on its bottom edge (align-self below), so the river
-		   at the foot of the illustration meets the fold on every screen rather than
-		   only on the one it happened to fit. svh, not vh: on a browser with a
-		   collapsing toolbar the small viewport is the one that is always there. */
-		.hero__inner {
-			min-height: calc(100svh - var(--nav-height));
-		}
-
-		/* Anchored to the hero's bottom edge, and only this column: .hero__left keeps
-		   the top alignment the ResizeObserver depends on (see the ≥768 rule), so the
-		   text column's intrinsic height is still what it reports. */
-		.hero__image-col {
-			align-self: end;
-		}
-
-		/* The type does NOT grow with the screen. One build scaled the title, the body,
-		   their measures and the two buttons by --site-scale, and the owner's verdict on
-		   his 2560px ultrawide was "too big, revert": 48px in a 1840px container reads as
-		   a title, 74px reads as a poster. So the hero keeps its 1200-container sizes at
-		   every width and only the drawing beside it grows (see --hero-col-h). */
-		.hero__heading {
-			font-size: var(--fs-title); /* full 36→48 above the tablet range */
 		}
 	}
 </style>
