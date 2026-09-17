@@ -81,8 +81,26 @@
 	// So the list is repeated until it is long enough. Duplicates are visually
 	// identical and carry aria-hidden + tabindex="-1", so the accessibility
 	// tree and the tab order still see each service exactly once.
+	//
+	// 2026-09-17: the ring is two laps of the seven, fourteen slots, whatever
+	// the padding rule above works out to. Seven slots put the recycle at
+	// ±3, one slot past the outermost card of the design, and "off-screen"
+	// there was only ever true of a desktop: on a tablet (768-1023, the
+	// phone geometry) slot ±3 is on screen, clipped by the fan box's bottom
+	// edge, and the transient slot ±3.5 a card passes through on its way
+	// round is on screen too at 820 — the owner watched cards "spawn in"
+	// at the edge. With fourteen slots the recycle sits at -6/+7 (see
+	// HIGH_SLOT/LOW_SLOT), 98deg round the hub on the 14deg geometry and
+	// 56deg on the 8deg one, far below the box and behind the edge fade at
+	// every width, and slots ±3 to ±6 are ordinary cards that pass through
+	// the fade like the rest. The visible order of the seven never changes
+	// — the second lap is the same seven in the same order — and the dots
+	// still count services, not slots (see nearestCopyOf / the dots'
+	// own comment in the template), so pagination stays seven and wraps
+	// 1 -> 7 -> 1 as before. Fourteen pivots, not seven, is the whole cost.
+	const RING_LAPS = 2;
 	const MIN_ITEMS = 2 * VISIBLE_SLOT_MAX + 3;
-	const REPEATS = Math.max(1, Math.ceil(MIN_ITEMS / BASE_COUNT));
+	const REPEATS = Math.max(RING_LAPS, Math.ceil(MIN_ITEMS / BASE_COUNT));
 
 	const items = Array.from({ length: REPEATS }, (_, r) =>
 		SERVICE_ITEMS.map((item) => ({
@@ -2166,8 +2184,19 @@
 		   -2 to 2, verified empirically (rendered bounding boxes measured
 		   directly, not hand-computed — a rotated rectangle's bounding box
 		   doesn't move the way simple trig on one reference point predicts,
-		   see the commit message). */
-		height: 20.76rem;
+		   see the commit message).
+
+		   2026-09-17: 20.76rem + 2rem. On a tablet (768-1023, this geometry)
+		   slot ±3 is on screen and its bottom corner was 50px below the box,
+		   slot 2.5's 4px; the box's bottom edge cut them in plain view. Two
+		   rem lower, slot 2.5 clears it by 20px and slot ±3's cut moves to
+		   374-424px from the centre line, behind the solid part of the edge
+		   fade (see the fade block). --pivot-baseline and the controls' tuck
+		   move by the same 2rem, so the cards, the controls and the section's
+		   height are exactly where they were; only the clip edge is lower.
+		   Not more than 2rem: the box overhangs the controls, and the note
+		   under the carousel starts 31px below its new bottom edge. */
+		height: 22.76rem;
 		overflow: hidden;
 		/* Horizontal gestures drive next()/prev() (see onPointerDown/Up in the
 		   script) — pan-y keeps vertical page scroll working through a touch
@@ -2183,17 +2212,39 @@
 		   can read it — see the ultra-wide block for why the fade needs the
 		   card's rotation angle. */
 		--tilt-step: 14deg;
-		/* Geometry for the desktop edge fade, all measured off the live DOM —
-		   see that block for the derivation. Declared here in the base rule,
-		   not inside the media query that uses them: the dead-CSS-var guard
-		   resolves every var() against a real element at its own viewport
-		   width, so a custom property both declared AND consumed inside the
-		   same media query reads as dead whenever that query is inactive.
-		   They are inert below the breakpoint regardless, since nothing
-		   renders the pseudo-elements there. */
-		--fade-cap: 1040px; /* furthest the fade's inner edge ever sits from the centre line */
-		--fade-edge: 180px; /* how far inside the viewport edge the inner edge sits before the cap */
-		--fade-ramp: 100px; /* transparent -> solid, measured along the fade's own axis */
+		/* Geometry for the edge fade, all measured off the live DOM — see the
+		   fade block at the end of this style sheet for the derivation. The
+		   four numbers are retuned per breakpoint (the 1024 and 1536 blocks
+		   below override them), and --fade-start is composed here, once, from
+		   whichever set is live. Declared in the base rule rather than inside
+		   a media query: the dead-CSS-var guard resolves every var() against
+		   a real element at its own viewport width, so a custom property both
+		   declared AND consumed inside the same media query reads as dead
+		   whenever that query is inactive.
+
+		   These are the phone/tablet numbers (this geometry: 14deg, 532px,
+		   100px cards). 75px in from the screen edge, a 50px ramp and an 8deg
+		   lean: the card the screen cuts on a phone is slot ±1, and the screen
+		   crosses its top edge ~125px above the strip's rotation origin (the
+		   box's mid-height), where the lean puts the inner edge 18px further
+		   out, plus 51px for the ramp along the lean, is 69; 75 leaves 6. The
+		   lean is 8deg and not the card's own 14deg because the lean is paid
+		   for out of the same budget: at 14deg the top corner took 31px, and
+		   with a 60px ramp the whole visible width of slot ±1 at 390 was
+		   inside the ramp — a gradient where a card should be. At 8deg the
+		   card keeps ~24px of solid before the ramp, the boundary is still
+		   within 6deg of its edge, and at 320px wide the inner edge is 85px
+		   from the centre, 81 at the centre card's bottom corners (which are
+		   at 50, and rounded). The cap, 340px, is what a tablet needs: from
+		   ~830px wide the screen rule would let the inner edge past slot ±3's
+		   cut on the box's bottom edge (374px from the centre at that row,
+		   see the box's own height comment), and the solid boundary has to
+		   be inside that at the bottom row, where the lean pulls the edge
+		   26px in: 340 - 26 + 51 = 365. */
+		--fade-cap: 340px; /* furthest the fade's inner edge ever sits from the centre line */
+		--fade-edge: 75px; /* how far inside the viewport edge the inner edge sits before the cap */
+		--fade-ramp: 50px; /* transparent -> solid, measured along the fade's own axis */
+		--fade-lean: 8deg; /* the strip's tilt, near-parallel to the card it sits against */
 		--fade-start: min(var(--fade-cap), calc(50vw - var(--fade-edge)));
 		/* A drag over the fan was selecting the card title/number text
 		   underneath the pointer instead of dragging the carousel — the
@@ -2267,7 +2318,9 @@
 	.treatments__pivot {
 		position: absolute;
 		left: 50%;
-		bottom: var(--pivot-baseline, 7.54rem);
+		/* 7.54rem + the 2rem the box grew on 2026-09-17 (see the fan's height),
+		   so the cards stay where they were. */
+		bottom: var(--pivot-baseline, 9.54rem);
 		will-change: transform;
 		--pivot-distance: 532px; /* smaller = more overlap risk, bigger = flatter curve — verified empirically, not by trig alone */
 		/* --tilt-step is declared on .treatments__fan, not here, and
@@ -2325,15 +2378,24 @@
 		   same tight ~2rem look without touching the safety margin. Setting
 		   this to exactly -1x --pivot-baseline cancels the buffer out
 		   entirely, leaving just the flex gap (--space-8, 2rem) above
-		   .treatments__controls as the visual distance to the card. */
-		margin-top: -7.54rem;
+		   .treatments__controls as the visual distance to the card. 9.54rem
+		   since 2026-09-17, with the baseline (see .treatments__pivot). */
+		margin-top: -9.54rem;
 		/* .treatments__fan is position:relative, which — regardless of DOM
 		   order — paints after (on top of) non-positioned siblings. Without
 		   this, the overlap from the negative margin above makes the fan's
 		   own (invisible but still hit-testable) box swallow clicks meant for
-		   Prev/Next/the dots. */
+		   Prev/Next/the dots.
+
+		   3, not 1, since the edge fade exists on every width (2026-09-17):
+		   the fade strips are the fan's own pseudo-elements at z-index 2, in
+		   this same stacking context, and on a phone the fade's inner edge
+		   sits ~70px from the centre line at this row — the outer dots, 84px
+		   out, would be painted over in sand. The strips are pointer-events:
+		   none, so this is paint order only; the hit-testing reason above is
+		   unchanged. */
 		position: relative;
-		z-index: 1;
+		z-index: 3;
 	}
 
 	/* The same circle the CTA buttons carry, pointing sideways instead of up:
@@ -2493,6 +2555,26 @@
 			   not a length, so it doesn't scale with card size. */
 			height: 49.5rem;
 			--card-width: 15rem;
+			/* The edge fade on this geometry (14deg, 1304px, 240px cards; see
+			   the fade block). 160px in from the screen edge with a 100px
+			   ramp: at 1024 the card the screen cuts is slot ±1, by 14px at
+			   its top corner, which sits 203px above the strip's origin — a
+			   14deg lean puts the inner edge 51px further out there, plus
+			   103px for the ramp along the lean, is 154. From 1100 up the
+			   cut card is slot ±2, whose top corner is only 28px above the
+			   origin, so the same 160 leaves it more room. The cap never
+			   binds in this branch (50vw - 160 is at most 607px at 1535, and
+			   slot ±3's innermost point is 783px out); 660 is a guard for the
+			   box's bottom edge, which slot 2.5 crosses 822px from the
+			   centre: 660 + 103 keeps the solid boundary inside that if the
+			   branch is ever widened. The lean is the card's own 14deg — the
+			   base rule's 8deg is a phone compromise (see there) that this
+			   geometry, with ~250px between the cut card's inner edge and
+			   the screen, does not need. */
+			--fade-cap: 660px;
+			--fade-edge: 160px;
+			--fade-ramp: 100px;
+			--fade-lean: 14deg;
 		}
 
 		.treatments__pivot {
@@ -2538,11 +2620,17 @@
 	/* Ultra-wide: flatten the arc so the outermost cards stop being cut off.
 
 	   .treatments__fan is full-bleed (100vw), so the wider the screen the
-	   more of the arc it reveals. There are only ever 7 cards (MIN_ITEMS =
-	   2 * VISIBLE_SLOT_MAX + 3), so slots run exactly -3..3 and ±3 IS the
-	   outermost pair — nothing deeper can ever appear, which is why one
-	   flattened setting covers every width from here up rather than needing
-	   a ladder of breakpoints.
+	   more of the arc it reveals. When this was tuned there were only ever
+	   7 cards (MIN_ITEMS = 2 * VISIBLE_SLOT_MAX + 3), so slots ran exactly
+	   -3..3 and ±3 was the outermost pair — nothing deeper could appear,
+	   which is why one flattened setting covers every width from here up
+	   rather than needing a ladder of breakpoints. Since 2026-09-17 the
+	   ring is fourteen slots (see RING_LAPS in the script) and ±4 to ±6
+	   exist as cards, but they change nothing here: on this geometry slot
+	   ±4 is 1488px from the centre line and 183px below the box's bottom
+	   edge, each slot further out is deeper still, and the edge fade's
+	   cap (1040px, see the fade block) has them behind solid sand at any
+	   width — so one setting still covers every width.
 
 	   Below ~1560px the ±3 pair sits fully past the viewport edge, so its
 	   rotation never mattered. From ~1600px it enters the viewport still
@@ -2598,6 +2686,13 @@
 		.treatments__fan {
 			--tilt-step: 8deg;
 			height: 52.5rem;
+			/* The fade numbers this geometry was measured for (see the fade
+			   block): the same values as before 2026-09-17, now stated here
+			   because the narrower branches carry their own. */
+			--fade-cap: 1040px;
+			--fade-edge: 180px;
+			--fade-ramp: 100px;
+			--fade-lean: 16deg; /* 2 * --tilt-step: parallel to slot ±2, the outermost card on show */
 		}
 
 		.treatments__pivot {
@@ -2611,63 +2706,72 @@
 	}
 
 	/* Edge fade — every card that leaves the fan leaves through this, and
-	   every card that arrives arrives through it. Slots 0/±1/±2 are the
-	   design; ±3 is the recycle slot, where a card steps off one end and
-	   reappears at the other (see shiftOne), passing through ±3.5 and ±4
-	   on the way. Two rules, and the fade's inner edge is the smaller of
-	   the two distances they give:
+	   every card that arrives arrives through it, on every width. Slots
+	   0/±1/±2 are the design; everything past them is on its way round the
+	   ring (fourteen slots since 2026-09-17, see RING_LAPS in the script),
+	   and the rule the owner set is that no card is ever seen appearing or
+	   disappearing and nothing is ever hard-cut — not by the screen, not by
+	   the fan box's clip. Two rules, and the fade's inner edge is the smaller
+	   of the two distances they give:
 
-	   1. From the VIEWPORT EDGE, --fade-edge inward. Whatever the width,
-	      a card reaching the edge of the screen is already fading before
-	      it gets there, so the screen edge itself never cuts one. This is
-	      the rule that bites on the owner's screens: at 1600 and 1920 the
-	      fan is wider than the screen, and before 2026-09-17 the fade did
-	      not exist below 1776px at all, so the outer cards were simply cut
-	      off at the viewport ("the blur isn't visible on some cards, it's
-	      just a cut-off"). The fade now exists from 1536px, the breakpoint
-	      the 8deg geometry above starts at, so both rules are computed
-	      against one set of slot positions.
+	   1. From the VIEWPORT EDGE, --fade-edge inward. Whatever the width, a
+	      card reaching the edge of the screen is already fading before it
+	      gets there, so the screen edge itself never cuts one. Before
+	      2026-09-17 the fade only existed from 1536px, so every phone,
+	      tablet and laptop below that cut the outer cards off at the
+	      viewport ("the blur isn't visible on some cards, it's just a
+	      cut-off"). --fade-edge is derived per geometry from where the cut
+	      card's top corner sits relative to the strip's rotation origin
+	      (the lean moves the edge outward above the origin) plus the ramp
+	      along the lean; each breakpoint's own comment has the arithmetic.
 
-	   2. From the CENTRE LINE, never further out than --fade-cap. Measured
-	      off the live DOM, every slot sits at a fixed distance from the
-	      centre no matter how wide the screen is (slot ±2 spans 712..1050px,
-	      slot ±3 1111..1489px, identical at 1536/1600/1920/2560/3440), so
-	      once the screen is wide enough to show slot ±3 (from 2222px up)
-	      the viewport rule alone would let the recycle happen in plain
-	      sight. The cap holds the inner edge between slot ±2's outermost
-	      corner and slot ±3's innermost: slot ±2 is rotated 16deg and its
-	      bottom-right corner is at 943px, its top-right at 1050px; slot ±3
-	      is rotated 24deg and its bottom-left corner, the innermost point,
-	      is at 1111px, 294px below the fade's rotation origin. With the
-	      edge leaning at the same 16deg, an inner edge between 1010 and
-	      1070px clears both; 1040px sits in the middle.
+	   2. From the CENTRE LINE, never further out than --fade-cap. Every
+	      slot sits at a fixed distance from the centre no matter how wide
+	      the screen is, and so does the point where a deep slot crosses the
+	      box's bottom edge; once the screen is wide enough to show that
+	      crossing, the viewport rule alone would let a card be cut by the
+	      box in plain sight. The cap holds the solid boundary inside the
+	      nearest such crossing: 340px on the phone geometry (slot ±3 crosses
+	      the bottom row 374px out, and the lean pulls the edge 26px in at
+	      that row), 1040px from 1536 up (between slot ±2's outermost corner
+	      at 1050 and slot ±3's innermost at 1111, and slots ±3.5 and ±4
+	      cross the box edge 1302 and 1488px out). The 1024 branch never
+	      reaches its own crossing (822px, slot 2.5) below 1536; its 660 is
+	      a guard.
 
-	   --fade-edge (180px) and --fade-ramp (100px) come from the lean, not
-	   from the ramp alone. The strip is rotated 16deg about its inner
-	   edge's midpoint, so at a height y the edge is (origin - y) * tan 16deg
-	   further out, and the solid boundary a further ramp / cos 16deg. The
-	   cards that reach the viewport edge on the narrowest screens (slot
-	   ~1.4 at 1536px) have their top corner ~230px above the origin, where
-	   the edge leans 66px outward: 66 + 104 = 170px, so 180 puts the solid
-	   boundary just inside the viewport at that corner and well inside it
-	   lower down. What this costs is slot ±2 on the laptop: at 1600px the
-	   inner edge is 620px from the centre, so the 88px of slot ±2 that were
-	   inside the viewport are now inside the ramp — faded rather than cut.
-	   At 1920 the inner edge is 780px, within 20px of the old 800, so that
-	   screen looks as it did; from 2440px up the cap takes over and slot
-	   ±2 is entirely clear.
+	   --fade-lean is the strip's tilt: 8deg on the phone geometry, 14deg
+	   (1 * --tilt-step) on the 1024 one, 16deg (2 * --tilt-step) from 1536.
+	   Parallel to the card the fade sits against, or as close as one angle
+	   per breakpoint and the lean's own cost allow: the strip rotates
+	   about its inner edge's midpoint, so above the origin the edge leans
+	   outward by (origin - y) * tan(lean) and the solid boundary sits a
+	   further ramp / cos(lean) out, and both come out of the distance
+	   between the cut card's inner edge and the screen. On the phone
+	   geometry that distance is ~100px, so the lean is held to 8deg (see
+	   the base rule's numbers); on the 1024 geometry 28deg would put a
+	   third of slot ±1 under the fade at 1024, where its 203px-tall top
+	   corner is what the screen cuts, so 14deg; 16deg from 1536 is the
+	   value the 8deg geometry was measured with (see the ultra-wide block).
+
+	   Measured inner edge / solid boundary at the box's mid-height: 120 /
+	   170 at 390, 140 / 190 at 430, 309 / 359 at 768, 335 / 385 at 820,
+	   340 / 390 from ~830 up on the phone geometry; 352 / 455 at 1024, 430
+	   / 533 at 1180, 523 / 626 at 1366, 560 / 663 at 1440; 588 / 692 at
+	   1536, 620 / 724 at 1600, 780 / 884 at 1920, 1040 / 1144 at 2560. What
+	   it costs: on a phone the outer 50px of slot ±1 fade where its top
+	   corner was cut; on a tablet slot ±2's outer corner fades and slot
+	   ±3, which was on screen and cut by the box, is a fading sliver; at
+	   1024 slot ±1's outer third fades where 14px of its tip was cut; at
+	   1440 slot ±2 is a fading sliver of ~45px where it was a 214px
+	   hard-cut chunk. From 1536 up nothing changed.
 
 	   Checked by pixel-diffing the fan with one pivot forced to each of
 	   slots ±2.5, ±3, ±3.5 and ±4 against the same frame with that pivot
-	   hidden: zero differing pixels at 1536, 1600, 1920, 2560 and 3440. And
-	   by driving the fan through two recycles by drag while sampling the
-	   viewport's outermost columns and the box's bottom row: sand only.
-
-	   The tilt is 2 * --tilt-step, NOT 3 *. The fade's visible boundary sits
-	   against slot ±2 — the outermost card anyone can actually see — so that
-	   is the edge it has to run parallel to. Matching slot ±3 instead (the
-	   card hidden behind the fade) over-rotates it by a whole step and reads
-	   as visibly off against its neighbour.
+	   hidden, and by driving the fan through two recycles by drag while
+	   sampling the viewport's outermost columns and the box's top and
+	   bottom rows: sand only, at 390, 430, 768, 820, 1024, 1180, 1280,
+	   1366, 1440, 1536, 1600, 1920 and 2560. behandelingen-edges.spec.ts
+	   keeps the drag check at five of those widths.
 
 	   The strip is a ROTATED ELEMENT with an axis-aligned gradient inside it,
 	   NOT an upright box with an angled gradient. The latter was tried and is
@@ -2679,39 +2783,38 @@
 	   makes its edges and its gradient axis the same frame, so the
 	   transparent boundary is a genuine straight line parallel to the card
 	   beside it. */
-	@media (min-width: 1536px) {
-		.treatments__fan::before,
-		.treatments__fan::after {
-			content: '';
-			position: absolute;
-			/* Rotated about its inner edge, so the far end swings vertically
-			   by width * sin(angle) — at 3440px that is ~950px. The strip has
-			   to stay taller than that swing plus the fan itself, or the far
-			   top corner is left uncovered. Everything past the fan's own box
-			   is clipped, so the excess costs nothing. */
-			top: -250%;
-			height: 600%;
-			width: 100vw;
-			/* Above the cards (positioned, but un-z-indexed), and never a
-			   hit-test target — the fan underneath is a drag surface. */
-			z-index: 2;
-			pointer-events: none;
-		}
+	.treatments__fan::before,
+	.treatments__fan::after {
+		content: '';
+		position: absolute;
+		/* Rotated about its inner edge, so the far end swings vertically
+		   by width * sin(angle) — at 3440px that is ~950px. The strip has
+		   to stay taller than that swing plus the fan itself, or the far
+		   top corner is left uncovered. Everything past the fan's own box
+		   is clipped, so the excess costs nothing. */
+		top: -250%;
+		height: 600%;
+		width: 100vw;
+		/* Above the cards (positioned, but un-z-indexed) and below the
+		   controls (z-index 3, see .treatments__controls), and never a
+		   hit-test target — the fan underneath is a drag surface. */
+		z-index: 2;
+		pointer-events: none;
+	}
 
-		/* Right: transparent at the inner edge, solid by --fade-ramp, then
-		   flat sand the rest of the way out. */
-		.treatments__fan::after {
-			left: calc(50% + var(--fade-start));
-			transform-origin: left center;
-			transform: rotate(calc(2 * var(--tilt-step)));
-			background: linear-gradient(to right, transparent 0, var(--color-bg-sand) var(--fade-ramp));
-		}
+	/* Right: transparent at the inner edge, solid by --fade-ramp, then
+	   flat sand the rest of the way out. */
+	.treatments__fan::after {
+		left: calc(50% + var(--fade-start));
+		transform-origin: left center;
+		transform: rotate(var(--fade-lean));
+		background: linear-gradient(to right, transparent 0, var(--color-bg-sand) var(--fade-ramp));
+	}
 
-		.treatments__fan::before {
-			right: calc(50% + var(--fade-start));
-			transform-origin: right center;
-			transform: rotate(calc(-2 * var(--tilt-step)));
-			background: linear-gradient(to left, transparent 0, var(--color-bg-sand) var(--fade-ramp));
-		}
+	.treatments__fan::before {
+		right: calc(50% + var(--fade-start));
+		transform-origin: right center;
+		transform: rotate(calc(-1 * var(--fade-lean)));
+		background: linear-gradient(to left, transparent 0, var(--color-bg-sand) var(--fade-ramp));
 	}
 </style>

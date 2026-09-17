@@ -1,6 +1,6 @@
 # Known Issues — deferred, not fixed yet
 
-Last updated: **2026-09-16**
+Last updated: **2026-09-17**
 
 Read the date above before answering "what issues are still open?" — anything here
 was true as of that date and may have been fixed since.
@@ -210,9 +210,9 @@ the service pages use, and no button. 112px from the pagination to the heading,
 ask. The section's bottom padding went from `--section-pad` to a flat 64px for
 that; on a phone the two were already equal.
 
-**Shipped 2026-09-17 — the fan's edge fade follows the screen, the note held to its break, the staircase past the heading, tablets are mobile**
+**Shipped 2026-09-17 — the fan's edge fade follows the screen, the note held to its break, the staircase past the heading, tablets are mobile, no card cut on any width**
 
-Four fixes from the owner's review of the live preview, four commits.
+Five fixes from the owner's review of the live preview, five commits.
 
 The fan. "The last card doesn't disappear, the first card visibly appears, every
 time" and "the blur isn't visible on some cards, it's just a cut-off". Measured,
@@ -277,6 +277,50 @@ from the screen's edges and the owner's rule is tablets = mobile; the
 alone at 1024: the nav (links fit), the carousel, Over mij's ledger and the FAQ's
 two columns — none of them break. 1180x820 landscape is a laptop and stays
 desktop. `--fs-title-sm`, which only the 768-1023 hero used, is gone.
+
+The fan, on every width this time. The fade above only existed from 1536px, and
+the owner, on a tablet, still saw cards spawn at the edge and get cut. Measured
+before the fix at 390, 430, 768, 820, 1024, 1180, 1280, 1366 and 1440: no fade at
+all, so the screen's outer columns cut a card in every frame of a drag; on the
+phone geometry (up to 1023) slot ±3 sits on screen, 319-502px from the centre
+line, with its bottom corner 50px below the box, so the box's bottom edge cut it
+in view from ~640px wide; and at 820 the transient slot ±3.5 a card passes
+through on its way round was itself on screen (64px of it) — that is the spawn.
+Two things changed, both in `Behandelingen.svelte`. The ring is fourteen slots,
+two laps of the seven (`RING_LAPS`): the recycle moves from ±3 to -6/+7, 98deg
+round the hub on the 14deg geometry and 56deg on the 8deg one, below the box and
+behind the fade at any width; the dots already counted services rather than
+slots, the modal already took `i % 7`, and the seven's order is unchanged. And the
+edge fade exists on every width, `min(cap, 50vw - edge)` as before, with cap /
+edge / ramp / lean per geometry: 340 / 75 / 50 / 8deg on the phone geometry
+(the lean is held under the card's 14deg because on a 100px card the lean and the
+ramp come out of the same ~100px, and at 14deg the whole visible width of slot ±1
+at 390 was ramp), 660 / 160 / 100 / 14deg from 1024, and 1040 / 180 / 100 / 16deg
+from 1536, unchanged. The phone box is 2rem taller, with the pivot baseline and
+the controls' tuck moving by the same 2rem so nothing visible moves; slot 2.5
+clears its bottom edge and slot ±3's cut sits behind the solid part of the fade.
+The controls are z-index 3, above the fade, because on a phone the fade now
+reaches the outer dots' row. Inner edge / solid boundary at the box's mid-height:
+120 / 170 at 390, 309 / 359 at 768, 335 / 385 at 820, 352 / 453 at 1024, 560 /
+661 at 1440, and from 1536 up exactly the figures above. **What it costs**: on a
+phone the outer 50px of slot ±1 fade where its top corner was cut; on a tablet
+slot ±2's outer corner fades and slot ±3 is a fading sliver; at 1024 slot ±1's
+outer third fades where 14px of its tip was cut; at 1440 slot ±2 is a fading
+sliver where it was a 214px hard-cut chunk. Checked by dragging through two
+recycles at all thirteen widths from 390 to 2560 (and at 320, 900, 1000 and
+1023) while sampling the screen's outermost columns and the box's top and bottom
+rows: sand only. `behandelingen-edges.spec.ts` keeps that check at 390, 820,
+1024, 1440 and 2560, decoding its own screenshots; the other seven
+`behandelingen-*` specs pass unchanged.
+
+**To watch.** A mouse on the phone geometry between ~860 and 1023px wide (a
+narrow desktop window, or a tablet with a trackpad): the hover reveal opens the
+description inside a 100px card, and from ~860 the body text is large enough
+that the card outgrows the 48px of headroom above it, so the box's top edge
+cuts the hovered centre card until the description closes. Pre-existing (the
+card's position did not move), touch never hovers, and none of the thirteen
+widths hits it; left alone rather than reaching into `TreatmentCard` in this
+pass.
 
 **Blocked on the owner — cannot ship without these**
 1. **Domain.** TransIP domain is linked to Vercel; the login is still needed from her.
