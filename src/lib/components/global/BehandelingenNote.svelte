@@ -13,8 +13,8 @@
 	 * controls, on the section's own background, with more air above it than
 	 * below: 112px from the pagination to the heading, 64px from the disclaimer to
 	 * the section's end. The sentence is an h2 now, set large (38px on desktop) and
-	 * centred, and on desktop it breaks by hand after "nodig" so the two lines are
-	 * the two halves of the thought rather than wherever the measure happened to
+	 * centred, and on desktop it breaks by hand after "nodig" and "gesprek" so the three lines are
+	 * the parts of the thought rather than wherever the measure happened to
 	 * fall; its max-width is sized to that break, see the style.
 	 *
 	 * The disclaimer is BRAND.disclaimer, the same constant every treatment page
@@ -31,7 +31,8 @@
 <div class="note" use:reveal>
 	<h2 class="note__heading">
 		Je hoeft niet te weten welke behandeling je nodig<br class="note__br" />
-		hebt. Dat zoeken we in het eerste gesprek samen uit.
+		hebt. Dat zoeken we in het eerste gesprek<br class="note__br" />
+		samen&nbsp;uit.
 	</h2>
 	<p class="note__disclaimer">{BRAND.disclaimer}</p>
 </div>
@@ -43,15 +44,13 @@
 	}
 
 	.note__heading {
-		/* 44ch, and not the 30-odd it looks like it should be. The measure is set by the
-		   hand break below: line 1 ("Je hoeft ... je nodig") is 40.0ch of this display face
-		   and line 2 ("hebt. Dat zoeken ... samen uit.") 42.4ch, measured off the rendered
-		   line boxes, and the ratio holds at every size because ch scales with the font.
-		   Anything under 42.4ch wraps line 2 into a third line; anything under 40ch moves
-		   the break off "nodig". 44ch is the smallest whole width with a rendering margin
-		   (~1.5% of the line) on both. On a phone 44ch is wider than the screen, so the
-		   padding sets the measure there, as before. */
-		max-width: 44ch;
+		/* Three lines on desktop, by hand: "... je nodig" / "hebt. ... gesprek" /
+		   "samen uit." The longest line (line 1) is 40.0ch of this display face, so 42ch
+		   holds it with a margin and is narrower than the 42.4ch line 2 used to need
+		   when it ran to "samen uit." on one line. The non-breaking space keeps "samen"
+		   and "uit." together on the last line at any width. On a phone 42ch is wider
+		   than the screen, so the padding sets the measure there and the breaks are off. */
+		max-width: 42ch;
 		margin: 0 auto;
 		text-align: center;
 		font-family: var(--font-display);
