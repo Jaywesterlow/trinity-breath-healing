@@ -41,6 +41,7 @@
 
 	let cardsEl: HTMLUListElement | null = $state(null);
 	let rowEl: HTMLDivElement | null = $state(null);
+	let headerEl: HTMLElement | null = $state(null);
 	let sectionEl: HTMLElement | null = $state(null);
 
 	// The desktop staircase's two states; the staircase itself is further down. `stairs`
@@ -94,17 +95,28 @@
 	// ── Desktop staircase (≥ 1024px, not under reduced motion) ──────────────────────
 	//
 	// The three cards do not sit on one line as the section arrives. At the moment the
-	// section's top reaches the bottom of the viewport they stand in a staircase: card 1
-	// at its rest position, card 2 two thirds of a card (306px) below it, card 3 twice
-	// that (612px). As the reader scrolls, the lower cards move up faster than the page so
-	// they catch up: with the offsets spent over exactly one viewport of travel, their
-	// speeds relative to the page are 1 + 306/vh and 1 + 612/vh (1.34 and 1.68 on a 900px
-	// viewport), left slowest, right fastest, and they land on one line at the instant the
-	// section has been scrolled through a full viewport height. Structured, but uneven.
+	// section's top reaches the bottom of the viewport all three stand below their rest
+	// position, in a staircase: card 1 200px down, card 2 two thirds of a card (306px)
+	// further, card 3 another 306 — 200 / 506 / 812. Card 1 is down too, deliberately: with
+	// it already at rest as the section entered, the owner's reading was that it "isn't
+	// animating at all". As the reader scrolls, each card moves up faster than the page and
+	// the lower ones faster still, so they catch up. The offsets are spent over the scroll
+	// it takes the row's rest position to reach the middle of the screen from where it is
+	// at entry: vh / 2 + rowOffset px, where rowOffset is the row's distance below the
+	// section's top (214px at 1440), so 664px at 1440x900 and 694 at 1920x960. That makes
+	// their speeds relative to the page 1 + 200/664, 1 + 506/664 and 1 + 812/664 (1.30,
+	// 1.76 and 2.22 at 1440x900; 1.29, 1.73, 2.17 at 1920x960), left slowest, right
+	// fastest, all three seen to arrive in order, and on one line at the instant the
+	// row's top crosses the viewport's centre.
+	// Not a viewport later, as it first shipped: the reader had card 1 in place before the
+	// section was half in.
 	//
 	// Past that point the row does not stop. Over the next 0.4 viewport of scroll all three
-	// keep rising a further 240px faster than the page — so they visibly overtake the
-	// heading, which scrolls at the page's own speed — and fade from 1 to 0 over that same
+	// keep rising faster than the page by the height of the header block (eyebrow + h2), the
+	// gap under it and half a card — measured live each time, 86 + 32 + 229.5 = 348px at
+	// 1440 — so they visibly overtake the heading, which scrolls at the page's own speed
+	// (they clear its bottom edge after ~30px of scroll and its top after ~120), and finish
+	// with their centre line on the header's top edge; they fade from 1 to 0 over that same
 	// range. Once fully faded they are also `visibility: hidden` (the --faded class): an
 	// invisible card with a link in it is a keyboard trap, and visibility is what takes
 	// the link out of the tab order and out of the accessibility tree. Scrolling back up
@@ -127,12 +139,12 @@
 	// with three different progress curves and a shared damping cannot be expressed as one
 	// view-timeline, and the damping is the point. Reduced motion: no staircase, no fade,
 	// the cards simply sit aligned on their line as the static layout has them.
-	/** px card 2 starts below its rest at entry; card 3 starts at twice this. Two thirds of
-	 *  a card's 459px height. */
+	/** px card 1 starts below its rest at entry; each further card starts STAIR_STEP lower. */
+	const STAIR_BASE = 200;
+	/** px between neighbouring cards' entry offsets: two thirds of a card's 459px height. */
 	const STAIR_STEP = 306;
-	/** px the aligned row rises past its rest while it fades out. */
-	const STAIR_LIFT = 240;
-	/** The scroll the lift and the fade take, as a fraction of the viewport height. */
+	/** The scroll the lift and the fade take, as a fraction of the viewport height. The lift
+	 *  itself is not a constant: it is the header block, the gap and half a card, measured. */
 	const STAIR_FADE_SPAN = 0.4;
 	/** s for the row to close ~95% of the gap to its scroll-given target (three time
 	 *  constants of the exponential lerp in `frame`). */
@@ -142,29 +154,39 @@
 		if (!stairs) return;
 		const section = sectionEl;
 		const list = cardsEl;
-		if (!section || !list) return;
+		const row = rowEl;
+		const header = headerEl;
+		if (!section || !list || !row || !header) return;
 
 		const items = Array.from(list.children).filter(
 			(el): el is HTMLElement => el instanceof HTMLElement
 		);
-		const rest = items.map((_, i) => i * STAIR_STEP);
-		const targetY = rest.slice();
+		const drop = items.map((_, i) => STAIR_BASE + i * STAIR_STEP);
+		const targetY = drop.slice();
 		let targetFade = 1;
-		const y = rest.slice();
+		const y = drop.slice();
 		let fade = 1;
 		let raf: number | null = null;
 		let last = 0;
 		let near = false;
 
-		/** Where the scroll says the row should be. p is the section's progress into the
-		 *  viewport: 0 with its top at the bottom edge, 1 once it has travelled one full
-		 *  viewport height, 1.4 when the lift and fade are done. */
+		/** Where the scroll says the row should be. `fall` is how much of its entry drop each
+		 *  card still has to make up: 1 with the section's top at the bottom edge of the
+		 *  viewport, 0 once the row's rest top has reached the viewport's vertical centre.
+		 *  `rise` is the lift and the fade after that: 0 at the centre, 1 a further
+		 *  STAIR_FADE_SPAN viewports on. The row wrapper is what is measured, never the
+		 *  cards: it is the untransformed box, so its rect is the rest position whatever the
+		 *  cards are doing. The lift is layout (offsetTop, offsetHeight), so the header's own
+		 *  reveal transform cannot leak into it. */
 		function targets() {
 			const vh = window.innerHeight;
-			const p = (vh - section!.getBoundingClientRect().top) / vh;
-			const fall = 1 - Math.min(Math.max(p, 0), 1);
-			const rise = Math.min(Math.max((p - 1) / STAIR_FADE_SPAN, 0), 1);
-			for (let i = 0; i < rest.length; i++) targetY[i] = rest[i]! * fall - STAIR_LIFT * rise;
+			const sectionTop = section!.getBoundingClientRect().top;
+			const rowTop = row!.getBoundingClientRect().top;
+			const rowOffset = rowTop - sectionTop;
+			const fall = Math.min(Math.max((rowTop - vh / 2) / (vh / 2 + rowOffset), 0), 1);
+			const rise = Math.min(Math.max((vh / 2 - rowTop) / (STAIR_FADE_SPAN * vh), 0), 1);
+			const lift = row!.offsetTop - header!.offsetTop + items[0]!.offsetHeight / 2;
+			for (let i = 0; i < drop.length; i++) targetY[i] = drop[i]! * fall - lift * rise;
 			targetFade = 1 - rise;
 		}
 
@@ -352,7 +374,7 @@
 		<div class="werkwijze__sticky">
 			<!-- One reveal for the header block: eyebrow and heading arrive and leave as one
 			     line of thought, not as two. -->
-			<header class="werkwijze__header" use:reveal>
+			<header class="werkwijze__header" use:reveal bind:this={headerEl}>
 				<p class="werkwijze__eyebrow">Werkwijze</p>
 				<h2 class="werkwijze__heading">Rustig, persoonlijk en op jouw tempo.</h2>
 			</header>
@@ -586,13 +608,14 @@
 			visibility: hidden;
 		}
 
-		/* The compensation. The cards leave their box 240px early and are gone by the time
-		   the reader has scrolled 0.4 viewport past the section's top, so the section's own
-		   bottom padding would only add sand to the band the vacated box already leaves.
-		   With it gone the gap from the aligned row to the next section's first content is
-		   the next section's top padding alone — one --section-pad (96px at 1440), where
-		   every other pair of sections has two. Measured at 1440x900 with the row aligned:
-		   the cards' bottom edge to the Over mij header is 96px. */
+		/* The compensation. The cards leave their box upward, ~350px in 0.4 viewport of
+		   scroll once the row's rest top has crossed the middle of the screen, so the
+		   section's own bottom padding would only add sand to the band the vacated box
+		   already leaves. With it gone the gap from the aligned row to the next section's
+		   first content is the next section's top padding alone — one --section-pad (96px
+		   at 1440), where every other pair of sections has two. Re-measured 2026-09-17 at
+		   1440x900 with the row aligned (its top on the viewport's centre line): the cards'
+		   bottom edge to the Over mij portrait is 96px. */
 		.werkwijze--stairs {
 			padding-bottom: 0;
 		}
