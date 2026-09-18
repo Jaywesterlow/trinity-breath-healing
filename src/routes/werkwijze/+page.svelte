@@ -12,8 +12,8 @@
 	 * BRAND.practice and BRAND.areaServed, never retyped, because the footer and
 	 * the JSON-LD read the same fields and a second copy would drift.
 	 */
-	import { Breadcrumbs, PageTitle } from '$lib/components/ui';
-	import { ButtonLink } from '$lib/components/ui/interactions';
+	import { Breadcrumbs } from '$lib/components/ui';
+	import { PageShell, PageHead, PageSection, CtaBand } from '$lib/components/page';
 	import { BRAND } from '$lib/constants/brand';
 	import { reveal } from '$lib/actions/reveal';
 	import type { PageData } from './$types';
@@ -59,32 +59,27 @@
 
 <Breadcrumbs items={data.crumbs} />
 
-<article class="ww">
-	<!-- Title and lead fade as one block. The steps below keep a reveal per step: the list
-	     is 742px on desktop and 966px on a phone, over the one-third line by a distance. -->
-	<header class="ww__head" use:reveal>
-		<PageTitle>Zo verloopt een sessie</PageTitle>
-		<p class="ww__lead">
-			Van het eerste bericht tot de dagen na een behandeling. Geen verrassingen, want dat is nou net
-			wat niet helpt als je al gespannen binnenkomt.
-		</p>
-	</header>
+<PageShell>
+	<PageHead
+		lead="Van het eerste bericht tot de dagen na een behandeling. Geen verrassingen, want dat is nou net wat niet helpt als je al gespannen binnenkomt."
+	>
+		Zo verloopt een sessie
+	</PageHead>
 
-	<ol class="ww__steps">
+	<!-- Five steps in one row on a wide screen, so the whole route from first
+	     message to afterwards is in view at once; three and two on a laptop,
+	     a column on a phone. Each step keeps its own reveal. -->
+	<ol class="steps">
 		{#each STEPS as step (step.n)}
 			<li class="step" use:reveal>
 				<span class="step__n" aria-hidden="true">{step.n}</span>
-				<div class="step__text">
-					<h2 class="step__title">{step.title}</h2>
-					<p class="step__body">{step.body}</p>
-				</div>
+				<h2 class="step__title">{step.title}</h2>
+				<p class="step__body">{step.body}</p>
 			</li>
 		{/each}
 	</ol>
 
-	<!-- Heading, then a row per fact: the list alone is 364px on desktop. -->
-	<section class="ww__facts" aria-labelledby="praktisch">
-		<h2 id="praktisch" class="ww__h2" use:reveal>Praktisch</h2>
+	<PageSection id="praktisch" title="Praktisch">
 		<dl class="facts">
 			{#each FACTS as fact (fact.label)}
 				<div class="facts__row" use:reveal>
@@ -93,138 +88,107 @@
 				</div>
 			{/each}
 		</dl>
-	</section>
+	</PageSection>
 
-	<!-- The whole closing block as one: heading, body, button and note fit in 276px. -->
-	<section class="ww__cta" aria-labelledby="beginnen" use:reveal>
-		<h2 id="beginnen" class="ww__h2">Beginnen bij het begin</h2>
-		<p class="ww__body">
-			De kennismaking is er om te kijken of het klikt, niet om je iets te verkopen. Kies zelf een
-			moment dat je uitkomt.
-		</p>
-		<div class="ww__button">
-			<ButtonLink label="Plan een kennismaking" href="/contact" />
-		</div>
-		<p class="ww__note">{BRAND.disclaimer}</p>
-	</section>
-</article>
+	<CtaBand
+		id="beginnen"
+		title="Beginnen bij het begin"
+		lead="De kennismaking is er om te kijken of het klikt, niet om je iets te verkopen. Kies zelf een moment dat je uitkomt."
+		label="Plan een kennismaking"
+		href="/contact"
+		note={BRAND.disclaimer}
+	/>
+</PageShell>
 
 <style>
-	/* Every page sits in the same box as the landing page's sections and the
-	   footer below it, so a heading never starts 256px to the right of the logo
-	   directly underneath it. The gutter is added to the max-width rather than
-	   taken out of it (box-sizing is border-box), so the content box is exactly
-	   --container-max. Reading measure is restored on the children, not by
-	   narrowing the box — otherwise the whole page slides right again. */
-	.ww {
-		max-width: calc(var(--container-max) + 3rem);
-		margin: 0 auto;
-		padding: var(--space-8) 1.5rem var(--space-16);
-	}
-
-	/* Reading measure. Direct children only, so a section can opt out by
-	   nesting if it ever needs the full container. */
-	.ww > * {
-		max-width: var(--content-max-width);
-	}
-
-	.ww__head {
-		margin-bottom: var(--space-10);
-	}
-
-	.ww__lead {
-		margin-top: var(--space-4);
-		font-family: var(--font-body);
-		font-size: var(--fs-body-lg);
-		font-weight: var(--font-weight-light);
-		line-height: var(--line-height-normal);
-		color: var(--color-text-subtle);
-	}
-
-	.ww__steps {
+	.steps {
 		list-style: none;
 		margin: 0;
-		padding: 0;
+		padding: 0 0 var(--block-gap);
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: var(--space-8) var(--space-10);
+	}
+
+	/* A rule above each step and the number on it, the way the ledger on the
+	   landing page sets its rows: the rule is what makes five columns read as
+	   one row rather than five loose blocks. */
+	.step {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-8);
+		gap: var(--space-3);
+		padding-top: var(--space-5);
+		border-top: 1px solid color-mix(in srgb, var(--brand-border) 28%, transparent);
 	}
 
-	.step {
-		display: grid;
-		grid-template-columns: auto 1fr;
-		gap: var(--space-5);
-		align-items: start;
-	}
-
-	/* A number in a ring rather than a plain numeral: at this size a bare "01"
-	   next to a heading reads as part of the heading. */
 	.step__n {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		width: 2.75rem;
-		height: 2.75rem;
-		border: 1px solid color-mix(in srgb, var(--brand-border) 40%, transparent);
-		border-radius: var(--radius-full);
 		font-family: var(--font-display);
-		font-size: var(--fs-body-sm);
+		font-size: var(--fs-h3);
+		line-height: 1;
 		color: var(--brand-border);
-		letter-spacing: 0.06em;
+		letter-spacing: 0.04em;
 	}
 
 	.step__title {
+		margin: var(--space-2) 0 0;
 		font-family: var(--font-display);
-		font-size: var(--font-size-2xl);
+		font-size: var(--fs-h3);
 		font-weight: var(--font-weight-medium);
 		line-height: var(--line-height-tight);
 		color: var(--color-fg-forest);
-		margin-bottom: var(--space-2);
 	}
 
-	.step__body,
-	.ww__body {
+	.step__body {
+		margin: 0;
 		font-family: var(--font-body);
 		font-size: var(--fs-body);
-		font-weight: var(--font-weight-light);
-		line-height: var(--line-height-normal);
+		line-height: var(--line-height-loose);
 		color: var(--color-text-subtle);
 	}
 
-	.ww__facts,
-	.ww__cta {
-		margin-top: var(--block-gap);
+	@media (min-width: 700px) {
+		.steps {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
 	}
 
-	.ww__h2 {
-		font-family: var(--font-display);
-		font-size: var(--fs-h2);
-		font-weight: var(--font-weight-medium);
-		line-height: var(--line-height-tight);
-		color: var(--color-fg-forest);
-		margin-bottom: var(--space-5);
+	@media (min-width: 1100px) {
+		.steps {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+
+	@media (min-width: 1536px) {
+		.steps {
+			grid-template-columns: repeat(5, minmax(0, 1fr));
+		}
 	}
 
 	.facts {
 		margin: 0;
-		display: flex;
-		flex-direction: column;
+		display: grid;
+		gap: 0;
+		/* Two facts per row on desktop: the dl is the section's content column,
+		   so this is what fills it. */
+		grid-template-columns: 1fr;
 	}
 
 	.facts__row {
 		display: grid;
-		gap: var(--space-1);
+		grid-template-columns: minmax(7rem, 1fr) minmax(0, 3fr);
+		gap: var(--space-4);
 		padding: var(--space-4) 0;
-		border-top: 1px solid color-mix(in srgb, var(--brand-border) 25%, transparent);
+		border-top: 1px solid color-mix(in srgb, var(--brand-border) 20%, transparent);
 	}
 
-	.facts__row:last-child {
-		border-bottom: 1px solid color-mix(in srgb, var(--brand-border) 25%, transparent);
+	.facts__row:first-child {
+		border-top: none;
+		padding-top: 0;
 	}
 
 	.facts dt {
 		font-family: var(--font-display);
-		font-size: var(--font-size-xl);
+		font-size: var(--fs-body-lg);
 		color: var(--color-fg-forest);
 	}
 
@@ -232,31 +196,7 @@
 		margin: 0;
 		font-family: var(--font-body);
 		font-size: var(--fs-body);
-		font-weight: var(--font-weight-light);
-		line-height: var(--line-height-normal);
+		line-height: var(--line-height-loose);
 		color: var(--color-text-subtle);
-	}
-
-	.ww__button {
-		margin-top: var(--space-6);
-	}
-
-	.ww__note {
-		margin-top: var(--space-8);
-		padding-left: var(--space-4);
-		border-left: 2px solid var(--brand-border);
-		font-family: var(--font-body);
-		font-size: var(--fs-body-sm);
-		font-weight: var(--font-weight-light);
-		line-height: var(--line-height-normal);
-		color: var(--color-text-subtle);
-	}
-
-	@media (min-width: 768px) {
-		.facts__row {
-			grid-template-columns: 12rem 1fr;
-			gap: var(--space-6);
-			align-items: baseline;
-		}
 	}
 </style>
