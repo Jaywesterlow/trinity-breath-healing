@@ -3,7 +3,7 @@
 	import { reveal } from '$lib/actions/reveal';
 	import { BRAND } from '$lib/constants/brand';
 	import TreatmentCard from '$lib/components/ui/TreatmentCard.svelte';
-	import ServiceModal from '$lib/components/ui/ServiceModal.svelte';
+	import ServiceModal, { type ServiceArt } from '$lib/components/ui/ServiceModal.svelte';
 	import BehandelingenNote from './BehandelingenNote.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 
@@ -19,6 +19,19 @@
 		'mahatma-healing': '/images/card-mahatma-healing.svg',
 		goldhealing: '/images/card-goldhealing.svg',
 		'spinal-touch': '/images/card-spinal-touch.svg'
+	};
+
+	// Where the drawing sits inside each SVG, as fractions of the viewBox,
+	// plus the drawing's own width/height. Measured with getBBox() on the
+	// rendered SVG (mahatma 4096×2235 → drawing 994×1724 at 1553,258;
+	// goldhealing 1760×960 → 592×587 at 583,187; spinal-touch 1418×774 →
+	// 380×613 at 518,82). The modal uses these to show the drawing, not the
+	// SVG's empty margins, so all three fill the same height. Re-measure if
+	// an SVG is replaced.
+	const ART: Record<string, ServiceArt> = {
+		'mahatma-healing': { x: 0.3791, y: 0.1153, w: 0.2426, h: 0.7712, ratio: 0.5765 },
+		goldhealing: { x: 0.3314, y: 0.195, w: 0.3363, h: 0.6117, ratio: 1.0078 },
+		'spinal-touch': { x: 0.365, y: 0.1061, w: 0.2681, h: 0.7919, ratio: 0.6203 }
 	};
 
 	// buttonLabel is placeholder copy, not final — see TreatmentCard.svelte.
@@ -1321,6 +1334,7 @@
 		intro: s.intro,
 		helpsWith: s.helpsWith,
 		icon: ICONS[s.slug] ?? null,
+		art: ART[s.slug],
 		number: ICONS[s.slug] ? undefined : i + 1
 	}));
 

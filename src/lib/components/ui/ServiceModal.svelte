@@ -22,12 +22,34 @@
 	 * what the pa11y-ci gate in CI exists to catch.
 	 */
 
+	import ButtonLink from './interactions/ButtonLink.svelte';
+
+	/**
+	 * Where the drawing actually is inside its SVG. The three card SVGs are
+	 * mostly empty: the line art sits centred in a viewBox two to four times
+	 * its own width, so an <img> sized to the box shows a small drawing with
+	 * a lot of nothing around it, and a different amount of nothing per
+	 * service. `x/y/w/h` are the drawing's bounding box as fractions of the
+	 * viewBox (getBBox() on the rendered SVG, see Behandelingen's ART map);
+	 * `ratio` is the drawing's own width/height. The media cell below sizes
+	 * itself to the drawing and shifts the SVG inside it so only the drawing
+	 * shows — every service's art then fills the same height.
+	 */
+	export interface ServiceArt {
+		x: number;
+		y: number;
+		w: number;
+		h: number;
+		ratio: number;
+	}
+
 	export interface ServiceModalItem {
 		slug: string;
 		name: string;
 		intro: string;
 		helpsWith: readonly string[];
 		icon: string | null;
+		art?: ServiceArt;
 		number?: number;
 	}
 
@@ -78,6 +100,12 @@
 		onContentPointerDown,
 		onContentClickCapture
 	}: Props = $props();
+
+	/* The tooltips on Prev/Next name the destination, not the direction: the
+	   order of the seven is not something a reader knows. */
+	const count = $derived(services.length);
+	const prevName = $derived(services[(activeIndex - 1 + count) % count]?.name ?? '');
+	const nextName = $derived(services[(activeIndex + 1) % count]?.name ?? '');
 </script>
 
 <!-- Stands in for the native ::backdrop pseudo-element — see its own CSS
@@ -100,12 +128,24 @@
 	oncancel={onCancel}
 	onclick={onBackdropClick}
 >
-	<button type="button" class="service-modal__close" onclick={onClose} aria-label="Sluiten">
-		<svg width="18" height="18" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+	<!-- The three controls are the treatment card's arrow circle (see
+	     TreatmentCard.svelte, .tcard__arrow): a thin ring in the text colour
+	     that grows a halo and fills on hover. Prev/Next also run the shared
+	     arrow swap from app.css, in the direction they go, the same way the
+	     carousel's own Vorige/Volgende do. The close button keeps a still
+	     cross: a cross has no direction to leave in. -->
+	<button
+		type="button"
+		class="service-modal__close service-modal__control"
+		onclick={onClose}
+		aria-label="Sluiten"
+		data-tooltip="Sluiten"
+	>
+		<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
 			<path
-				d="M5 5L17 17M17 5L5 17"
+				d="M4 4L12 12M12 4L4 12"
 				stroke="currentColor"
-				stroke-width="2"
+				stroke-width="1.5"
 				stroke-linecap="round"
 			/>
 		</svg>
@@ -113,35 +153,63 @@
 
 	<button
 		type="button"
-		class="service-modal__nav service-modal__nav--prev"
+		class="service-modal__nav service-modal__nav--prev service-modal__control arrow-swap roll-host"
 		onclick={onPrev}
-		aria-label="Vorige behandeling"
+		aria-label={`Vorige behandeling: ${prevName}`}
+		data-tooltip={`Vorige: ${prevName}`}
 	>
-		<svg width="16" height="16" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-			<path
-				d="M14 4L6 11L14 18"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			/>
-		</svg>
+		<span class="arrow-swap__glyph arrow-swap__glyph--out">
+			<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+				<path
+					d="M11 8H3M3 8L6.5 4.5M3 8L6.5 11.5"
+					stroke="currentColor"
+					stroke-width="1.5"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
+			</svg>
+		</span>
+		<span class="arrow-swap__glyph arrow-swap__glyph--in">
+			<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+				<path
+					d="M11 8H3M3 8L6.5 4.5M3 8L6.5 11.5"
+					stroke="currentColor"
+					stroke-width="1.5"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
+			</svg>
+		</span>
 	</button>
 	<button
 		type="button"
-		class="service-modal__nav service-modal__nav--next"
+		class="service-modal__nav service-modal__nav--next service-modal__control arrow-swap roll-host"
 		onclick={onNext}
-		aria-label="Volgende behandeling"
+		aria-label={`Volgende behandeling: ${nextName}`}
+		data-tooltip={`Volgende: ${nextName}`}
 	>
-		<svg width="16" height="16" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-			<path
-				d="M8 4L16 11L8 18"
-				stroke="currentColor"
-				stroke-width="2"
-				stroke-linecap="round"
-				stroke-linejoin="round"
-			/>
-		</svg>
+		<span class="arrow-swap__glyph arrow-swap__glyph--out">
+			<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+				<path
+					d="M5 8H13M13 8L9.5 4.5M13 8L9.5 11.5"
+					stroke="currentColor"
+					stroke-width="1.5"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
+			</svg>
+		</span>
+		<span class="arrow-swap__glyph arrow-swap__glyph--in">
+			<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+				<path
+					d="M5 8H13M13 8L9.5 4.5M13 8L9.5 11.5"
+					stroke="currentColor"
+					stroke-width="1.5"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+				/>
+			</svg>
+		</span>
 	</button>
 
 	<!-- onpointerdown below is a passive swipe-gesture listener, not a
@@ -158,33 +226,51 @@
 		onpointerdown={onContentPointerDown}
 		onclickcapture={onContentClickCapture}
 	>
-		{#each services as service, idx (service.slug)}
-			<section class="service-modal__panel" hidden={idx !== activeIndex}>
-				<h3 id={`service-modal-title-${service.slug}`} class="service-modal__title">
-					{service.name}
-				</h3>
-				<p class="service-modal__intro">{service.intro}</p>
+		<!-- The panels scroll (on a phone) inside this box; the disclaimer
+		     below it never does. Its size is the container the art measures
+		     itself against, see .service-modal__art. -->
+		<div class="service-modal__panels">
+			{#each services as service, idx (service.slug)}
+				<section class="service-modal__panel" hidden={idx !== activeIndex}>
+					<div class="service-modal__text">
+						<h3 id={`service-modal-title-${service.slug}`} class="service-modal__title">
+							{service.name}
+						</h3>
+						<p class="service-modal__intro">{service.intro}</p>
+						<div class="service-modal__cta">
+							<ButtonLink label="Naar de pagina" href={`/diensten/${service.slug}`} />
+						</div>
+					</div>
 
-				<div class="service-modal__media">
-					{#if service.icon}
-						<img src={service.icon} alt="" aria-hidden="true" class="service-modal__icon" />
-					{:else if service.number}
-						<span class="service-modal__number" aria-hidden="true">{service.number}</span>
-					{/if}
-				</div>
+					<div class="service-modal__media">
+						{#if service.icon && service.art}
+							<!-- The drawing's box, not the SVG's: the img is scaled so the
+							     drawing fills this box and shifted so the SVG's empty margins
+							     fall outside it. See ServiceArt above for the numbers. -->
+							<div
+								class="service-modal__art"
+								style={`--art-x: ${service.art.x}; --art-y: ${service.art.y}; --art-w: ${service.art.w}; --art-h: ${service.art.h}; --art-ratio: ${service.art.ratio};`}
+							>
+								<img src={service.icon} alt="" aria-hidden="true" class="service-modal__icon" />
+							</div>
+						{:else if service.icon}
+							<img src={service.icon} alt="" aria-hidden="true" class="service-modal__icon-plain" />
+						{:else if service.number}
+							<span class="service-modal__number" aria-hidden="true">{service.number}</span>
+						{/if}
+					</div>
 
-				<div class="service-modal__helps">
-					<h4 class="service-modal__helps-title">Helpt bij</h4>
-					<ul class="service-modal__helps-list">
-						{#each service.helpsWith as item (item)}
-							<li>{item}</li>
-						{/each}
-					</ul>
-				</div>
-
-				<a class="service-modal__cta" href={`/diensten/${service.slug}`}>Naar de pagina</a>
-			</section>
-		{/each}
+					<div class="service-modal__helps">
+						<h4 class="service-modal__helps-title">Helpt bij</h4>
+						<ul class="service-modal__helps-list">
+							{#each service.helpsWith as item (item)}
+								<li>{item}</li>
+							{/each}
+						</ul>
+					</div>
+				</section>
+			{/each}
+		</div>
 
 		<p class="service-modal__disclaimer">{disclaimer}</p>
 	</div>
@@ -266,65 +352,100 @@
 		z-index: 200;
 	}
 
-	.service-modal__close,
-	.service-modal__nav {
+	/* ─── The three controls: the card's arrow circle ─────────────────────
+	   Numbers copied from .tcard__arrow in TreatmentCard.svelte (2.625rem,
+	   1px ring in the text colour, a 9px halo at 38% sand and a sand fill
+	   with the glyph turning green on hover). Scoped styles cannot be shared,
+	   so the values are repeated here; change them in both places or in
+	   neither. The card also grows a smaller halo when the card itself is
+	   hovered — there is no equivalent state in a dialog, so that one is
+	   left out. */
+	.service-modal__control {
 		position: absolute;
-		display: grid;
-		place-items: center;
-		width: var(--space-10);
-		height: var(--space-10);
-		border: none;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 2.625rem;
+		height: 2.625rem;
+		padding: 0;
+		border-radius: var(--radius-full);
+		border: 1px solid currentColor;
 		background: transparent;
 		color: inherit;
 		cursor: pointer;
+		box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-bg-sand) 0%, transparent);
+		transition:
+			background-color var(--motion-arrow) var(--ease-arrow),
+			color var(--motion-arrow) var(--ease-arrow),
+			box-shadow var(--motion-hover) var(--ease-hover);
 	}
 
-	/* Close keeps its circular button chrome (the one control here that
-	   isn't paired with an obvious "this is clickable" affordance like an
-	   arrow shape already implies motion) — Prev/Next below deliberately
-	   don't, per a direct owner request to remove the circles around them. */
+	.service-modal__control svg {
+		width: 21px;
+		height: 21px;
+	}
+
+	.service-modal__control:focus-visible {
+		box-shadow: 0 0 0 9px color-mix(in srgb, var(--color-bg-sand) 38%, transparent);
+		background: var(--color-bg-sand);
+		color: var(--color-brand-green);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.service-modal__control:hover {
+			box-shadow: 0 0 0 9px color-mix(in srgb, var(--color-bg-sand) 38%, transparent);
+			background: var(--color-bg-sand);
+			color: var(--color-brand-green);
+		}
+	}
+
+	/* Phone: all three in one row at the top right, close on the outside,
+	   because at the dialog's sides they sat on top of the text. Desktop
+	   moves Prev/Next back to the sides below. The swap runs along the
+	   arrow's own axis, the same vector the carousel's Vorige/Volgende use. */
 	.service-modal__close {
 		top: var(--space-4);
 		right: var(--space-4);
-		border-radius: var(--radius-full);
-		border: 1px solid currentColor;
-		transition: background-color var(--motion-fast);
-	}
-
-	@media (hover: hover) and (pointer: fine) {
-		.service-modal__close:hover {
-			background: var(--color-fg-forest-92);
-		}
-	}
-
-	/* Bare arrows, no circle/border — opacity is the only hover affordance
-	   left once the circle (and its own hover background) is gone. */
-	@media (hover: hover) and (pointer: fine) {
-		.service-modal__nav:hover {
-			opacity: 0.65;
-		}
-	}
-
-	/* Vertically centred against the dialog's own left/right edge, per the plan. */
-	.service-modal__nav--prev {
-		top: 50%;
-		left: var(--space-4);
-		transform: translateY(-50%);
 	}
 
 	.service-modal__nav--next {
-		top: 50%;
-		right: var(--space-4);
-		transform: translateY(-50%);
+		top: var(--space-4);
+		right: calc(var(--space-4) + 2.625rem + var(--space-3));
+		--swap-x: var(--arrow-roll);
+		--swap-y: 0px;
 	}
 
+	.service-modal__nav--prev {
+		top: var(--space-4);
+		right: calc(var(--space-4) + 2 * (2.625rem + var(--space-3)));
+		--swap-x: calc(-1 * var(--arrow-roll));
+		--swap-y: 0px;
+	}
+
+	/* ─── Content: panels above, disclaimer pinned below ──────────────────
+	   The disclaimer is the one line the owner wants under everything on
+	   every screen, never overlapped and never scrolled away — so it is a
+	   flex sibling of the scrolling panels box, not the last item inside it.
+	   Room for the absolutely-positioned close/prev/next buttons so text
+	   never runs under them. */
 	.service-modal__content {
 		flex: 1;
 		min-height: 0;
+		display: flex;
+		flex-direction: column;
+		/* Top clears the control row; the sides are the dialog's own padding
+		   plus a little, since nothing sits beside the text on a phone. */
+		padding: calc(var(--space-4) + 2.625rem + var(--space-4)) var(--space-4) 0;
+	}
+
+	.service-modal__panels {
+		flex: 1;
+		min-height: 0;
 		overflow-y: auto;
-		/* Room for the absolutely-positioned close/prev/next buttons so text
-		   never runs under them. */
-		padding: var(--space-10) var(--space-10) 0;
+		/* The art measures itself against this box (cqh/cqw below), so it
+		   has to be a size container. Its size comes from the flex line
+		   above, never from its content, which is what containment needs. */
+		container-type: size;
 		/* Mobile scrolls by touch, not by dragging a visible scrollbar thumb —
 		   a first attempt shrank this element (margin-right) so its own
 		   scrollbar, which paints at its border-box edge regardless of
@@ -341,77 +462,102 @@
 		-ms-overflow-style: none; /* legacy Edge */
 	}
 
-	.service-modal__content::-webkit-scrollbar {
+	.service-modal__panels::-webkit-scrollbar {
 		display: none; /* Chrome/Safari/mobile WebKit */
 	}
 
+	/* The author display rules below would otherwise beat the UA's
+	   [hidden] { display: none } by cascade origin, and all seven panels
+	   would show at once. */
+	.service-modal__panel[hidden] {
+		display: none;
+	}
+
+	/* Phone: one column, the drawing first and as tall as the screen allows
+	   without pushing the title out of the first view, then the text. The
+	   drawing is not a background: the text and the line art are both sand,
+	   and sand on sand is nothing. */
 	.service-modal__panel {
-		display: grid;
-		/* Without this, the single implicit column sizes itself to its
-		   widest content (auto), not the full available width — which left
-		   .service-modal__media's own width: 100% resolving against a column
-		   narrower than the actual content area (measured: 224px of 304px
-		   available). 1fr stretches the column itself first. Reset at the
-		   1024px breakpoint below, which declares its own 3-column template. */
-		grid-template-columns: 1fr;
-		/* Mobile order: image first, then title/intro/helps/cta — reset
-		   entirely at the 1024px breakpoint below, which defines its own
-		   3-column layout rather than reordering this one. */
-		grid-template-areas:
-			'media'
-			'title'
-			'intro'
-			'helps'
-			'cta';
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-5);
+		min-height: 100%;
+	}
+
+	.service-modal__text {
+		display: flex;
+		flex-direction: column;
 		gap: var(--space-4);
+		order: 2;
 	}
 
 	.service-modal__title {
-		grid-area: title;
 		margin: 0;
 		font-family: var(--font-display);
-		font-size: var(--fs-h3);
+		font-size: var(--fs-h2);
 		font-weight: var(--font-weight-medium);
 		line-height: var(--line-height-tight);
 	}
 
 	.service-modal__intro {
-		grid-area: intro;
 		margin: 0;
 		font-family: var(--font-body);
 		font-size: var(--fs-body);
 		line-height: var(--line-height-loose);
 	}
 
+	.service-modal__cta {
+		margin-top: var(--space-2);
+	}
+
 	.service-modal__media {
-		grid-area: media;
+		order: 1;
 		display: grid;
 		place-items: center;
-		/* Mobile: full-width square (owner request, "a lot bigger") — reset to
-		   the original, unconstrained sizing at the 1024px breakpoint below,
-		   where media sits in its own narrower grid column instead. */
-		width: 100%;
-		aspect-ratio: 1 / 1;
+		flex: none;
+		height: min(38cqh, 22rem);
+	}
+
+	/* The drawing's own box: as tall as the media cell, as wide as the
+	   drawing's ratio makes it, and clipped, with the SVG inside scaled up
+	   by 1/--art-w × 1/--art-h and pulled up and left by the margins so the
+	   drawing lands exactly in the box. The two scale factors describe the
+	   same SVG, so its aspect ratio is untouched. */
+	.service-modal__art {
+		position: relative;
+		height: 100%;
+		max-width: 100%;
+		aspect-ratio: var(--art-ratio);
+		overflow: hidden;
 	}
 
 	.service-modal__icon {
-		/* Fills the now-square media box; object-fit: contain keeps the
-		   artwork's own aspect ratio intact (most icons aren't square
-		   themselves) rather than stretching it to fill the square. */
-		width: 100%;
+		position: absolute;
+		display: block;
+		width: calc(100% / var(--art-w));
+		height: calc(100% / var(--art-h));
+		max-width: none;
+		left: calc(-100% * var(--art-x) / var(--art-w));
+		top: calc(-100% * var(--art-y) / var(--art-h));
+	}
+
+	/* A service whose drawing has no measured box yet: plain contain. */
+	.service-modal__icon-plain {
 		height: 100%;
+		width: auto;
+		max-width: 100%;
 		object-fit: contain;
 	}
 
 	.service-modal__number {
 		font-family: var(--font-display);
-		font-size: clamp(3rem, 8vw, 5rem);
+		font-size: min(30cqh, 6rem);
 		font-weight: var(--font-weight-medium);
 		line-height: 1;
 	}
 
 	.service-modal__helps {
-		grid-area: helps;
+		order: 3;
 	}
 
 	.service-modal__helps-title {
@@ -438,23 +584,9 @@
 		line-height: var(--line-height-normal);
 	}
 
-	.service-modal__cta {
-		grid-area: cta;
-		justify-self: start;
-		display: inline-block;
-		margin-top: var(--space-2);
-		padding: var(--space-2) var(--space-5);
-		border-radius: var(--radius-full);
-		background: var(--color-accent-gold);
-		color: var(--color-fg-forest);
-		font-family: var(--font-body);
-		font-size: var(--fs-cta);
-		font-weight: var(--font-weight-medium);
-		text-decoration: none;
-	}
-
 	.service-modal__disclaimer {
-		margin: var(--space-8) 0 var(--space-6);
+		flex: none;
+		margin: var(--space-4) 0 var(--space-4);
 		padding-top: var(--space-4);
 		border-top: 1px solid var(--color-bg-sand-25);
 		font-family: var(--font-body);
@@ -463,47 +595,103 @@
 		opacity: 0.8;
 	}
 
+	/* Desktop: the drawing in the middle at the full height of the panel,
+	   the title, intro and button to its left and the list to its right,
+	   both gathered against it and centred on its axis. The drawing's width
+	   follows its ratio from that height, capped so the two text columns
+	   always keep room; the columns take the rest. */
 	@media (min-width: 1024px) {
+		.service-modal__content {
+			padding: var(--space-8) var(--space-10) 0;
+		}
+
+		/* Vertically centred against the dialog's own left/right edge. */
+		.service-modal__nav--prev {
+			top: 50%;
+			right: auto;
+			left: var(--space-4);
+			transform: translateY(-50%);
+		}
+
+		.service-modal__nav--next {
+			top: 50%;
+			right: var(--space-4);
+			transform: translateY(-50%);
+		}
+
 		.service-modal__panel {
-			grid-template-columns: 1fr auto 1fr;
-			grid-template-areas:
-				'title media helps'
-				'intro media helps'
-				'cta   media helps';
-			align-items: start;
-			column-gap: var(--space-10);
+			display: grid;
+			grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+			grid-template-rows: minmax(0, 1fr);
+			align-items: center;
+			column-gap: clamp(2.5rem, 4vw, 5rem);
+			height: 100%;
+			min-height: 0;
 		}
 
-		.service-modal__cta {
-			align-self: start;
+		.service-modal__panel[hidden] {
+			display: none;
 		}
 
-		/* The full-width square above is a mobile-only concession to a small
-		   viewport ("a lot bigger" was specifically a mobile complaint) —
-		   restore the original width-capped, auto-height sizing here, where
-		   media sits in its own narrower column next to title/intro and helps
-		   instead of spanning the full content width. */
+		.service-modal__text {
+			order: 0;
+			justify-self: end;
+			max-width: 46ch;
+			gap: var(--space-5);
+		}
+
+		.service-modal__intro {
+			font-size: var(--fs-body-lg);
+		}
+
 		.service-modal__media {
-			width: auto;
-			aspect-ratio: auto;
-			min-height: 8rem;
+			order: 0;
+			height: 100%;
+			min-height: 0;
 		}
 
-		.service-modal__icon {
-			width: 100%;
-			max-width: 12rem;
+		.service-modal__art {
+			width: min(calc(94cqh * var(--art-ratio)), 34cqw);
+			/* Height follows the width through the ratio, so a wide drawing on
+			   a narrow screen shrinks instead of overflowing. The phone rule's
+			   max-width: 100% must not apply here: against the auto grid track
+			   it resolves circularly and clamps the drawing to a fraction of
+			   its size. */
+			max-width: none;
 			height: auto;
+		}
+
+		.service-modal__icon-plain {
+			height: 94cqh;
+			max-width: 34cqw;
+		}
+
+		/* Cormorant's digits sit well inside the em box, so the size is well
+		   over the cell height to get a glyph that fills most of it. */
+		.service-modal__number {
+			font-size: min(92cqh, 28cqw);
+		}
+
+		.service-modal__helps {
+			order: 0;
+			justify-self: start;
+			max-width: 36ch;
+		}
+
+		.service-modal__helps-list {
+			font-size: var(--fs-body);
+			gap: var(--space-2);
 		}
 
 		/* Restore a visible scrollbar at this breakpoint — the hide is a
 		   mobile-only concession to the touch-scroll pattern (see its own
 		   comment); desktop's mouse/trackpad users benefit from seeing one. */
-		.service-modal__content {
+		.service-modal__panels {
 			scrollbar-width: auto;
 			-ms-overflow-style: auto;
 		}
 
-		.service-modal__content::-webkit-scrollbar {
+		.service-modal__panels::-webkit-scrollbar {
 			display: block;
 		}
 	}
