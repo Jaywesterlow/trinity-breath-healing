@@ -6,9 +6,10 @@
 
 	const NAV_LINKS = [
 		{ path: '/', label: 'Home' },
+		{ path: '/behandelingen', label: 'Behandelingen' },
+		{ path: '/diensten', label: 'Diensten' },
 		{ path: '/werkwijze', label: 'Werkwijze' },
 		{ path: '/over-mij', label: 'Over mij' },
-		{ path: '/behandelingen', label: 'Behandelingen' },
 		{ path: '/contact', label: 'Contact' }
 	] as const;
 

@@ -63,7 +63,7 @@
 		font-weight: var(--font-weight-medium);
 		line-height: var(--line-height-tight);
 		color: var(--color-fg-forest);
-		max-width: 20ch;
+		max-width: 22ch;
 		text-wrap: balance;
 	}
 
@@ -81,6 +81,7 @@
 		display: grid;
 		place-items: center;
 		height: 14rem;
+		overflow: hidden;
 	}
 
 	@media (min-width: 1100px) {

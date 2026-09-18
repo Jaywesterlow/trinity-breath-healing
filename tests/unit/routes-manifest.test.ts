@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { ALL_ROUTES } from '$lib/constants/routes';
 
 describe('ALL_ROUTES manifest', () => {
-	it('contains exactly 18 entries (260810-mdl: +3 service stubs)', () => {
-		expect(ALL_ROUTES.length).toBe(20);
+	it('contains exactly 18 entries (2026-09-18: /faq merged into /contact, /blog dropped)', () => {
+		expect(ALL_ROUTES.length).toBe(18);
 	});
 
 	it('paths match the reserved route list, in order', () => {
@@ -22,9 +22,7 @@ describe('ALL_ROUTES manifest', () => {
 			'/diensten/spinal-touch',
 			'/diensten/brtt-body',
 			'/diensten/trb-breathwork',
-			'/blog',
 			'/artikelen',
-			'/faq',
 			'/privacyverklaring',
 			'/algemene-voorwaarden',
 			'/disclaimer',

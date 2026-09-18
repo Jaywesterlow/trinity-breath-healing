@@ -36,8 +36,9 @@ const CEILING: Record<string, number> = {
 	'/behandelingen': 18,
 	'/diensten': 18,
 	'/diensten/spinal-touch': 30,
-	'/contact': 14,
-	'/faq': 20
+	/* The FAQ moved onto /contact on 2026-09-18 (was /faq, ceiling 20): the page is
+	   now head + planner + the accordion, so its ceiling is the sum of the two. */
+	'/contact': 34
 };
 
 type Revealed = { sel: string; height: number; width: number };

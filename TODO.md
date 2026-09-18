@@ -24,7 +24,7 @@ machine can check is checked, and anything it cannot is dated.
 |---|---|
 | **Homepage contact form + date planner** | **Finished and pushed.** Three-step wizard, square tiles at every width, both panels locked to one height, mobile-first. Cal.com dropped; the site owns booking. Nothing outstanding in the component itself. |
 | **Pre-launch audit** | **Done.** CSP, security headers, self-hosted fonts, stubs out of the sitemap and noindexed, custom 404. |
-| **Page list / sitemap** | **20 routes** in `src/lib/constants/routes.ts`, **16 published** as of 2026-09-09. Eleven graduated that day: the seven modalities under `/diensten/`, their `/diensten` index, `/behandelingen`, `/werkwijze` and `/contact`. Four are still stubs — `/over-mij`, `/blog`, `/artikelen`, `/reviews` — noindexed and out of the sitemap until they carry something. |
+| **Page list / sitemap** | **18 routes** in `src/lib/constants/routes.ts`, **15 published** as of 2026-09-18. Eleven graduated on 2026-09-09: the seven modalities under `/diensten/`, their `/diensten` index, `/behandelingen`, `/werkwijze` and `/contact`. On 2026-09-18 `/faq` merged into `/contact#faq` (301) and `/blog` was dropped. Three are still stubs — `/over-mij`, `/artikelen`, `/reviews` — noindexed and out of the sitemap until they carry something. |
 | **Legal pages + OG image + favicons + Plausible** | **Done and pushed.** |
 | **Booking approval + slot blocking** | **Live.** A requested slot greys out at once; she approves or declines from her inbox; approval sends a calendar invite, a decline reopens the slot. Supabase holds only date, time and status — no name, e-mail or klachten. |
 | **Homepage redesign** | **Recorded below, not started.** Waiting on an approved layout. |
@@ -197,7 +197,7 @@ modal image animation.
 - [x] **Service page template — built 2026-09-09**, one `ServicePage.svelte` for all
       seven, copy taken from `BRAND.services` rather than written fresh.
 - [ ] `/reviews` — needs her reviews first; carries Review + AggregateRating JSON-LD
-- [ ] `/blog`, `/artikelen` — only worth it once there is something to put in them
+- [ ] `/artikelen` — only worth it once there is something to put in it (`/blog` dropped 2026-09-18: one home for written pieces, not two)
 - [ ] Resubmit the sitemap in Search Console — it went from 5 URLs to 16
 
 ---

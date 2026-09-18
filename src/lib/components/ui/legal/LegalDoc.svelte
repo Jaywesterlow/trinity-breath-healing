@@ -13,7 +13,9 @@
 	 * weighs it most.
 	 */
 	import type { Snippet } from 'svelte';
-	import { Breadcrumbs, PageTitle } from '$lib/components/ui';
+	import { Breadcrumbs } from '$lib/components/ui';
+	import { PageShell, PageHead } from '$lib/components/page';
+	import { BRAND } from '$lib/constants/brand';
 
 	let {
 		title,
@@ -39,89 +41,105 @@
 
 <Breadcrumbs items={crumbs} />
 
-<article class="legal">
-	<header class="legal__header">
-		<PageTitle>{title}</PageTitle>
-		<p class="legal__lead">{lead}</p>
-		<p class="legal__meta">
-			Laatst bijgewerkt op <time datetime={lastUpdated}>{printed}</time>
-		</p>
-	</header>
+<PageShell>
+	<PageHead {lead}>{title}</PageHead>
 
-	<div class="legal__body">
-		{@render children()}
+	<!-- The document beside a narrow column that stays put: when it was last
+	     changed, and who to ask. The text itself keeps a reading measure; the
+	     page no longer leaves two thirds of a wide screen empty for it. -->
+	<div class="legal">
+		<aside class="legal__aside">
+			<p class="legal__meta">
+				<span class="legal__meta-label">Laatst bijgewerkt</span>
+				<time datetime={lastUpdated}>{printed}</time>
+			</p>
+			<p class="legal__meta">
+				<span class="legal__meta-label">Vragen hierover</span>
+				<a class="link-underline" href="mailto:{BRAND.email}">{BRAND.email}</a>
+			</p>
+		</aside>
+		<div class="legal__body">
+			{@render children()}
+		</div>
 	</div>
-</article>
+</PageShell>
 
 <style>
-	/* Every page sits in the same box as the landing page's sections and the
-	   footer below it, so a heading never starts 256px to the right of the logo
-	   directly underneath it. The gutter is added to the max-width rather than
-	   taken out of it (box-sizing is border-box), so the content box is exactly
-	   --container-max. Reading measure is restored on the children, not by
-	   narrowing the box — otherwise the whole page slides right again. */
 	.legal {
-		max-width: calc(var(--container-max) + 3rem);
-		margin: 0 auto;
-		padding: clamp(1.5rem, 6vw, 3rem) 1.5rem clamp(3rem, 10vw, 5rem);
-		color: var(--color-fg-forest, #3a4530);
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-8);
+		padding-top: var(--block-gap);
+		border-top: 1px solid color-mix(in srgb, var(--brand-border) 28%, transparent);
+		color: var(--color-fg-forest);
 	}
 
-	/* Reading measure. Direct children only, so a section can opt out by
-	   nesting if it ever needs the full container. */
-	.legal > * {
-		max-width: var(--content-max-width);
-	}
-
-	.legal__header {
-		padding-bottom: clamp(1rem, 4vw, 1.5rem);
-		border-bottom: 1px solid var(--brand-border, #7c5e49);
-		margin-bottom: clamp(1.5rem, 5vw, 2.5rem);
-	}
-
-	.legal__lead {
-		margin-top: 0.75rem;
-		font-size: 1.0625rem;
-		line-height: 1.65;
-		color: var(--brand-muted, #5f6d56);
+	.legal__aside {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-5);
 	}
 
 	.legal__meta {
-		margin-top: 1rem;
-		font-size: 0.8125rem;
-		color: var(--brand-muted, #5f6d56);
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-1);
+		font-family: var(--font-body);
+		font-size: var(--fs-body-sm);
+		color: var(--color-text-subtle);
+	}
+
+	.legal__meta-label {
+		font-family: var(--font-display);
+		font-size: var(--fs-body-lg);
+		color: var(--color-fg-forest);
+	}
+
+	.legal__body {
+		min-width: 0;
+		max-width: 70ch;
 	}
 
 	/* Descendant selectors, so the pages can write plain semantic markup instead
 	   of carrying a class on every paragraph. :global is required because the
 	   content is passed in as a snippet and compiled in the parent's scope. */
 	.legal__body :global(h2) {
-		font-family: var(--font-display, serif);
-		font-size: clamp(1.25rem, 4vw, 1.5rem);
-		line-height: 1.25;
-		margin: clamp(2rem, 6vw, 2.75rem) 0 0.75rem;
+		margin: var(--space-10) 0 var(--space-3);
+		font-family: var(--font-display);
+		font-size: var(--fs-h3);
+		font-weight: var(--font-weight-medium);
+		line-height: var(--line-height-tight);
+		color: var(--color-fg-forest);
+	}
+
+	.legal__body :global(h2:first-child) {
+		margin-top: 0;
 	}
 
 	.legal__body :global(h3) {
-		font-size: 1rem;
-		font-weight: 600;
-		margin: 1.5rem 0 0.5rem;
+		margin: var(--space-6) 0 var(--space-2);
+		font-family: var(--font-body);
+		font-size: var(--fs-body);
+		font-weight: var(--font-weight-medium);
+		color: var(--color-fg-forest);
 	}
 
 	.legal__body :global(p),
 	.legal__body :global(li) {
-		font-size: 1rem;
-		line-height: 1.7;
-		color: var(--brand-muted, #5f6d56);
+		font-family: var(--font-body);
+		font-size: var(--fs-body);
+		line-height: var(--line-height-loose);
+		color: var(--color-text-subtle);
 	}
 
 	.legal__body :global(p) {
-		margin-bottom: 1rem;
+		margin: 0 0 var(--space-4);
 	}
 
 	.legal__body :global(ul),
 	.legal__body :global(ol) {
-		margin: 0 0 1rem 1.25rem;
+		margin: 0 0 var(--space-4) var(--space-5);
 		padding: 0;
 	}
 
@@ -134,48 +152,51 @@
 	}
 
 	.legal__body :global(li) {
-		margin-bottom: 0.375rem;
+		margin-bottom: var(--space-2);
 	}
 
 	.legal__body :global(a) {
-		color: var(--color-fg-forest, #3a4530);
+		color: var(--brand-border);
 		text-decoration: underline;
+		text-underline-offset: 0.15em;
 	}
 
-	@media (hover: hover) and (pointer: fine) {
-		.legal__body :global(a:hover) {
-			text-decoration: none;
-		}
+	.legal__body :global(a:hover) {
+		text-decoration: none;
 	}
 
 	.legal__body :global(dl) {
-		margin: 0 0 1rem;
+		margin: 0 0 var(--space-4);
 	}
 
 	.legal__body :global(dt) {
-		font-weight: 600;
-		font-size: 0.9375rem;
-		margin-top: 0.75rem;
+		margin-top: var(--space-3);
+		font-family: var(--font-body);
+		font-size: var(--fs-body);
+		font-weight: var(--font-weight-medium);
+		color: var(--color-fg-forest);
 	}
 
 	.legal__body :global(dd) {
-		margin: 0.125rem 0 0;
-		font-size: 1rem;
-		line-height: 1.7;
-		color: var(--brand-muted, #5f6d56);
+		margin: var(--space-1) 0 0;
+		font-family: var(--font-body);
+		font-size: var(--fs-body);
+		line-height: var(--line-height-loose);
+		color: var(--color-text-subtle);
 	}
 
 	/* Tables carry the processor list, which is the one place these documents
 	   genuinely need columns. They must not push the page sideways on a phone. */
 	.legal__body :global(.legal-table-wrap) {
 		overflow-x: auto;
-		margin-bottom: 1rem;
+		margin-bottom: var(--space-4);
 	}
 
 	.legal__body :global(table) {
 		width: 100%;
 		border-collapse: collapse;
-		font-size: 0.9375rem;
+		font-family: var(--font-body);
+		font-size: var(--fs-body-sm);
 		min-width: 30rem;
 	}
 
@@ -183,14 +204,28 @@
 	.legal__body :global(td) {
 		text-align: left;
 		vertical-align: top;
-		padding: 0.5rem 0.75rem 0.5rem 0;
-		border-bottom: 1px solid color-mix(in srgb, var(--brand-border, #7c5e49) 30%, transparent);
-		color: var(--brand-muted, #5f6d56);
-		line-height: 1.55;
+		padding: var(--space-3) var(--space-4) var(--space-3) 0;
+		border-bottom: 1px solid color-mix(in srgb, var(--brand-border) 30%, transparent);
+		color: var(--color-text-subtle);
+		line-height: var(--line-height-normal);
 	}
 
 	.legal__body :global(th) {
-		color: var(--color-fg-forest, #3a4530);
-		font-weight: 600;
+		font-weight: var(--font-weight-medium);
+		color: var(--color-fg-forest);
+	}
+
+	@media (min-width: 1100px) {
+		.legal {
+			display: grid;
+			grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
+			column-gap: var(--space-12);
+			align-items: start;
+		}
+
+		.legal__aside {
+			position: sticky;
+			top: calc(var(--nav-height) + var(--space-8));
+		}
 	}
 </style>
