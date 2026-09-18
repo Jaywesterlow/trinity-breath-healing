@@ -35,13 +35,8 @@
 	 * itself to the drawing and shifts the SVG inside it so only the drawing
 	 * shows — every service's art then fills the same height.
 	 */
-	export interface ServiceArt {
-		x: number;
-		y: number;
-		w: number;
-		h: number;
-		ratio: number;
-	}
+
+	import type { ServiceArt } from '$lib/constants/service-art';
 
 	export interface ServiceModalItem {
 		slug: string;

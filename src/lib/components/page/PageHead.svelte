@@ -14,9 +14,13 @@
 	interface Props {
 		eyebrow?: string;
 		lead?: string;
+		/** Something to look at beside the words: a drawing, a numeral. On
+		 * desktop it takes the right end of the row; on a phone it sits under
+		 * the lead. */
+		visual?: Snippet;
 		children: Snippet;
 	}
-	let { eyebrow, lead, children }: Props = $props();
+	let { eyebrow, lead, visual, children }: Props = $props();
 </script>
 
 <header class="phead" use:reveal>
@@ -28,6 +32,9 @@
 	</div>
 	{#if lead}
 		<p class="phead__lead">{lead}</p>
+	{/if}
+	{#if visual}
+		<div class="phead__visual">{@render visual()}</div>
 	{/if}
 </header>
 
@@ -70,12 +77,27 @@
 		color: var(--color-text-subtle);
 	}
 
+	.phead__visual {
+		display: grid;
+		place-items: center;
+		height: 14rem;
+	}
+
 	@media (min-width: 1100px) {
 		.phead {
 			display: grid;
 			grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
 			align-items: end;
 			column-gap: var(--space-12);
+		}
+
+		.phead:has(.phead__visual) {
+			grid-template-columns: minmax(0, 6fr) minmax(0, 4fr) auto;
+		}
+
+		.phead__visual {
+			height: clamp(10rem, 16vw, 16rem);
+			justify-self: end;
 		}
 
 		.phead__lead {

@@ -12,8 +12,8 @@
 	 *
 	 * Cards come from BRAND.services, in BRAND's order. No teaser is written here.
 	 */
-	import { Breadcrumbs, PageTitle } from '$lib/components/ui';
-	import { ButtonLink } from '$lib/components/ui/interactions';
+	import { Breadcrumbs } from '$lib/components/ui';
+	import { PageShell, PageHead, CtaBand, ServiceCard } from '$lib/components/page';
 	import { BRAND } from '$lib/constants/brand';
 	import { reveal } from '$lib/actions/reveal';
 	import type { PageData } from './$types';
@@ -23,185 +23,62 @@
 
 <Breadcrumbs items={data.crumbs} />
 
-<article class="index">
-	<!-- Title and lead fade as one block. Each card below keeps its own reveal: the grid
-	     is 834px on desktop and 1619px on a phone. -->
-	<header class="index__head" use:reveal>
-		<PageTitle>Alle behandelingen</PageTitle>
-		<p class="index__lead">
-			Zeven behandelingen, elk met een eigen ingang. De ene werkt via de adem, de andere via
-			aanraking of energie. Welke bij jou past hoeft je niet zelf uit te zoeken.
-		</p>
-	</header>
+<PageShell>
+	<PageHead
+		lead="Zeven behandelingen, elk met een eigen ingang. De ene werkt via de adem, de andere via aanraking of energie. Welke bij jou past hoeft je niet zelf uit te zoeken."
+	>
+		Alle behandelingen
+	</PageHead>
 
+	<!-- Each card keeps its own reveal: the grid is taller than a third of any screen. -->
 	<ul class="index__grid">
 		{#each BRAND.services as service, i (service.slug)}
 			<li use:reveal>
-				<a class="card" href="/diensten/{service.slug}">
-					<span class="card__number">{String(i + 1).padStart(2, '0')}</span>
-					<span class="card__name">{service.name}</span>
-					<span class="card__teaser">{service.teaser}</span>
-					<span class="card__more">Lees meer</span>
-				</a>
+				<ServiceCard
+					href="/diensten/{service.slug}"
+					name={service.name}
+					teaser={service.teaser}
+					number={i + 1}
+				/>
 			</li>
 		{/each}
 	</ul>
 
-	<!-- The ask (heading, body, button) as one, the note on its own: together they are
-	     306px on a phone, just over the one-third line. The wrapper is a plain block; the
-	     spacing is the children's own margins, which collapse through it. -->
-	<section class="index__cta" aria-labelledby="hulp">
-		<div class="index__cta-main" use:reveal>
-			<h2 id="hulp" class="index__h2">Weet je niet welke je nodig hebt?</h2>
-			<p class="index__body">
-				Dat hoeft ook niet. In een kennismaking van dertig minuten kijken we samen wat er speelt en
-				wat daarbij past. Vrijblijvend, online.
-			</p>
-			<div class="index__button">
-				<ButtonLink label="Plan een kennismaking" href="/contact" />
-			</div>
-		</div>
-		<p class="index__note" use:reveal>{BRAND.disclaimer}</p>
-	</section>
-</article>
+	<CtaBand
+		id="hulp"
+		title="Weet je niet welke je nodig hebt?"
+		lead="Dat hoeft ook niet. In een kennismaking van dertig minuten kijken we samen wat er speelt en wat daarbij past. Vrijblijvend, online."
+		label="Plan een kennismaking"
+		href="/contact"
+		note={BRAND.disclaimer}
+	/>
+</PageShell>
 
 <style>
-	/* Same box as <Breadcrumbs> and the footer: the gutter is added to the max-width, not
-	   taken out of it, so the content box is exactly --container-max and starts
-	   on the same vertical line as every section on the landing page. */
-	.index {
-		max-width: calc(var(--container-max) + 3rem);
-		margin: 0 auto;
-		padding: var(--space-8) 1.5rem var(--space-16);
-	}
-
-	.index__head {
-		max-width: var(--content-max-width);
-		margin-bottom: var(--space-10);
-	}
-
-	.index__lead {
-		margin-top: var(--space-4);
-		font-family: var(--font-body);
-		font-size: var(--fs-body-lg);
-		font-weight: var(--font-weight-light);
-		line-height: var(--line-height-normal);
-		color: var(--color-text-subtle);
-	}
-
 	.index__grid {
 		list-style: none;
 		margin: 0;
-		padding: 0;
+		padding: 0 0 var(--block-gap);
 		display: grid;
+		grid-template-columns: 1fr;
 		gap: var(--space-4);
 	}
 
-	.card {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-2);
-		height: 100%;
-		padding: var(--space-6);
-		border: 1px solid color-mix(in srgb, var(--brand-border) 30%, transparent);
-		border-radius: 1.125rem;
-		text-decoration: none;
-		transition:
-			background-color var(--motion-hover) var(--ease-hover),
-			border-color var(--motion-hover) var(--ease-hover);
-	}
-
-	@media (hover: hover) and (pointer: fine) {
-		.card:hover {
-			background: color-mix(in srgb, var(--brand-border) 7%, transparent);
-			border-color: var(--brand-border);
+	@media (min-width: 700px) {
+		.index__grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
 	}
 
-	.card:focus-visible {
-		background: color-mix(in srgb, var(--brand-border) 7%, transparent);
-		border-color: var(--brand-border);
-	}
-
-	/* Position in the list, not a ranking. Quiet enough to read as an index
-	   marker rather than as a score. */
-	.card__number {
-		font-family: var(--font-display);
-		font-size: var(--fs-body-sm);
-		color: var(--brand-muted);
-		letter-spacing: 0.08em;
-	}
-
-	.card__name {
-		font-family: var(--font-display);
-		font-size: var(--font-size-2xl);
-		font-weight: var(--font-weight-medium);
-		line-height: var(--line-height-tight);
-		color: var(--color-fg-forest);
-	}
-
-	.card__teaser {
-		flex: 1;
-		font-family: var(--font-body);
-		font-size: var(--fs-body);
-		font-weight: var(--font-weight-light);
-		line-height: var(--line-height-normal);
-		color: var(--color-text-subtle);
-	}
-
-	.card__more {
-		margin-top: var(--space-2);
-		font-family: var(--font-body);
-		font-size: var(--fs-body-sm);
-		color: var(--brand-border);
-	}
-
-	.index__cta {
-		max-width: var(--content-max-width);
-		margin-top: var(--block-gap);
-	}
-
-	.index__h2 {
-		font-family: var(--font-display);
-		font-size: var(--fs-h2);
-		font-weight: var(--font-weight-medium);
-		line-height: var(--line-height-tight);
-		color: var(--color-fg-forest);
-		margin-bottom: var(--space-4);
-	}
-
-	.index__body {
-		font-family: var(--font-body);
-		font-size: var(--fs-body);
-		font-weight: var(--font-weight-light);
-		line-height: var(--line-height-normal);
-		color: var(--color-text-subtle);
-	}
-
-	.index__button {
-		margin-top: var(--space-6);
-	}
-
-	.index__note {
-		margin-top: var(--space-8);
-		padding-left: var(--space-4);
-		border-left: 2px solid var(--brand-border);
-		font-family: var(--font-body);
-		font-size: var(--fs-body-sm);
-		font-weight: var(--font-weight-light);
-		line-height: var(--line-height-normal);
-		color: var(--color-text-subtle);
-	}
-
-	@media (min-width: 640px) {
+	@media (min-width: 1100px) {
 		.index__grid {
-			grid-template-columns: 1fr 1fr;
+			grid-template-columns: repeat(3, minmax(0, 1fr));
 		}
 	}
 
-	@media (min-width: 1024px) {
+	@media (min-width: 1536px) {
 		.index__grid {
-			grid-template-columns: repeat(3, 1fr);
+			grid-template-columns: repeat(4, minmax(0, 1fr));
 		}
 	}
 </style>
