@@ -346,8 +346,16 @@
 	   the reveal is reachable by keyboard, not just a mouse. One shared
 	   motion token (--motion-base/--ease-out) across every property here —
 	   and on .tcard__icon-wrap/.tcard__bottom above — so it reads as one
-	   movement, not four unrelated ones. */
-	@media (hover: hover) and (pointer: fine) {
+	   movement, not four unrelated ones.
+
+	   Also gated to the carousel's desktop geometry (min-width: 1024px, the
+	   same breakpoint Behandelingen.svelte switches its fan on). Below it the
+	   card is 100px wide, so the description runs to seven or eight lines and
+	   the opened card grows 130–155px — past the headroom the fan box leaves
+	   above the centre card, which then clips it at the box's top edge. Only a
+	   mouse on a narrow window ever saw that (touch never hovers); it now sees
+	   the resting card, and a click still opens the modal with the same text. */
+	@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
 		.tcard:hover .tcard__icon-wrap,
 		.tcard:focus-visible .tcard__icon-wrap {
 			opacity: 0;

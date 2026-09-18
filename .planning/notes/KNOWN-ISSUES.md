@@ -313,7 +313,14 @@ rows: sand only. `behandelingen-edges.spec.ts` keeps that check at 390, 820,
 1024, 1440 and 2560, decoding its own screenshots; the other seven
 `behandelingen-*` specs pass unchanged.
 
-**To watch.** A mouse on the phone geometry between ~860 and 1023px wide (a
+**Resolved 2026-09-18** — the hover reveal in `TreatmentCard` is now also gated
+to `min-width: 1024px`, so below the carousel's desktop breakpoint a mouse sees
+the resting card and a click opens the modal. CI's Chromium wrapped the
+description one line longer than the local build at 820px and the opened card
+crossed the box's top edge by a few pixels; the margin there was 15px. The
+original note follows.
+
+**Was to watch.** A mouse on the phone geometry between ~860 and 1023px wide (a
 narrow desktop window, or a tablet with a trackpad): the hover reveal opens the
 description inside a 100px card, and from ~860 the body text is large enough
 that the card outgrows the 48px of headroom above it, so the box's top edge
