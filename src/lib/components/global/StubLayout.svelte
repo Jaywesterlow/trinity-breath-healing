@@ -1,65 +1,140 @@
 <script lang="ts">
 	/**
-	 * StubLayout — shared layout for all 14 stub routes.
+	 * Shared layout for the routes that are reserved but have nothing to say yet:
+	 * /blog and /artikelen have no posts, /reviews has no reviews, /over-mij is
+	 * waiting on the practitioner's own words.
 	 *
-	 * Renders:
-	 *   - <Breadcrumbs> navigation from Plan 02 (reused, no duplication)
-	 *   - <PageTitle> h1 from Plan 02 (reused, no duplication)
-	 *   - Description paragraph (per-route distinct — Pitfall #7)
-	 *   - "Komt binnenkort" availability message with home link
+	 * It used to print the SEO <title> as the <h1>, so /blog opened with
+	 * "Blog – Inzichten over ademwerk en heling | Trinity" set in display type,
+	 * pipe and all. A title tag is written for a search result and a heading is
+	 * written for a reader; STUB_META now carries both, plus a `lead` that says
+	 * what the page will be rather than repeating the meta description at the
+	 * visitor.
 	 *
-	 * FND-08: 14 reserved stubs; Phase 2+ deepens content without changing structure.
-	 * RESEARCH Pattern 9: "Komt binnenkort beschikbaar" UX for stub routes.
+	 * These pages stay out of the sitemap and stay `noindex` while they are empty.
+	 * That is not an oversight to fix later — thin content submitted at this ratio
+	 * is judged against the whole domain, and the whole point of the site is being
+	 * found. They rejoin by flipping `kind` in routes.ts once they carry something.
+	 *
+	 * Typography matches the real content pages deliberately. An empty page laid
+	 * out like the rest of the site reads as one that is coming; an empty page
+	 * with its own layout reads as one that is broken. No eyebrow, though — these
+	 * are all top-level routes, so it would have read "Home" directly under a
+	 * breadcrumb that already says Home.
 	 */
 	import { Breadcrumbs, PageTitle } from '$lib/components/ui';
+	import { ButtonLink } from '$lib/components/ui/interactions';
+	import { reveal } from '$lib/actions/reveal';
 
 	let {
-		title,
-		description,
+		heading,
+		lead,
 		crumbs
 	}: {
-		title: string;
-		description: string;
+		heading: string;
+		lead: string;
 		crumbs: { name: string; path: string }[];
 	} = $props();
+
+	/** The crumb before the current page — where "terug" actually goes. */
+	const parent = $derived(crumbs[crumbs.length - 2] ?? { name: 'Home', path: '/' });
 </script>
 
 <Breadcrumbs items={crumbs} />
 
-<article class="stub-article">
-	<PageTitle>{title}</PageTitle>
-	<p class="stub-description">{description}</p>
-	<p class="stub-coming-soon">
-		Deze pagina komt binnenkort beschikbaar.
-		<a href="/">Terug naar de hoofdpagina &rarr;</a>
-	</p>
+<article class="stub">
+	<!-- Two reveals on a stub: the title block, and the notice as one. -->
+	<header class="stub__head" use:reveal>
+		<PageTitle>{heading}</PageTitle>
+		<p class="stub__lead">{lead}</p>
+	</header>
+
+	<section class="stub__empty" aria-labelledby="binnenkort" use:reveal>
+		<h2 id="binnenkort" class="stub__h2">Nog niets te lezen</h2>
+		<p class="stub__body">
+			Deze pagina bestaat al, maar staat nog leeg. Er is intussen genoeg te vinden over de
+			behandelingen en hoe een sessie verloopt.
+		</p>
+		<div class="stub__buttons">
+			<ButtonLink label="Bekijk de behandelingen" href="/behandelingen" />
+		</div>
+		<p class="stub__alt">
+			Of ga <a href={parent.path}>terug naar {parent.name.toLowerCase()}</a>.
+		</p>
+	</section>
 </article>
 
 <style>
-	.stub-article {
-		max-width: var(--content-max-width, 42rem);
+	/* Every page sits in the same box as the landing page's sections and the
+	   footer below it, so a heading never starts 256px to the right of the logo
+	   directly underneath it. The gutter is added to the max-width rather than
+	   taken out of it (box-sizing is border-box), so the content box is exactly
+	   --container-max. Reading measure is restored on the children, not by
+	   narrowing the box — otherwise the whole page slides right again. */
+	.stub {
+		max-width: calc(var(--container-max) + 3rem);
 		margin: 0 auto;
-		padding: var(--space-8, 2rem) var(--space-4, 1rem);
+		padding: var(--space-8) 1.5rem var(--space-16);
 	}
 
-	.stub-description {
-		color: var(--color-fg-muted, #5a6a50);
-		font-size: var(--font-size-base, 1rem);
-		line-height: var(--line-height-relaxed, 1.625);
-		margin-bottom: var(--space-4, 1rem);
+	/* Reading measure. Direct children only, so a section can opt out by
+	   nesting if it ever needs the full container. */
+	.stub > * {
+		max-width: var(--content-max-width);
 	}
 
-	.stub-coming-soon {
-		color: var(--color-fg-muted, #5a6a50);
-		font-size: var(--font-size-sm, 0.875rem);
+	.stub__head {
+		margin-bottom: var(--space-10);
 	}
 
-	.stub-coming-soon a {
-		color: var(--color-fg-forest, #3a4530);
+	.stub__lead {
+		margin-top: var(--space-4);
+		font-family: var(--font-body);
+		font-size: var(--fs-body-lg);
+		font-weight: var(--font-weight-light);
+		line-height: var(--line-height-normal);
+		color: var(--color-text-subtle);
+	}
+
+	.stub__empty {
+		margin-top: var(--block-gap);
+	}
+
+	.stub__h2 {
+		font-family: var(--font-display);
+		font-size: var(--fs-h2);
+		font-weight: var(--font-weight-medium);
+		line-height: var(--line-height-tight);
+		color: var(--color-fg-forest);
+		margin-bottom: var(--space-4);
+	}
+
+	.stub__body,
+	.stub__alt {
+		font-family: var(--font-body);
+		font-size: var(--fs-body);
+		font-weight: var(--font-weight-light);
+		line-height: var(--line-height-normal);
+		color: var(--color-text-subtle);
+	}
+
+	.stub__buttons {
+		margin-top: var(--space-6);
+	}
+
+	.stub__alt {
+		margin-top: var(--space-6);
+	}
+
+	.stub__alt a {
+		color: var(--color-fg-forest);
 		text-decoration: underline;
+		text-underline-offset: 3px;
 	}
 
-	.stub-coming-soon a:hover {
-		text-decoration: none;
+	@media (hover: hover) and (pointer: fine) {
+		.stub__alt a:hover {
+			text-decoration: none;
+		}
 	}
 </style>

@@ -1,49 +1,390 @@
 # Known Issues — deferred, not fixed yet
 
-Last updated: **2026-08-09**
+Last updated: **2026-09-17**
 
 Read the date above before answering "what issues are still open?" — anything here
 was true as of that date and may have been fixed since.
+
+**Every item in the at-a-glance list below was re-checked against the working tree on
+2026-09-09, not carried forward on trust.** The list had drifted a month: it still
+claimed the phone number was missing (it is in `brand.ts`), that the contact section
+was placeholders (the form, the planner and three API routes all exist), and that the
+carousel rebuild was an unmerged PR (it is on main and has been rewritten twice since).
+If you are reading this more than a few weeks later, re-check before repeating it.
 
 ---
 
 ## Open, at a glance
 
-Everything still outstanding. Detail for each is further down.
+Detail for the older items is further down. Anything marked **closed** stays listed
+only so a future reader does not re-open it.
 
-**Before launch**
-1. Pick the real domain — three conflicting ones; set `PUBLIC_SITE_URL` in Vercel. Owner decision.
-2. ~~Fill in `TODO_PRACTITIONER_NAME`, `TODO_PHONE`, `TODO_INSTAGRAM_HANDLE`~~ — **name and
-   Instagram done 2026-08-01** (Brigitte Grohe, @trinitybreath.and.healing — commit `4cd9b08`).
-   `TODO_PHONE` still open, still needed from the owner.
-3. ~~Fix 128 contrast failures~~ — **done 2026-08-01** (commit `4cd9b08`): darkened
-   `--brand-muted` and `--brand-border` tokens plus two hardcoded `NavLogo.svelte` colors, all
-   now ≥4.9:1 against their background. See "Site-wide WCAG 2.2 AA color-contrast failures"
-   below, updated with the fix.
+**Shipped 2026-09-09 — eleven routes graduated from stub to real content**
 
-**Deferred by the owner**
-4. Contact section is placeholders — no form, no send, no Cal.com.
-5. ~~Behandelingen transitions are janky~~ — **rebuilt from scratch 2026-08-07** on
-   `claude/accessible-work-repos-kb67gy` (PR #10, **open, not merged**). Old Embla version and
-   its `[carousel-debug]` logs are gone entirely. See root `HANDOFF.md` → "The Behandelingen
-   carousel rebuild" for the mechanism and what's still open on it (desktop click-to-index
-   never implemented; swipe feel untested on a real device). Detail below has been updated to
-   match — do not trust anything under "Services / Behandelingen section" further down that
-   isn't marked superseded.
+The seven modality pages under `/diensten/`, their `/diensten` index, plus
+`/behandelingen`, `/werkwijze` and `/contact`. The sitemap went from 5 URLs to 16.
+Copy for the seven comes from `BRAND.services`, which is the practitioner's own;
+`/behandelingen` is organised by complaint rather than by modality (see
+`src/lib/content/klachten.ts`) so it is not a duplicate of `/diensten`.
 
-**Small but real**
-6. PRF-03 lazy loading unimplemented — needs an exclusion list first (the pinned pan would pop in).
-7. Hero waits 1.43s before text — check Search Console LCP after launch.
+Four routes stayed stubs on purpose: `/over-mij` is waiting on her words, and
+`/blog`, `/artikelen` and `/reviews` have no posts and no reviews. They are
+`noindex` and out of the sitemap until they carry something. Writing filler for
+them would be the thin-content problem the exclusion exists to avoid.
+
+**Shipped 2026-09-09 — one grid line for every page**
+
+Every subpage used to pick one of two boxes: the container width (`/`, `/diensten`,
+`/contact`, `/faq`) or a centred reading measure (everything else). At 1440px the two
+disagreed by 256px, so on half the site the breadcrumb and the `<h1>` started a quarter
+of the screen right of the logo in the footer directly below them. Now every page sits
+in the container box and the reading measure is applied to the children instead, so
+crumb, heading and footer share one left edge on all fourteen routes. `Breadcrumbs`
+lost its `wide` prop — with one box there is nothing to choose.
+
+The section eyebrow came off `/diensten`, `/werkwijze`, `/behandelingen` and
+`/over-mij` in the same pass: it repeated, in smaller type, the exact word the
+breadcrumb directly above it already said. `ServicePage` keeps its "Behandeling"
+eyebrow, which names the kind of page rather than echoing the crumb.
+
+**Shipped 2026-09-09 — page titles stopped shipping the brand twice**
+
+`Head.svelte` appended " | TRINITY Breath & Healing" unconditionally, and eleven
+routes had already put the practice name in their own TITLE, so they rendered it
+twice: "Spinal Touch in Amsterdam – Trinity Breath & Healing | TRINITY Breath &
+Healing", 79 characters where Google shows about 60. Three more spellings were in
+use elsewhere — "Trinity Healing BnH", a bare "| Trinity", "TRINITY Breath &
+Healing NL". All twenty routes now render 48–62 characters with the brand once, in
+one spelling; `routes.spec.ts` asserts both. The stub-title rule that caused it —
+"the base title must be 50–60" — was itself the bug, since the only way to pad a
+two-word page name to 50 is to append the brand; it now measures the rendered
+title instead.
+
+`/reviews` also stopped claiming the practice is in Almere, and the four stub
+descriptions stopped addressing the reader as "u" while the rest of the site says
+"je".
+
+**~~Flaky, not broken — carousel momentum~~ — closed 2026-09-14**
+
+`behandelingen-momentum.spec.ts:79` failed once in a full parallel run on
+2026-09-09 and passed on its own immediately after, twice. It measures deceleration
+against wall-clock timings, so it loses under load. Nothing in that run touched the
+carousel. Worth a real fix (assert on the physics rather than on elapsed time)
+before it wastes someone's afternoon.
+
+**Closed 2026-09-14.** The spec now marks release from inside the page at the pointerup
+event and slices everything by animation frame; the failing run's "early" window had
+been stationary frames taken before the pointer had actually lifted.
+
+**Shipped 2026-09-14 — the scroll reveal stopped blinking, and the band is symmetric**
+
+The owner's "blink": scroll fast, stop, and a moment later a block that had already
+left through the top popped from invisible to two-thirds lit in one frame. Traced
+per frame in `src/lib/actions/reveal.ts`: an element that entered the band and left
+it again inside its 1300ms entrance had `driftTo(0)` read its start value off the
+inline style, which the still-running entrance had not written yet, so the exit
+animated 0 -> 0 on top of the entrance instead of replacing it. When that no-op
+finished 450ms later the entrance underneath was uncovered mid-flight. Now the
+entrance is ended the moment the band is crossed, and every drift starts from the
+rendered opacity. `reveal.spec.ts` scrolls ten screens in ten frames, freezes, and
+samples every revealed element per frame for three seconds: nothing may move by
+more than half its range between two frames.
+
+The band itself moved in the same pass. The fade-out line sat 28% of the viewport
+below the top edge against a fade-in line 12% above the bottom, so a block was
+leaving a quarter-screen before it clipped while arriving almost at the edge.
+Both lines are now 12% in. The history of the earlier pairs stays in the comment
+above the constants.
+
+**Shipped 2026-09-15 — the scroll reveal fades fewer things, faster, and has an off switch**
+
+The owner's verdict on the effect was "iffy", and the diagnosis was three things at
+once. Too much faded: 93 `use:reveal` call sites, and on `/` at 1440x900 that was 82
+independently fading elements after a full scroll — every heading, paragraph, list row,
+icon and hairline on its own. The entrance was slow, at 1300ms. And tall blocks
+lingered: the rule is top-in, bottom-out, so the 608px carousel box stayed lit while
+its top half was off screen, right next to a 30px heading that had already gone —
+consistent by the rule, inconsistent to the eye.
+
+The audit, applied everywhere: one reveal per section header (eyebrow, heading and
+lead together), one per list or grid where the container fits in a third of the
+viewport and one per row where it does not, body copy and buttons with the block they
+belong to, nothing on hairlines or icons alone, three in the whole footer. Nothing
+taller than a third of the viewport at 390x844 or 1440x900 carries the action any
+more: the carousel wrap, the two about cards and the contact form card lost theirs.
+Measured, not guessed — a Playwright walk lists every revealed element with its
+height at both widths, and `reveal-audit.spec.ts` now holds that line per route.
+Counts after a full scroll, before -> after (mobile / desktop): `/` 71/82 -> 33/37,
+`/werkwijze` 43 -> 16, `/behandelingen` 40 -> 13, `/diensten` 39 -> 13,
+`/diensten/spinal-touch` 54 -> 25, `/contact` 36/42 -> 8/9, `/faq` 37 -> 14. The
+tallest revealed element on `/` went from 608px to 279px.
+
+The target for `/` was 25. What keeps it above that is the ten FAQ rows and the seven
+text lines inside the Werkwijze cards, seventeen between them, both kept on purpose:
+the FAQ list is 650px and more at either width, so the rows are the smallest thing
+that can carry the fade, and the card lines own the `exit: false` mechanism the row
+above them depends on. On the subpages it is the same story — every list is over the
+line at both widths, so each row keeps its own reveal. Relaxing either is the owner's
+call after he has seen it, not a bug.
+
+Speeds in `reveal.ts`: entrance 1300 -> 600ms, rise 1100 -> 800, exit 450 -> 300,
+return 600 -> 400. The leaving/arriving asymmetry stays. And a kill switch:
+`export const EXIT_FADE = true` at the top of `reveal.ts` — set it to `false` and every
+element keeps its entrance but never fades out. One line, nothing else to touch; the
+reveal spec passes in both positions, its exit test skipping itself when the switch
+is off.
+
+**Shipped 2026-09-16 — the site widens with the screen, Over mij is a ledger, the note closes the carousel; then the hero's type back to size, the Werkwijze staircase, more curve on the fan**
+
+Six approved design changes to the landing page over the day, six commits.
+
+The container was a fixed 1200px, and the owner measured what that meant on his
+three screens: on the 1600x770 laptop the hero ends 6px above the fold and feels
+right; on 1920x960 there is a 196px band of empty sand under it; on the 2560x1080
+ultrawide 316px under and 1360px beside. `--container-max` is now
+`clamp(1200px, 72vw, 1840px)` — 1200 / 1382 / 1840 on those three — and every
+box that read it follows. Beside it `--site-scale` is the same growth as a plain
+number (1 / 1.152 / 1.533, via `tan(atan2(72vw, 1200px))`, the one way CSS can
+divide two lengths). The hero is at least the viewport minus the nav, with the
+drawing on its bottom edge, so the river meets the fold on every screen.
+
+The first build of that also multiplied the hero's title, body, measures and
+spacing, the nav's wordmark and links, and the two buttons (through `zoom`) by
+`--site-scale`. The owner's verdict on the ultrawide: "too big, revert"; on 1920:
+"same as before, just grow hero image". So the scale is off everything but the
+drawing. Title 48px, body 16px, links 20px, button 234x40 at every width again,
+`ButtonLink` untouched in both directions. The drawing is the one thing that
+grows with the container, and it is capped: `--hero-img-max-w: 950px`, written
+into the height it is sized from at the artwork's own ratio (a `max-width` on the
+svg would letterbox the art inside its box). Measured: 721 / 831 / 950px wide on
+1600 / 1920 / 2560, where the uncapped version was 1106 on the ultrawide. Against
+a build of f7a7384 at 1600x770, 3.3% of pixels differ, all inside the drawing's
+column (it sits on the fold, 6px lower); title lines, measure, body, nav, button
+are pixel-identical.
+
+Werkwijze on desktop (≥ 1024px) is a staircase, from a mockup the owner approved.
+As the section's top reaches the bottom of the viewport the cards stand at rest /
++306px / +612px; the lower ones move up faster than the page (1 + 306/vh, 1 +
+612/vh) and land on one line when the section has scrolled through one viewport.
+Then the row keeps rising 240px more than the page over the next 0.4 viewport,
+overtaking the heading, and fades to 0 over the same range; fully faded it is
+`visibility: hidden`, which is what keeps the Verdieping button out of the tab
+order. Scroll-linked and damped (~95% of a jump in 0.25s), reversible, transforms
+and a non-inherited `@property --stair-fade` only, `will-change` while the section
+is near, no library. Reduced motion: aligned, opacity 1, nothing moves. The
+section drops its bottom padding in this mode, so the gap from the aligned row to
+Over mij's portrait is one `--section-pad` (96px at 1440). The mobile pin is as it
+was. `werkwijze-staircase.spec.ts` covers the five states at 1440x900; the reveal
+audit's count is unchanged because nothing writes an inline `opacity`.
+
+The fan's desktop breakpoint (≥ 1536px, the one all three of the owner's screens
+use) goes from 6.5deg per slot to 8deg, a quarter more, "a little more" curve. The
+radius stays at 3000px, as asked, and on a fixed radius the angle also sets the
+spread — measured, identical at 1600/1920/2560: slot ±1 362 → 445px from the
+centre line, slot ±2 719 → 881px (its span 712..1050px, so at 1600 only 88px of
+it is on screen, against 242 before), slot ±3 1067 → 1300px, and slot ±3's bottom
+clearance 76 → -20px (it clips the fan box, entirely behind the edge fade). The
+edge fade is still anchored at 800px from the centre line, which slot ±2 now
+crosses, so from 1776px up the outer part of that card sits under the ramp.
+**To watch on the owner's screens.** If it is the dive he wants and not the
+spread, the radius is the other number: ~2420px at 8deg holds the 362px spacing.
+The momentum, drag, recycle and click specs all pass unchanged. (Watched, and
+seen: the edge, not the recycle — see 2026-09-17 below.)
+
+Over mij is design "A, grootboek": on desktop a `4fr 5fr 3fr` grid — the portrait
+drawn straight onto the sand in forest ink (no card, second portrait gone), the
+words with a secondary "Lees meer over mij" button, and a ledger of three figures
+(8+, 65+, ∞) between hairlines, the count-up kept from the circles it replaces.
+The two feature bullets are parked in a comment in `OverMij.svelte` with what they
+need to come back. Reveals: header, body-and-button, and one per ledger row — the
+three rows are 391px, over the audit's third-of-the-viewport line, so the list
+fades by row as the audit's own rule says. `/` is 35 (mobile) / 37 (desktop) after
+a full scroll, against 33 / 37 before; the ceiling in `reveal-audit.spec.ts` holds
+and its comment records the new figures.
+
+The sentence under the carousel is no longer a section of its own. It is the
+closing block of the treatments section, an h2 at 42px with a hand break after
+"nodig" from 1024px up, the shared disclaimer under it with the brown left rule
+the service pages use, and no button. 112px from the pagination to the heading,
+64px from the disclaimer to the section's end — more above than below, the owner's
+ask. The section's bottom padding went from `--section-pad` to a flat 64px for
+that; on a phone the two were already equal.
+
+**Shipped 2026-09-17 — the fan's edge fade follows the screen, the note held to its break, the staircase past the heading, tablets are mobile, no card cut on any width, Over mij centred on small screens**
+
+Six fixes from the owner's review of the live preview, six commits.
+
+The fan. "The last card doesn't disappear, the first card visibly appears, every
+time" and "the blur isn't visible on some cards, it's just a cut-off". Measured,
+the recycle itself was never in view: one pivot forced to slots ±2.5, ±3, ±3.5 and
+±4 and pixel-diffed against the same frame with it hidden gives zero differing
+pixels at 1536, 1600, 1920, 2560 and 3440. What he saw is the edge: the fade only
+existed from 1776px, so on the 1600 laptop the outer cards were cut by the
+viewport with no fade at all, and at 1920 its solid part was a 70px strip. The
+fade's inner edge is now `min(1040px from the centre line, 50vw - 180px)`, with a
+100px ramp, from 1536px up — the first rule puts a fade under every card that
+reaches the screen edge at any width, the second holds the edge between slot
+±2's outermost corner (1050px) and slot ±3's innermost (1111px) on screens wide
+enough to show the recycle slot. Measured inner edge / solid from, at the fan's
+mid-height: 588 / 692 at 1536, 620 / 724 at 1600, 780 / 884 at 1920, 1040 / 1144
+at 2560 and 3440. The 180 and 100 come from the strip's 16deg lean, which puts
+the edge 66px further out at the top corner of the cards that reach the screen
+edge on the narrowest screens. **The cost is on the laptop**: at 1600 the 88px of
+slot ±2 that were cut off by the screen are now inside the ramp, so that screen
+shows three cards and two fades where it showed three cards and two slivers. At
+1920 the inner edge is 780 against the old 800. The fan box is 3rem taller from
+1536px, with the pivot baseline and the controls' tuck moving by the same 3rem,
+so slot ±3's bottom clearance is +28px instead of -20 and nothing else moves;
+the transient ±3.5 / ±4 positions still cross the box edge, behind the solid
+fade. Checked by dragging through two recycles at each width while sampling the
+viewport's outermost columns and the box's bottom row: sand only. Every
+`behandelingen-*` spec passes unchanged. Below 1536px (the 14deg geometry) the
+viewport still cuts the outer cards as it always did; none of the owner's
+screens is there.
+
+The note under the carousel: 42px to 38px on desktop, same clamp shape, and a
+max-width of 44ch. Not the 30-odd it looks like it should be: line 1 ("Je hoeft
+... je nodig") is 40.0ch of this display face and line 2 42.4ch, measured off
+the rendered line boxes, so anything narrower wraps line 2 into a third line
+or moves the break off "nodig". Verified at 1024/1440/1920/2560: line 1 ends
+"nodig", line 2 starts "hebt.", box 798px. 112 above / 64 below untouched.
+
+The staircase. "Card 1 is already in place, not animating at all" and "I want
+it to slide past the title; now it all stops at the title". At entry the cards
+now stand 200 / 506 / 812px below rest (card 1 too), and they align when the
+row's rest top reaches the middle of the viewport, not a viewport after the
+section's top enters. Progress is `(rowTop - vh/2) / (vh/2 + rowOffset)` with
+rowOffset the row's 214px below the section's top, so the drop is spent over
+664px of scroll at 1440x900 and 694 at 1920x960; speeds 1.30 / 1.76 / 2.22 times
+the page at 1440x900 (1.29 / 1.73 / 2.17 at 1920x960). After alignment the row
+rises past the page by the header block + the gap + half a card, measured live
+(86 + 32 + 229.5 = 348px at 1440), over 0.4 viewport, fading to 0; the cards
+clear the heading's bottom after ~30px of scroll and its top after ~120, and end
+229px above it. Damping, `visibility: hidden` and the reduced-motion static row
+unchanged. Compensation padding re-measured with the row aligned on the centre
+line: 96px to the Over mij portrait, one `--section-pad`. The spec carries the
+new numbers, the ±80px-of-centre assertion and the past-the-header assertion.
+
+Tablets. The two-column hero started at 768px, so every iPad in portrait got it,
+and at 1024 (iPad Pro 12.9 portrait) the fold rule stretched the hero to 1266px
+with 460px of sand between the text and the drawing. The hero's desktop layout
+now starts at **1100px**; below it the stacked mobile hero, with the phone's
+fold-fill margin switched off from 768 (it is calibrated to a ~333px drawing and
+would add 582px of sand at 1024x1366) and the intro capped at 40rem. Werkwijze's
+pin moves to the same 1100px, since at 1024 the desktop row of three was 14px
+from the screen's edges and the owner's rule is tablets = mobile; the
+`werkwijze-scrolljack` spec pins 1024x1366 down as "pinned". Checked and left
+alone at 1024: the nav (links fit), the carousel, Over mij's ledger and the FAQ's
+two columns — none of them break. 1180x820 landscape is a laptop and stays
+desktop. `--fs-title-sm`, which only the 768-1023 hero used, is gone.
+
+The fan, on every width this time. The fade above only existed from 1536px, and
+the owner, on a tablet, still saw cards spawn at the edge and get cut. Measured
+before the fix at 390, 430, 768, 820, 1024, 1180, 1280, 1366 and 1440: no fade at
+all, so the screen's outer columns cut a card in every frame of a drag; on the
+phone geometry (up to 1023) slot ±3 sits on screen, 319-502px from the centre
+line, with its bottom corner 50px below the box, so the box's bottom edge cut it
+in view from ~640px wide; and at 820 the transient slot ±3.5 a card passes
+through on its way round was itself on screen (64px of it) — that is the spawn.
+Two things changed, both in `Behandelingen.svelte`. The ring is fourteen slots,
+two laps of the seven (`RING_LAPS`): the recycle moves from ±3 to -6/+7, 98deg
+round the hub on the 14deg geometry and 56deg on the 8deg one, below the box and
+behind the fade at any width; the dots already counted services rather than
+slots, the modal already took `i % 7`, and the seven's order is unchanged. And the
+edge fade exists on every width, `min(cap, 50vw - edge)` as before, with cap /
+edge / ramp / lean per geometry: 340 / 75 / 50 / 8deg on the phone geometry
+(the lean is held under the card's 14deg because on a 100px card the lean and the
+ramp come out of the same ~100px, and at 14deg the whole visible width of slot ±1
+at 390 was ramp), 660 / 160 / 100 / 14deg from 1024, and 1040 / 180 / 100 / 16deg
+from 1536, unchanged. The phone box is 2rem taller, with the pivot baseline and
+the controls' tuck moving by the same 2rem so nothing visible moves; slot 2.5
+clears its bottom edge and slot ±3's cut sits behind the solid part of the fade.
+The controls are z-index 3, above the fade, because on a phone the fade now
+reaches the outer dots' row. Inner edge / solid boundary at the box's mid-height:
+120 / 170 at 390, 309 / 359 at 768, 335 / 385 at 820, 352 / 453 at 1024, 560 /
+661 at 1440, and from 1536 up exactly the figures above. **What it costs**: on a
+phone the outer 50px of slot ±1 fade where its top corner was cut; on a tablet
+slot ±2's outer corner fades and slot ±3 is a fading sliver; at 1024 slot ±1's
+outer third fades where 14px of its tip was cut; at 1440 slot ±2 is a fading
+sliver where it was a 214px hard-cut chunk. Checked by dragging through two
+recycles at all thirteen widths from 390 to 2560 (and at 320, 900, 1000 and
+1023) while sampling the screen's outermost columns and the box's top and bottom
+rows: sand only. `behandelingen-edges.spec.ts` keeps that check at 390, 820,
+1024, 1440 and 2560, decoding its own screenshots; the other seven
+`behandelingen-*` specs pass unchanged.
+
+**Resolved 2026-09-18** — the hover reveal in `TreatmentCard` is now also gated
+to `min-width: 1024px`, so below the carousel's desktop breakpoint a mouse sees
+the resting card and a click opens the modal. CI's Chromium wrapped the
+description one line longer than the local build at 820px and the opened card
+crossed the box's top edge by a few pixels; the margin there was 15px. The
+original note follows.
+
+**Was to watch.** A mouse on the phone geometry between ~860 and 1023px wide (a
+narrow desktop window, or a tablet with a trackpad): the hover reveal opens the
+description inside a 100px card, and from ~860 the body text is large enough
+that the card outgrows the 48px of headroom above it, so the box's top edge
+cuts the hovered centre card until the description closes. Pre-existing (the
+card's position did not move), touch never hovers, and none of the thirteen
+widths hits it; left alone rather than reaching into `TreatmentCard` in this
+pass.
+
+Over mij below the desktop grid is one centred stack. The header and the
+portrait were centred and the paragraph, the button and the ledger rows hugged
+the left edge under them. Now `.about__text` centres its items and its text,
+the button's wrapper centres the button (`ButtonLink` itself untouched), the
+heading block sits on the header's axis with `margin-inline: auto` rather than
+only centring its text, and each ledger row is `text-align: center`, so number
+and label sit on the same line as everything above. The section's desktop grid
+starts at **1100px** instead of 1024, the hero's and Werkwijze's line since
+b827984, so a 1024px iPad Pro gets the stacked, centred section between a
+mobile hero and a pinned track rather than the three-column grid; the grid's
+rules reset each of the centring rules to the left-aligned reading column they
+were. Measured at 390x844, 768x1024 and 1024x1366: eyebrow, heading, paragraph,
+button, portrait and the six ledger lines all share one centre x, spread 0.0px.
+At 1100 and 1440 the grid is as it was. `reveal-audit.spec.ts` and
+`reveal.spec.ts` pass unchanged.
+
+**Blocked on the owner — cannot ship without these**
+1. **Domain.** TransIP domain is linked to Vercel; the login is still needed from her.
+   `PUBLIC_SITE_URL` is read from the environment (`src/lib/seo/defaults.ts`) and the
+   build throws without it, so this is a Vercel env var, not a code change.
+2. **E-mail provider.** Left off at contacting their customer support. Blocks the
+   `<Todo>e-mailprovider</Todo>` / `<Todo>land</Todo>` rows in the privacy statement.
+3. **Terms content.** Rate per session, payment moment and method, VAT yes/no,
+   cancellation window, late-cancellation fee, complaints body. All `<Todo>` in
+   `/algemene-voorwaarden`.
+4. **Her own words for `/over-mij`** — two paragraphs plus whether she is a member of
+   a professional association. `<Todo>` markers in `src/routes/over-mij/+page.svelte`.
+5. **Disclaimer list** — the conditions she does not treat, to be confirmed by her.
+
+Run `npm run audit:placeholders` for the live list; it greps every `<Todo>` in the tree.
+
+**Closed since the last edit of this file**
+- ~~Phone number~~ — **closed.** `BRAND.phone` is `+31624244585`, displayed as
+  `06 24 24 45 85`. It renders in the footer and the contact section.
+- ~~Contact section is placeholders~~ — **closed.** There is a real e-mail form, a
+  date planner with its own booking flow, and three API routes under `src/routes/api/`
+  (`contact`, `booking`, `availability`).
+- ~~Behandelingen carousel PR #10 unmerged~~ — **closed.** On the mainline and rebuilt
+  since; the fan, the drag band, the momentum and the modal are all covered by their own
+  Playwright specs.
+- ~~128 contrast failures~~ — **closed** 2026-08-01, and the axe gate
+  (`npm run audit:a11y`) has reported zero violations across six states on every run
+  since.
+
+**Small but real, mine to do**
+6. PRF-03 lazy loading unimplemented — needs an exclusion list first (the pinned pan
+   would pop in). Detail below.
+7. Hero waits 1.43s before text — check Search Console LCP after launch. Detail below.
 8. Favicon soft at a true 16px — needs a simplified small-size mark from the designer.
 9. Draw-on parked — ~0.2% edge-pixel difference remains.
+10. Scroll fade skips a block during a fast flick. Detail at the bottom of this file.
 
 **Housekeeping**
-10. ~~2 GB stale worktrees in `.claude/worktrees/`~~ — checked 2026-08-01, does not exist in this
-    checkout. Nothing to delete.
 11. Contact copy assertions commented out in `check-copy.sh`.
-12. ~~The teacup `--section` invocation lives only in a commit message.~~ Clarified 2026-08-01:
-    it was never recorded anywhere, not just in a commit — see detail below. A guarded script
-    now exists so future invocations get saved.
+12. Six `behandelingen-*` Playwright specs fail on the owner's Windows machine — a local
+    browser mismatch, not a component bug. Detail below.
 
 ---
 
@@ -326,3 +667,25 @@ situation is pinned down. Before spending time on a "failing" carousel test, fir
 spec at `a482f4e` — if it fails there too, it is this, not your change. Worth fixing properly by
 pinning a known-good browser in a committed Playwright config so the suite means the same thing
 on every machine, but nobody has done that yet.
+
+## Scroll fade skips a block during a fast flick
+
+Reported by the owner, seen most often in the FAQ list. Scrolling slowly, every
+item fades out on the line as it should. Flicking fast, a block can cross the
+fade-out line without fading; if the scroll then stops abruptly, that block
+finally fades — so one item is left blank in the middle of a list that is
+otherwise fully drawn.
+
+Cause: IntersectionObserver delivers on the main thread and coalesces, while
+the scroll itself runs on the compositor. Under a fast flick several crossings
+land in one delivery and the observer reports only the final state, so a block
+that crossed the line and came back never hears about it; one that crossed and
+stopped hears about it late.
+
+Not fixed on purpose — the owner asked for it to be recorded rather than
+chased, and it is hard to reproduce deliberately. If it is picked up: the fix
+is not a scroll handler (see the note at the top of $lib/actions/reveal.ts).
+The candidates are a scroll-driven CSS animation with `animation-timeline:
+view()`, which is compositor-resident and cannot desync, or a `scrollend`
+reconciliation pass that re-reads every revealed element's rect once the scroll
+settles.

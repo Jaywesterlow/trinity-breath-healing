@@ -1,68 +1,255 @@
 <script lang="ts">
 	import ContactForm from '$lib/components/ui/contact/ContactForm.svelte';
 	import DatePlanner from '$lib/components/ui/contact/DatePlanner.svelte';
-	import { BRAND } from '$lib/constants/brand';
+	import SocialIcon from '$lib/components/ui/SocialIcon.svelte';
+	/* Instagram, WhatsApp, e-mail — the same list the footer renders, built once
+	   in constants/socials.ts. */
+	import { SOCIAL_LINKS } from '$lib/constants/socials';
+	/* The carousel's own magnet, not a copy of it: same action, same tuning, so
+	   the two cards pull toward the cursor exactly the way a treatment card does. */
+	import { magnetic } from '$lib/actions/magnetic';
+	import { reveal } from '$lib/actions/reveal';
 
-	let active = $state<'form' | 'meeting'>('form');
+	/* null is the rest state: neither route chosen, both cards on offer. Picking
+	   one replaces the pair with that panel, and the switch link above it goes
+	   straight to the other — so the two panels still alternate in place, which
+	   is what the panel's fixed sizing below exists for. */
+	let active = $state<'form' | 'meeting' | null>(null);
+	/* 'out' while the block on screen fades away, 'in' for the frame the
+	   replacement arrives on, then idle. Both blocks stay in the DOM the whole
+	   time — hidden is what the a11y tree and the crawler read — so the fade is
+	   driven by a class rather than by a Svelte transition, which would have to
+	   unmount one of them. */
+	let phase = $state<'idle' | 'out' | 'in'>('idle');
+
+	const FADE_MS = 180;
+
+	function choose(next: 'form' | 'meeting' | null) {
+		if (phase !== 'idle') return;
+		phase = 'out';
+		setTimeout(() => {
+			active = next;
+			phase = 'in';
+			requestAnimationFrame(() => requestAnimationFrame(() => (phase = 'idle')));
+		}, FADE_MS);
+	}
+
+	/* The design lists the channels e-mail first and Instagram last — the reverse
+	   of the footer's order, where the profile leads. Reversed here rather than
+	   reordered in constants/socials.ts, so the footer keeps its own order. */
+	const CONTACT_SOCIALS = [...SOCIAL_LINKS].reverse();
+
+	/* Reach and pull are separate knobs, and only the pull was ever the problem.
+	   The card should already be leaning toward a cursor that is merely nearby,
+	   so the field is wide — wider than the carousel's 60 — while the strength
+	   below keeps the actual movement small. */
+	const MAGNET_MARGIN = 140;
+	/* 0.08 is a fraction of the element's half-width, so on a ~600px card it
+	   pulls ~24px where the same number moves a 240px treatment card ~10px.
+	   0.035 lands these on that same ~10px. */
+	const MAGNET_STRENGTH = 0.035;
+
+	/* Which card the pointer is actually on, if either. The field is 140px wide,
+	   so from anywhere on one card the other is well inside range and was being
+	   pulled too — two cards leaning at a cursor that is already resting on one
+	   of them. Only the card under the pointer keeps its magnet; if the pointer
+	   is on neither, both are live so they can lean on approach. */
+	/** /contact renders its own <h1>; a second "Hoe wil je contact opnemen?"
+	 *  directly under it would be a repeat, not a hierarchy. Same prop and the
+	 *  same reason as Faq.svelte's. */
+	let { showHeading = true }: { showHeading?: boolean } = $props();
+
+	let over = $state<'form' | 'meeting' | null>(null);
+
+	const CHECKS = [
+		'Een kennismaking van 30 minuten, online en vrijblijvend',
+		'Je kiest zelf het moment, bevestiging komt meteen per mail',
+		'Mailen en appen kan de hele dag, je hoeft niet te bellen',
+		'Sessies bij jou thuis of op afstand, in Amsterdam en omgeving'
+	];
 </script>
 
-<section id="contact" class="contact" aria-labelledby="contact-heading">
+<!-- aria-labelledby only when the heading it names is actually rendered; pointing at
+     a missing id names the section after nothing. On /contact the page h1 above it
+     does that job, so an aria-label repeats it in the accessibility tree. -->
+<section
+	id="contact"
+	class="contact"
+	aria-labelledby={showHeading ? 'contact-heading' : undefined}
+	aria-label={showHeading ? undefined : 'Contact'}
+>
 	<div class="contact__inner">
-		<div class="contact__text">
-			<p class="contact__eyebrow">Contact</p>
-			<h2 id="contact-heading" class="contact__heading">
-				Een eerste stap hoeft niet groot te zijn.
-			</h2>
-			<div class="contact__description">
-				<p class="contact__description-intro">
-					Wil je iets vragen, of meteen een gesprek plannen? Laat een bericht achter of kies een
-					moment dat jou uitkomt. Ik neem zo snel mogelijk contact op.
-				</p>
-				<p class="contact__description-main">
-					U kunt contact opnemen door <strong>het contactformulier in te vullen</strong>, direct te
-					mailen naar
-					<strong><a href="mailto:{BRAND.email}">{BRAND.email}</a></strong>, of door een
-					<strong>30 minuten online meeting</strong> in te plannen. Kies wat voor jou prettig voelt.
-				</p>
+		<!-- One reveal for the whole header block; on /contact at desktop it is empty
+		     (the page's own h1 does the job and the mobile intro is hidden), and an empty
+		     block fades nothing. -->
+		<header class="contact__header" use:reveal>
+			{#if showHeading}
+				<p class="contact__eyebrow">Contact</p>
+				<h2 id="contact-heading" class="contact__heading">Hoe wil je contact opnemen?</h2>
+			{/if}
+			<!-- Desktop shows this in the right-hand column, under its own small
+			     title; on mobile it belongs under the heading. -->
+			<p class="contact__intro contact__intro--mobile">
+				Vul het formulier in of plan een kennismaking, wanneer het jou uitkomt.
+			</p>
+		</header>
+
+		<div class="contact__grid">
+			<!-- Whole card is the control, so the visible pill inside it is a span,
+			     not a nested button — one target, and the pill is still free to
+			     answer the hover on its own. -->
+			<!-- The two cards reveal one each rather than the pair as one: this container
+			     owns the swap fade above (.is-leaving sets its opacity through a class,
+			     and the reveal action leaves an inline opacity behind that would outrank
+			     it), and stacked on mobile the pair is 408px anyway, over a third of the
+			     screen. -->
+			<div class="contact__routes" class:is-leaving={phase !== 'idle'} hidden={active !== null}>
+				<button
+					type="button"
+					class="route"
+					use:magnetic={{
+						enabled: over === null || over === 'meeting',
+						dragging: false,
+						margin: MAGNET_MARGIN,
+						strength: MAGNET_STRENGTH
+					}}
+					onpointerenter={() => (over = 'meeting')}
+					onpointerleave={() => (over = null)}
+					onclick={() => choose('meeting')}
+					use:reveal={{ distance: 0 }}
+				>
+					<span class="route__title">Plan een kennismaking</span>
+					<span class="route__body"
+						>Kies zelf een moment. Dertig minuten, online, vrijblijvend.</span
+					>
+					<span
+						class="route__cta btn-pill btn-host text-roll roll-host"
+						data-label="Kies een datum"
+					>
+						<span class="text-roll__face">Kies een datum</span>
+					</span>
+				</button>
+				<button
+					type="button"
+					class="route"
+					use:magnetic={{
+						enabled: over === null || over === 'form',
+						dragging: false,
+						margin: MAGNET_MARGIN,
+						strength: MAGNET_STRENGTH
+					}}
+					onpointerenter={() => (over = 'form')}
+					onpointerleave={() => (over = null)}
+					onclick={() => choose('form')}
+					use:reveal={{ distance: 0 }}
+				>
+					<span class="route__title">Stuur een bericht</span>
+					<span class="route__body">
+						Liever eerst een vraag stellen? Mailen en appen kan de hele dag.
+					</span>
+					<span
+						class="route__cta btn-pill btn-host text-roll roll-host"
+						data-label="Schrijf een bericht"
+					>
+						<span class="text-roll__face">Schrijf een bericht</span>
+					</span>
+				</button>
 			</div>
 
-			<!-- Figma draws these as radio dots, and that is what they are: one
-			     choice out of two. Native radios come with arrow-key navigation
-			     and the right announcement for free — a pair of aria-pressed
-			     buttons would have to fake both. -->
-			<fieldset class="contact__toggle">
-				<legend class="visually-hidden">Hoe wil je contact opnemen?</legend>
-				<label class="contact__toggle-btn" class:contact__toggle-btn--active={active === 'form'}>
-					<input
-						class="contact__toggle-input visually-hidden"
-						type="radio"
-						name="contact-mode"
-						value="form"
-						bind:group={active}
-					/>
-					<span class="contact__toggle-dot" aria-hidden="true"></span>
-					<span class="contact__toggle-label">Email formulier</span>
-				</label>
-				<label class="contact__toggle-btn" class:contact__toggle-btn--active={active === 'meeting'}>
-					<input
-						class="contact__toggle-input visually-hidden"
-						type="radio"
-						name="contact-mode"
-						value="meeting"
-						bind:group={active}
-					/>
-					<span class="contact__toggle-dot" aria-hidden="true"></span>
-					<span class="contact__toggle-label">Online meeting</span>
-				</label>
-			</fieldset>
-		</div>
+			<!-- Both panels are always in the DOM, and only their visibility changes.
+			     Rendering the chosen one with {#if} kept the e-mail form out of the
+			     prerendered HTML entirely, which is the one thing this site cannot
+			     trade away: no crawler, and nobody without JS, would have found a
+			     contact form at all. -->
+			<!-- No scroll reveal in here: the chosen panel arrives through the swap fade
+			     above, and the form card itself is far taller than anything that may fade
+			     on scroll. -->
+			<div class="contact__chosen" class:is-leaving={phase !== 'idle'} hidden={active === null}>
+				<button
+					type="button"
+					class="contact__switch"
+					onclick={() => choose(active === 'form' ? 'meeting' : 'form')}
+				>
+					<svg width="15" height="15" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+						<path
+							d="M14 6 8 12l6 6"
+							stroke="currentColor"
+							stroke-width="1.8"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
+					{active === 'form' ? 'Liever een afspraak plannen' : 'Liever een bericht sturen'}
+				</button>
+				<div class="contact__panel">
+					<div class="contact__pane" hidden={active === 'meeting'}>
+						<ContactForm />
+					</div>
+					<div class="contact__pane" hidden={active === 'form'}>
+						<DatePlanner />
+					</div>
+				</div>
+			</div>
 
-		<div class="contact__panel">
-			{#if active === 'form'}
-				<ContactForm />
-			{:else}
-				<DatePlanner />
-			{/if}
+			<div class="contact__aside">
+				<!-- Same shape as the two blocks under it: a small title, then its
+				     content. It read as a loose sentence without one. -->
+				<!-- One reveal per block — title and content together — and not one for the
+				     whole aside, which is 457px on desktop. The rule between the blocks is
+				     a hairline and never fades on its own. -->
+				<div class="contact__block contact__block--intro" use:reveal>
+					<p class="contact__block-title">Hoe het werkt</p>
+					<p class="contact__intro contact__intro--desktop">
+						Vul het formulier in of plan een kennismaking, wanneer het jou uitkomt.
+					</p>
+				</div>
+
+				<div class="contact__block" use:reveal>
+					<p class="contact__block-title">Wat je kunt verwachten</p>
+					<ul class="contact__checks">
+						{#each CHECKS as check (check)}
+							<li class="contact__check">
+								<svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+									<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" />
+									<path
+										d="m8.5 12 2.4 2.4 4.6-4.8"
+										stroke="currentColor"
+										stroke-width="1.6"
+										stroke-linecap="round"
+										stroke-linejoin="round"
+									/>
+								</svg>
+								<span>{check}</span>
+							</li>
+						{/each}
+					</ul>
+				</div>
+
+				<div class="contact__rule"></div>
+
+				<div class="contact__block contact__block--socials" use:reveal>
+					<p class="contact__block-title">Of rechtstreeks</p>
+					<nav aria-label="Sociale media">
+						<!-- A row of bare icons. The channel names used to sit beside
+						     them; the cursor now carries that wording instead, which is
+						     what makes the row work at all. -->
+						<ul class="contact__socials">
+							{#each CONTACT_SOCIALS as social (social.icon)}
+								<li>
+									<SocialIcon
+										icon={social.icon}
+										href={social.href}
+										label={social.label}
+										newTab={social.newTab}
+										tooltip={social.tooltip}
+										color="var(--brand-border)"
+									/>
+								</li>
+							{/each}
+						</ul>
+					</nav>
+				</div>
+			</div>
 		</div>
 	</div>
 </section>
@@ -70,291 +257,425 @@
 <style>
 	.contact {
 		background: var(--color-bg-sand);
-		padding: var(--space-16) 1.5rem; /* 24px gutter */
+		padding: var(--section-pad) 1.5rem; /* 24px gutter */
 	}
 
 	.contact__inner {
-		max-width: 22.125rem; /* 354px */
+		max-width: var(--container-max); /* 1200px — same cap as nav/footer/hero */
 		margin: 0 auto;
+	}
+
+	/* ─── Header ─── */
+	.contact__header {
 		display: flex;
 		flex-direction: column;
+		gap: var(--space-2);
 	}
 
-	/* Between phone and desktop the card used to stay pinned at 354px while the
-	   viewport grew to 1023, which is what made the tablet case worst of all:
-	   the calendar could not grow, the e-mail form stayed tall, and the gap
-	   between the two panels was at its widest. Letting the card use the room
-	   closes it — wider card, bigger tiles, shorter form. */
-	@media (min-width: 30rem) {
-		.contact__inner {
-			max-width: min(100%, 36.75rem); /* 588px, the desktop card width */
-		}
-	}
-
-	.contact__text {
-		display: flex;
-		flex-direction: column;
-		text-align: center;
-	}
-
-	/* Line heights below are Figma's own, derived from measured text-box
-	   heights rather than eyeballed: 21/16 body, 26/20 eyebrow, 96/(2*40)
-	   heading. They are deliberately tighter than --line-height-normal —
-	   using the token here pushed every element under it progressively
-	   lower and put the toggle 78px below where the design has it. */
 	.contact__eyebrow {
 		font-family: var(--font-body);
 		font-size: 1rem; /* 16px */
 		font-weight: var(--font-weight-light);
-		line-height: 1.3125; /* 21/16 — Figma 519:53 is 21px tall */
+		line-height: 1.3125;
 		color: var(--brand-muted);
-		/* No gap: Figma stacks the heading directly on the eyebrow's line
-		   box (mobile 519:53 ends at 21, 519:54 starts at 21). */
-		margin-bottom: 0;
+		margin: 0;
 	}
 
 	.contact__heading {
 		font-family: var(--font-display);
 		font-size: 2rem; /* 32px */
 		font-weight: var(--font-weight-medium);
-		line-height: 1.21875; /* 78/(2*32) — Figma 519:54 */
+		line-height: 1.21875;
 		color: var(--color-fg-forest);
-		margin-bottom: 1rem; /* 16px — Figma 519:52 -> 519:67 */
+		margin: 0;
+		text-wrap: balance;
 	}
 
-	.contact__description {
-		display: flex;
-		flex-direction: column;
+	.contact__intro {
 		font-family: var(--font-body);
-		font-size: 0.75rem; /* 12px */
-		line-height: 1.3333; /* 16/12 — Figma 519:56 is 64px over 4 lines */
+		font-size: 1rem;
+		font-weight: var(--font-weight-light);
+		line-height: var(--line-height-normal);
 		color: var(--color-text-subtle);
-		margin-bottom: 1rem; /* 16px — copy block -> toggle row (519:66 at y=355) */
+		margin: 0;
 	}
 
-	/* Intro paragraph is desktop-only per Figma — mobile shows only the
-	   "U kunt contact opnemen..." paragraph. */
-	.contact__description-intro {
+	/* One sentence, two homes: under the heading on mobile, in the right-hand
+	   column on desktop. Rendered twice rather than moved, because moving it
+	   would mean the column it is not in loses its first line of copy. */
+	.contact__intro--desktop {
 		display: none;
 	}
 
-	.contact__description strong {
-		font-weight: var(--font-weight-bold);
-		color: var(--color-fg-forest);
-	}
-
-	.contact__description a {
-		position: relative;
-		color: inherit;
-		text-decoration: none;
-	}
-
-	/* Sits permanently (the link must read as a link in body copy) and thickens
-	   on hover — the reveal vocabulary, adapted to an always-underlined link. */
-	.contact__description a::after {
-		content: '';
-		position: absolute;
-		left: 0;
-		right: 0;
-		bottom: -0.0625rem;
-		height: 1px;
-		background: currentColor;
-		transform-origin: left center;
-		transition:
-			height var(--motion-hover) var(--ease-hover),
-			transform var(--motion-hover) var(--ease-hover);
-	}
-
-	.contact__description a:hover::after,
-	.contact__description a:focus-visible::after {
-		height: 2px;
-	}
-
-	.contact__toggle {
+	/* ─── Layout ─── */
+	.contact__grid {
 		display: flex;
-		gap: clamp(0.25rem, 1.5vw, 0.5rem);
-		border: 0;
-		padding: 0;
-		margin: 0;
-		min-width: 0; /* fieldset defaults to min-content — would blow out the grid column */
+		flex-direction: column;
+		gap: var(--space-8);
+		margin-top: var(--space-8);
 	}
 
-	.contact__toggle-btn {
-		position: relative; /* containing block for the visually-hidden radio inside */
-		display: inline-flex;
-		flex: 1 1 0;
-		align-items: center;
-		justify-content: center;
-		gap: clamp(0.25rem, 1.8vw, 0.5rem);
-		padding: clamp(0.375rem, 2vw, 0.5rem);
-		border: none;
-		background: transparent;
-		border-radius: 0.625rem; /* 10px */
-		cursor: pointer;
-		font-family: var(--font-body);
-		font-size: clamp(0.8125rem, 3.6vw, 1rem);
-		color: var(--color-fg-forest);
+	/* ─── The two routes ─── */
+	.contact__routes {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-5);
+	}
+
+	.contact__routes[hidden],
+	.contact__chosen[hidden] {
+		display: none;
+	}
+
+	/* The swap: what is leaving drops 8px and fades, what arrives comes back up.
+	   Transform and opacity only, so nothing reflows and the card underneath
+	   does not resize mid-swap. */
+	.contact__routes,
+	.contact__chosen {
 		transition:
-			background-color var(--motion-hover) var(--ease-hover),
-			transform var(--motion-hover) var(--ease-hover);
+			opacity 180ms var(--ease-out),
+			transform 180ms var(--ease-out);
 	}
 
-	.contact__toggle-btn:has(.contact__toggle-input:focus-visible) {
+	.contact__routes.is-leaving,
+	.contact__chosen.is-leaving {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.contact__routes.is-leaving,
+		.contact__chosen.is-leaving {
+			transform: none;
+		}
+	}
+
+	.route {
+		--magnet-x: 0px;
+		--magnet-y: 0px;
+		display: flex;
+		flex-direction: column;
+		/* Mobile centres the card's contents; the desktop block below puts them
+		   back to the left. The card itself is full width either way. */
+		align-items: center;
+		text-align: center;
+		gap: var(--space-3);
+		width: 100%;
+		padding: var(--space-6);
+		border: none;
+		border-radius: 1.125rem; /* 18px */
+		background: var(--color-brand-green);
+		color: var(--color-bg-sand);
+		cursor: pointer;
+		/* The carousel's magnet, composed the same way TreatmentCard composes it:
+		   use:magnetic only ever writes --magnet-x/y and, while tracking,
+		   --tcard-transition-duration. Nothing rotates this card, so unlike a
+		   treatment card it needs no counter-rotation around the translate. */
+		transform: translate(var(--magnet-x), var(--magnet-y));
+		transition: transform var(--tcard-transition-duration, var(--motion-fast)) var(--ease-out);
+	}
+
+	.route:focus-visible {
 		outline: 2px solid var(--color-accent-gold);
 		outline-offset: 2px;
 	}
 
-	.contact__toggle-btn:hover {
-		background: color-mix(in srgb, var(--color-card-warm) 55%, transparent);
-		transform: translateY(var(--lift-hover));
+	.route__title {
+		font-family: var(--font-display);
+		font-size: 1.5rem; /* 24px */
+		font-weight: var(--font-weight-medium);
+		line-height: var(--line-height-tight);
 	}
 
-	.contact__toggle-btn:active {
+	.route__body {
+		font-family: var(--font-body);
+		font-size: 0.9375rem; /* 15px */
+		font-weight: var(--font-weight-light);
+		line-height: var(--line-height-normal);
+	}
+
+	/* Not a button — the card is. It still answers its own hover so the call to
+	   action stays distinguishable inside the card's target. */
+	.route__cta {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-height: var(--space-10);
+		margin-top: var(--space-2);
+		padding: 0 var(--space-6);
+		border-radius: var(--radius-full);
+		font-family: var(--font-display);
+		font-size: var(--font-size-xl); /* 20px */
+		line-height: 1;
+		white-space: nowrap;
+		/* Fill, edge, ink and the hover swap are .btn-pill's — see app.css. */
+	}
+
+	/* The pill's own hover, not the card's: standing anywhere on the card used to
+	   light it up, which made it look pressed before the pointer had reached it.
+	   The card is still the click target — this only governs how the pill looks. */
+	/* Keyboard focus lands on the card, never on the pill, so the card drives the
+	   swap that .btn-pill would otherwise do for itself. Deliberately not by
+	   putting btn-host on the card: that would also invert the pill on hovering
+	   anywhere in the card, which is what made it look pressed before the pointer
+	   had reached it. --btn-ink and --btn-fill are the pill's own, declared on it
+	   by .btn-pill, so this cannot drift from the rule. */
+	.route:focus-visible .route__cta {
+		background: var(--btn-ink);
+		color: var(--btn-fill);
+	}
+
+	/* The pill answers its own pointer through .roll-host (app.css). Keyboard
+	   focus lands on the card, never on the pill, so the roll has to be driven
+	   from there too or the label would sit still for anyone not using a mouse. */
+	.route:focus-visible .route__cta :global(.text-roll__face) {
+		transform: translateY(calc(-1 * var(--btn-text-travel)));
+	}
+
+	.route:focus-visible .route__cta::after {
 		transform: translateY(0);
 	}
 
-	.contact__toggle-btn--active:hover {
-		background: var(--color-card-warm);
-	}
-
-	.contact__toggle-btn--active {
-		background: var(--color-card-warm);
-	}
-
-	.contact__toggle-dot {
-		width: clamp(0.6875rem, 3vw, 0.875rem);
-		height: clamp(0.6875rem, 3vw, 0.875rem);
-		border-radius: var(--radius-full);
-		border: 2px solid var(--color-fg-forest);
-		flex-shrink: 0;
+	/* ─── The chosen route ─── */
+	.contact__chosen {
 		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: var(--space-4);
+	}
+
+	/* The only way back, so it sits above the panel where the pair of cards
+	   started, not buried under the form. */
+	.contact__switch {
+		display: inline-flex;
 		align-items: center;
-		justify-content: center;
+		gap: var(--space-2);
+		padding: 0;
+		border: none;
+		background: none;
+		cursor: pointer;
+		font-family: var(--font-body);
+		font-size: 0.9375rem;
+		color: var(--brand-border);
+		text-decoration: underline;
+		text-underline-offset: 4px;
 	}
 
-	.contact__toggle-btn--active .contact__toggle-dot::before {
-		content: '';
-		width: 0.375rem; /* 6px */
-		height: 0.375rem;
-		border-radius: var(--radius-full);
-		background: var(--color-fg-forest);
+	.contact__switch:focus-visible {
+		outline: 2px solid var(--color-accent-gold);
+		outline-offset: 2px;
 	}
 
-	.contact__toggle-label {
-		white-space: nowrap;
-	}
-
-	/* The wrapper owns the card's size and its single child stretches to fill —
-	   that is what makes the e-mail form and the planner identical, so the
-	   toggle cannot resize anything. */
+	/* The wrapper owns the card's size and its single visible child stretches to
+	   fill — that is what makes the e-mail form and the planner identical, so
+	   switching between them cannot resize anything. */
 	.contact__panel {
 		display: grid;
 		width: 100%;
-		margin-top: 1.5rem; /* 24px, buttons -> panel gap */
 	}
 
-	/* Below the desktop breakpoint the e-mail form is usually the taller panel,
-	   so the card needs a floor that clears it — otherwise the wrapper would be
-	   the height of whichever panel is showing and the toggle would resize it.
-	   The floor tracks the form's own height, which grows with the card's width
-	   until the fields stop widening, hence the fluid value and the cap. */
+	/* Both panes occupy the same cell, so the wrapper is the size of whichever is
+	   showing and never the sum of the two. */
+	.contact__pane {
+		grid-column: 1;
+		grid-row: 1;
+		display: grid;
+		min-width: 0;
+	}
+
+	.contact__pane[hidden] {
+		display: none;
+	}
+
 	@media (max-width: 1023px) {
 		.contact__panel {
 			min-height: min(calc(15rem + 78vw), 41rem);
 		}
 	}
 
+	/* ─── Right-hand column ─── */
+	.contact__aside {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-6);
+	}
+
+	.contact__block {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+	}
+
+	/* Tighter than the check list: a title over one paragraph, not over rows. */
+	.contact__block--intro {
+		gap: var(--space-2);
+		display: none;
+	}
+
+	@media (min-width: 1024px) {
+		.contact__block--intro {
+			display: flex;
+		}
+	}
+
+	.contact__block-title {
+		font-family: var(--font-body);
+		font-size: 0.9375rem; /* 15px */
+		font-weight: var(--font-weight-medium);
+		color: var(--color-fg-forest);
+		margin: 0;
+	}
+
+	.contact__checks {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-4);
+	}
+
+	.contact__check {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.8125rem; /* 13px */
+		font-family: var(--font-body);
+		font-size: 0.9375rem;
+		font-weight: var(--font-weight-light);
+		line-height: var(--line-height-normal);
+		color: var(--color-text-subtle);
+	}
+
+	.contact__check svg {
+		flex: none;
+		margin-top: 0.125rem;
+		color: var(--brand-border);
+	}
+
+	.contact__rule {
+		height: 1px;
+		background: color-mix(in srgb, var(--brand-border) 25%, transparent);
+	}
+
+	.contact__socials {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: row;
+		gap: var(--space-4);
+	}
+
+	/* Mobile drops the channels: the design ends the section on the checks, and
+	   the footer carries the same three icons a screen further down. */
+	.contact__rule,
+	.contact__block--socials {
+		display: none;
+	}
+
+	/* ─── Desktop ─── */
 	@media (min-width: 1024px) {
 		.contact {
-			/* 112px block padding, not --space-16: Figma's 1440x1024 frame
-			   centres an 800px card in it (112 + 800 + 112 = 1024). Scaled by
-			   vh below that height so the section still clears the viewport
-			   once the card itself is capped at 80vh. */
-			padding: clamp(3rem, 7vh, 7rem) var(--space-8);
+			/* Vertical comes from --section-pad like every other section; this used to
+			   be its own clamp on 7vh, which made the gap depend on how tall the
+			   browser window was and landed at 63px where its neighbours had 96. Only
+			   the wider desktop gutter is kept. */
+			padding: var(--section-pad) var(--space-8);
 		}
 
-		.contact__inner {
-			max-width: none;
-			display: grid;
-			grid-template-columns: minmax(0, 36.75rem) minmax(0, 30.375rem); /* 588px / 486px */
-			/* 126px at the 1440px reference frame: Figma's card ends at x=708
-			   and the copy starts at x=834, which also lands the whole
-			   1200px composition on symmetric 120px side margins. Expressed
-			   in vw so narrower desktops close the gap proportionally
-			   instead of forcing the two columns to shrink. */
-			column-gap: clamp(3.5rem, 8.75vw, 7.875rem);
-			/* NOT centre: the copy is deliberately high against the card —
-			   Figma puts the card at y=112 and the copy at y=212, so it sits
-			   100px below the card's top, not on its centre line. */
-			align-items: start;
-			justify-content: center;
-		}
-
-		/* Desktop: panel LEFT, text RIGHT (node 424-113) */
-		.contact__panel {
-			grid-column: 1;
-			grid-row: 1;
-			margin-top: 0;
-			/* Height follows width instead of the viewport, so the calendar's tiles
-			   stay square at every screen size. The ratio is the planner's own
-			   natural height at this width — the taller of the two panels — and
-			   the e-mail form stretches into it, so switching between them cannot
-			   change the card's size. */
-			aspect-ratio: 588 / 648;
-			max-height: 82vh;
-			/* At the narrow end of desktop the two-column grid squeezes the card,
-			   and the ratio alone makes it too short for the e-mail form's fields.
-			   The floor keeps the form inside; the calendar just gains slack. */
-			min-height: 35rem;
-		}
-
-		.contact__text {
-			grid-column: 2;
-			grid-row: 1;
-			align-items: flex-start;
-			text-align: left;
-			padding-top: 6.25rem; /* 100px — card y=112 -> copy y=212 */
+		/* Header centred over both columns, per the design. */
+		.contact__header {
+			align-items: center;
+			text-align: center;
+			gap: 0.875rem;
 		}
 
 		.contact__eyebrow {
 			font-size: 1.25rem; /* 20px */
-			line-height: 1.3; /* 26/20 — Figma 449:6 */
-			margin-bottom: 0;
+			line-height: 1.3;
 		}
 
 		.contact__heading {
-			font-size: 2.5rem; /* 40px */
-			line-height: 1.2; /* 96/(2*40) — Figma 449:7 */
-			max-width: 30.375rem; /* 486px */
-			margin-bottom: 1rem; /* 16px — 449:7 ends 122, 449:8 starts 138 */
+			font-size: 3rem; /* 48px */
+			line-height: 1.2;
 		}
 
-		.contact__description {
-			font-size: 1rem; /* 16px */
-			line-height: 1.3125; /* 21/16 — Figma 449:8 is 63px over 3 lines */
-			text-align: left;
-			margin-bottom: 0.5625rem; /* 9px — 452:65 ends 301, toggle starts 310 */
+		.contact__intro--mobile {
+			display: none;
 		}
 
-		.contact__description-intro {
+		.contact__intro--desktop {
 			display: block;
-			margin-bottom: 1rem; /* 16px — 449:8 ends 201, 452:65 starts 217 */
-		}
-
-		.contact__toggle {
-			flex-direction: column;
-			align-items: flex-start;
-			gap: 0.34375rem; /* 5.5px — 454:424 ends 352, 454:436 starts 357.5 */
-		}
-
-		.contact__toggle-btn {
-			flex: 0 0 auto;
-			align-self: flex-start;
-			padding: 0.5rem 1rem; /* 8px vertical / 16px horizontal */
-			/* Was 20px. Every control on the site now speaks at 16px — the toggle
-			   is a choice between two panels, not a headline. */
 			font-size: 1rem;
-			line-height: 1.3;
+		}
+
+		.contact__grid {
+			display: grid;
+			grid-template-columns: 7fr 5fr;
+			column-gap: clamp(3.5rem, 8.75vw, 6.5rem);
+			align-items: start;
+			margin-top: var(--space-12);
+		}
+
+		.contact__routes,
+		.contact__chosen {
+			grid-column: 1;
+			grid-row: 1;
+			gap: var(--space-6);
+		}
+
+		.contact__aside {
+			grid-column: 2;
+			grid-row: 1;
+			gap: var(--space-8);
+		}
+
+		.route {
+			padding: 2rem;
+			gap: var(--space-4);
+			align-items: flex-start;
+			text-align: left;
+		}
+
+		.route__title {
+			font-size: 1.6875rem; /* 27px */
+		}
+
+		.route__body {
+			font-size: 1rem;
+		}
+
+		/* Desktop: the pill sits at its natural width, left-aligned in the card. */
+		.route__cta {
+			align-self: flex-start;
+		}
+
+		.contact__rule,
+		.contact__block--socials {
+			display: flex;
+		}
+
+		.contact__rule {
+			display: block;
+		}
+
+		.contact__panel {
+			/* Was 588/648, which left the planner's stage ~40px short of what the
+			   calendar actually needs: the tiles are square and sized from the
+			   card's WIDTH, so the grid cannot shrink to fit a short card — it
+			   just overflows and gets clipped by .planner's overflow: hidden.
+			   The step row added on top of that. Measured need at 583px wide:
+			   month head 36 + grid 539 + gaps, inside padding 52, step row 36 and
+			   footer 36. */
+			/* Measured, not guessed: at 639px wide the planner's own content comes
+			   to 694px — 28px padding twice, the 20px step row and its 20px
+			   margin, the 28px month row, the grid's 14px offset and its 497px,
+			   then the footer's 18px margin and 41px. 639/694 is that ratio. The
+			   e-mail form stretches into the same box, so switching panels still
+			   cannot resize the card. */
+			aspect-ratio: 588 / 645; /* +6px of slack over the measured 639 */
+			max-height: 88vh;
+			min-height: 34rem;
 		}
 	}
 </style>

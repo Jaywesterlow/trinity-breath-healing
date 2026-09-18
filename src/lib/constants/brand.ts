@@ -24,27 +24,107 @@ export const BRAND = {
 	    still has to be created (or forwarded) before this address receives. */
 	email: 'info@trinitybreathhealing.nl',
 
-	/** E.164 formatted business phone — locked when practitioner provides it.
-	    While it is TODO_, the footer omits the line entirely rather than
-	    printing a placeholder number to visitors. */
-	phone: 'TODO_PHONE',
+	/** E.164 for the tel: link; `phoneDisplay` is what a visitor reads. */
+	phone: '+31624244585',
+	phoneDisplay: '06 24 24 45 85',
+	/** PLACEHOLDER — the hours she actually wants to be called between. Shown in
+	    the cursor over the footer's phone number and nowhere else yet, so this
+	    is the one line to change. */
+	phoneHours: '09:00 en 17:00',
+
+	/** KvK and BTW, supplied 2026-08-24. Both belong on the legal pages and in
+	    the Organization JSON-LD — a Dutch business is expected to publish them,
+	    and they are a trust signal in a category where anyone can put up a site. */
+	kvk: '97538159',
+	vatId: 'NL005276270B90',
 
 	/**
-	 * Practice address. Part of the NAP triplet and therefore a local-SEO
-	 * signal, so it must match KvK and Google Business Profile exactly.
+	 * HER HOME ADDRESS. NOT FOR PUBLICATION.
 	 *
-	 * The footer used to hard-code "Stationsstraat 45 A, 1315 KS Almere" and a
-	 * phone number of "(+31) 6 123 456 78" — neither confirmed by the
-	 * practitioner, and the second obviously a placeholder. Publishing an
-	 * unverified street address for a real health practice is worse than
-	 * publishing none, so both now live here and the footer renders them only
-	 * once they stop being TODO_.
+	 * Clarified 31-08, and it reverses what this block used to assume. Reigersbos
+	 * is where she lives and works from; it is not the address the business is
+	 * registered at. The KvK registration sits on a different building — one she
+	 * owns and rents out to tenants — so neither address belongs in the footer:
+	 * the registered one would send a client to a stranger's door, and this one
+	 * broadcasts a solo practitioner's home on a health site.
+	 *
+	 * Kept here because the booking flow and her own correspondence need it, and
+	 * because a NAP source of truth that silently drops the address invites
+	 * someone to retype it in a component later. Nothing renders it. The public
+	 * answer to "where are you" is `workArea` below.
+	 *
+	 * The address the legal pages need is the KvK vestigingsadres — a different
+	 * value, still outstanding, and marked TODO_ in `registeredAddress`.
 	 */
 	address: {
-		street: 'TODO_STREET',
-		postalCode: 'TODO_POSTAL_CODE',
-		city: 'TODO_CITY',
+		street: 'Reigersbos 100 L',
+		/* Third floor. Part of the address rather than a separate field: it is
+		   what someone standing in the lobby needs, and Schema.org has no
+		   better slot for it than streetAddress. */
+		floor: '3e etage',
+		postalCode: '1107 ES',
+		city: 'Amsterdam',
 		country: 'Nederland'
+	},
+
+	/**
+	 * The KvK vestigingsadres, for the legal pages only.
+	 *
+	 * Article 3:15d BW requires a service provider to publish the geographic
+	 * address where it is established, so this cannot simply be omitted — but it
+	 * appears on ONE page, the algemene voorwaarden, in the "gevestigd te" line,
+	 * and nowhere else.
+	 *
+	 * NOBODY WORKS HERE. It is a building she owns and rents out; the tenants
+	 * have nothing to do with the practice. A client who reads this as a
+	 * visiting address and turns up is knocking on a stranger's door, so
+	 * wherever it renders it must be followed by the sentence saying it is a
+	 * registration address and not a place to visit. That sentence is not
+	 * decoration.
+	 *
+	 * The privacyverklaring deliberately does NOT repeat it. AVG art. 13(1)(a)
+	 * asks for the controller's identity and contact details, and a name, KvK
+	 * number, e-mail address and telephone number are contact details — a street
+	 * is not required there. One page instead of two halves the exposure at no
+	 * legal cost.
+	 */
+	registeredAddress: {
+		street: 'Kantershof 7',
+		postalCode: '1104 GA',
+		city: 'Amsterdam'
+	},
+
+	/**
+	 * What a visitor is told about location. No street, on purpose.
+	 *
+	 * She works from home, travels to clients, and treats remotely — so the
+	 * honest answer to "where are you" is a region, not a doorway. This is also
+	 * what the Google Business Profile is set up as: a service-area business
+	 * with the address hidden, which is the right shape for a practice with no
+	 * storefront and the wrong one to contradict on the site.
+	 */
+	workArea: {
+		label: 'Amsterdam-Zuidoost',
+		region: 'Amsterdam en omgeving'
+	},
+
+	/**
+	 * How she actually works, supplied 2026-08-24 — and it is not "a practice
+	 * you visit on weekdays".
+	 *
+	 * The Reigersbos address is a Saturday location. On other days she travels
+	 * to the client, and several treatments can be given remotely. Publishing
+	 * the address without that context would send someone to a closed door on a
+	 * Tuesday, so anywhere the address appears, this has to appear with it.
+	 */
+	practice: {
+		/** Weekday at the fixed location; ISO-8601, 6 = Saturday. */
+		locationWeekday: 6,
+		locationNote: 'Op zaterdag geef ik behandelingen op de praktijk in Amsterdam-Zuidoost.',
+		homeVisits: true,
+		homeVisitNote: 'Op andere dagen kom ik naar je toe.',
+		remote: true,
+		remoteNote: 'Een aantal behandelingen kan ook op afstand.'
 	},
 
 	/** Social media profiles */

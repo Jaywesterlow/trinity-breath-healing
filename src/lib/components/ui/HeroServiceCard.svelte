@@ -52,9 +52,11 @@
 			box-shadow var(--motion-hover) var(--ease-hover);
 	}
 
-	.card:hover {
-		transform: translateY(var(--lift-hover));
-		box-shadow: var(--shadow-hover);
+	@media (hover: hover) and (pointer: fine) {
+		.card:hover {
+			transform: translateY(var(--lift-hover));
+			box-shadow: var(--shadow-hover);
+		}
 	}
 
 	.card:active {
@@ -63,7 +65,7 @@
 	}
 
 	.card--forest {
-		background: var(--color-fg-forest);
+		background: var(--color-brand-green);
 		color: var(--color-bg-sand);
 	}
 

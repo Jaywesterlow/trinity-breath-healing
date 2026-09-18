@@ -112,7 +112,7 @@
 		role="dialog"
 		aria-modal="true"
 		aria-label="Mobiel navigatiemenu"
-		aria-hidden={!menuOpen}
+		{...{ inert: menuOpen ? undefined : true }}
 	>
 		{#each NAV_LINKS as link (link.path)}
 			<a
@@ -154,7 +154,7 @@
 		transition: background var(--motion-base) var(--ease-out);
 	}
 
-	/* Content row, capped at the same --container-max (1200px) as the footer so every
+	/* Content row, capped at the same --container-max as the footer so every
 	   section's content lines up at the same edges once the viewport outgrows it. .nav
 	   itself stays full-bleed (background spans edge-to-edge); this is what centers. */
 	.nav__inner {
@@ -180,11 +180,16 @@
 		height: 44px;
 		border-radius: var(--radius-full);
 		background: var(--brand-border);
-		border: none;
+		/* Ring in the fill's own colour, so the button reads as one flat disc. */
+		border: 2px solid var(--brand-border);
+		box-sizing: border-box;
 		cursor: pointer;
 		flex-shrink: 0;
 	}
 
+	/* Opening the menu turns the dot grid and nothing else. The button keeps its
+	   brown fill and sand dots in both states — the rotation is the whole signal,
+	   and a colour swap layered on top of it read as two things happening. */
 	.dot-grid {
 		display: block;
 		fill: var(--color-bg-sand);
@@ -193,7 +198,7 @@
 
 	/* ─── Nav open state (mobile) ─── */
 	.nav--open {
-		background: var(--color-fg-forest);
+		background: var(--color-brand-green);
 	}
 
 	/* ─── Mobile menu — full-screen overlay ─── */
@@ -201,7 +206,7 @@
 		position: fixed;
 		inset: 0;
 		z-index: 15;
-		background: var(--color-fg-forest);
+		background: var(--color-brand-green);
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -232,20 +237,38 @@
 		pointer-events: auto;
 	}
 
+	/* Same two-line idea as the desktop nav, minus the hover half: a touch screen
+	   has no hover, so only the current-page line is ever drawn. Sand on forest,
+	   and the same 2px as every other underline on the site. */
 	.mobile-menu__link {
+		position: relative;
 		font-family: var(--font-display);
 		font-size: 1.5rem;
 		font-weight: 500;
 		color: var(--color-bg-sand);
 		text-decoration: none;
 		padding: var(--space-1) 0.375rem;
-		border-bottom: 1px solid transparent;
-		transition: border-color var(--motion-fast);
+	}
+
+	.mobile-menu__link::after {
+		content: '';
+		position: absolute;
+		left: 0.375rem;
+		right: 0.375rem;
+		bottom: 0;
+		height: var(--underline-height);
+		background: var(--color-bg-sand);
+		transform: scaleX(0);
+		transform-origin: center;
+		transition: transform var(--motion-underline) var(--ease-out);
 	}
 
 	.mobile-menu__link--active {
 		font-weight: 600;
-		border-bottom-color: var(--color-bg-sand);
+	}
+
+	.mobile-menu__link--active::after {
+		transform: scaleX(1);
 	}
 
 	/* ─── Desktop ≥ 1024px ─── */
@@ -276,7 +299,15 @@
 			justify-content: center;
 		}
 
+		/* Two lines under every link, both centred and both growing outward from
+		   the middle to the same width. ::before is the grey one and answers
+		   hover; ::after is the green one and answers being the current page. On
+		   navigation the green line on the old link shrinks back to its centre
+		   while the new link's grows out of its own — the nav is never rebuilt
+		   between pages, so both run as plain transitions on elements that stay
+		   put. */
 		.nav__link {
+			position: relative;
 			font-family: var(--font-display);
 			font-weight: 500;
 			font-size: var(--font-size-xl);
@@ -284,13 +315,62 @@
 			text-decoration: none;
 			padding: var(--space-1) 0.375rem;
 			white-space: nowrap;
-			border-bottom: 1px solid transparent;
 			transition: color var(--motion-fast);
+		}
+
+		/* Wider than the word by 0.5rem at each end — the link's own padding is
+		   0.375rem, so -0.125rem puts the line half a rem clear of the first and
+		   last glyph. And 1px, not the shared 2px: at nav size a heavier rule
+		   reads as a border under the item rather than as an underline. */
+		.nav__link::before,
+		.nav__link::after {
+			content: '';
+			position: absolute;
+			left: -0.125rem;
+			right: -0.125rem;
+			bottom: 0;
+			height: 1px;
+			transform: scaleX(0);
+			transform-origin: center;
+			transition: transform var(--motion-underline) var(--ease-out);
+		}
+
+		/* Stage one is an actual grey. It was --brand-muted, which is a sage green
+		   — near enough to the forest that lands on top of it that the two
+		   stages read as a single line and the first one was never visible. */
+		.nav__link::before {
+			background: var(--color-underline-idle);
+		}
+
+		.nav__link::after {
+			background: var(--color-fg-forest);
+		}
+
+		.nav__link:focus-visible::before {
+			transform: scaleX(1);
+		}
+
+		@media (hover: hover) and (pointer: fine) {
+			.nav__link:hover::before {
+				transform: scaleX(1);
+			}
 		}
 
 		.nav__link--active {
 			color: var(--color-fg-forest);
-			border-bottom-color: var(--color-fg-forest);
+		}
+
+		/* The current page draws both: the grey first, then the green out of the
+		   same centre a beat later. They occupy the same pixels, so without the
+		   delay the green simply covers the grey on the way out and the page
+		   looks like it only ever had one line. */
+		.nav__link--active::before,
+		.nav__link--active::after {
+			transform: scaleX(1);
+		}
+
+		.nav__link--active::after {
+			transition-delay: var(--underline-stage-delay);
 		}
 	}
 </style>

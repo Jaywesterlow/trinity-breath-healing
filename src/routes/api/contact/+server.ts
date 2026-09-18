@@ -80,7 +80,7 @@ function htmlResponse(status: number, heading: string, message: string): Respons
 <meta name="robots" content="noindex">
 <title>${heading} — ${BRAND.shortName}</title>
 <style>body{margin:0;min-height:100vh;display:grid;place-items:center;background:#faf0e6;color:#3d4a35;font:400 1rem/1.5 system-ui,sans-serif;padding:2rem}main{max-width:32rem;text-align:center}a{color:inherit}</style>
-</head><body><main><h1>${heading}</h1><p>${message}</p><p><a href="/#contact">Terug naar de site</a></p></main></body></html>`;
+</head><body><main><h1>${heading}</h1><p>${message}</p><p><a href="/contact">Terug naar de site</a></p></main></body></html>`;
 	return text(body, { status, headers: { 'content-type': 'text/html; charset=utf-8' } });
 }
 

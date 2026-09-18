@@ -31,6 +31,14 @@
  *   - "pinned": mobile + !prefers-reduced-motion, after mount — tall pin + sticky +
  *     an inline transform on the track, sized against `--travel`.
  *
+ * "Mobile" is anything under 1100px wide (and at least 640px tall), not 1024: since
+ * 2026-09-17 tablets are mobile, the owner's rule for every tablet screen, and the hero's
+ * two-column layout moved to the same 1100px. The viewports below did not have to move
+ * for that — 390x844 was mobile and 1440x900 desktop under either threshold — but the
+ * threshold itself is what the 1024x1366 test at the end pins down: an iPad Pro 12.9 in
+ * portrait is 1024px wide and must pin like a phone, where under the old 1024 breakpoint
+ * it got the desktop row of three.
+ *
  * This is a poor fit for jsdom unit tests (no real scroll geometry / layout), hence a
  * live-interaction Playwright spec, consistent with the previous version of this file.
  * Uses standard Playwright page APIs directly (not the static-parse pattern of
@@ -308,6 +316,22 @@ test.describe('Werkwijze mobile horizontal scroll — sticky pin + tall spacer',
 				'native'
 			);
 		}
+	});
+
+	// Tablets are mobile: 1024px wide in portrait is an iPad Pro 12.9, and it pins like a
+	// phone. Under the old 1024px breakpoint this viewport got the desktop row, with the
+	// three cards 14px from the screen's edges.
+	test('tablet portrait (1024x1366) → data-scroll-mode "pinned", like a phone', async ({
+		page
+	}) => {
+		await page.setViewportSize({ width: 1024, height: 1366 });
+		await page.goto('/');
+
+		const section = page.locator('#werkwijze');
+		await expect(section).toHaveAttribute('data-scroll-mode', 'pinned');
+		await expect(section).toHaveClass(/werkwijze--pinned/);
+		await expect(section).not.toHaveClass(/werkwijze--stairs/);
+		expect(await getTravel(page), '--travel should be positive once pinned').toBeGreaterThan(0);
 	});
 
 	// A landscape phone passes the mobile width but has nowhere near the height the pin needs.

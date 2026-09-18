@@ -33,14 +33,18 @@ describe('ALL_ROUTES manifest', () => {
 	});
 
 	it('first entry is landing page with kind="landing"', () => {
-		expect(ALL_ROUTES[0].kind).toBe('landing');
-		expect(ALL_ROUTES[0].path).toBe('/');
+		expect(ALL_ROUTES[0]!.kind).toBe('landing');
+		expect(ALL_ROUTES[0]!.path).toBe('/');
 	});
 
-	it('has exactly 7 service-stub entries covering all 7 modality slugs', () => {
-		const serviceStubs = ALL_ROUTES.filter((r) => r.kind === 'service-stub');
-		expect(serviceStubs.length).toBe(7);
-		const paths = serviceStubs.map((r) => r.path);
+	it('has exactly 7 modality routes, and they all carry real content', () => {
+		// Was "7 service-stub entries". They graduated to `kind: 'page'` on 2026-09-09
+		// when each got a real /diensten/{slug} page, which is what puts them in the
+		// sitemap. The count and the slugs are still the thing worth pinning.
+		const modalities = ALL_ROUTES.filter((r) => r.path.startsWith('/diensten/'));
+		expect(modalities.length).toBe(7);
+		expect(modalities.every((r) => r.kind === 'page')).toBe(true);
+		const paths = modalities.map((r) => r.path);
 		expect(paths).toContain('/diensten/mahatma-healing');
 		expect(paths).toContain('/diensten/goldhealing');
 		expect(paths).toContain('/diensten/raster-energie');

@@ -21,7 +21,7 @@ import { faqItems } from '$lib/content/faq/index';
 export const prerender = true;
 
 const PATH = '/faq';
-const TITLE = 'Veelgestelde vragen over ademwerk en behandelingen';
+const TITLE = 'Veelgestelde vragen over ademwerk';
 const DESCRIPTION =
 	'Antwoord op de vragen die we het vaakst horen over ademwerk, Mahatma Healing, Goldhealing, ' +
 	'Raster Energie en Spinal Touch: duur, kosten, geschiktheid en meer.';

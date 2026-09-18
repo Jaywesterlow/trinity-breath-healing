@@ -58,9 +58,14 @@
 
 	<!-- Text fades; the art draws. Cards 2 and 3 sit horizontally outside the viewport until
 	     the pan brings them in, and the observer only fires on intersection — so each card's
-	     text arrives as that card does, rather than all three firing when the section opens. -->
-	<h3 class="wcard__title" use:reveal={{ delay: 0 }}>{title}</h3>
-	<p class="wcard__body" use:reveal={{ delay: 110 }}>{body}</p>
+	     text arrives as that card does, rather than all three firing when the section opens.
+	     `exit: false` because the way out belongs to the row, not to these lines: Werkwijze
+	     fades whole cards, art included — one after the other on mobile, and as one row that
+	     rises past the heading on desktop (the staircase). Left here as well, they would fade
+	     a second time inside a card that is already fading. Nothing in this file writes
+	     `opacity` on the card itself; the <li> around it is the one element that fades. -->
+	<h3 class="wcard__title" use:reveal={{ exit: false }}>{title}</h3>
+	<p class="wcard__body" use:reveal={{ exit: false }}>{body}</p>
 
 	{#if variant === 'filled'}
 		{#if artSvg}
@@ -80,8 +85,8 @@
 	{/if}
 
 	{#if ctaHref && ctaLabel}
-		<div class="wcard__cta" use:reveal={{ delay: 220 }}>
-			<ButtonLink href={ctaHref} label={ctaLabel} withArrow />
+		<div class="wcard__cta" use:reveal={{ exit: false }}>
+			<ButtonLink href={ctaHref} label={ctaLabel} block />
 		</div>
 	{/if}
 </article>
@@ -103,7 +108,7 @@
 	}
 
 	.wcard--filled {
-		background: var(--color-fg-forest);
+		background: var(--color-brand-green);
 		color: var(--color-bg-sand);
 		align-items: flex-start;
 		text-align: left;

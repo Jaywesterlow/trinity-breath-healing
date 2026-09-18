@@ -28,9 +28,11 @@
 >
 	<h2>1. Wie is verantwoordelijk voor jouw gegevens?</h2>
 	<p>
-		De verwerkingsverantwoordelijke is {BRAND.legalName}, gevestigd te
-		<Todo>vestigingsadres</Todo>, ingeschreven bij de Kamer van Koophandel onder nummer
-		<Todo>KvK-nummer</Todo>. De praktijk wordt gevoerd door {BRAND.practitionerFullName}.
+		De verwerkingsverantwoordelijke is {BRAND.legalName}, ingeschreven bij de Kamer van Koophandel
+		onder nummer {BRAND.kvk}. De praktijk wordt gevoerd door {BRAND.practitionerFullName}. Je
+		bereikt mij op <a href="mailto:{BRAND.email}">{BRAND.email}</a> en op
+		{BRAND.phoneDisplay}; het inschrijvingsadres van de onderneming staat in de
+		<a href="/algemene-voorwaarden">algemene voorwaarden</a>.
 	</p>
 	<p>
 		Heb je een vraag over je gegevens? Mail dan naar
@@ -141,6 +143,7 @@
 					<th scope="col">Verwerker</th>
 					<th scope="col">Waarvoor</th>
 					<th scope="col">Waar staan de gegevens</th>
+					<th scope="col">Toegang van buiten de EU</th>
 				</tr>
 			</thead>
 			<tbody>
@@ -148,21 +151,34 @@
 					<td>Vercel</td>
 					<td>Hosting van de website en het formulierverkeer</td>
 					<td>Europese Unie (regio Frankfurt)</td>
+					<td>Ja — Verenigde Staten</td>
 				</tr>
 				<tr>
 					<td>Resend</td>
 					<td>Afleveren van formulierinzendingen en bevestigingsmails</td>
 					<td>Europese Unie (regio Ierland)</td>
+					<td>Ja — Verenigde Staten</td>
+				</tr>
+				<tr>
+					<td>Supabase</td>
+					<td>
+						Het vastleggen van bezette afspraakmomenten. Hierin staan alleen de datum, de tijd en de
+						status van een aanvraag — geen naam, geen e-mailadres en niets over je klacht.
+					</td>
+					<td>Europese Unie (regio Ierland)</td>
+					<td>Ja — Verenigde Staten</td>
 				</tr>
 				<tr>
 					<td>Plausible Analytics</td>
 					<td>Bezoekstatistieken zonder cookies</td>
 					<td>Europese Unie</td>
+					<td>Nee</td>
 				</tr>
 				<tr>
 					<td><Todo>e-mailprovider</Todo></td>
 					<td>De mailbox waarin je bericht binnenkomt</td>
 					<td><Todo>land</Todo></td>
+					<td><Todo>ja of nee</Todo></td>
 				</tr>
 			</tbody>
 		</table>
@@ -170,6 +186,29 @@
 	<p>
 		Buiten deze partijen deel ik gegevens alleen wanneer ik daar wettelijk toe verplicht word,
 		bijvoorbeeld door de Belastingdienst.
+	</p>
+
+	<h3>Doorgifte buiten de Europese Unie</h3>
+	<p>
+		De opslag gebeurt in de Europese Unie, in de regio's die hierboven staan. Toch is dat niet het
+		hele verhaal, en ik vind dat je het volledige verhaal hoort te krijgen: Vercel, Resend en
+		Supabase zijn bedrijven van buiten de EU. Voor onderhoud, ondersteuning en storingen kunnen zij
+		vanuit de Verenigde Staten bij gegevens komen. Dat is een doorgifte naar een land buiten de EU.
+	</p>
+	<p>
+		Voor elk van deze partijen gelden de <strong
+			>modelcontractbepalingen van de Europese Commissie</strong
+		>
+		(de standaardcontractbepalingen uit besluit 2021/914). Dat is het instrument dat de AVG hiervoor voorschrijft:
+		het verplicht de partij in het buitenland tot hetzelfde beschermingsniveau als hier geldt, en geeft
+		jou rechten die je ook tegenover die partij kunt inroepen.
+	</p>
+	<p>
+		Om die reden staat er in de database die de afspraakmomenten bijhoudt <strong
+			>bewust niets persoonlijks</strong
+		>. Je naam, je e-mailadres en je omschrijving van je klacht worden daar niet opgeslagen — die
+		reizen alleen mee in de e-mail naar mij. Wat je over je gezondheid schrijft is een bijzonder
+		persoonsgegeven, en daar hoort de kortste weg bij.
 	</p>
 
 	<h2>6. Hoe lang bewaar ik ze?</h2>

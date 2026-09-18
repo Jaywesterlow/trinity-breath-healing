@@ -13,6 +13,7 @@
 	 */
 	import { Breadcrumbs, PageTitle } from '$lib/components/ui';
 	import { Faq } from '$lib/components/global';
+	import { reveal } from '$lib/actions/reveal';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -20,7 +21,8 @@
 
 <Breadcrumbs items={data.crumbs} />
 
-<article class="faq-intro">
+<!-- Title and lead fade as one block, as on every other subpage. -->
+<article class="faq-intro" use:reveal>
 	<PageTitle>Veelgestelde vragen</PageTitle>
 	<p class="faq-intro__text">
 		Antwoorden op de vragen die we het vaakst horen over ademwerk, de energetische behandelingen en
@@ -33,10 +35,17 @@
 <Faq showHeading={false} />
 
 <style>
+	/* <Faq> below is a full-width section whose inner content is --container-max,
+	   so this has to be the same box or the h1 sits to the right of the questions
+	   it introduces. Gutter added to the max-width, not taken out of it. */
 	.faq-intro {
-		max-width: var(--content-max-width, 42rem);
+		max-width: calc(var(--container-max) + 3rem);
 		margin: 0 auto;
-		padding: var(--space-8, 2rem) var(--space-4, 1rem) 0;
+		padding: var(--space-8) 1.5rem 0;
+	}
+
+	.faq-intro__text {
+		max-width: var(--content-max-width);
 	}
 
 	.faq-intro__text {
@@ -50,7 +59,9 @@
 		text-decoration: underline;
 	}
 
-	.faq-intro__text a:hover {
-		text-decoration: none;
+	@media (hover: hover) and (pointer: fine) {
+		.faq-intro__text a:hover {
+			text-decoration: none;
+		}
 	}
 </style>

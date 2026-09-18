@@ -16,7 +16,7 @@ import { LEGAL_LAST_UPDATED } from '$lib/legal/meta';
 export const prerender = true;
 
 const PATH = '/disclaimer';
-const TITLE = 'Disclaimer en medisch voorbehoud bij behandelingen';
+const TITLE = 'Disclaimer en medisch voorbehoud';
 const DESCRIPTION =
 	'Ademwerk en energetisch werk vervangen geen medische zorg. Lees wat een sessie wel en ' +
 	'niet is, wanneer je eerst met je arts overlegt en wat je kunt verwachten.';

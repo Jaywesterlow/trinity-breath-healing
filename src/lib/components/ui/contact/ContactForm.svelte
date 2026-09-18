@@ -201,8 +201,14 @@
 			>
 				{statusMessage}
 			</p>
-			<button class="form__submit" type="submit" disabled={sending}>
-				{sending ? 'Versturen…' : 'Verstuur email'}
+			<button
+				class="form__submit btn-pill btn-host text-roll"
+				class:roll-host={!sending}
+				type="submit"
+				disabled={sending}
+				data-label={sending ? 'Versturen…' : 'Verstuur email'}
+			>
+				<span class="text-roll__face">{sending ? 'Versturen…' : 'Verstuur email'}</span>
 			</button>
 		</div>
 
@@ -216,99 +222,143 @@
 </div>
 
 <style>
+	/* Every value in this file now comes from DatePlanner: the two panels sit in
+	   the same slot, one behind the other, and any difference between them reads
+	   as the card changing shape when you switch. Sand ground, hairline border,
+	   18px radius, 28px padding — the planner's card, exactly. */
 	.contact-panel {
-		/* Field fills are the card green lifted toward the sand background —
-		   derived from the card colour so both stay in step if the token moves. */
-		--field-bg: color-mix(in srgb, var(--color-bg-sand) 10%, var(--color-fg-forest));
-		--field-bg-hover: color-mix(in srgb, var(--color-bg-sand) 15%, var(--color-fg-forest));
-		--field-placeholder: color-mix(in srgb, var(--color-bg-sand) 45%, transparent);
-
 		display: flex; /* gives the form a real box to stretch into, so the textarea can grow */
 		flex-direction: column;
 		width: 100%;
 		min-height: 0; /* the wrapper sets the height; this just fills its cell */
-		/* Mobile-first: 14px at 320px, opening up to the Figma 28px as the card
-		   widens. A flat 28/32 ate a sixth of a small phone's width. */
-		padding: clamp(0.875rem, 4.5vw, 1.75rem);
-		background: var(--color-fg-forest);
-		border-radius: 1.5625rem; /* 25px */
-		color: var(--color-bg-sand);
+		padding: 1.75rem; /* 28px */
+		--panel-bg: var(--color-panel);
+		background: var(--panel-bg);
+		border: 1px solid rgba(124, 94, 73, 0.22);
+		border-radius: 1.125rem; /* 18px */
+		color: var(--color-fg-forest);
 		font-family: var(--font-body);
 	}
 
+	/* .planner__fields gap. */
 	.form {
 		display: flex;
 		flex: 1 1 auto;
 		flex-direction: column;
-		gap: clamp(0.625rem, 3vw, 1.25rem);
+		gap: 0.875rem; /* 14px */
 		min-height: 0;
 	}
 
+	/* .planner__field-row. */
 	.form__row {
 		display: grid;
 		grid-template-columns: 1fr;
-		gap: clamp(0.625rem, 3vw, 1.25rem);
+		gap: 0.75rem; /* 12px */
 	}
 
+	/* .planner__field. */
 	.field {
 		display: flex;
 		flex-direction: column;
-		gap: clamp(0.25rem, 1.5vw, 0.5rem);
+		gap: 0.4375rem; /* 7px */
 		min-width: 0;
 	}
 
+	/* Sized by its own content now, like .planner__field--grow: the card is as
+	   tall as the calendar needs, and a stretching field would take all of it. */
 	.field--grow {
-		flex: 1 1 auto;
+		flex: 0 1 auto;
 	}
 
+	/* .planner__label: 11px uppercase brown at .12em. */
 	.field__label {
-		font-size: clamp(0.8125rem, 3.6vw, 1rem);
-		font-weight: var(--font-weight-regular);
-		color: var(--color-bg-sand);
+		font-size: 0.6875rem; /* 11px */
+		font-weight: var(--font-weight-medium);
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		color: var(--brand-border);
 		line-height: 1.2;
 	}
 
+	/* .planner__input: transparent, hairline border, 48px, 13/16 padding. The
+	   type size is the one place the two can differ from the design's 14px —
+	   iOS Safari zooms the page when a focused input is under 16px — so 14px
+	   applies from 1024px up, where no phone is looking. */
 	.field__input {
 		width: 100%;
-		min-height: clamp(2.5rem, 11vw, 3rem);
-		padding: clamp(0.5rem, 2.5vw, 0.75rem) clamp(0.625rem, 3vw, 1rem);
-		background: var(--field-bg);
-		border: 1px solid transparent;
+		min-height: 3rem; /* 48px */
+		padding: 0.8125rem 1rem; /* 13px 16px */
+		background: transparent;
+		border: 1px solid rgba(124, 94, 73, 0.28);
 		border-radius: 0.625rem; /* 10px */
-		color: var(--color-bg-sand);
+		color: var(--color-fg-forest);
 		font-family: inherit;
-		/* Deliberately not shrunk below 16px: iOS Safari zooms the whole page when
-		   a focused input's type is smaller than that. */
 		font-size: 1rem;
 		line-height: var(--line-height-normal);
-		transition:
-			background-color var(--motion-hover) var(--ease-hover),
-			border-color var(--motion-hover) var(--ease-hover);
+		transition: border-color var(--motion-hover) var(--ease-hover);
+	}
+
+	@media (min-width: 1024px) {
+		.field__input {
+			font-size: 0.875rem; /* 14px */
+		}
 	}
 
 	.field__input::placeholder {
-		color: var(--field-placeholder);
+		/* Lighter than the value it stands in for, so the two cannot be confused —
+		   --color-text-subtle is the body-copy colour and read as real input.
+		   72% lands at 3.01:1 on the panel: clearly a placeholder, and still above
+		   the 3:1 floor. Every field has a real visible <label>, so this text is a
+		   redundant example rather than the only cue. */
+		color: color-mix(in srgb, var(--color-text-subtle) 72%, transparent);
 	}
 
-	.field__input:hover {
-		background: var(--field-bg-hover);
+	/* Chrome paints its own fill behind an autofilled field, as a background the
+	   page cannot restyle — square, so it cut the corners off the 10px radius.
+	   An inset shadow is the one thing that paints inside the border box and
+	   follows its radius, so it covers Chrome's fill instead of fighting it. */
+	.field__input:-webkit-autofill,
+	.field__input:-webkit-autofill:focus {
+		-webkit-box-shadow: 0 0 0 3rem var(--panel-bg) inset;
+		-webkit-text-fill-color: var(--color-fg-forest);
+		caret-color: var(--color-fg-forest);
+		transition: background-color 100000s ease-in-out 0s;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.field__input:-webkit-autofill:hover {
+			-webkit-box-shadow: 0 0 0 3rem var(--panel-bg) inset;
+			-webkit-text-fill-color: var(--color-fg-forest);
+			caret-color: var(--color-fg-forest);
+			transition: background-color 100000s ease-in-out 0s;
+		}
+	}
+
+	.field__input:focus {
+		border-color: var(--brand-border);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.field__input:hover {
+			border-color: var(--brand-border);
+		}
 	}
 
 	.field__input:focus-visible {
-		outline: none;
-		border-color: var(--color-accent-gold-soft);
-		box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent-gold-soft) 55%, transparent);
+		outline: 2px solid var(--color-accent-gold);
+		outline-offset: 2px;
 	}
 
 	.field__input[aria-invalid='true'] {
-		border-color: var(--color-accent-gold);
+		border-color: #a8442f;
 	}
 
+	/* The planner's textarea is 76px. This one is the whole point of the panel
+	   rather than an optional note, so it gets more room — but a fixed amount,
+	   not flex: 1, which handed it every spare pixel of a card sized for the
+	   calendar. */
 	.field__input--area {
-		/* Grows into whatever height the card has left, so the send button stays
-		   pinned just under it on the tall desktop card (Figma). */
-		flex: 1 1 auto;
-		min-height: clamp(3.75rem, 18vw, 8.75rem);
+		min-height: 8rem; /* 128px */
 		/* No drag handle: dragging it grew the textarea past the card and took
 		   the send button with it. Long messages scroll inside instead. */
 		resize: none;
@@ -319,8 +369,8 @@
 	.phone {
 		display: flex;
 		align-items: stretch;
-		background: var(--field-bg);
-		border: 1px solid transparent;
+		background: transparent;
+		border: 1px solid rgba(124, 94, 73, 0.28);
 		border-radius: 0.625rem;
 		/* Not overflow:hidden — the country popup has to escape this box. */
 		transition:
@@ -329,27 +379,28 @@
 	}
 
 	.phone {
-		min-height: clamp(2.5rem, 11vw, 3rem); /* matches the other inputs */
-	}
-
-	.phone:hover {
-		background: var(--field-bg-hover);
+		min-height: 3rem; /* 48px — matches the other inputs */
 	}
 
 	.phone:focus-within {
-		border-color: var(--color-accent-gold-soft);
-		box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent-gold-soft) 55%, transparent);
+		border-color: var(--brand-border);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.phone:hover {
+			border-color: var(--brand-border);
+		}
 	}
 
 	.phone--invalid {
-		border-color: var(--color-accent-gold);
+		border-color: #a8442f;
 	}
 
 	.phone__divider {
 		width: 1px;
 		align-self: stretch;
 		margin: 0.5rem 0;
-		background: color-mix(in srgb, var(--color-bg-sand) 25%, transparent);
+		background: rgba(124, 94, 73, 0.28);
 		flex-shrink: 0;
 	}
 
@@ -360,17 +411,25 @@
 		flex: 1 1 auto;
 	}
 
-	.phone__input:hover,
 	.phone__input:focus-visible {
 		background: transparent;
 		box-shadow: none;
 		border-color: transparent;
 	}
 
+	@media (hover: hover) and (pointer: fine) {
+		.phone__input:hover {
+			background: transparent;
+			box-shadow: none;
+			border-color: transparent;
+		}
+	}
+
+	/* .planner__error. */
 	.field__error {
-		font-size: 0.8125rem; /* 13px */
+		font-size: 0.75rem; /* 12px */
 		line-height: var(--line-height-normal);
-		color: var(--color-accent-gold);
+		color: #a8442f;
 	}
 
 	.honeypot {
@@ -385,12 +444,13 @@
 		border: 0;
 	}
 
+	/* .planner__footer: one row, pinned to the bottom of the card. */
 	.form__actions {
 		display: flex;
 		flex-direction: column;
 		align-items: stretch;
-		gap: clamp(0.375rem, 2vw, 0.75rem);
-		margin-top: auto; /* pin to the bottom of the card, per Figma */
+		gap: 0.5rem;
+		margin-top: auto;
 	}
 
 	.form__status {
@@ -401,34 +461,45 @@
 	}
 
 	.form__status--sent {
-		color: var(--color-card-warm);
+		color: var(--brand-muted);
 	}
 
 	.form__status--error {
-		color: var(--color-accent-gold);
+		color: #a8442f;
 	}
 
+	/* .planner__proceed: ButtonLink's own values — Cormorant 400 at 20px on
+	   --brand-border, 13/30 padding, right-aligned in the footer row. */
 	.form__submit {
-		align-self: stretch;
-		height: clamp(2.25rem, 10vw, 2.5rem);
-		padding: 0 clamp(1rem, 5vw, 1.5rem);
-		border: none;
+		align-self: flex-end;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		/* Height rather than vertical padding, and the same 40px every other pill
+		   on the site uses. The label roll clips at the padding edge, so a pill
+		   padded to its height would leave the outgoing word sitting in the
+		   padding instead of leaving the button. */
+		height: var(--space-10);
+		padding: 0 1.875rem; /* 30px */
 		border-radius: var(--radius-full);
-		background: var(--color-accent-gold-soft);
-		color: var(--color-bg-sand);
-		font-family: inherit;
-		font-size: clamp(0.875rem, 3.6vw, 1rem);
+		/* Fill, edge, ink and the hover swap are .btn-pill's — see the button rule
+		   in app.css. Kept from when this button owned its own colours: no gold in
+		   the palette works here, forest on gold-soft is 3.98:1 and on the brighter
+		   gold 4.34:1, both under the 4.5:1 this label needs. --brand-border carries
+		   sand at 5.25:1, which is why the rule is built on it. */
+		font-family: var(--font-display);
+		font-size: var(--font-size-xl); /* 20px */
+		font-weight: 400;
 		line-height: 1;
 		cursor: pointer;
-		transition:
-			transform var(--motion-hover) var(--ease-hover),
-			box-shadow var(--motion-hover) var(--ease-hover),
-			background-color var(--motion-hover) var(--ease-hover);
+		transition: transform var(--motion-hover) var(--ease-hover);
 	}
 
-	.form__submit:hover:not(:disabled) {
-		transform: translateY(var(--lift-hover));
-		box-shadow: var(--shadow-hover);
+	@media (hover: hover) and (pointer: fine) {
+		.form__submit:hover:not(:disabled) {
+			transform: translateY(var(--lift-hover));
+			box-shadow: var(--shadow-hover);
+		}
 	}
 
 	.form__submit:active:not(:disabled) {
@@ -449,7 +520,7 @@
 	.form__noscript {
 		font-size: 0.8125rem;
 		line-height: var(--line-height-normal);
-		color: color-mix(in srgb, var(--color-bg-sand) 75%, transparent);
+		color: var(--color-text-subtle);
 	}
 
 	.form__noscript a {

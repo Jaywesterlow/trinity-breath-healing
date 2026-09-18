@@ -78,6 +78,11 @@
 	}: Props = $props();
 </script>
 
+<!-- One target again. Splitting the corner arrow off as a second link to the
+     service's page gave the visitor no way to know it was one — two
+     destinations in a card that looks like a single object is a guess, not an
+     affordance. The whole card is the link, the arrow is decoration on it, and
+     one cursor label covers both. -->
 <a
 	href={buttonHref}
 	class="tcard"
@@ -86,6 +91,8 @@
 	aria-hidden={duplicate ? 'true' : undefined}
 	tabindex={duplicate ? -1 : undefined}
 	onclick={onCardClick}
+	data-tooltip="Lees meer over {label}"
+	data-tooltip-icon="page"
 	use:magnetic={{ enabled: isMagnetic, dragging }}
 >
 	<div class="tcard__icon-wrap">
@@ -103,22 +110,36 @@
 		<div class="tcard__bottom">
 			<p class="tcard__title">{label}</p>
 
-			<!-- Decorative only — the whole card above is now the single <a>, so
-			     this no longer needs to be its own link or carry a stretched-link
-			     pseudo-element (simplification of what shipped in 7c557ae: with no
-			     second link inside the card there's no nested-link problem left to
-			     solve). aria-hidden since it adds no information beyond the card's
-			     own accessible name. -->
-			<span class="tcard__arrow" aria-hidden="true">
-				<svg width="14" height="14" viewBox="0 0 22 22" fill="none" aria-hidden="true">
-					<path
-						d="M5 17L17 5M17 5H9M17 5V13"
-						stroke="currentColor"
-						stroke-width="2"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					/>
-				</svg>
+			<!-- Decoration, not a control — the whole card is the link. The card's
+			     hover only makes an outer ring appear around it; the swap and the
+			     fill still belong to the arrow's own hover. -->
+			<span class="tcard__arrow arrow-swap roll-host" aria-hidden="true">
+				<!-- Two copies: the visible one leaves along the diagonal it points
+				     down, and the second arrives on that same axis from the
+				     opposite corner. .arrow-swap in app.css owns the motion; this
+				     only says which way. -->
+				<span class="arrow-swap__glyph arrow-swap__glyph--out">
+					<svg width="14" height="14" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+						<path
+							d="M5 17L17 5M17 5H9M17 5V13"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
+				</span>
+				<span class="arrow-swap__glyph arrow-swap__glyph--in">
+					<svg width="14" height="14" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+						<path
+							d="M5 17L17 5M17 5H9M17 5V13"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
+				</span>
 			</span>
 		</div>
 
@@ -141,7 +162,7 @@
 		aspect-ratio: 282 / 459;
 		padding: var(--space-3); /* consistent on all 4 sides */
 		border-radius: var(--radius-lg);
-		background: var(--color-fg-forest);
+		background: var(--color-brand-green);
 		color: var(--color-bg-sand);
 		text-decoration: none;
 		cursor: pointer;
@@ -325,8 +346,16 @@
 	   the reveal is reachable by keyboard, not just a mouse. One shared
 	   motion token (--motion-base/--ease-out) across every property here —
 	   and on .tcard__icon-wrap/.tcard__bottom above — so it reads as one
-	   movement, not four unrelated ones. */
-	@media (hover: hover) and (pointer: fine) {
+	   movement, not four unrelated ones.
+
+	   Also gated to the carousel's desktop geometry (min-width: 1024px, the
+	   same breakpoint Behandelingen.svelte switches its fan on). Below it the
+	   card is 100px wide, so the description runs to seven or eight lines and
+	   the opened card grows 130–155px — past the headroom the fan box leaves
+	   above the centre card, which then clips it at the box's top edge. Only a
+	   mouse on a narrow window ever saw that (touch never hovers); it now sees
+	   the resting card, and a click still opens the modal with the same text. */
+	@media (hover: hover) and (pointer: fine) and (min-width: 1024px) {
 		.tcard:hover .tcard__icon-wrap,
 		.tcard:focus-visible .tcard__icon-wrap {
 			opacity: 0;
@@ -371,14 +400,57 @@
 			   ~50% bigger than the old mobile 1.5rem (2.625rem); tap target
 			   and glyph (the svg rule below) scale together so the arrow's
 			   proportions inside the circle hold. */
-			display: flex;
+			display: inline-flex;
 			flex-shrink: 0;
-			align-items: center;
-			justify-content: center;
 			width: 2.625rem;
 			height: 2.625rem;
 			border-radius: var(--radius-full);
 			border: 1px solid currentColor;
+			/* Up and to the right, the way the glyph points. */
+			--swap-x: var(--arrow-travel);
+			--swap-y: calc(-1 * var(--arrow-travel));
+		}
+
+		/* Three states, and they are deliberately different sizes of gesture.
+
+		   Card hovered: an outer ring appears around the circle. Nothing else —
+		   the arrow does not move and the circle does not fill, because the
+		   pointer is not on it yet.
+
+		   Arrow hovered: that ring grows a little, the circle fills, and the
+		   arrow runs its swap. Moving back off the arrow while staying on the
+		   card shrinks the ring to where it was.
+
+		   The ring is a box-shadow rather than a second element: it costs
+		   nothing in markup and it animates from the circle's own edge. */
+		.tcard__arrow {
+			/* Sand, not currentcolor: the glyph's colour flips to green when the
+			   circle fills, and a green ring on a green card is no ring at all.
+			   At 26%/22% the ring was technically present and effectively invisible
+			   against --color-brand-green — measured on screen, not guessed. */
+			box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-bg-sand) 0%, transparent);
+			transition:
+				background-color var(--motion-arrow) var(--ease-arrow),
+				color var(--motion-arrow) var(--ease-arrow),
+				box-shadow var(--motion-hover) var(--ease-hover);
+		}
+
+		@media (hover: hover) and (pointer: fine) {
+			.tcard:hover .tcard__arrow {
+				box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-bg-sand) 48%, transparent);
+			}
+		}
+
+		/* Both selectors, so this out-ranks the card rule above — `.tcard:hover
+		   .tcard__arrow` is three components and `.tcard__arrow:hover` alone is
+		   only two, so on its own it lost and the ring never grew. */
+		@media (hover: hover) and (pointer: fine) {
+			.tcard:hover .tcard__arrow:hover,
+			.tcard__arrow:hover {
+				box-shadow: 0 0 0 9px color-mix(in srgb, var(--color-bg-sand) 38%, transparent);
+				background: var(--color-bg-sand);
+				color: var(--color-brand-green);
+			}
 		}
 
 		.tcard__arrow svg {

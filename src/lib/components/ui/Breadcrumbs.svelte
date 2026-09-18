@@ -32,8 +32,19 @@
 </nav>
 
 <style>
+	/* Was flush against the viewport edge on every subpage, because this sits
+	   outside the page's own container and had no width of its own. One box for
+	   every page: the same one the landing page's sections and the footer use,
+	   with the gutter added to the max-width rather than eaten out of it
+	   (box-sizing is border-box), so the content box is exactly --container-max.
+	   This used to be switchable per page and the two settings disagreed by
+	   256px, which is how a crumb ended up 256px right of the logo below it. */
 	nav {
+		max-width: calc(var(--container-max) + 3rem);
+		margin: 0 auto;
+		padding: var(--space-4) 1.5rem 0;
 		font-size: 0.875rem;
+		color: var(--color-text-subtle);
 	}
 
 	ol {
@@ -51,13 +62,22 @@
 		gap: 0.25rem;
 	}
 
+	/* 24px of height, not the 21 the type alone gives. WCAG 2.5.8 exempts targets
+	   inside a sentence, and a breadcrumb trail is a navigation list rather than
+	   prose, so it does not get to claim that exemption. The padding is vertical
+	   only — horizontal padding would push the separators away from the words. */
 	a {
+		display: inline-block;
+		padding-block: 0.125rem;
 		color: var(--dark-green, #3a4530);
 		text-decoration: underline;
+		text-underline-offset: 2px;
 	}
 
-	a:hover {
-		text-decoration: none;
+	@media (hover: hover) and (pointer: fine) {
+		a:hover {
+			text-decoration: none;
+		}
 	}
 
 	span[aria-current='page'] {

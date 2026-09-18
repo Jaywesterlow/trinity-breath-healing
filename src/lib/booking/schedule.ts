@@ -45,12 +45,28 @@ export interface TimeSlot {
 }
 
 /**
- * Until the CMS exists, this is the practitioner's availability: weekdays,
- * 10:00-16:00, in 30-minute slots — the twelve slots drawn in Figma 441-48.
+ * Until the CMS exists, this is the practitioner's availability.
+ *
+ * What the planner sells is the 30-minute online kennismaking, and she said
+ * where that fits (29-08): *"Kennismaking online door de weeks kan maar in de
+ * avonden."* Weekday evenings, not office hours.
+ *
+ * This used to be Mon-Fri 10:00-16:00 — the twelve slots drawn in Figma 441-48,
+ * which were a layout study rather than her diary. Twelve daytime slots she
+ * cannot take is worse than four she can: every booking against them is a
+ * request she has to decline, and the decline arrives after the visitor has
+ * already committed to a time.
+ *
+ * 19:00-21:00 is the conservative reading of "in de avonden" — narrow on
+ * purpose, since an offered slot she cannot make costs more than an unoffered
+ * slot she could have. TODO.md §1 tracks confirming the real window with her.
+ *
+ * `leadTimeHours: 24` is hers too: nothing bookable inside 24 hours, matching
+ * the 24-hour free cancellation window in CANCELLATION_HOURS.
  */
 export const DEFAULT_SCHEDULE: Schedule = {
 	slotMinutes: 30,
-	openingHours: [1, 2, 3, 4, 5].map((weekday) => ({ weekday, from: '10:00', to: '16:00' })),
+	openingHours: [1, 2, 3, 4, 5].map((weekday) => ({ weekday, from: '19:00', to: '21:00' })),
 	closedDates: [],
 	leadTimeHours: 24,
 	horizonDays: 90
@@ -126,4 +142,31 @@ export function isBookable(schedule: Schedule, iso: string, now: Date = new Date
 	if (date > horizon) return false;
 
 	return slotsFor(schedule, iso, now).length > 0;
+}
+
+/**
+ * The first date the schedule actually offers, walking forward from today.
+ *
+ * The planner opens on a month and disables its back arrow there, so "which
+ * month do we open on" has to be a real question rather than "the current one".
+ * With a six-hour daytime window there was always something bookable within a
+ * day or two and the distinction never showed. With a two-hour evening window
+ * and a 24-hour lead time it does: late on the last day of a month, every
+ * remaining slot is inside the lead time and the current month has nothing
+ * left — so the planner would open on an empty grid with the back arrow
+ * disabled and no indication that the answer is one click forward.
+ *
+ * Returns null when the whole horizon is empty, which only happens if the
+ * schedule has no opening hours at all.
+ */
+export function firstBookableDate(schedule: Schedule, now: Date = new Date()): string | null {
+	const start = startOfDay(now);
+
+	for (let offset = 0; offset <= schedule.horizonDays; offset += 1) {
+		const day = new Date(start.getFullYear(), start.getMonth(), start.getDate() + offset);
+		const iso = toIso(day);
+		if (isBookable(schedule, iso, now)) return iso;
+	}
+
+	return null;
 }

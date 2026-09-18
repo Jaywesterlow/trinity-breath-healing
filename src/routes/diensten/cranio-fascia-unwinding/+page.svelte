@@ -1,9 +1,12 @@
 <script lang="ts">
-	import { StubLayout } from '$lib/components/global';
-	import { STUB_META } from '$lib/seo/stub-meta';
+	/**
+	 * /diensten/cranio-fascia-unwinding — content and layout both come from ServicePage; this route
+	 * only names the service. See ServicePage.svelte for why the copy is not here.
+	 */
+	import { ServicePage } from '$lib/components/global';
 	import type { PageData } from './$types';
+
 	let { data }: { data: PageData } = $props();
-	const stub = $derived(STUB_META[data.meta.path]!);
 </script>
 
-<StubLayout title={data.meta.title} description={data.meta.description} crumbs={stub.crumbs} />
+<ServicePage slug="cranio-fascia-unwinding" crumbs={data.crumbs} />

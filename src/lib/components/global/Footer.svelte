@@ -5,9 +5,12 @@
 	import TextLink from '$lib/components/ui/interactions/TextLink.svelte';
 	import { reveal } from '$lib/actions/reveal';
 	import { BRAND } from '$lib/constants/brand';
+	/* Instagram, WhatsApp, e-mail — the same row the hero renders, built once
+	   in constants/socials.ts. Both used to assemble it separately, which is
+	   how they both came to link two accounts that never existed. */
+	import { SOCIAL_LINKS } from '$lib/constants/socials';
 
 	const SOCIAL_COLOR = 'var(--color-bg-sand)';
-	const instagramUrl = `https://www.instagram.com/${BRAND.socials.instagram.replace('@', '')}/`;
 
 	/* NAP comes from BRAND, never from literals in this file — brand.ts is the
 	   source of truth and says so at the top. The address and phone were until
@@ -15,47 +18,39 @@
 	   street in Almere and a placeholder "(+31) 6 123 456 78". A wrong address
 	   on a health practice's site costs more than a missing one, and Google
 	   reads footer NAP against KvK and the Business Profile, so anything still
-	   marked TODO_ is withheld rather than guessed at. */
+	   marked TODO_ is withheld rather than guessed at.
+
+	   NO STREET ADDRESS, decided 31-08. This footer printed Reigersbos on all
+	   thirteen pages. That turned out to be her *home* — she works from there
+	   and travels to clients — while the business is registered at a different
+	   building, one she owns and rents to tenants. Neither belongs here: the
+	   registered one would send a client to a stranger's door, and publishing a
+	   solo practitioner's home on a health site is a decision she should make
+	   deliberately rather than by listing it in a message.
+
+	   So the footer answers "where are you" the way the practice actually works
+	   — a region, home visits, remote — which is also how the Google Business
+	   Profile is set up. The vestigingsadres that art. 3:15d BW requires lives
+	   on the legal pages, where "gevestigd te" is the right frame for it. The
+	   Organization JSON-LD has never carried an address either (see
+	   schema/shared.ts), so this brings the footer in line with the rest. */
 	const isPending = (value: string) => value.startsWith('TODO_');
 
-	const address = BRAND.address;
-	const hasAddress = !(
-		isPending(address.street) ||
-		isPending(address.postalCode) ||
-		isPending(address.city)
-	);
 	const hasPhone = !isPending(BRAND.phone);
 	/* tel: needs the digits unspaced; the visible label keeps the spacing. */
 	const telHref = `tel:${BRAND.phone.replace(/[^+\d]/g, '')}`;
 
-	/* Only the profiles that actually exist. facebook and x are null in BRAND —
-	   they were still rendered here as links to x.com/trinitybnh and
-	   facebook.com/trinitybnh, neither of which is a real account. */
-	const socials = [
-		{ icon: 'instagram' as const, href: instagramUrl, label: 'Volg ons op Instagram' },
-		...(BRAND.socials.facebook
-			? [
-					{
-						icon: 'facebook' as const,
-						href: BRAND.socials.facebook,
-						label: 'Volg ons op Facebook'
-					}
-				]
-			: []),
-		...(BRAND.socials.x
-			? [{ icon: 'x' as const, href: BRAND.socials.x, label: 'Volg ons op X' }]
-			: [])
-	];
-
+	/* Reading order, left to right, on every screen. This used to be the reverse
+	   and desktop flipped it back with `flex-direction: row-reverse`, so the two
+	   breakpoints showed the columns in opposite orders and neither matched the
+	   order a screen reader read them in. The array is now the order you see. */
 	const NAV_COLUMNS = [
 		{
-			heading: 'DIENSTEN',
+			heading: 'LEZEN',
 			links: [
-				{ href: '/diensten/mahatma-healing', label: 'Mahatma Healing' },
-				{ href: '/diensten/goldhealing', label: 'Goldhealing' },
-				{ href: '/diensten/raster-energie', label: 'Raster Energie' },
-				{ href: '/diensten/spinal-touch', label: 'Spinal Touch' },
-				{ href: '/diensten', label: 'Meer diensten' }
+				{ href: '/blog', label: 'Blog' },
+				{ href: '/artikelen', label: 'Artikelen' },
+				{ href: '/faq', label: 'FAQ' }
 			]
 		},
 		{
@@ -69,11 +64,13 @@
 			]
 		},
 		{
-			heading: 'LEZEN',
+			heading: 'DIENSTEN',
 			links: [
-				{ href: '/blog', label: 'Blog' },
-				{ href: '/artikelen', label: 'Artikelen' },
-				{ href: '/faq', label: 'FAQ' }
+				{ href: '/diensten/mahatma-healing', label: 'Mahatma Healing' },
+				{ href: '/diensten/goldhealing', label: 'Goldhealing' },
+				{ href: '/diensten/raster-energie', label: 'Raster Energie' },
+				{ href: '/diensten/spinal-touch', label: 'Spinal Touch' },
+				{ href: '/diensten', label: 'Meer diensten' }
 			]
 		}
 	] as const;
@@ -81,19 +78,29 @@
 
 <footer class="footer">
 	<div class="footer__inner">
+		<!-- Three reveals in the whole footer, since the 2026-09-15 audit: the brand column,
+		     the nav columns as one, and the legal row (which reaches the reader through the
+		     last-screenful fallback in reveal.ts). The social icons are icons alone and do
+		     not fade by themselves. -->
 		<div class="footer__main">
 			<!-- Brand: logo + contact -->
-			<ul class="footer__brand" use:reveal={{ delay: 0 }}>
+			<ul class="footer__brand" use:reveal>
 				<li><NavLogo inverted={true} footer={true} /></li>
 				<li>
 					<address class="footer__contact">
 						<ul>
-							{#if hasAddress}
-								<li>
-									{address.street}<br />{address.postalCode}
-									{address.city}, {address.country}
-								</li>
-							{/if}
+							<li>
+								<span class="footer__area">{BRAND.workArea.label}</span>
+								<!-- The region, then how she works. One without the other is
+								     misleading in both directions: a place with no note reads
+								     as a clinic you can walk into, and a note with no place
+								     leaves a visitor unable to tell whether she covers them. -->
+								<br /><span class="footer__note"
+									>{BRAND.practice.homeVisitNote} {BRAND.practice.remoteNote}</span
+								>
+							</li>
+							<!-- Neither of these opens a web page. The cursor says what they
+							     actually do, in her own voice rather than the browser's. -->
 							<li>
 								<TextLink
 									href="mailto:{BRAND.email}"
@@ -101,16 +108,18 @@
 									inverted={true}
 									showArrow={false}
 									size="sm"
+									tooltip="Verstuur mij een mail"
 								/>
 							</li>
 							{#if hasPhone}
 								<li>
 									<TextLink
 										href={telHref}
-										label={BRAND.phone}
+										label={BRAND.phoneDisplay}
 										inverted={true}
 										showArrow={false}
 										size="sm"
+										tooltip="Bereikbaar tussen {BRAND.phoneHours}"
 									/>
 								</li>
 							{/if}
@@ -120,15 +129,17 @@
 			</ul>
 
 			<!-- Social icons — row on mobile, vertical column on desktop (order: 3) -->
-			<nav class="footer__social" aria-label="Sociale media links" use:reveal={{ delay: 110 }}>
+			<nav class="footer__social" aria-label="Sociale media links">
 				<ul class="footer__social-list">
-					{#each socials as social (social.icon)}
+					{#each SOCIAL_LINKS as social (social.icon)}
 						<li>
 							<SocialIcon
 								icon={social.icon}
 								href={social.href}
 								label={social.label}
+								newTab={social.newTab}
 								color={SOCIAL_COLOR}
+								tooltip={social.tooltip}
 							/>
 						</li>
 					{/each}
@@ -136,7 +147,7 @@
 			</nav>
 
 			<!-- Nav columns — order: 2 on desktop, after social on mobile -->
-			<nav class="footer__nav" aria-label="Footer navigatie" use:reveal={{ delay: 220 }}>
+			<nav class="footer__nav" aria-label="Footer navigatie" use:reveal>
 				{#each NAV_COLUMNS as col (col.heading)}
 					<FooterNavColumn heading={col.heading} links={[...col.links]} />
 				{/each}
@@ -145,10 +156,10 @@
 
 		<hr class="footer__divider" />
 
-		<div class="footer__bottom" use:reveal={{ delay: 330 }}>
+		<div class="footer__bottom" use:reveal>
 			<nav class="footer__legal" aria-label="Juridische links">
-				<a href="/privacyverklaring">Privacyverklaring</a>
-				<a href="/algemene-voorwaarden">Algemene voorwaarden</a>
+				<a class="link-underline" href="/privacyverklaring">Privacyverklaring</a>
+				<a class="link-underline" href="/algemene-voorwaarden">Algemene voorwaarden</a>
 			</nav>
 			<p class="footer__copyright">
 				©Copyright 2026 Trinity Breath &amp; Healing, alle rechten voorbehouden
@@ -159,7 +170,7 @@
 
 <style>
 	.footer {
-		background: var(--color-fg-forest);
+		background: var(--color-brand-green);
 		color: var(--color-bg-sand);
 	}
 
@@ -193,6 +204,31 @@
 		font-size: var(--font-size-base);
 		color: var(--color-bg-sand);
 		line-height: var(--line-height-normal);
+	}
+
+	/* The region is the heading of this block, so it is set like one: the display
+	   face at nav size, a step up from the lines under it. It was the same 16px as
+	   the address rows below and read as one more row rather than as their title. */
+	.footer__area {
+		font-size: var(--font-size-xl); /* 20px */
+		font-weight: var(--font-weight-medium);
+		line-height: var(--line-height-snug);
+	}
+
+	/* The "only on Saturdays" line sits under the region and must read as a caveat
+	   rather than part of it — smaller and lighter, but not so faint that someone
+	   planning a visit skips it. */
+	.footer__note {
+		display: inline-block;
+		margin-top: 0.5rem;
+		font-family: var(--font-body);
+		font-size: 0.8125rem;
+		font-weight: var(--font-weight-light);
+		line-height: 1.5;
+		/* Weight, not opacity. The footer's ground is --color-brand-green, which
+		   carries full sand at exactly 4.50:1 — fading this 13px line at all drops
+		   it under AA (0.75 computes to 3.30:1), so the lighter face and the size
+		   are what mark it as secondary. */
 	}
 
 	.footer__contact ul {
@@ -259,29 +295,19 @@
 		line-height: var(--line-height-normal);
 	}
 
-	/* Plain text links get the underline reveal rather than the lift: moving a
-	   line of running text is noisy, an underline arriving is not. */
+	/* 24px tall, which the 12px type alone does not reach. These sit in a <nav>,
+	   not in a sentence, so WCAG 2.5.8's inline exception does not cover them.
+	   Vertical padding only — the underline is drawn on the text box, so adding
+	   horizontal padding would push the line out past the word. */
 	.footer__legal a {
-		position: relative;
+		display: inline-block;
+		padding-block: 0.1875rem;
 	}
 
-	.footer__legal a::after {
-		content: '';
-		position: absolute;
-		left: 0;
-		right: 0;
-		bottom: -0.125rem;
-		height: 1px;
-		background: currentColor;
-		transform: scaleX(0);
-		transform-origin: left center;
-		transition: transform var(--motion-hover) var(--ease-hover);
-	}
-
-	.footer__legal a:hover::after,
-	.footer__legal a:focus-visible::after {
-		transform: scaleX(1);
-	}
+	/* Plain text links get the underline reveal rather than the lift: moving a
+	   line of running text is noisy, an underline arriving is not. The wipe
+	   itself is .link-underline in app.css — it used to be redeclared here at
+	   1px and rewound to the left on the way out. */
 
 	/* ─── Desktop (≥ 1024px) ─── */
 	@media (min-width: 1024px) {
@@ -323,11 +349,13 @@
 			align-items: flex-start;
 		}
 
-		/* nav columns land in the middle; row-reverse flips array order to LEZEN→MENU→DIENSTEN */
+		/* Nav columns land in the middle. Plain `row` — the array is already in
+		   LEZEN→MENU→DIENSTEN order, so what you read in the source, what a screen
+		   reader announces and what both breakpoints show are one order. */
 		.footer__nav {
 			order: 2;
 			display: flex;
-			flex-direction: row-reverse;
+			flex-direction: row;
 			gap: 5.44rem; /* Figma spec 87px; nearest token --space-16 is 64px — deviation too large to round to token */
 			align-self: flex-start;
 		}

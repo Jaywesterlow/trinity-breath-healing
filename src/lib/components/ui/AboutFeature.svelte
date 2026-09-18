@@ -46,9 +46,9 @@
 		height: 4.688rem;
 		border-radius: 50%;
 		overflow: hidden;
-		background: var(
-			--color-fg-forest
-		); /* matches the icon art's own baked-in background, so the shrunk-down margin below blends in seamlessly */
+		/* The art is a mask with a near-sand stroke and no ground of its own, so
+		   this circle IS the ground — same green as every other filled surface. */
+		background: var(--color-brand-green);
 		display: flex;
 		align-items: center;
 		justify-content: center;

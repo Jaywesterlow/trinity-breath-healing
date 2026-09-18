@@ -29,9 +29,23 @@
 	<dl>
 		<dt>Praktijk</dt>
 		<dd>
-			{BRAND.legalName}, gevestigd te <Todo>vestigingsadres</Todo>, ingeschreven bij de Kamer van
-			Koophandel onder nummer <Todo>KvK-nummer</Todo>, vertegenwoordigd door
+			{BRAND.legalName}, gevestigd te {BRAND.registeredAddress.street},
+			{BRAND.registeredAddress.postalCode}
+			{BRAND.registeredAddress.city}, ingeschreven bij de Kamer van Koophandel onder nummer
+			{BRAND.kvk}, btw-identificatienummer {BRAND.vatId}, vertegenwoordigd door
 			{BRAND.practitionerFullName}.
+			<!-- The sentence below is not decoration. This is the registered
+			     address of the business, a building she owns and rents out; the
+			     people living there have nothing to do with the practice. It is
+			     published because art. 3:15d BW requires an establishment
+			     address, and it appears on this page only. Anyone reading it as
+			     "where the treatments are" and turning up is knocking on a
+			     stranger's door. -->
+			<br /><span class="legal-note"
+				>Dit is het inschrijvingsadres van de onderneming, geen bezoekadres: er worden hier geen
+				behandelingen gegeven en je kunt er niet terecht. Behandelingen vinden bij jou thuis plaats,
+				op afspraak op de praktijk, of op afstand.</span
+			>
 		</dd>
 		<dt>Cliënt</dt>
 		<dd>De persoon die een sessie of behandeling afneemt of daarvoor een afspraak maakt.</dd>
@@ -151,3 +165,15 @@
 		voorgelegd aan de bevoegde rechter in het arrondissement waar de praktijk is gevestigd.
 	</p>
 </LegalDoc>
+
+<style>
+	/* Quieter than the definition it qualifies, but never hidden: the whole
+	   point of the line is that someone skimming for an address reads it. */
+	.legal-note {
+		display: inline-block;
+		margin-top: 0.5rem;
+		font-size: 0.875rem;
+		line-height: 1.55;
+		opacity: 0.85;
+	}
+</style>

@@ -320,14 +320,18 @@
 		transition: background-color 150ms; /* was var(--motion-fast) */
 	}
 
-	.morph-modal__close:hover {
-		background: color-mix(in srgb, #3d4a35 92%, transparent); /* was var(--color-fg-forest-92) */
+	@media (hover: hover) and (pointer: fine) {
+		.morph-modal__close:hover {
+			background: color-mix(in srgb, #3d4a35 92%, transparent); /* was var(--color-fg-forest-92) */
+		}
 	}
 
 	/* Bare arrows, no circle/border — opacity is the only hover affordance
 	   left once the circle (and its own hover background) is gone. */
-	.morph-modal__nav:hover {
-		opacity: 0.65;
+	@media (hover: hover) and (pointer: fine) {
+		.morph-modal__nav:hover {
+			opacity: 0.65;
+		}
 	}
 
 	.morph-modal__nav--prev {

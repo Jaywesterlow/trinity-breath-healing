@@ -43,11 +43,15 @@
 		const target = event.target;
 		if (!(target instanceof Element)) return;
 
-		const summary = target.closest('summary');
-		if (!summary) return;
-		const found = summary.closest('details.faq__item');
+		/* Either half of an open row closes it: the question, or the answer under
+		   it. The answer is not a <summary>, so the browser does nothing with a
+		   click there — this is what makes it act like one. */
+		const control = target.closest('summary, .faq__answer');
+		if (!control) return;
+		const found = control.closest('details.faq__item');
 		if (!(found instanceof HTMLDetailsElement)) return;
 		const item = found;
+		const fromAnswer = !control.matches('summary');
 
 		// Clicked again mid-close: cancel the collapse and leave the panel open, rather
 		// than queueing a second one against the first.
@@ -60,7 +64,11 @@
 		// Opening is the browser's job — the CSS handles it and native behaviour is better
 		// than anything reimplemented here. Same when motion is not wanted.
 		if (!item.open) return;
-		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+			// The answer still has to close it; only the animation is skipped.
+			if (fromAnswer) item.open = false;
+			return;
+		}
 
 		// Closing: keep `open` set so the panel stays rendered, and let the CSS collapse it.
 		event.preventDefault();
@@ -97,9 +105,12 @@
 <section class="faq" id="faq">
 	<div class="faq__container">
 		{#if showHeading}
-			<header class="faq__header">
-				<p class="faq__eyebrow" use:reveal={{ delay: 0 }}>FAQ</p>
-				<h2 class="faq__heading" use:reveal={{ delay: 120 }}>Veelgestelde vragen</h2>
+			<!-- Eyebrow and heading fade as one block. The questions below keep a reveal
+			     each: the list is 650px and more at either width, far over the one-third
+			     line, and a row is the smallest thing that reads as a unit. -->
+			<header class="faq__header" use:reveal>
+				<p class="faq__eyebrow">FAQ</p>
+				<h2 class="faq__heading">Veelgestelde vragen</h2>
 			</header>
 		{/if}
 
@@ -110,11 +121,10 @@
 		<!-- svelte-ignore a11y_no_static_element_interactions -->
 		<!-- svelte-ignore a11y_click_events_have_key_events -->
 		<div class="faq__list" onclick={onListClick}>
-			{#each faqItems as item, i (item.question)}
+			{#each faqItems as item (item.question)}
 				<details
 					class="faq__item"
 					use:reveal={{
-						delay: Math.min(240 + i * 90, 240 + 6 * 90),
 						/* No rise here: this element owns its own grid-template-rows disclosure
 						   transition (open/close, see the style block below). Animating its
 						   transform — even via Web Animations, even to a no-op offset — promotes
@@ -125,7 +135,9 @@
 						distance: 0
 					}}
 				>
-					<summary class="faq__question">
+					<!-- data-cursor: the pointer becomes a filled circle with a + over a
+					     closed row and turns 45deg into a × when it opens. -->
+					<summary class="faq__question" data-cursor="toggle">
 						<span>{item.question}</span>
 						<svg class="faq__chevron" width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
 							<polyline
@@ -137,7 +149,12 @@
 							/>
 						</svg>
 					</summary>
-					<p class="faq__answer">{item.answer}</p>
+					<!-- The answer closes the row too. Reading to the end and having to
+					     travel back up to the question to shut it is a small annoyance
+					     that costs nothing to remove — and it means the disclosure
+					     cursor holds all the way down the open row instead of
+					     changing halfway. -->
+					<p class="faq__answer" data-cursor="toggle">{item.answer}</p>
 				</details>
 			{/each}
 		</div>
@@ -147,7 +164,7 @@
 <style>
 	.faq {
 		background: var(--color-bg-sand);
-		padding-block: var(--space-12);
+		padding-block: var(--section-pad);
 
 		/* Local to this section rather than the global motion tokens: --motion-base (250ms) with
 		   --ease-out (a steep expo curve, ~80% travelled in its first quarter) put nearly all of
@@ -160,15 +177,24 @@
 		--faq-ease: cubic-bezier(0.4, 0, 0.2, 1);
 	}
 
+	/* The gutter is added to the max-width rather than taken out of it, so the
+	   content box is exactly --container-max. It used to be taken out, which put
+	   every question 24px to the right of every other section on the landing page
+	   — including the contact cards directly above it. */
 	.faq__container {
-		max-width: var(--container-max); /* 1200px — same cap as nav/footer/hero, so edges line up */
+		max-width: calc(var(--container-max) + 3rem);
 		margin-inline: auto;
-		padding-inline: var(--space-6);
+		padding-inline: 1.5rem;
 	}
 
 	.faq__header {
 		margin-bottom: var(--space-8);
 	}
+
+	/* Two columns from 1024px up: the header holds the left one on its own and
+	   the questions fill the right. The header does NOT stretch to match the
+	   list — the empty space under it is the point, and a section this dense
+	   needs somewhere to breathe. See the breakpoint at the bottom. */
 
 	/* Matches the eyebrow treatment in Werkwijze/Behandelingen so all landing
 	   sections share one header rhythm. */
@@ -323,6 +349,7 @@
 	}
 
 	.faq__answer {
+		cursor: pointer;
 		padding-bottom: var(--space-5);
 		font-size: var(--font-size-base);
 		line-height: var(--line-height-loose);
@@ -330,8 +357,21 @@
 	}
 
 	@media (min-width: 1024px) {
-		.faq {
-			padding-block: var(--space-16);
+		.faq__container {
+			display: grid;
+			/* 5fr/7fr rather than half and half: a question is a line of text and
+			   wants the room; a two-line heading does not. */
+			grid-template-columns: 5fr 7fr;
+			gap: var(--space-12);
+			align-items: start;
+		}
+
+		.faq__header {
+			margin-bottom: 0;
+		}
+
+		.faq__eyebrow {
+			margin-bottom: var(--space-3);
 		}
 	}
 </style>

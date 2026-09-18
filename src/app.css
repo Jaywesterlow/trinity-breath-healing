@@ -19,9 +19,26 @@
 	--color-accent-gold: #d4a968; /* gold accent — CTA buttons, focus rings */
 	--color-card-warm: #ede8d0; /* pale sage — card backgrounds */
 	--brand-muted: #5f6d56; /* mid sage, darkened for WCAG AA — secondary text, borders (was #7a8c6e, 3.22:1; now 4.90:1 on --color-bg-sand) */
-	--color-text-subtle: #848981; /* neutral stone gray — body text on light bg (Figma) */
+	/* Was #848981, which is 3.17:1 on the sand ground — under the 4.5:1 AA asks of
+	   body text, and this token is the body text colour (hero intro, contact copy,
+	   card bodies). Darkened along its own hue until it clears AA on both grounds
+	   it actually sits on: 4.98:1 on --color-bg-sand, 4.55:1 on --color-card-warm. */
+	--color-text-subtle: #656962; /* neutral stone gray — body text on light bg */
 	--brand-border: #7c5e49; /* dark cream, darkened for WCAG AA — dividers, input borders, CTA chrome (was #b68a6b, 2.73:1; now 5.25:1 on --color-bg-sand) */
 	--color-accent-gold-soft: #c7a27a; /* Figma-sourced — Over mij mobile CTA/link accents on dark overlay */
+	/* Forest taken down 20% so it can carry *text* on gold-soft. Plain
+	   --color-fg-forest is 3.98:1 there: enough for a glyph under WCAG 1.4.11,
+	   short of the 4.5:1 a label needs. This is 4.96:1, and still reads forest. */
+	--color-fg-forest-deep: #313b2a;
+	/* Leaf green, for filled cards that used to be --color-fg-forest. 8% darker
+	   than the #6f8460 it came from, which is what lifts sand on it from 3.63:1
+	   to 4.50:1 — #6f8460 has no working text colour at all (charcoal on it is
+	   2.31:1). Never a text colour itself. */
+	--color-brand-green: #627454;
+	/* The contact panels' ground. Bone rather than the page's own sand, so an
+	   empty form still reads as a card sitting on the section instead of a
+	   rectangle of border floating on the same colour. */
+	--color-panel: #fdf8f1;
 	--brand-destructive: #b3402c; /* rust/brick red — NOT in Figma's palette; chosen because Trinity's
                                     palette has no existing red, and destructive/error states need a
                                     hue that reads as "stop" while still sitting comfortably in a warm
@@ -147,6 +164,25 @@
 	--space-12: 3rem;
 	--space-16: 4rem;
 
+	/* One number for the air between sections, because it was nine before: --space-16
+	   on the landing sections, --space-12 on the FAQ and the note, --space-8 on the
+	   carousel's bottom edge, and a media query flipping two of those back to 16 at
+	   the breakpoint. Adjacent sections butt up against each other — the whitespace a
+	   reader sees is this value twice.
+
+	   Clamped rather than fixed: 96px of padding on a 390px phone eats a fifth of the
+	   screen, and 64px on a 1440px desktop reads as cramped. The vw term hits the 6rem
+	   ceiling at about 1370px wide. Gaps land at 128px on a phone and 192px on a
+	   desktop, against 112 and 128 before. */
+	--section-pad: clamp(4rem, 7vw, 6rem);
+
+	/* The same job one level down: the gap between the <section>s inside a single
+	   subpage article. Not --section-pad — those separate full-bleed bands of the
+	   landing page, and 192px between "Wat het is" and "Waar het bij kan helpen"
+	   would read as two documents rather than two headings in one. It was 4rem on
+	   three route files and 3rem on two components, for the same job. */
+	--block-gap: clamp(3.5rem, 5vw, 5rem);
+
 	/* --- Typography --- */
 	--font-size-xs: 0.75rem;
 	--font-size-sm: 0.875rem;
@@ -163,7 +199,6 @@
 	/* Range: 375px → 1440px (1065px denominator). All values in px.             */
 	--fs-display: clamp(36px, calc(24.74px + 3.005vw), 68px); /* hero H1        36→68 */
 	--fs-title: clamp(36px, calc(31.77px + 1.127vw), 48px); /* hero H1 (Figma) 36→48 */
-	--fs-title-sm: clamp(30px, 4vw, 36px); /* hero H1, tablet 768–1023 (smaller than --fs-title) */
 	--fs-h2: clamp(
 		28px,
 		calc(23.77px + 1.127vw),
@@ -195,18 +230,93 @@
 	--ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
 
 	/* --- Hover interaction (one vocabulary, used by every interactive surface) ---
-	   Buttons and cards lift by --lift-hover and pick up --shadow-hover; plain
-	   text links wipe an underline in. Both are driven from these four tokens so
+	   Buttons and cards lift by --lift-hover; plain text links wipe an underline
+	   in. Both are driven from these four tokens so
 	   the feel can be retuned in one place — and so the reduced-motion block at
 	   the bottom of this file can flatten the movement to nothing without every
 	   component needing its own media query. */
 	--motion-hover: 180ms;
 	--ease-hover: cubic-bezier(0.22, 1, 0.36, 1);
 	--lift-hover: -2px;
-	--shadow-hover: 0 6px 18px color-mix(in srgb, var(--color-fg-forest) 22%, transparent);
+	/* ButtonLink's arrow swap: how far each arrow travels on both axes. Equal x and
+	   y, so the path runs at 45deg — the angle the glyph itself points. Lives here,
+	   not on the component, so the reduced-motion block below can flatten it; a
+	   declaration on .btn-link__circle would out-specify that :root override. */
+	--arrow-travel: 14px;
+	/* The same swap when it runs straight down instead of along the diagonal —
+	   the arrow half of a filled button, counter-rolling against its label. It
+	   has to clear the full inner height of the circle (36px) rather than a
+	   corner of it, so it travels further than --arrow-travel. */
+	--arrow-roll: 24px;
+	/* How far a button's label rolls. 100% of the label box, so the word leaves
+	   the pill completely rather than stopping halfway up it. */
+	--btn-text-travel: 100%;
+	/* The arrow swap and the circle filling run slower than a plain hover: at
+	   --motion-hover (180ms) the two arrows crossed so fast the movement barely
+	   registered, and the fill snapped. This is the one interaction on the site
+	   people are meant to watch. */
+	--motion-arrow: 420ms;
+	/* --- The underline wipe (one vocabulary, every animated link) ---
+	   Height was 1px in the footer and 1px-growing-to-2px in the contact copy,
+	   which is the jump you see when the animation lands. One value now.
+	   The wipe always travels the same way: in from the left, and out to the
+	   right, so it continues rather than rewinding. That is what the origin
+	   flip in .link-underline below does. */
+	/* A whole pixel, and this is not cosmetic. At 1.5px the line is rasterised on
+	   its own compositing layer for the duration of the scaleX wipe, where it
+	   rounds up to 2px, and then snaps back to 1.5px the instant the animation
+	   settles — so every footer link's underline visibly thinned at the end of
+	   its own reveal. An integral height renders the same mid-wipe as at rest. */
+	--underline-height: 2px;
+	--motion-underline: 260ms;
+	/* The underline arrives in two stages: a neutral line first, then the link's
+	   own colour sweeping over it. --brand-muted used to play the first part and
+	   could not — it is a sage green, close enough to the forest that lands on
+	   top of it that the two stages read as one. This is an actual grey. 3.84:1
+	   on --color-bg-sand, so it clears WCAG 1.4.11 for a graphic on its own. */
+	--color-underline-idle: #7e7972;
+	/* How long the second stage waits, so the first one is seen at all. */
+	--underline-stage-delay: 130ms;
+	/* The FAQ's disclosure glyph, in the cursor: growing out of the arrowhead and
+	   turning + into ×. Slower than everything else the cursor does, because it
+	   is the one shape carrying a message rather than an affordance. */
+	--motion-toggle: 460ms;
+	/* The social icons taking on their channel's own colour. Slower than a plain
+	   hover because it is a hue change rather than a movement, and a fast one
+	   reads as a flicker. */
+	--motion-social: 250ms;
+	--ease-arrow: cubic-bezier(0.22, 1, 0.36, 1);
+	/* No shadows anywhere on this site, hover included — the lift alone carries the
+	   interaction. Kept as a token rather than deleted so every surface that reads it
+	   stays on one vocabulary, and so a shadow can never creep back in one component
+	   at a time. */
+	--shadow-hover: none;
 
 	/* --- Layout --- */
-	--container-max: 1200px;
+	/* The measure every text page is set to. It was --content-max-width with a
+	   42rem fallback and the variable was never actually defined, so four
+	   components were each quietly using their own fallback and the breadcrumbs
+	   above them used none at all. 46rem is the width the treatments note and the
+	   new content pages were already built to. */
+	--content-max-width: 46rem;
+	/* The page container, and it grows with the screen. It was a fixed 1200px, which
+	   the owner measured on his own three screens: on the 1600px laptop it fits, on
+	   1920 it leaves 360px of side space and on the 2560px ultrawide 1360px. 72vw is
+	   what 1200px is at 1667px wide, so the laptop is pixel-for-pixel what it was
+	   (1152 < 1200, so the floor holds), 1920 gives 1382px and 2560 gives the 1840px
+	   ceiling. Everything that reads this token — nav, hero, sections, footer, the
+	   `calc(var(--container-max) + 3rem)` boxes on the subpages — follows on its own. */
+	--container-max: clamp(1200px, 72vw, 1840px);
+	/* The same growth as a plain number: container / 1200, so 1 on the laptop, 1.152
+	   at 1920 and 1.533 at the 1840px ceiling. Only the hero's drawing reads it now
+	   (Hero.svelte, --hero-col-h, where it is also capped). It once scaled the hero's
+	   type and measures and the nav's wordmark, links and button as well, and the
+	   owner's verdict on the ultrawide was that all of that got too big — type keeps
+	   its 1200-container size at every width; the drawing is the one thing that
+	   grows with the container. tan(atan2(a, b)) is the one way to divide two lengths
+	   into a <number> in CSS today; `calc(72vw / 1200px)` is not valid in any
+	   shipping engine. */
+	--site-scale: clamp(1, tan(atan2(72vw, 1200px)), 1.533);
 	--nav-height: 80px; /* mobile: 20px padding × 2 + 40px logo */
 }
 
@@ -381,5 +491,310 @@ h6 {
 	   feedback that carry the affordance stay. */
 	:root {
 		--lift-hover: 0px;
+		/* Same reason as the lift: the two arrows in ButtonLink would still fly
+		   across the circle on hover if only the transition were killed. At 0 they
+		   sit on top of each other and only the fade is left. */
+		--arrow-travel: 0px;
+		--arrow-roll: 0px;
+		/* At 0 the incoming copy of the label sits exactly on the outgoing one —
+		   same word, same place — so the swap is invisible rather than a jump. */
+		--btn-text-travel: 0%;
 	}
+}
+
+/* ─── The underline wipe ─────────────────────────────────────────────────────
+   Global rather than per-component: four components had four copies of this,
+   at two different heights and with the exit reversed. Add `link-underline` to
+   any inline link and it behaves the same everywhere.
+
+   The origin flip is the whole trick. At rest the origin is the right edge, so
+   collapsing pulls the line off toward the right; on hover it is the left edge,
+   so growing pushes it out to the right. In and out therefore travel the same
+   direction instead of rewinding. */
+.link-underline {
+	position: relative;
+	text-decoration: none;
+}
+
+.link-underline::before,
+.link-underline::after {
+	content: '';
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: -0.125rem;
+	height: var(--underline-height);
+	transform: scaleX(0);
+	transform-origin: right center;
+	transition: transform var(--motion-underline) var(--ease-out);
+}
+
+/* First stage. currentcolor faded rather than the flat grey the nav uses: these
+   links sit on sand in one place and on the footer's green in another, and a
+   fixed grey would vanish on the second. Faded, it is always a quieter version
+   of whatever colour the link already is. */
+.link-underline::before {
+	background: color-mix(in srgb, currentcolor 45%, transparent);
+}
+
+/* Second stage, and the one that waits. Both lines occupy the same pixels, so
+   without the delay the full-strength one simply covers the faded one on the
+   way out and there is no first stage to see. */
+.link-underline::after {
+	background: currentColor;
+}
+
+.link-underline:focus-visible::after {
+	transition-delay: var(--underline-stage-delay);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.link-underline:hover::after {
+		transition-delay: var(--underline-stage-delay);
+	}
+}
+
+.link-underline:focus-visible::before,
+.link-underline:focus-visible::after {
+	transform: scaleX(1);
+	transform-origin: left center;
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.link-underline:hover::before,
+	.link-underline:hover::after {
+		transform: scaleX(1);
+		transform-origin: left center;
+	}
+}
+
+/* Permanently drawn, and not animated: the current page in a nav, or a link in
+   body copy that has to read as a link before anyone points at it. */
+.link-underline--always::after {
+	transform: scaleX(1);
+	transform-origin: left center;
+}
+
+/* ─── The button label roll ──────────────────────────────────────────────────
+   Every filled button uses it: on hover the label rolls up out of the pill
+   while the same word rolls up from underneath to take its place.
+
+   The second copy is a pseudo-element carrying `content: attr(data-label)`,
+   not a second element. That matters here — a duplicated <span> would put the
+   label in the HTML twice, and this site is judged first on what a crawler
+   reads. A pseudo-element is invisible to both the DOM and a screen reader.
+
+   Put `roll-host` on whatever receives the hover (the <a>, or the <button>)
+   and `text-roll` with `data-label` on the box that clips. */
+/* Deliberately no `display` here: every button that opts in already sets its
+   own (inline-flex on a pill that must not stretch, flex on one that must),
+   and a `display` in this file would either lose or win that fight depending
+   on which stylesheet the bundler happens to emit second. */
+.text-roll {
+	position: relative;
+	overflow: hidden;
+	white-space: nowrap;
+}
+
+/* align-self: stretch, not height: 100% — several of these pills are sized by
+   min-height rather than height, and a percentage height against an auto
+   parent resolves to auto. Stretched, the face is as tall as the pill, so
+   translating it by 100% carries the word right out of it instead of leaving
+   it half inside. */
+.text-roll__face {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	align-self: stretch;
+	transition: transform var(--motion-arrow) var(--ease-arrow);
+}
+
+.text-roll::after {
+	content: attr(data-label);
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transform: translateY(var(--btn-text-travel));
+	transition: transform var(--motion-arrow) var(--ease-arrow);
+}
+
+.roll-host:focus-visible .text-roll__face {
+	transform: translateY(calc(-1 * var(--btn-text-travel)));
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.roll-host:hover .text-roll__face {
+		transform: translateY(calc(-1 * var(--btn-text-travel)));
+	}
+}
+
+/* Same element carrying both classes — the pill in a contact card is its own
+   hover target, so there is no wrapper for the descendant form to match. */
+.roll-host:focus-visible .text-roll::after,
+.text-roll.roll-host:focus-visible::after {
+	transform: translateY(0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.roll-host:hover .text-roll::after,
+	.text-roll.roll-host:hover::after {
+		transform: translateY(0);
+	}
+}
+
+/* ─── The button rule ────────────────────────────────────────────────────────
+   Every call to action on the site is the same thing: a 2px brown edge and a
+   fill, and hovering swaps which side is brown. Nothing gains or loses a
+   border, and nothing changes size — box-sizing is border-box, so the edge
+   costs no height.
+
+   Two tiers, and they are the same two colours in opposite order:
+
+     primary    brown fill, sand label   ->  sand fill, brown label
+     secondary  no fill, brown label     ->  brown fill, sand label
+
+   The edge is always brown, which is what makes the swap safe: a primary
+   button on the sand ground turns sand on hover, and without the edge it would
+   vanish into the page at exactly the moment the pointer is on it.
+
+   Only colour lives here. Every button keeps its own geometry — one is 40px
+   with 24px of padding, another stretches the full width of a card — and the
+   thing they have to agree on is what happens when you point at them.
+
+   Put `btn-host` on whatever receives the hover, `btn-pill` on the box that is
+   painted. They are the same element on a plain <button>, and different ones on
+   ButtonLink, where the <a> is the target and a span inside it is the pill —
+   hence both forms of every selector below, the same shape .roll-host uses.
+
+   :not(:disabled) throughout: a disabled <button> still matches :hover, and a
+   greyed-out submit that inverts under the pointer is telling the reader it is
+   about to do something. */
+/* Declared on the host as well as the pill so anything else inside the button —
+   ButtonLink's arrow circle — can be built from the same two colours instead of
+   naming them again. */
+.btn-host,
+.btn-pill {
+	--btn-fill: var(--brand-border);
+	--btn-ink: var(--color-bg-sand);
+}
+
+.btn-pill {
+	border: 2px solid var(--btn-fill);
+	background: var(--btn-fill);
+	color: var(--btn-ink);
+	transition:
+		background-color var(--motion-arrow) var(--ease-arrow),
+		color var(--motion-arrow) var(--ease-arrow),
+		border-color var(--motion-arrow) var(--ease-arrow);
+}
+
+.btn-pill--secondary {
+	background: transparent;
+	color: var(--btn-fill);
+}
+
+.btn-host:not(:disabled):focus-visible .btn-pill,
+.btn-pill.btn-host:not(:disabled):focus-visible {
+	background: var(--btn-ink);
+	color: var(--btn-fill);
+}
+
+.btn-host:not(:disabled):focus-visible .btn-pill--secondary,
+.btn-pill--secondary.btn-host:not(:disabled):focus-visible {
+	background: var(--btn-fill);
+	color: var(--btn-ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.btn-host:not(:disabled):hover .btn-pill,
+	.btn-pill.btn-host:not(:disabled):hover {
+		background: var(--btn-ink);
+		color: var(--btn-fill);
+	}
+
+	.btn-host:not(:disabled):hover .btn-pill--secondary,
+	.btn-pill--secondary.btn-host:not(:disabled):hover {
+		background: var(--btn-fill);
+		color: var(--btn-ink);
+	}
+}
+
+/* ─── Two arrows in one circle ───────────────────────────────────────────────
+   The same gesture wherever an arrow sits inside a ring: the one you can see
+   leaves along an axis, and a second copy arrives on that axis from the
+   opposite side, so the arrow reads as continuing rather than as fading out
+   and back in. The ring clips both, so neither is ever drawn outside it.
+
+   Direction is the instance's business, not this file's: --swap-x/--swap-y is
+   the vector the visible arrow leaves along, and the incoming one waits at
+   exactly its negative. A diagonal CTA arrow leaves up and to the right, a
+   button's arrow rolls straight down against its label, a carousel's Vorige
+   leaves to the left. Both offsets come from --arrow-travel / --arrow-roll,
+   which the reduced-motion block flattens to 0 — at which point the two
+   copies sit on top of each other and only the fade is left. */
+.arrow-swap {
+	position: relative;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	overflow: hidden;
+}
+
+.arrow-swap__glyph {
+	position: absolute;
+	display: inline-flex;
+	transition:
+		transform var(--motion-arrow) var(--ease-arrow),
+		opacity var(--motion-arrow) var(--ease-arrow);
+}
+
+.arrow-swap__glyph--in {
+	opacity: 0;
+	transform: translate(calc(-1 * var(--swap-x, 0px)), calc(-1 * var(--swap-y, 0px)));
+}
+
+.roll-host:focus-visible .arrow-swap__glyph--out {
+	opacity: 0;
+	transform: translate(var(--swap-x, 0px), var(--swap-y, 0px));
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.roll-host:hover .arrow-swap__glyph--out {
+		opacity: 0;
+		transform: translate(var(--swap-x, 0px), var(--swap-y, 0px));
+	}
+}
+
+.roll-host:focus-visible .arrow-swap__glyph--in {
+	opacity: 1;
+	transform: translate(0, 0);
+}
+
+@media (hover: hover) and (pointer: fine) {
+	.roll-host:hover .arrow-swap__glyph--in {
+		opacity: 1;
+		transform: translate(0, 0);
+	}
+}
+
+/* The native cursor is replaced by the arrowhead in CursorTooltip.svelte, so
+   it has to go — but only once that component has mounted and confirmed a fine
+   pointer. The class it adds to <html> is the gate: without JavaScript, on a
+   touch screen, or under prefers-reduced-motion, this rule never matches and
+   every component's own `cursor: pointer` / `grab` / `text` still applies,
+   exactly as it did before.
+
+   `!important` because those component rules are Svelte-scoped, which makes
+   them one class more specific than anything written here — a plain
+   declaration lost to every one of them, which is why the hand, the grab and
+   the I-beam kept showing through. There is no exception list any more: the
+   caret is one of the cursor's own shapes now (see its `text` mode), so a form
+   field has no reason to fall back to the native one either. */
+.has-cursor-tooltip,
+.has-cursor-tooltip *,
+.has-cursor-tooltip *::before,
+.has-cursor-tooltip *::after {
+	cursor: none !important;
 }

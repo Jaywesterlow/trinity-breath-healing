@@ -30,6 +30,24 @@ export type MagneticOptions = {
 	enabled: boolean;
 	/** True while the carousel fan itself is being dragged. */
 	dragging: boolean;
+	/**
+	 * How far outside the element's edges the magnet starts tracking, in px.
+	 * Defaults to the carousel's own 60. A treatment card sits in a fan with
+	 * space around it, so reaching for it early feels right; a contact card is
+	 * a big block in a two-column layout, where 60px means it starts moving
+	 * while the cursor is still nowhere near it.
+	 */
+	margin?: number;
+	/**
+	 * Fraction of the cursor's offset from the centre that the element follows
+	 * by, before the edge falloff. Defaults to the carousel's 0.08.
+	 *
+	 * It is a fraction of the element's own half-width, so the same number does
+	 * not mean the same movement: 0.08 is ~10px on a 240px treatment card and
+	 * ~24px on a 600px contact card. A wider element needs a smaller value to
+	 * move by the same amount.
+	 */
+	strength?: number;
 };
 
 // Fraction of the cursor's offset from the card's CENTRE that the card
@@ -57,7 +75,24 @@ const MAGNET_STRENGTH = 0.08;
 // it is a margin around the real measured box rather than a fraction of it.
 const MAGNET_MARGIN_PX = 60;
 
+const marginOf = (o: MagneticOptions): number => o.margin ?? MAGNET_MARGIN_PX;
+const strengthOf = (o: MagneticOptions): number => o.strength ?? MAGNET_STRENGTH;
+
 const MAGNET_TRACK_MS = 300;
+
+// How long the offset takes to come home when the magnet lets go — leaving the
+// element's margin, or another element taking the hover and switching this one
+// off. Releasing used to fall back to --motion-fast, which at 180ms reads as a
+// snap rather than a return: the owner's report is exactly that, "the card
+// snaps back to its original position... it should be smoothed out, not just a
+// snap back, but actually going back in a fluent motion." Longer than the
+// tracking duration on purpose — following the cursor should feel immediate,
+// letting go should not.
+const MAGNET_RELEASE_MS = 620;
+
+// The one release that must not be slow: the carousel fan is being dragged, and
+// an offset still easing home would be fighting the drag.
+const MAGNET_DRAG_RELEASE_MS = 120;
 
 function prefersReducedMotion(): boolean {
 	if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
@@ -76,11 +111,13 @@ export function magnetic(node: HTMLElement, options: MagneticOptions) {
 	let pendingX = 0;
 	let pendingY = 0;
 
-	function releaseTo(x: string, y: string): void {
-		// Restore the CSS transition BEFORE changing the offset, in the same
-		// tick, so the browser animates the change instead of snapping —
-		// "release must animate back, not snap."
-		node.style.removeProperty('--tcard-transition-duration');
+	function releaseTo(x: string, y: string, ms: number = MAGNET_RELEASE_MS): void {
+		// Set the transition BEFORE changing the offset, in the same tick, so the
+		// browser animates the change instead of snapping — "release must animate
+		// back, not snap." An explicit duration rather than removing the property
+		// and falling back to --motion-fast: the fallback was fast enough to read
+		// as the snap it was supposed to replace.
+		node.style.setProperty('--tcard-transition-duration', `${ms}ms`);
 		node.style.setProperty('--magnet-x', x);
 		node.style.setProperty('--magnet-y', y);
 	}
@@ -117,7 +154,8 @@ export function magnetic(node: HTMLElement, options: MagneticOptions) {
 				Math.max(0, Math.abs(dy) - halfHeight)
 			);
 
-			if (edgeDistance > MAGNET_MARGIN_PX) {
+			const margin = marginOf(opts);
+			if (edgeDistance > margin) {
 				releaseTo('0px', '0px');
 				return;
 			}
@@ -148,8 +186,8 @@ export function magnetic(node: HTMLElement, options: MagneticOptions) {
 			// so the card leans toward wherever the cursor is on it: nothing
 			// at dead centre, ~MAGNET_STRENGTH * halfWidth (~10px) at the
 			// left/right edge.
-			const falloff = 1 - edgeDistance / MAGNET_MARGIN_PX;
-			const pull = MAGNET_STRENGTH * falloff;
+			const falloff = 1 - edgeDistance / margin;
+			const pull = strengthOf(opts) * falloff;
 			node.style.setProperty('--magnet-x', `${dx * pull}px`);
 			node.style.setProperty('--magnet-y', `${dy * pull}px`);
 		});
@@ -206,7 +244,7 @@ export function magnetic(node: HTMLElement, options: MagneticOptions) {
 			const wasDragging = opts.dragging;
 			opts = newOptions;
 			if (opts.dragging && !wasDragging) {
-				releaseTo('0px', '0px');
+				releaseTo('0px', '0px', MAGNET_DRAG_RELEASE_MS);
 			}
 			sync();
 		},

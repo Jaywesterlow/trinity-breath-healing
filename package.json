@@ -25,7 +25,8 @@
 		"audit:placeholders": "bash scripts/grep-placeholders.sh",
 		"test:html-audit": "npm run audit:html",
 		"test:routes": "npm run test:integration",
-		"test:schema": "npx structured-data-testing-tool"
+		"test:schema": "npx structured-data-testing-tool",
+		"audit:a11y": "node scripts/audit-a11y.mjs"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",

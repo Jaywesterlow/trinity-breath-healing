@@ -20,6 +20,7 @@ import { env } from '$env/dynamic/private';
 import { BRAND } from '$lib/constants/brand';
 import type { ContactValues } from '$lib/forms/contact';
 import type { BookingValues } from '$lib/booking/booking';
+import { SITE_URL } from '$lib/seo/defaults';
 
 export type SendResult =
 	| { ok: true; id: string | null }
@@ -62,6 +63,74 @@ function buildBodies(values: ContactValues) {
 	return { text, html, naam };
 }
 
+/**
+ * One HTML shell for every message the site sends.
+ *
+ * Written as inline-styled tables rather than modern CSS because Outlook still
+ * renders mail through Word's engine: no flexbox, no grid, and `<div>`s with
+ * margins collapse unpredictably. A table with explicit widths is the thing
+ * that looks the same in Gmail, Apple Mail and Outlook.
+ *
+ * The signature carries the practice's contact details and, deliberately, the
+ * Saturday caveat — someone who reads only the confirmation e-mail and drives
+ * to Reigersbos on a Tuesday has been let down by us, not by her.
+ */
+function layout(bodyHtml: string): string {
+	const sand = '#faf0e6';
+	const forest = '#3d4a35';
+	const muted = '#5f6d56';
+	const border = '#dfd0bd';
+	const site = SITE_URL;
+
+	return [
+		`<div style="margin:0;padding:24px 12px;background:${sand};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:${forest}">`,
+		`<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="max-width:560px;margin:0 auto;background:#fffaf3;border:1px solid ${border};border-radius:4px">`,
+		'<tr><td style="padding:28px 28px 8px">',
+
+		/* Remote images are blocked by default in most clients, so the wordmark
+		   is text. It always renders, and it never leaves a broken-image box at
+		   the top of the first message someone gets from the practice. */
+		`<div style="font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:#a8871a;padding-bottom:2px">Trinity</div>`,
+		`<div style="font-size:13px;letter-spacing:1px;color:${muted};padding-bottom:20px">Breath &amp; Healing</div>`,
+
+		'</td></tr>',
+		`<tr><td style="padding:0 28px 24px;font-size:15px;line-height:1.65;color:${forest}">`,
+		bodyHtml,
+		'</td></tr>',
+
+		`<tr><td style="padding:18px 28px 24px;border-top:1px solid ${border};font-size:13px;line-height:1.6;color:${muted}">`,
+		`<strong style="color:${forest}">${escapeHtml(BRAND.practitionerFullName)}</strong><br>`,
+		`${escapeHtml(BRAND.legalName)}<br>`,
+		`<a href="mailto:${BRAND.email}" style="color:${muted}">${escapeHtml(BRAND.email)}</a>`,
+		` &nbsp;·&nbsp; <a href="tel:${BRAND.phone}" style="color:${muted}">${escapeHtml(BRAND.phoneDisplay)}</a><br>`,
+		`<a href="${site}" style="color:${muted}">${escapeHtml(site.replace(/^https?:\/\//, ''))}</a>`,
+		`<div style="padding-top:10px;font-size:12px;line-height:1.55;color:${muted}">`,
+		`${escapeHtml(BRAND.address.street)}, ${escapeHtml(BRAND.address.floor)} &middot; ${escapeHtml(BRAND.address.postalCode)} ${escapeHtml(BRAND.address.city)}<br>`,
+		`${escapeHtml(BRAND.practice.locationNote)} ${escapeHtml(BRAND.practice.homeVisitNote)}`,
+		'</div>',
+		`<div style="padding-top:10px;font-size:11px;color:${muted}">KvK ${escapeHtml(BRAND.kvk)} &middot; BTW ${escapeHtml(BRAND.vatId)}</div>`,
+		'</td></tr>',
+		'</table>',
+		'</div>'
+	].join('');
+}
+
+/** The same signature, for the plain-text alternative. */
+function textSignature(): string {
+	return [
+		'',
+		'—',
+		BRAND.practitionerFullName,
+		BRAND.legalName,
+		`${BRAND.email} · ${BRAND.phoneDisplay}`,
+		SITE_URL.replace(/^https?:\/\//, ''),
+		'',
+		`${BRAND.address.street}, ${BRAND.address.floor}, ${BRAND.address.postalCode} ${BRAND.address.city}`,
+		`${BRAND.practice.locationNote} ${BRAND.practice.homeVisitNote}`,
+		`KvK ${BRAND.kvk} · BTW ${BRAND.vatId}`
+	].join('\n');
+}
+
 interface Attachment {
 	filename: string;
 	/** Raw UTF-8 content; encoded to base64 for Resend at send time. */
@@ -95,8 +164,10 @@ async function deliver(mail: Delivery, fetchImpl: typeof fetch): Promise<SendRes
 			to: [mail.to || env.CONTACT_TO_EMAIL || BRAND.email],
 			reply_to: mail.replyTo,
 			subject: mail.subject,
-			text: mail.text,
-			html: mail.html,
+			/* Wrapped here rather than at every call site, so no message can
+			   ship without the signature and none of them drift apart. */
+			text: mail.text + textSignature(),
+			html: layout(mail.html),
 			...(mail.attachments?.length
 				? {
 						attachments: mail.attachments.map((file) => ({
@@ -205,27 +276,42 @@ export async function sendBookingApproved(
 		start: string;
 		end: string;
 		ics: string;
+		cancellationHours: number;
 	},
 	fetchImpl: typeof fetch = fetch
 ): Promise<SendResult> {
 	const text = [
 		`Hoi ${args.clientName},`,
 		'',
-		`Je afspraak is bevestigd: ${args.spokenDate}, ${args.start} - ${args.end}.`,
+		`Je afspraak is bevestigd: ${args.spokenDate}, ${args.start} - ${args.end} (30 minuten).`,
 		'',
 		'In de bijlage zit een agenda-uitnodiging die je aan je eigen agenda kunt toevoegen.',
 		'',
-		'Kun je onverhoopt niet? Laat het even weten door op deze mail te antwoorden.',
+		'Goed om te weten:',
+		`• Tot ${args.cancellationHours} uur van tevoren kun je kosteloos afzeggen of verzetten.`,
+		'• Kun je niet? Laat het even weten door op deze mail te antwoorden.',
+		'• Dit gesprek is online. Je hoeft niets voor te bereiden.',
 		'',
 		'Tot dan!'
 	].join('\n');
 
 	const html = [
-		`<p>Hoi ${escapeHtml(args.clientName)},</p>`,
-		`<p>Je afspraak is bevestigd:<br><strong>${escapeHtml(args.spokenDate)}</strong><br><strong>${escapeHtml(args.start)} - ${escapeHtml(args.end)}</strong> (30 minuten)</p>`,
-		'<p>In de bijlage zit een agenda-uitnodiging die je aan je eigen agenda kunt toevoegen.</p>',
-		'<p>Kun je onverhoopt niet? Laat het even weten door op deze mail te antwoorden.</p>',
-		'<p>Tot dan!</p>'
+		`<p style="margin:0 0 14px">Hoi ${escapeHtml(args.clientName)},</p>`,
+		'<p style="margin:0 0 16px">Je afspraak is <strong>bevestigd</strong>.</p>',
+		'<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f5eade;border-radius:4px;margin:0 0 16px">',
+		'<tr><td style="padding:14px 16px">',
+		'<div style="font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:#5f6d56;padding-bottom:4px">Afspraak</div>',
+		`<div style="font-size:16px;color:#3d4a35"><strong>${escapeHtml(args.spokenDate)}</strong></div>`,
+		`<div style="font-size:16px;color:#3d4a35"><strong>${escapeHtml(args.start)} – ${escapeHtml(args.end)}</strong> <span style="font-size:13px;color:#5f6d56">(30 minuten)</span></div>`,
+		'</td></tr></table>',
+		'<p style="margin:0 0 14px">In de bijlage zit een agenda-uitnodiging die je aan je eigen agenda kunt toevoegen.</p>',
+		'<p style="margin:0 0 6px;font-size:13px;color:#5f6d56"><strong>Goed om te weten</strong></p>',
+		'<ul style="margin:0 0 14px;padding-left:18px;font-size:13px;line-height:1.7;color:#5f6d56">',
+		`<li>Tot ${args.cancellationHours} uur van tevoren kun je kosteloos afzeggen of verzetten.</li>`,
+		'<li>Kun je niet? Laat het even weten door op deze mail te antwoorden.</li>',
+		'<li>Dit gesprek is online. Je hoeft niets voor te bereiden.</li>',
+		'</ul>',
+		'<p style="margin:0">Tot dan!</p>'
 	].join('');
 
 	return deliver(
@@ -284,6 +370,76 @@ export async function sendBookingRejected(
 		{
 			to: args.to,
 			subject: `Over je aanvraag voor ${args.spokenDate}`,
+			text,
+			html,
+			replyTo: env.CONTACT_TO_EMAIL || BRAND.email
+		},
+		fetchImpl
+	);
+}
+
+/**
+ * The immediate acknowledgement, sent to the visitor the moment they request a
+ * slot — before the practitioner has looked at it.
+ *
+ * Without this the visitor gets nothing at all until she answers, and the
+ * reasonable conclusion is that the form is broken. They then either give up or
+ * submit again, and she gets duplicates of a request she had not yet read. The
+ * message therefore has one job above being polite: say clearly that this is a
+ * request, not a booking, and say when they will hear back.
+ */
+export async function sendBookingReceived(
+	args: {
+		to: string;
+		clientName: string;
+		spokenDate: string;
+		start: string;
+		end: string;
+		cancellationHours: number;
+	},
+	fetchImpl: typeof fetch = fetch
+): Promise<SendResult> {
+	const text = [
+		`Hoi ${args.clientName},`,
+		'',
+		'Je aanvraag is binnengekomen. Dit is nog geen bevestiging.',
+		'',
+		`Gevraagd moment: ${args.spokenDate}, ${args.start} - ${args.end} (30 minuten).`,
+		'',
+		'Ik kijk zo snel mogelijk of dit moment lukt en laat het je binnen 48 uur weten.',
+		'Zodra ik het bevestig, krijg je een mail met een agenda-uitnodiging.',
+		'',
+		'Goed om te weten:',
+		`• Tot ${args.cancellationHours} uur van tevoren kun je kosteloos afzeggen of verzetten.`,
+		'• Een kennismaking van 30 minuten is gratis en verplicht je tot niets.',
+		'• Dit gesprek is online. Je krijgt de link bij de bevestiging.',
+		'',
+		'Vragen in de tussentijd? Antwoord gerust op deze mail.'
+	].join('\n');
+
+	const html = [
+		`<p style="margin:0 0 14px">Hoi ${escapeHtml(args.clientName)},</p>`,
+		'<p style="margin:0 0 14px">Je aanvraag is binnengekomen. <strong>Dit is nog geen bevestiging.</strong></p>',
+		`<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#f5eade;border-radius:4px;margin:0 0 16px">`,
+		'<tr><td style="padding:14px 16px">',
+		'<div style="font-size:11px;letter-spacing:1.2px;text-transform:uppercase;color:#5f6d56;padding-bottom:4px">Gevraagd moment</div>',
+		`<div style="font-size:16px;color:#3d4a35"><strong>${escapeHtml(args.spokenDate)}</strong></div>`,
+		`<div style="font-size:16px;color:#3d4a35"><strong>${escapeHtml(args.start)} – ${escapeHtml(args.end)}</strong> <span style="font-size:13px;color:#5f6d56">(30 minuten)</span></div>`,
+		'</td></tr></table>',
+		'<p style="margin:0 0 14px">Ik kijk zo snel mogelijk of dit moment lukt en laat het je <strong>binnen 48 uur</strong> weten. Zodra ik het bevestig, krijg je een mail met een agenda-uitnodiging.</p>',
+		'<p style="margin:0 0 6px;font-size:13px;color:#5f6d56"><strong>Goed om te weten</strong></p>',
+		'<ul style="margin:0 0 14px;padding-left:18px;font-size:13px;line-height:1.7;color:#5f6d56">',
+		`<li>Tot ${args.cancellationHours} uur van tevoren kun je kosteloos afzeggen of verzetten.</li>`,
+		'<li>Een kennismaking van 30 minuten is gratis en verplicht je tot niets.</li>',
+		'<li>Dit gesprek is online. Je krijgt de link bij de bevestiging.</li>',
+		'</ul>',
+		'<p style="margin:0">Vragen in de tussentijd? Antwoord gerust op deze mail.</p>'
+	].join('');
+
+	return deliver(
+		{
+			to: args.to,
+			subject: `Aanvraag ontvangen — ${args.spokenDate}, ${args.start}`,
 			text,
 			html,
 			replyTo: env.CONTACT_TO_EMAIL || BRAND.email

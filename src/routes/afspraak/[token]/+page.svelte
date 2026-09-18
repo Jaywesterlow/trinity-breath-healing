@@ -176,8 +176,10 @@
 			opacity var(--motion-hover, 180ms) var(--ease-hover, ease);
 	}
 
-	.btn:hover:not(:disabled) {
-		transform: translateY(-1px);
+	@media (hover: hover) and (pointer: fine) {
+		.btn:hover:not(:disabled) {
+			transform: translateY(-1px);
+		}
 	}
 
 	.btn:disabled {

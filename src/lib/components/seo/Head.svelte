@@ -7,12 +7,24 @@
 	 */
 	import type { PageMeta } from '$lib/seo/types';
 	import { SITE_URL } from '$lib/seo/defaults';
+	import { BRAND } from '$lib/constants/brand';
 
 	let { meta }: { meta: PageMeta } = $props();
 
 	// All derived values — no $state, no $effect (Pitfall #2 compliance)
+
+	/* The brand goes on once. This used to append unconditionally, and every page
+	   whose own TITLE already ended in the practice name shipped it twice —
+	   "Spinal Touch in Amsterdam – Trinity Breath & Healing | TRINITY Breath &
+	   Healing", 79 characters, of which Google shows about 60. The page titles
+	   were trimmed in the same pass, but the guard stays: this component is the
+	   one place the suffix is decided, and it should not be possible to defeat it
+	   from a route file. Matched case-insensitively because the two spellings in
+	   the tree differ only in case. */
+	const BRAND_SUFFIX = BRAND.shortName;
+	const hasBrand = $derived(meta.title.toLowerCase().includes(BRAND_SUFFIX.toLowerCase()));
 	const titleFull = $derived(
-		meta.path === '/' ? meta.title : `${meta.title} | TRINITY Breath & Healing`
+		meta.path === '/' || hasBrand ? meta.title : `${meta.title} | ${BRAND_SUFFIX}`
 	);
 	const canonical = $derived(SITE_URL + meta.path);
 	const ogImage = $derived(meta.og?.image ?? `${SITE_URL}/og-default.jpg`);

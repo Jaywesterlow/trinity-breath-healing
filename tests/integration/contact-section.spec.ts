@@ -12,6 +12,13 @@
  * Run AFTER: PUBLIC_SITE_URL=https://trinitybreathhealing.nl npm run build
  */
 import { test, expect, type Page } from '@playwright/test';
+import { DEFAULT_SCHEDULE, slotsFor } from '../../src/lib/booking/schedule';
+
+/* The opening window is the practitioner's, and it has already moved once — from
+   the Figma mock-up's office hours to her real weekday evenings. Tests that name
+   a literal "10:00", or reach for the sixth slot, break on every such move for
+   no reason: none of them assert anything about which hour it is. Ask the
+   schedule instead. */
 
 const VALID = {
 	voornaam: 'John',
@@ -23,9 +30,15 @@ const VALID = {
 	website: ''
 };
 
-/** The mode radios are visually hidden by design; people click the label. */
-async function chooseMode(page: Page, label: 'Email formulier' | 'Online meeting') {
-	await page.getByText(label, { exact: true }).click();
+/** The section opens on neither route: two cards, and picking one replaces the
+ *  pair with that panel. The whole card is the control, so click the card. */
+async function chooseMode(page: Page, route: 'bericht' | 'afspraak') {
+	const title = route === 'bericht' ? 'Stuur een bericht' : 'Plan een kennismaking';
+	await page.locator('.route', { hasText: title }).click();
+	// The cards fade out before the panel fades in, so the panel is not there to
+	// be clicked or focused for ~180ms after the click.
+	await expect(page.locator('.contact__chosen')).toBeVisible();
+	await expect(page.locator('.contact__chosen')).toHaveCSS('opacity', '1');
 }
 
 async function fillValid(page: Page) {
@@ -40,6 +53,7 @@ test.describe('Contact — e-mail form', () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/');
 		await page.locator('#contact').scrollIntoViewIfNeeded();
+		await chooseMode(page, 'bericht');
 	});
 
 	test('renders in the initial HTML with every control labelled', async ({ page }) => {
@@ -187,67 +201,82 @@ test.describe('Contact — date planner', () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/');
 		await page.locator('#contact').scrollIntoViewIfNeeded();
-		await chooseMode(page, 'Online meeting');
+		await chooseMode(page, 'afspraak');
 	});
+
+	/* Both panels live in the DOM at once so the e-mail form stays in the
+	   prerendered HTML, and the two share field names — "Voornaam" exists twice.
+	   Scoping to the visible pane is what keeps these locators unambiguous. */
+	const pane = (page: Page) => page.locator('.contact__pane:not([hidden])');
 
 	/** The first day the schedule actually offers — weekends and past days are not it. */
 	const openDay = (page: Page) =>
-		page.getByRole('gridcell').and(page.locator('button:not([aria-disabled="true"])')).first();
+		pane(page)
+			.getByRole('gridcell')
+			.and(page.locator('button:not([aria-disabled="true"])'))
+			.first();
 
-	const times = (page: Page) => page.getByRole('group', { name: /Tijden op/ }).getByRole('button');
+	const times = (page: Page) =>
+		pane(page)
+			.getByRole('group', { name: /Tijden op/ })
+			.getByRole('button');
 
 	/** Steps crossfade: for ~160ms both panels are mounted. Wait for one. */
 	const settled = (page: Page) => expect(page.locator('.planner__step')).toHaveCount(1);
 
+	/* There is no forward button anywhere in this flow: picking a date is step
+	   1's forward and picking a time is step 2's. The only button that moves the
+	   booking on is Verzenden, at the end. */
 	async function toTimeStep(page: Page) {
 		await openDay(page).click();
-		await settled(page);
+		await expect(page.locator('.planner__sheet')).toBeVisible();
 	}
 
 	async function toDetailStep(page: Page) {
 		await toTimeStep(page);
-		await times(page).nth(5).click();
-		await page.getByRole('button', { name: 'Verder' }).click();
+		// .last(), not a fixed index: the window is four slots wide today and was
+		// twelve before, and this step only needs *a* time to be chosen.
+		await times(page).last().click();
 		await settled(page);
 	}
 
-	test('step 1: month grid and legend, no step controls yet', async ({ page }) => {
-		await expect(page.getByRole('grid')).toBeVisible();
-		await expect(page.getByText('Beschikbaar', { exact: true })).toBeVisible();
-		await expect(page.getByText('Niet beschikbaar', { exact: true })).toBeVisible();
-		await expect(page.getByRole('button', { name: 'Verder' })).toHaveCount(0);
+	test('step 1: the month grid, the step counter, and no footer at all', async ({ page }) => {
+		await expect(pane(page).getByRole('grid')).toBeVisible();
+		await expect(pane(page).getByText('Stap 1 van 3')).toBeVisible();
+		await expect(pane(page).getByRole('button', { name: 'Verder' })).toHaveCount(0);
+		// Nothing to press on this step, so the footer is not rendered — it must
+		// not stand empty holding the space the design's hint line used to fill.
+		await expect(page.locator('.planner__footer')).toHaveCount(0);
 	});
 
 	test('cannot leave the current month backwards', async ({ page }) => {
-		await expect(page.getByRole('button', { name: 'Vorige maand' })).toBeDisabled();
+		await expect(pane(page).getByRole('button', { name: 'Vorige maand' })).toBeDisabled();
 		expect(await openDay(page).count(), 'the month must offer at least one day').toBeGreaterThan(0);
 	});
 
-	test('step 2: a date reveals its times, back returns to step 1, proceed is disabled', async ({
-		page
-	}) => {
+	test('step 2: the times rise over the calendar, which stays put', async ({ page }) => {
 		const day = openDay(page);
 		const dayNumber = (await day.textContent())?.trim();
 		await day.click();
-		await settled(page);
+		await expect(page.locator('.planner__sheet')).toBeVisible();
 
-		// The calendar slides out entirely rather than staying under the slots.
-		await expect(page.getByRole('grid')).toHaveCount(0);
-		await expect(page.locator('.planner__date')).toContainText(`${dayNumber} `);
+		// The calendar stays: the day just chosen is still visible above the sheet.
+		await expect(pane(page).getByRole('grid')).toBeVisible();
+		await expect(page.locator('.planner__sheet-date')).toContainText(`${dayNumber} `);
 		expect(await times(page).count()).toBeGreaterThan(0);
 
-		await expect(page.getByRole('button', { name: 'Terug naar kies datum' })).toBeVisible();
-		const proceed = page.getByRole('button', { name: 'Verder' });
-		await expect(proceed, 'no time chosen yet').toBeDisabled();
+		await expect(pane(page).getByText('Stap 2 van 3')).toBeVisible();
+		await expect(pane(page).getByRole('button', { name: 'Terug naar kies datum' })).toBeVisible();
+		await expect(pane(page).getByRole('button', { name: 'Verder' })).toHaveCount(0);
 	});
 
-	test('picking a time enables the proceed button', async ({ page }) => {
+	test('picking a time is the way forward — no button in between', async ({ page }) => {
 		await toTimeStep(page);
-		const time = times(page).first();
-		await time.click();
+		await times(page).first().click();
+		await settled(page);
 
-		await expect(time).toHaveAttribute('aria-pressed', 'true');
-		await expect(page.getByRole('button', { name: 'Verder' })).toBeEnabled();
+		await expect(pane(page).getByText('Stap 3 van 3')).toBeVisible();
+		await expect(pane(page).getByLabel('Voornaam')).toBeVisible();
 	});
 
 	test('step 3: the fields appear, back names step 2, booking is disabled until filled', async ({
@@ -256,38 +285,38 @@ test.describe('Contact — date planner', () => {
 		await toDetailStep(page);
 
 		for (const label of ['Voornaam', 'Achternaam']) {
-			await expect(page.getByLabel(label)).toBeVisible();
+			await expect(pane(page).getByLabel(label)).toBeVisible();
 		}
-		await expect(page.getByLabel('Email', { exact: true })).toBeVisible();
-		await expect(page.getByLabel(/Waar loop je tegenaan/)).toBeVisible();
+		await expect(pane(page).getByLabel('Email', { exact: true })).toBeVisible();
+		await expect(pane(page).getByLabel(/Waar loop je tegenaan/)).toBeVisible();
 
 		// The chosen time joins the date in the heading.
 		await expect(page.locator('.planner__date')).toContainText(':');
 
-		await expect(page.getByRole('button', { name: 'Terug naar kies tijd' })).toBeVisible();
-		await expect(page.getByRole('button', { name: 'Verzenden' })).toBeDisabled();
+		await expect(pane(page).getByRole('button', { name: 'Terug naar kies tijd' })).toBeVisible();
+		await expect(pane(page).getByRole('button', { name: 'Verzenden' })).toBeDisabled();
 	});
 
 	test('filling name and e-mail enables the booking button', async ({ page }) => {
 		await toDetailStep(page);
-		await page.getByLabel('Voornaam').fill('John');
-		await page.getByLabel('Achternaam').fill('Williams');
-		await page.getByLabel('Email', { exact: true }).fill('john@example.com');
+		await pane(page).getByLabel('Voornaam').fill('John');
+		await pane(page).getByLabel('Achternaam').fill('Williams');
+		await pane(page).getByLabel('Email', { exact: true }).fill('john@example.com');
 
-		await expect(page.getByRole('button', { name: 'Verzenden' })).toBeEnabled();
+		await expect(pane(page).getByRole('button', { name: 'Verzenden' })).toBeEnabled();
 	});
 
 	test('back steps one at a time — details to times to calendar', async ({ page }) => {
 		await toDetailStep(page);
 
-		await page.getByRole('button', { name: 'Terug naar kies tijd' }).click();
+		await pane(page).getByRole('button', { name: 'Terug naar kies tijd' }).click();
 		await settled(page);
 		expect(await times(page).count(), 'first press lands on the times').toBeGreaterThan(0);
-		await expect(page.getByRole('button', { name: 'Kies datum' })).toBeVisible();
+		await expect(pane(page).getByRole('button', { name: 'Kies datum' })).toBeVisible();
 
-		await page.getByRole('button', { name: 'Terug naar kies datum' }).click();
+		await pane(page).getByRole('button', { name: 'Terug naar kies datum' }).click();
 		await settled(page);
-		await expect(page.getByRole('grid'), 'second press lands on the calendar').toBeVisible();
+		await expect(pane(page).getByRole('grid'), 'second press lands on the calendar').toBeVisible();
 	});
 
 	test('a successful booking turns the card into a confirmation', async ({ page }) => {
@@ -300,13 +329,13 @@ test.describe('Contact — date planner', () => {
 		);
 
 		await toDetailStep(page);
-		await page.getByLabel('Voornaam').fill('John');
-		await page.getByLabel('Achternaam').fill('Williams');
-		await page.getByLabel('Email', { exact: true }).fill('john@example.com');
-		await page.getByRole('button', { name: 'Verzenden' }).click();
+		await pane(page).getByLabel('Voornaam').fill('John');
+		await pane(page).getByLabel('Achternaam').fill('Williams');
+		await pane(page).getByLabel('Email', { exact: true }).fill('john@example.com');
+		await pane(page).getByRole('button', { name: 'Verzenden' }).click();
 
-		await expect(page.getByText('Je aanvraag is verstuurd.')).toBeVisible();
-		await expect(page.getByRole('button', { name: 'Nog een moment plannen' })).toBeVisible();
+		await expect(pane(page).getByText('Je aanvraag is verstuurd.')).toBeVisible();
+		await expect(pane(page).getByRole('button', { name: 'Nog een moment plannen' })).toBeVisible();
 	});
 
 	test('a rejected booking surfaces the message and keeps the form', async ({ page }) => {
@@ -319,13 +348,13 @@ test.describe('Contact — date planner', () => {
 		);
 
 		await toDetailStep(page);
-		await page.getByLabel('Voornaam').fill('John');
-		await page.getByLabel('Achternaam').fill('Williams');
-		await page.getByLabel('Email', { exact: true }).fill('john@example.com');
-		await page.getByRole('button', { name: 'Verzenden' }).click();
+		await pane(page).getByLabel('Voornaam').fill('John');
+		await pane(page).getByLabel('Achternaam').fill('Williams');
+		await pane(page).getByLabel('Email', { exact: true }).fill('john@example.com');
+		await pane(page).getByRole('button', { name: 'Verzenden' }).click();
 
-		await expect(page.getByText('Dit moment is niet meer beschikbaar.')).toBeVisible();
-		await expect(page.getByLabel('Voornaam')).toHaveValue('John');
+		await expect(pane(page).getByText('Dit moment is niet meer beschikbaar.')).toBeVisible();
+		await expect(pane(page).getByLabel('Voornaam')).toHaveValue('John');
 	});
 
 	test('the card never scrolls, on any step', async ({ page }) => {
@@ -339,18 +368,17 @@ test.describe('Contact — date planner', () => {
 		await times(page).first().click();
 		expect(await overflow(), 'step 2 overflows').toBeLessThanOrEqual(1);
 
-		await page.getByRole('button', { name: 'Verder' }).click();
 		await settled(page);
-		await expect(page.getByLabel('Voornaam')).toBeVisible();
+		await expect(pane(page).getByLabel('Voornaam')).toBeVisible();
 		expect(await overflow(), 'step 3 overflows').toBeLessThanOrEqual(1);
 	});
 
 	test('the month grid keeps its height when paging between months', async ({ page }) => {
-		const grid = page.getByRole('grid');
+		const grid = pane(page).getByRole('grid');
 		const before = (await grid.boundingBox())!.height;
 
 		for (let i = 0; i < 3; i++) {
-			await page.getByRole('button', { name: 'Volgende maand' }).click();
+			await pane(page).getByRole('button', { name: 'Volgende maand' }).click();
 			const after = (await grid.boundingBox())!.height;
 			expect(Math.abs(after - before), 'a shorter month shifted the layout').toBeLessThan(2);
 		}
@@ -417,8 +445,11 @@ test.describe('Contact — /api/booking', () => {
 		target.setDate(target.getDate() + ((3 - (target.getDay() || 7) + 7) % 7));
 		const datum = `${target.getFullYear()}-${String(target.getMonth() + 1).padStart(2, '0')}-${String(target.getDate()).padStart(2, '0')}`;
 
+		const offered = slotsFor(DEFAULT_SCHEDULE, datum, new Date())[0];
+		expect(offered, 'the schedule must offer something on a Wednesday').toBeTruthy();
+
 		const response = await request.post('/api/booking', {
-			data: { ...person, datum, start: '10:00', end: '10:30' }
+			data: { ...person, datum, start: offered!.start, end: offered!.end }
 		});
 		// 200 with Resend configured, 503 without; either way the slot was real.
 		expect([400, 409]).not.toContain(response.status());

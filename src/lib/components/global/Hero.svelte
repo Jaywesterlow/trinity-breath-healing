@@ -1,30 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import ButtonLink from '$lib/components/ui/interactions/ButtonLink.svelte';
-	import SocialIcon from '$lib/components/ui/SocialIcon.svelte';
-	import HeroServiceCard from '$lib/components/ui/HeroServiceCard.svelte';
-	import { BRAND } from '$lib/constants/brand';
-
-	const instagramUrl = `https://www.instagram.com/${BRAND.socials.instagram.replace('@', '')}/`;
-
-	/* Only real profiles. facebook and x are null in BRAND, but this list used
-	   to link x.com/trinitybnh and facebook.com/trinitybnh regardless — two
-	   accounts that do not exist, in the hero, above the fold. */
-	const socials = [
-		{ icon: 'instagram' as const, href: instagramUrl, label: 'Volg ons op Instagram' },
-		...(BRAND.socials.facebook
-			? [
-					{
-						icon: 'facebook' as const,
-						href: BRAND.socials.facebook,
-						label: 'Volg ons op Facebook'
-					}
-				]
-			: []),
-		...(BRAND.socials.x
-			? [{ icon: 'x' as const, href: BRAND.socials.x, label: 'Volg ons op X' }]
-			: [])
-	];
+	import { reveal } from '$lib/actions/reveal';
 
 	// The hero illustration is a centerline trace of the original line art, inlined as SVG so
 	// its strokes can draw themselves on load (stroke-dashoffset, see .hero__draw below).
@@ -37,7 +14,7 @@
 	let leftEl: HTMLDivElement | null = $state(null);
 
 	// The desktop hero image must never grow taller than the content column beside it
-	// (heading + body + CTA + service cards). CSS percentage-height on a replaced
+	// (heading + body + CTA). CSS percentage-height on a replaced
 	// element (img) nested this deep in grid+flex doesn't resolve as a definite value —
 	// confirmed empirically, it falls back to matching the viewport width outright and
 	// crops the image (the same failure mode documented on .hero__img below for a
@@ -71,81 +48,35 @@
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -- build-time asset, not user input -->
 				{@html heroSvg}
 			</div>
-			<nav class="hero__social" aria-label="Sociale media">
-				<ul class="hero__social-list">
-					{#each socials as social (social.icon)}
-						<li>
-							<SocialIcon
-								icon={social.icon}
-								href={social.href}
-								label={social.label}
-								color="var(--brand-border)"
-								background="var(--color-bg-sand)"
-								responsiveSize={false}
-							/>
-						</li>
-					{/each}
-				</ul>
-			</nav>
 		</div>
 
-		<!-- Content column: below image on mobile (DOM order), left on desktop (order:1) -->
+		<!-- Content column: below image on mobile (DOM order), left on desktop (order:1).
+		     Two exit fades, not one and not three. The whole column is 365px, over a third
+		     of either viewport, so faded as one block the heading would sit well above the
+		     screen while the button kept it lit; the heading therefore answers the band on
+		     its own bottom edge, and the body and the button leave together, since a button
+		     never fades alone. `entrance: false` on both: the arrival is the pure-CSS cascade
+		     below and nothing else, so all they ask the action for is the way out. The
+		     wrapper is a plain block — the spacing is the children's own margins, which
+		     collapse through it. The drawing above is deliberately not wrapped: it neither
+		     fades in nor fades out. -->
 		<div class="hero__left" bind:this={leftEl}>
 			<div class="hero__content">
-				<h1 class="hero__heading">
+				<h1 class="hero__heading" use:reveal={{ entrance: false }}>
 					Rust in je hoofd.<br />
 					Ontspanning in je lichaam.
 				</h1>
-				<p class="hero__body">
-					Ik weet hoe het voelt om vast te lopen, fysiek, mentaal en emotioneel. Via
-					lichaamsgerichte therapie, ademwerk en energetische behandelingen help ik jou terug naar
-					rust, herstel en jezelf.
-				</p>
-				<div class="hero__cta">
-					<ButtonLink href="/contact" label="Maak een afspraak" />
+				<div class="hero__text" use:reveal={{ entrance: false }}>
+					<p class="hero__body">
+						Ik weet hoe het voelt om vast te lopen, fysiek, mentaal en emotioneel. Via
+						lichaamsgerichte therapie, ademwerk en energetische behandelingen help ik jou terug naar
+						rust, herstel en jezelf.
+					</p>
+					<div class="hero__cta">
+						<ButtonLink href="/contact" label="Maak een afspraak" />
+					</div>
 				</div>
 			</div>
-
-			<ul class="hero__cards" aria-label="Behandelingen">
-				<li>
-					<HeroServiceCard
-						href="/diensten/goldhealing"
-						label="Goldhealing"
-						imgSrc="/images/card-goldhealing.svg"
-						variant="forest"
-					/>
-				</li>
-				<li>
-					<HeroServiceCard
-						href="/diensten/spinal-touch"
-						label="Spinal Touch"
-						imgSrc="/images/card-spinal-touch.svg"
-						variant="border"
-					/>
-				</li>
-				<li>
-					<a href="/behandelingen" class="card card--outline">
-						<div class="card__head">
-							<span class="card__title">Meer klachten</span>
-							<span class="card__arrow" aria-hidden="true">
-								<svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-									<path
-										d="M6 18L18 6M18 6H11M18 6V13"
-										stroke="currentColor"
-										stroke-width="1.5"
-										stroke-linecap="round"
-										stroke-linejoin="round"
-									/>
-								</svg>
-							</span>
-						</div>
-						<p class="card__desc">
-							Er altijd is een aanpak die bij jou past. Ik leg per therapie uit wat je kunt
-							verwachten.
-						</p>
-					</a>
-				</li>
-			</ul>
 		</div>
 	</div>
 </section>
@@ -166,7 +97,7 @@
 	   turn comes.
 
 	   Ordered by where things sit on screen, not by DOM order — the two columns swap sides at
-	   1024px. The illustration is left out on purpose: its draw-on stroke animation is already
+	   1100px. The illustration is left out on purpose: its draw-on stroke animation is already
 	   its entrance, and fading it in on top of that would be two entrances for one element.
 
 	   The whole cascade waits for the illustration to finish drawing itself, so the two
@@ -212,9 +143,7 @@
 		   A single animation-delay value applies to both entries in the list. */
 		.hero__heading,
 		.hero__body,
-		.hero__cta,
-		.hero__social,
-		.hero__cards > li {
+		.hero__cta {
 			animation:
 				hero-fade 1300ms cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards,
 				hero-rise 1100ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
@@ -228,20 +157,6 @@
 		}
 		.hero__cta {
 			animation-delay: calc(var(--hero-in-start) + 280ms);
-		}
-		/* Sits under the illustration on mobile and bottom-right on desktop — early enough not
-		   to lag behind the image it belongs to, late enough not to precede the heading. */
-		.hero__social {
-			animation-delay: calc(var(--hero-in-start) + 340ms);
-		}
-		.hero__cards > li:nth-child(1) {
-			animation-delay: calc(var(--hero-in-start) + 420ms);
-		}
-		.hero__cards > li:nth-child(2) {
-			animation-delay: calc(var(--hero-in-start) + 530ms);
-		}
-		.hero__cards > li:nth-child(3) {
-			animation-delay: calc(var(--hero-in-start) + 640ms);
 		}
 	}
 
@@ -266,7 +181,7 @@
 	.hero__inner {
 		display: flex;
 		flex-direction: column;
-		max-width: var(--container-max); /* 1200px — same cap as nav/footer, so content edges line up */
+		max-width: var(--container-max); /* same cap as nav/footer, so content edges line up */
 		margin: 0 auto;
 	}
 
@@ -291,6 +206,25 @@
 	@media (min-width: 390px) and (max-width: 767px) {
 		.hero__image-col {
 			margin-top: calc(var(--space-6) + max(0px, 100vh - 861px));
+		}
+	}
+
+	/* Tablets (768px up to the 1100px desktop breakpoint) get this same stacked layout, since
+	   2026-09-17 — the owner's rule is that every tablet renders as mobile, and the two-column
+	   hero used to start at 768px. The fold-fill margin above is calibrated to a phone, where
+	   the drawing is width-bound at ~333px and the whole hero is a fixed ~808px; on a tablet
+	   the drawing is 640-875px tall by itself (it is still width-bound, and the width is 768
+	   to 1024), so the content already reaches the fold and the formula would only add
+	   empty sand — 582px of it on an iPad Pro 12.9 in portrait. Plain --space-6 instead. */
+	@media (min-width: 768px) and (max-width: 1099.98px) {
+		.hero__image-col {
+			margin-top: var(--space-6);
+		}
+
+		/* A phone never needs a measure on the intro; a tablet does, or the paragraph runs
+		   the full 976px of an iPad Pro at ~120 characters a line. 40rem is ~85. */
+		.hero__body {
+			max-width: 40rem;
 		}
 	}
 
@@ -357,17 +291,6 @@
 		}
 	}
 
-	/* Social: desktop only */
-	.hero__social {
-		display: none;
-	}
-
-	.hero__social-list {
-		list-style: none;
-		padding: 0;
-		margin: 0;
-	}
-
 	/* ─── Content ─── */
 	.hero__content {
 		padding: var(--space-4) var(--space-6) var(--space-16); /* bottom space so the section doesn't butt the next one */
@@ -394,79 +317,51 @@
 		margin-bottom: var(--space-4);
 	}
 
-	/* ─── Service cards ─── */
-	.hero__cards {
-		list-style: none;
-		padding: var(--space-8) var(--space-6) 3.5rem; /* 3.5rem = 56px; between --space-12 and --space-16 */
-		margin: 0;
-		display: none; /* mobile: cards hidden per Figma; keeps the CTA above the fold */
-		gap: var(--space-4);
-		overflow-x: auto;
-		-webkit-overflow-scrolling: touch;
-		scrollbar-width: none;
-	}
-
-	.hero__cards::-webkit-scrollbar {
-		display: none;
-	}
-
-	/* ─── Outline card (Meer klachten) ─── */
-	.card--outline {
-		background: var(--color-bg-sand);
-		border: 2px solid var(--color-fg-forest);
-		border-radius: 1.25rem; /* 20px — Figma spec; see HeroServiceCard for same value */
-		color: var(--color-fg-forest);
-		flex-shrink: 0;
-		display: flex;
-		flex-direction: column;
-		justify-content: center;
-		width: 12.5rem; /* 200px — Figma text-card width */
-		height: 8.125rem; /* 130px — match photo cards (HeroServiceCard) */
-		box-sizing: border-box;
-		padding: var(--space-4) var(--space-5);
-		gap: var(--space-2);
-		text-decoration: none;
-		transition: opacity var(--motion-fast);
-		overflow: hidden;
-	}
-
-	.card--outline:hover {
-		opacity: 0.88;
-	}
-
-	.card__head {
-		display: flex;
-		align-items: center;
-		gap: var(--space-1);
-	}
-
-	.card__title {
-		font-family: var(--font-body);
-		font-size: var(--font-size-xl);
-		font-weight: var(--font-weight-medium);
-		white-space: nowrap;
-	}
-
-	.card__arrow {
-		flex-shrink: 0;
-		width: 1.5rem;
-		height: 1.5rem;
-		color: inherit;
-	}
-
-	.card__desc {
-		font-family: var(--font-body);
-		font-size: var(--font-size-xs);
-		font-weight: var(--font-weight-light);
-		color: var(--color-text-subtle); /* neutral stone gray token (was --color-muted sage) */
-		line-height: var(--line-height-normal);
-	}
-
-	/* ─── Desktop / tablet (≥ 768px) — two-column, image beside text ─── */
-	@media (min-width: 768px) {
+	/* ─── Desktop (≥ 1100px) — two-column, image beside text ───
+	   1100px, not 768 and not 1024. It was 768, which handed every iPad in portrait (768,
+	   810, 820, 834) the two-column hero, and 1024 would still hand it to an iPad Pro 12.9
+	   in portrait, where the fold rule below stretched the hero to 1266px with the text
+	   at the top and the drawing on the bottom edge, 460px of sand between them. The
+	   owner's rule (2026-09-17) is that every tablet renders as mobile; 1100 is the first
+	   width that is a laptop and not a portrait tablet. Werkwijze's pin uses the same
+	   number, so a tablet gets the stacked hero and the pinned track together. */
+	@media (min-width: 1100px) {
 		.hero__inner {
 			display: grid;
 			grid-template-columns: 44% 1fr; /* content keeps its reserved 44% share; image gets the rest */
+			/* The fold rule. The hero used to be a fixed 764px (100px nav + 48px padding +
+			   616px drawing), which the owner measured on his three screens: 6px above the
+			   fold on the 1600x770 laptop, and a 196px band of empty sand under it on
+			   1920x960, 316px on 2560x1080. The hero is now at least the viewport minus the
+			   nav, and the drawing sits on its bottom edge (align-self on the image column
+			   below), so the river at the foot of the illustration meets the fold on every
+			   screen rather than only on the one it happened to fit. svh, not vh: on a
+			   browser with a collapsing toolbar the small viewport is the one that is always
+			   there. */
+			min-height: calc(100svh - var(--nav-height));
+			/* The height both columns agree on. A constant expression, deliberately: the
+			   content column and the illustration each read it, and neither is measured
+			   from the other, so there is no loop to feed. 38.5rem is what .hero__left
+			   measured before the service cards were removed; the 42vw term keeps it under
+			   the image track's own width on narrow desktops.
+
+			   The drawing grows with its column, and stops. --site-scale (app.css) is the
+			   container's growth as a plain number, so the first term is the drawing's
+			   height at 1200px times that growth: 616px on the 1600px laptop as before,
+			   710 at 1920. The third term is a ceiling on its WIDTH, written as the height
+			   that width works out to at the artwork's own ratio (the height is what the
+			   drawing is sized from, see .hero__img below; a max-width on the svg itself
+			   would cap the box and leave the art letterboxed inside it, lifted off the
+			   hero's bottom edge). The owner's verdict on the uncapped version was that the
+			   1106px drawing on his 2560px ultrawide was a little too big; 950 is the size
+			   he asked for there, and it is the only screen of his three the cap touches:
+			   721 / 831 / 950 wide on 1600 / 1920 / 2560. */
+			--hero-img-max-w: 950px;
+			--hero-col-h: min(
+				calc(38.5rem * var(--site-scale)),
+				42vw,
+				calc(var(--hero-img-max-w) * 1721 / 2015)
+			);
 			/* align-items: start (not the grid default, stretch) is load-bearing: .hero__left
 			   must report its own intrinsic content height to the ResizeObserver in the
 			   script block, unaffected by the row's track height. Stretch would make it
@@ -477,32 +372,37 @@
 			position: relative; /* anchor for the absolutely-positioned social icons */
 		}
 
-		/* Content column: heading group + cards stack from the top, fixed gap between them.
-		   flex-start (not space-between) keeps the gap tight and constant at every viewport
-		   height, so the content never drifts and the cards stay above the fold. */
+		/* Content column. With the service cards gone this is much shorter than the
+		   illustration beside it, so it holds --hero-col-h and centres its content in
+		   that space rather than hanging from the top with a gap underneath.
+		   min-height is a constant, not the image's height — the ResizeObserver reads
+		   this column and the image is sized from what it reads, so measuring the image
+		   here would close a loop. */
 		.hero__left {
 			grid-column: 1;
 			grid-row: 1;
 			position: relative;
 			z-index: 1; /* content always paints above the artwork — no absolute positioning needed */
 			min-width: 0;
+			min-height: var(--hero-col-h);
 			display: flex;
 			flex-direction: column;
-			justify-content: flex-start;
+			justify-content: center;
 		}
 
 		.hero__content {
-			padding: var(--space-12) var(--space-10) 0 0; /* left is 0 — max-width + centering sets the edge */
-			margin-bottom: var(
-				--space-8
-			); /* desktop-only floor gap so content never butts the service cards */
+			padding: 0 var(--space-10) 0 0; /* vertical space now comes from centring in --hero-col-h */
 			--btn-label-size: var(--font-size-xl); /* 20px on desktop */
 		}
 
+		/* The type does NOT grow with the screen. One build scaled the title, the body,
+		   their measures and the two buttons by --site-scale, and the owner's verdict on
+		   his 2560px ultrawide was "too big, revert": 48px in a 1840px container reads as
+		   a title, 74px reads as a poster. So the hero keeps its 1200-container sizes at
+		   every width and only the drawing beside it grows (see --hero-col-h). The smaller
+		   --fs-title-sm the 768-1023 range used to get is gone with that range. */
 		.hero__heading {
-			font-size: var(
-				--fs-title-sm
-			); /* tablet 768–1023: smaller token; ≥1024 restores full --fs-title */
+			font-size: var(--fs-title); /* 36→48 */
 			max-width: 25rem;
 			margin-bottom: var(--space-4);
 		}
@@ -510,12 +410,6 @@
 		.hero__body {
 			max-width: 27.5rem;
 			margin-bottom: var(--space-6);
-		}
-
-		.hero__cards {
-			display: flex; /* re-enabled at desktop (hidden on mobile) */
-			padding: 0 0 var(--space-10) 0; /* left is 0 — max-width + centering sets the edge */
-			overflow: visible; /* let the third card render fully; column is wide enough now */
 		}
 
 		/* Image column sits in the right grid track (col 2), which spans exactly from the content's
@@ -526,6 +420,10 @@
 			grid-row: 1;
 			min-width: 0;
 			margin-top: 0;
+			/* Anchored to the hero's bottom edge, and only this column: .hero__left keeps
+			   the top alignment the ResizeObserver depends on (align-items: start on the
+			   grid above), so the text column's intrinsic height is still what it reports. */
+			align-self: end;
 			display: flex;
 			align-items: flex-start;
 			justify-content: center; /* centre the illustration in the right zone (content-right ↔ screen-right) */
@@ -543,52 +441,20 @@
 			   of the aspect-ratio + height-clamped size, badly cropping the image. A
 			   genuinely definite length sidesteps it. --hero-content-height is a plain px
 			   value written by a ResizeObserver in the script block, measuring
-			   .hero__left's real rendered height (heading + body + CTA + cards) — so the
+			   .hero__left's real rendered height (heading + body + CTA) — so the
 			   image is capped at exactly the content column's height and never grows past
 			   it. The var() fallback only matters for the brief pre-hydration paint,
 			   before the observer has measured anything. */
-			height: var(--hero-content-height, min(calc(100vh - var(--nav-height)), 1000px, 55vw));
+			/* Floor at --hero-col-h, so dropping the service cards does not shrink the
+			   drawing: that column measured 615px with the cards and 445px without them,
+			   and the image is sized from it. Same constant the content column holds, so
+			   the two end up the same height. */
+			height: max(
+				var(--hero-content-height, min(calc(100vh - var(--nav-height)), 1000px, 55vw)),
+				var(--hero-col-h)
+			);
 			max-width: none; /* width follows aspect */
 			max-height: none; /* cancels the mobile-base max-height, which otherwise keeps cascading through */
-		}
-
-		/* Social icons appear at desktop — top-right, matches Figma */
-		.hero__social {
-			display: block;
-			position: absolute;
-			right: 0; /* max-width + centering on .hero__inner sets the edge */
-			top: var(--space-12);
-			z-index: 5;
-		}
-
-		.hero__social-list {
-			display: flex;
-			flex-direction: column;
-			gap: var(--space-6);
-		}
-	}
-
-	/* Tablet only (768–1023px): row is too narrow for content to breathe flush against
-	   the edge the way it can once max-width takes over at 1024px+, or the way the
-	   true-mobile stacked layout can below 768px. */
-	@media (min-width: 768px) and (max-width: 1023.98px) {
-		.hero__content {
-			padding-left: var(--space-6);
-		}
-
-		.hero__cards {
-			padding-left: var(--space-6);
-		}
-
-		.hero__social {
-			right: var(--space-6);
-		}
-	}
-
-	/* ─── Desktop (≥ 1024px) — restore the full-size hero title (tablet uses --fs-title-sm) ─── */
-	@media (min-width: 1024px) {
-		.hero__heading {
-			font-size: var(--fs-title); /* full 36→48 above the tablet range */
 		}
 	}
 </style>
