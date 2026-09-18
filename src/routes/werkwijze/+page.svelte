@@ -117,7 +117,9 @@
 		display: flex;
 		flex-direction: column;
 		gap: var(--space-3);
-		padding-top: var(--space-5);
+		/* space-4, not 5: at 1440×900 the tallest step was 302px with 5, two over
+		   the third-of-the-viewport band the reveal keeps to. */
+		padding-top: var(--space-4);
 		border-top: 1px solid color-mix(in srgb, var(--brand-border) 28%, transparent);
 	}
 

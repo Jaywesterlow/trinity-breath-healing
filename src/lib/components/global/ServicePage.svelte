@@ -141,7 +141,9 @@
 	.service__body {
 		margin: 0;
 		font-family: var(--font-body);
-		font-size: var(--fs-body-lg);
+		/* Lead size from the desktop breakpoint up; on a phone the intro at that size
+		   ran to 298px, over the third-of-the-viewport band the reveal keeps to. */
+		font-size: var(--fs-body);
 		font-weight: var(--font-weight-light);
 		line-height: var(--line-height-loose);
 		color: var(--color-text-subtle);
@@ -193,6 +195,10 @@
 	}
 
 	@media (min-width: 1100px) {
+		.service__body {
+			font-size: var(--fs-body-lg);
+		}
+
 		.service__others {
 			grid-template-columns: repeat(3, minmax(0, 1fr));
 		}

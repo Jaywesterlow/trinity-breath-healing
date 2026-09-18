@@ -23,15 +23,18 @@
 	let { eyebrow, lead, visual, children }: Props = $props();
 </script>
 
-<header class="phead" use:reveal>
-	<div class="phead__title">
+<!-- Reveals per part, never on the header: title and lead together are
+     well over a third of a phone screen, the band the reveal action keeps
+     to (tests/integration/reveal-audit.spec.ts). The visual draws itself. -->
+<header class="phead">
+	<div class="phead__title" use:reveal>
 		{#if eyebrow}
 			<p class="phead__eyebrow">{eyebrow}</p>
 		{/if}
 		<h1 class="phead__h1">{@render children()}</h1>
 	</div>
 	{#if lead}
-		<p class="phead__lead">{lead}</p>
+		<p class="phead__lead" use:reveal>{lead}</p>
 	{/if}
 	{#if visual}
 		<div class="phead__visual">{@render visual()}</div>

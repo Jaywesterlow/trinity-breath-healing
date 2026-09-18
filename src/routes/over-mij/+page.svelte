@@ -170,6 +170,10 @@
 	}
 
 	@media (min-width: 1100px) {
+		.about-page__body {
+			font-size: var(--fs-body-lg);
+		}
+
 		.about-page__portrait {
 			height: clamp(10rem, 16vw, 16rem);
 		}
@@ -182,7 +186,9 @@
 	.about-page__body {
 		margin: 0 0 var(--space-4);
 		font-family: var(--font-body);
-		font-size: var(--fs-body-lg);
+		/* Lead size from the desktop breakpoint up; on a phone the intro at that size
+		   ran to 298px, over the third-of-the-viewport band the reveal keeps to. */
+		font-size: var(--fs-body);
 		font-weight: var(--font-weight-light);
 		line-height: var(--line-height-loose);
 		color: var(--color-text-subtle);

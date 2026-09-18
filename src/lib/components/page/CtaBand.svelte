@@ -20,16 +20,17 @@
 	let { id, title, lead, label, href, note }: Props = $props();
 </script>
 
-<section class="cta" aria-labelledby={id} use:reveal>
-	<div class="cta__text">
+<!-- Three reveals, not one: the block is over a third of a phone screen. -->
+<section class="cta" aria-labelledby={id}>
+	<div class="cta__text" use:reveal>
 		<h2 {id} class="cta__h2">{title}</h2>
 		<p class="cta__lead">{lead}</p>
 	</div>
-	<div class="cta__button">
+	<div class="cta__button" use:reveal>
 		<ButtonLink {label} {href} />
 	</div>
 	{#if note}
-		<p class="cta__note">{note}</p>
+		<p class="cta__note" use:reveal>{note}</p>
 	{/if}
 </section>
 
