@@ -1,4 +1,8 @@
-/** Single source-of-truth for all 21 site routes.
+/** Single source-of-truth for all site routes.
+ *
+ * 2026-09-18: /faq merged into /contact (#faq, 301 in vercel.json) and /blog
+ * dropped — an empty page adds nothing to be found by; /artikelen stays as
+ * the one place for written pieces once there are any.
  *
  * `kind` is what the sitemap filters on: 'stub' and 'service-stub' are excluded,
  * everything else is submitted. Eleven routes graduated to 'page' on 2026-09-09
@@ -38,9 +42,7 @@ export const ALL_ROUTES: readonly { path: string; title: string; kind: RouteKind
 	{ path: '/diensten/spinal-touch', title: 'Spinal Touch', kind: 'page' },
 	{ path: '/diensten/brtt-body', title: 'BRTT Body', kind: 'page' },
 	{ path: '/diensten/trb-breathwork', title: 'Trauma Release Breathwork', kind: 'page' },
-	{ path: '/blog', title: 'Blog', kind: 'stub' },
 	{ path: '/artikelen', title: 'Artikelen', kind: 'stub' },
-	{ path: '/faq', title: 'Veelgestelde vragen', kind: 'page' },
 	/* The three legal pages carry real content and are indexed on purpose: in the
 	   YMYL health category a findable privacy statement and a findable medical
 	   disclaimer are trust signals, not boilerplate to hide. */

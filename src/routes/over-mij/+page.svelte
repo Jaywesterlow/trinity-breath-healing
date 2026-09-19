@@ -15,8 +15,12 @@
 	 *
 	 * See +page.ts for why the page is noindex until the markers are filled.
 	 */
-	import { Breadcrumbs, PageTitle, Todo } from '$lib/components/ui';
-	import { ButtonLink } from '$lib/components/ui/interactions';
+	import { Breadcrumbs, Todo } from '$lib/components/ui';
+	import DrawOn from '$lib/components/ui/DrawOn.svelte';
+	import { PageShell, PageHead, PageSection, CtaBand, ServiceCard } from '$lib/components/page';
+	import { reveal } from '$lib/actions/reveal';
+	// The same portrait the landing page draws, see OverMij.svelte.
+	import portrait from '$lib/images/about-portrait-1.svg?raw';
 	import { BRAND } from '$lib/constants/brand';
 	import { ABOUT_INTRO } from '$lib/content/about';
 	import { COMPLETED_TRAININGS, PLANNED_TRAININGS } from '$lib/constants/trainings';
@@ -29,50 +33,53 @@
 
 <Breadcrumbs items={data.crumbs} />
 
-<article class="about-page">
-	<header class="about-page__header">
-		<PageTitle>Vanuit eigen ervaring weet ik wat jij doormaakt.</PageTitle>
-		<p class="about-page__lead">{ABOUT_INTRO}</p>
-	</header>
+<PageShell>
+	<PageHead lead={ABOUT_INTRO}>
+		Vanuit eigen ervaring weet ik wat jij doormaakt.
+		{#snippet visual()}
+			<div class="about-page__portrait">
+				<DrawOn svg={portrait} />
+			</div>
+		{/snippet}
+	</PageHead>
 
-	<section class="about-page__section">
-		<h2>Hoe ik hier terechtkwam</h2>
-		<p>
+	<PageSection id="verhaal" title="Hoe ik hier terechtkwam">
+		<p class="about-page__body" use:reveal>
 			<Todo>
 				Haar verhaal: wat er gebeurde waardoor ze zelf vastliep, en wat haar op dit werk bracht.
 				Twee tot drie alinea's, in haar eigen woorden
 			</Todo>
 		</p>
-	</section>
+	</PageSection>
 
-	<section class="about-page__section">
-		<h2>Hoe ik werk</h2>
-		<p>
+	<PageSection id="werk" title="Hoe ik werk">
+		<p class="about-page__body" use:reveal>
 			Er is tijdens een sessie geen moeten en geen tempo dat gehaald moet worden. Jouw lichaam
 			bepaalt wat er die dag mogelijk is, en ik volg dat in plaats van er iets doorheen te duwen.
 		</p>
-		<p>
+		<p class="about-page__body" use:reveal>
 			<Todo>
 				Wat iemand concreet kan verwachten van een eerste afspraak: hoe lang, wat er gebeurt, wat ze
 				aan moeten trekken, hoe ze zich achteraf kunnen voelen
 			</Todo>
 		</p>
-	</section>
+	</PageSection>
 
-	<section class="about-page__section">
-		<h2>Opleiding en achtergrond</h2>
-		<p>
+	<PageSection id="opleiding" title="Opleiding en achtergrond">
+		<p class="about-page__body" use:reveal>
 			Sinds 2024 volg ik onafgebroken opleidingen en verdiepingen. Niet één cursus en klaar — elk
 			jaar komt er werk bij, een deel herhaal ik bewust, en sommige trajecten lopen nog. Het Soul
 			Alchemist-traject telt zes modules; daarvan heb ik er twee afgerond en volgen de rest dit jaar
 			en volgend jaar.
 		</p>
-		<ul class="about-page__trainings">
+		<!-- A ledger, like the one on the landing page: date on the left, course and
+		     school on the right, a rule between rows. -->
+		<ul class="trainings">
 			{#each COMPLETED_TRAININGS as training (training.date + training.name)}
-				<li>
-					<span class="about-page__training-date">{training.dateLabel}</span>
-					<span class="about-page__training-name">
-						{training.name}{#if training.provider}<span class="about-page__training-provider"
+				<li class="trainings__row" use:reveal>
+					<span class="trainings__date">{training.dateLabel}</span>
+					<span class="trainings__name">
+						{training.name}{#if training.provider}<span class="trainings__provider"
 								>{training.provider}</span
 							>{/if}
 					</span>
@@ -84,7 +91,7 @@
 			<!-- Separated on purpose. Something she has planned is not something she
 			     has completed, and on a health page that difference is the whole
 			     point of publishing the list. -->
-			<p class="about-page__training-planned">
+			<p class="trainings__planned" use:reveal>
 				Gepland:
 				{#each PLANNED_TRAININGS as training, i (training.date + training.name)}{i > 0
 						? ', '
@@ -92,104 +99,155 @@
 			</p>
 		{/if}
 
-		<p>
+		<p class="about-page__body" use:reveal>
 			<Todo>Aangesloten bij een beroepsvereniging? Zo ja, welke, en sinds wanneer</Todo>
 		</p>
-	</section>
+	</PageSection>
 
-	<section class="about-page__section">
-		<h2>Wat ik doe</h2>
-		<p>
+	<PageSection id="doe" title="Wat ik doe" wide>
+		<p class="about-page__body about-page__body--intro" use:reveal>
 			In de praktijk werk ik met {BRAND.services.length} vormen van ademwerk, lichaamswerk en energetisch
 			werk. Welke vorm het beste past, hangt af van wat er bij jou speelt — dat kijken we samen tijdens
 			de kennismaking.
 		</p>
 		<ul class="about-page__services">
-			{#each BRAND.services as service (service.slug)}
-				<li>
-					<h3>{service.name}</h3>
-					<p>{service.teaser}</p>
+			{#each BRAND.services as service, i (service.slug)}
+				<li use:reveal>
+					<ServiceCard
+						href="/diensten/{service.slug}"
+						name={service.name}
+						teaser={service.teaser}
+						number={i + 1}
+					/>
 				</li>
 			{/each}
 		</ul>
-	</section>
+	</PageSection>
 
-	<section class="about-page__section">
-		<h2>Waar ik werk</h2>
-		<p>
+	<PageSection id="waar" title="Waar ik werk">
+		<p class="about-page__body" use:reveal>
 			{BRAND.practice.locationNote}
 			{BRAND.practice.homeVisitNote}
 			{BRAND.practice.remoteNote} Mensen komen naar me toe uit {areaList} en omgeving.
 		</p>
-	</section>
+	</PageSection>
 
-	<section class="about-page__section about-page__section--note">
-		<h2>Belangrijk om te weten</h2>
-		<p>{BRAND.disclaimer}</p>
-		<p>
-			Wat een sessie wel en niet is, en wanneer je beter eerst met je arts overlegt, staat
-			uitgebreid op de <a href="/disclaimer">disclaimerpagina</a>.
-		</p>
-	</section>
+	<PageSection id="belangrijk" title="Belangrijk om te weten">
+		<div class="about-page__note" use:reveal>
+			<p>{BRAND.disclaimer}</p>
+			<p>
+				Wat een sessie wel en niet is, en wanneer je beter eerst met je arts overlegt, staat
+				uitgebreid op de <a class="link-underline" href="/disclaimer">disclaimerpagina</a>.
+			</p>
+		</div>
+	</PageSection>
 
-	<aside class="about-page__cta">
-		<h2>Even kennismaken?</h2>
-		<p>
-			Een kennismaking duurt 30 minuten, is kosteloos en verplicht je tot niets. We kijken samen of
-			dit werk bij je past.
-		</p>
-		<ButtonLink label="Plan een kennismaking" href="/contact" />
-	</aside>
-</article>
+	<CtaBand
+		id="kennismaken"
+		title="Even kennismaken?"
+		lead="Een kennismaking duurt 30 minuten, is kosteloos en verplicht je tot niets. We kijken samen of dit werk bij je past."
+		label="Plan een kennismaking"
+		href="/contact"
+	/>
+</PageShell>
 
 <style>
-	/* Every page sits in the same box as the landing page's sections and the
-	   footer below it, so a heading never starts 256px to the right of the logo
-	   directly underneath it. The gutter is added to the max-width rather than
-	   taken out of it (box-sizing is border-box), so the content box is exactly
-	   --container-max. Reading measure is restored on the children, not by
-	   narrowing the box — otherwise the whole page slides right again. */
-	.about-page {
-		max-width: calc(var(--container-max) + 3rem);
-		margin: 0 auto;
-		padding: clamp(1.5rem, 6vw, 3rem) 1.5rem clamp(3rem, 10vw, 5rem);
-		color: var(--color-fg-forest);
+	/* DrawOn is display:contents, so the <svg> is the box; :global() because
+	   {@html} content carries no scoping class. Same ink as the landing page. */
+	/* Sized explicitly, not by percentage: the SVG carries its own 1060×1580
+	   width/height attributes and a percentage height on the wrapper did not
+	   resolve inside the head's centred grid cell, which left the drawing at
+	   its full 1580px. Same height as PageHead's visual cell. */
+	.about-page__portrait {
+		height: 14rem;
+		aspect-ratio: 1060 / 1580;
 	}
 
-	/* Reading measure. Direct children only, so a section can opt out by
-	   nesting if it ever needs the full container. */
-	.about-page > * {
-		max-width: var(--content-max-width);
+	.about-page__portrait :global(svg.lt) {
+		display: block;
+		width: 100%;
+		height: 100%;
 	}
 
-	.about-page__lead {
-		margin-top: 1rem;
-		font-size: 1.0625rem;
-		line-height: 1.7;
-		color: var(--brand-muted);
+	@media (min-width: 1100px) {
+		.about-page__body {
+			font-size: var(--fs-body-lg);
+		}
+
+		.about-page__portrait {
+			height: clamp(10rem, 16vw, 16rem);
+		}
 	}
 
-	.about-page__section {
-		margin-top: clamp(2rem, 7vw, 3rem);
+	.about-page__portrait :global(svg.lt > path) {
+		fill: var(--color-fg-forest);
 	}
 
-	.about-page__section h2 {
+	.about-page__body {
+		margin: 0 0 var(--space-4);
+		font-family: var(--font-body);
+		/* Lead size from the desktop breakpoint up; on a phone the intro at that size
+		   ran to 298px, over the third-of-the-viewport band the reveal keeps to. */
+		font-size: var(--fs-body);
+		font-weight: var(--font-weight-light);
+		line-height: var(--line-height-loose);
+		color: var(--color-text-subtle);
+	}
+
+	.about-page__body:last-child {
+		margin-bottom: 0;
+	}
+
+	.about-page__body--intro {
+		max-width: 66ch;
+		margin-bottom: var(--space-8);
+	}
+
+	.trainings {
+		list-style: none;
+		margin: var(--space-6) 0 var(--space-4);
+		padding: 0;
+	}
+
+	.trainings__row {
+		display: grid;
+		grid-template-columns: 1fr;
+		gap: var(--space-1) var(--space-6);
+		padding: var(--space-3) 0;
+		border-top: 1px solid color-mix(in srgb, var(--brand-border) 20%, transparent);
+	}
+
+	.trainings__row:last-child {
+		border-bottom: 1px solid color-mix(in srgb, var(--brand-border) 20%, transparent);
+	}
+
+	.trainings__date {
 		font-family: var(--font-display);
-		font-size: clamp(1.25rem, 4vw, 1.5rem);
-		line-height: 1.25;
-		margin-bottom: 0.75rem;
+		font-size: var(--fs-body);
+		color: var(--brand-border);
 	}
 
-	.about-page__section p {
-		font-size: 1rem;
-		line-height: 1.7;
-		color: var(--brand-muted);
-		margin-bottom: 1rem;
-	}
-
-	.about-page__section a {
+	.trainings__name {
+		font-family: var(--font-body);
+		font-size: var(--fs-body);
+		line-height: var(--line-height-normal);
 		color: var(--color-fg-forest);
-		text-decoration: underline;
+	}
+
+	/* The school on its own line under the course. It is the part a sceptical
+	   reader checks, so it stays visible rather than collapsing into a tooltip —
+	   just quieter than the course itself. */
+	.trainings__provider {
+		display: block;
+		font-size: var(--fs-body-sm);
+		color: var(--color-text-subtle);
+	}
+
+	.trainings__planned {
+		margin: 0 0 var(--space-4);
+		font-family: var(--font-body);
+		font-size: var(--fs-body);
+		color: var(--color-text-subtle);
 	}
 
 	.about-page__services {
@@ -197,98 +255,49 @@
 		margin: 0;
 		padding: 0;
 		display: grid;
-		gap: 1.25rem;
+		grid-template-columns: 1fr;
+		gap: var(--space-4);
 	}
 
-	.about-page__services h3 {
-		font-size: 1rem;
-		font-weight: 600;
-		margin-bottom: 0.25rem;
-	}
-
-	.about-page__services p {
-		margin: 0;
-		font-size: 0.9375rem;
-	}
-
-	/* Date and course name as two columns on anything but the narrowest phone:
-	   a reader scanning for "how recent is this" wants the years to line up. It
-	   collapses to a stacked list below 30rem, where a fixed date column would
-	   squeeze the longer course names to three words a line. */
-	.about-page__trainings {
-		list-style: none;
-		margin: 0 0 1.25rem;
-		padding: 0;
-		display: grid;
-		gap: 0.5rem;
-	}
-
-	.about-page__trainings li {
-		display: grid;
-		gap: 0.1rem 1rem;
-	}
-
-	.about-page__training-date {
-		font-size: 0.8125rem;
-		color: var(--color-text-subtle);
-	}
-
-	/* The school on its own line under the course. It is the part a sceptical
-	   reader checks, so it stays visible rather than collapsing into a tooltip —
-	   just quieter than the course itself. */
-	.about-page__training-provider {
-		display: block;
-		font-size: 0.8125rem;
-		color: var(--color-text-subtle);
-	}
-
-	.about-page__training-planned {
-		font-size: 0.9375rem;
-		color: var(--color-text-subtle);
-	}
-
-	@media (min-width: 30rem) {
-		.about-page__trainings li {
-			grid-template-columns: 9rem 1fr;
-			align-items: baseline;
-		}
-	}
-
-	.about-page__section--note {
-		padding: clamp(1rem, 4vw, 1.5rem);
+	.about-page__note {
+		max-width: 66ch;
+		padding-left: var(--space-5);
 		border-left: 2px solid var(--brand-border);
-		background: color-mix(in srgb, var(--brand-border) 6%, transparent);
 	}
 
-	.about-page__section--note p:last-child {
+	.about-page__note p {
+		margin: 0 0 var(--space-3);
+		font-family: var(--font-body);
+		font-size: var(--fs-body);
+		line-height: var(--line-height-loose);
+		color: var(--color-text-subtle);
+	}
+
+	.about-page__note p:last-child {
 		margin-bottom: 0;
 	}
 
-	/* Left, like everything above it and like the closing CTA on every other page.
-	   This block was centred, which on a page of left-aligned prose reads as a
-	   fragment from somewhere else rather than as emphasis. The rule above it
-	   stays: that one does mark an ending. */
-	.about-page__cta {
-		margin-top: clamp(2.5rem, 8vw, 3.5rem);
-		padding-top: clamp(1.5rem, 5vw, 2rem);
-		border-top: 1px solid var(--brand-border);
+	@media (min-width: 30rem) {
+		.trainings__row {
+			grid-template-columns: 9rem minmax(0, 1fr);
+		}
 	}
 
-	.about-page__cta h2 {
-		font-family: var(--font-display);
-		font-size: var(--fs-h2);
-		font-weight: var(--font-weight-medium);
-		line-height: var(--line-height-tight);
-		color: var(--color-fg-forest);
-		margin-bottom: var(--space-4);
+	@media (min-width: 700px) {
+		.about-page__services {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
 	}
 
-	.about-page__cta p {
-		font-family: var(--font-body);
-		font-size: var(--fs-body);
-		font-weight: var(--font-weight-light);
-		line-height: var(--line-height-normal);
-		color: var(--color-text-subtle);
-		margin: 0 0 var(--space-6);
+	@media (min-width: 1100px) {
+		.about-page__services {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+	}
+
+	@media (min-width: 1536px) {
+		.about-page__services {
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+		}
 	}
 </style>

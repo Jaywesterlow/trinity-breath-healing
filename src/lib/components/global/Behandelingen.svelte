@@ -4,6 +4,7 @@
 	import { BRAND } from '$lib/constants/brand';
 	import TreatmentCard from '$lib/components/ui/TreatmentCard.svelte';
 	import ServiceModal from '$lib/components/ui/ServiceModal.svelte';
+	import { SERVICE_ART } from '$lib/constants/service-art';
 	import BehandelingenNote from './BehandelingenNote.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 
@@ -1321,6 +1322,7 @@
 		intro: s.intro,
 		helpsWith: s.helpsWith,
 		icon: ICONS[s.slug] ?? null,
+		art: SERVICE_ART[s.slug],
 		number: ICONS[s.slug] ? undefined : i + 1
 	}));
 

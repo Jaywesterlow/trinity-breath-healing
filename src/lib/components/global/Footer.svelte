@@ -48,18 +48,18 @@
 		{
 			heading: 'LEZEN',
 			links: [
-				{ href: '/blog', label: 'Blog' },
-				{ href: '/artikelen', label: 'Artikelen' },
-				{ href: '/faq', label: 'FAQ' }
+				{ href: '/contact#faq', label: 'Veelgestelde vragen' },
+				{ href: '/disclaimer', label: 'Disclaimer' }
 			]
 		},
 		{
 			heading: 'MENU',
 			links: [
 				{ href: '/', label: 'Home' },
-				{ href: '/over-mij', label: 'Over mij' },
 				{ href: '/behandelingen', label: 'Behandelingen' },
+				{ href: '/diensten', label: 'Diensten' },
 				{ href: '/werkwijze', label: 'Werkwijze' },
+				{ href: '/over-mij', label: 'Over mij' },
 				{ href: '/contact', label: 'Contact' }
 			]
 		},

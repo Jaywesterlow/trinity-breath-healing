@@ -60,17 +60,6 @@ export const STUB_META: Record<string, StubMeta> = {
 	},
 
 	// ─── /blog ──────────────────────────────────────────────────────────────────
-	'/blog': {
-		title: 'Blog over ademwerk en herstel',
-		heading: 'Blog',
-		description:
-			'Lees artikelen van Trinity Breath & Healing over ademwerk, traumaverwerking en energetische therapie voor je lichamelijk en geestelijk welzijn en herstel.',
-		lead: 'Stukken over ademwerk, spanning en herstel. Er staat nog niets: als er iets is, komt het hier.',
-		crumbs: [
-			{ name: 'Home', path: '/' },
-			{ name: 'Blog', path: '/blog' }
-		]
-	},
 
 	// ─── /artikelen ─────────────────────────────────────────────────────────────
 	'/artikelen': {
