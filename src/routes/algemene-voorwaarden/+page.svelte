@@ -79,7 +79,7 @@
 		afspraak kenbaar gemaakt; het tarief dat bij de bevestiging is genoemd, is het tarief dat geldt.
 	</p>
 	<p>
-		Betaling vindt plaats <Todo>betaalmoment en -wijze</Todo>. De praktijk is
+		Betaling vindt plaats ná de behandeling, per factuur, Tikkie, iDEAL of contant. De praktijk is
 		<Todo>wel/niet</Todo> btw-plichtig. Bij een factuur geldt een betaaltermijn van 14 dagen.
 	</p>
 	<p>
