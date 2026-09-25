@@ -1,9 +1,13 @@
 <script lang="ts">
 	/**
-	 * A subpage's opening: eyebrow, <h1>, lead. On desktop the heading and the
-	 * lead share one row — heading left, lead right, both on the baseline —
-	 * so the first thing on the page already spans the container the way the
-	 * landing page's sections do. Below 1100px it is a stack.
+	 * A subpage's opening: eyebrow, <h1>, lead, stacked. A heading and the text
+	 * it introduces always sit one above the other, never side by side: split
+	 * across a gutter they stop reading as one thing (proximity), and the eye
+	 * has to hunt for where the sentence continues.
+	 *
+	 * An optional visual (a drawing, the portrait) may sit beside the whole
+	 * text block on desktop. That is an illustration next to a paragraph, not
+	 * a title split from its description.
 	 *
 	 * The heading is the only <h1> on the page (checklist §A), and it starts at
 	 * the container's left edge, where the breadcrumb and the footer start.
@@ -14,28 +18,29 @@
 	interface Props {
 		eyebrow?: string;
 		lead?: string;
-		/** Something to look at beside the words: a drawing, a numeral. On
-		 * desktop it takes the right end of the row; on a phone it sits under
-		 * the lead. */
+		/** Something to look at beside the words: a drawing, a portrait. On
+		 * desktop it sits to the right of the text block; on a phone, under it. */
 		visual?: Snippet;
 		children: Snippet;
 	}
 	let { eyebrow, lead, visual, children }: Props = $props();
 </script>
 
-<!-- Reveals per part, never on the header: title and lead together are
-     well over a third of a phone screen, the band the reveal action keeps
-     to (tests/integration/reveal-audit.spec.ts). The visual draws itself. -->
-<header class="phead">
-	<div class="phead__title" use:reveal>
-		{#if eyebrow}
-			<p class="phead__eyebrow">{eyebrow}</p>
+<!-- Reveals per part, never on the header: title and lead together are well
+     over a third of a phone screen, the band the reveal action keeps to
+     (tests/integration/reveal-audit.spec.ts). The visual draws itself. -->
+<header class="phead" class:phead--visual={!!visual}>
+	<div class="phead__text">
+		<div class="phead__title" use:reveal>
+			{#if eyebrow}
+				<p class="phead__eyebrow">{eyebrow}</p>
+			{/if}
+			<h1 class="phead__h1">{@render children()}</h1>
+		</div>
+		{#if lead}
+			<p class="phead__lead" use:reveal>{lead}</p>
 		{/if}
-		<h1 class="phead__h1">{@render children()}</h1>
 	</div>
-	{#if lead}
-		<p class="phead__lead" use:reveal>{lead}</p>
-	{/if}
 	{#if visual}
 		<div class="phead__visual">{@render visual()}</div>
 	{/if}
@@ -45,8 +50,14 @@
 	.phead {
 		display: flex;
 		flex-direction: column;
-		gap: var(--space-5);
+		gap: var(--space-8);
 		padding-bottom: var(--block-gap);
+	}
+
+	.phead__text {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-5);
 	}
 
 	.phead__eyebrow {
@@ -60,8 +71,8 @@
 	.phead__h1 {
 		margin: 0;
 		font-family: var(--font-display);
-		/* The hero's own scale, one step under it: a subpage title is the largest
-		   thing on its page but not a hero. */
+		/* The hero's own scale: a subpage title is the largest thing on its
+		   page. */
 		font-size: var(--fs-display);
 		font-weight: var(--font-weight-medium);
 		line-height: var(--line-height-tight);
@@ -88,27 +99,21 @@
 	}
 
 	@media (min-width: 1100px) {
-		.phead {
+		/* Text block left, illustration right, bottoms aligned. Only when there
+		   is an illustration; otherwise the text block simply stands alone. */
+		/* The illustration sits right after the text column, not against the
+		   container's far edge, so the two read as one opening rather than a
+		   title with something floating a screen away. */
+		.phead--visual {
 			display: grid;
-			grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+			grid-template-columns: minmax(0, 46rem) auto;
+			justify-content: start;
 			align-items: end;
-			column-gap: var(--space-12);
-		}
-
-		.phead:has(.phead__visual) {
-			grid-template-columns: minmax(0, 6fr) minmax(0, 4fr) auto;
+			column-gap: var(--space-16);
 		}
 
 		.phead__visual {
 			height: clamp(10rem, 16vw, 16rem);
-			justify-self: end;
-		}
-
-		.phead__lead {
-			/* A little above the heading's baseline: the lead's last line and the
-			   heading's last line then read as one row rather than the lead
-			   hanging under it. */
-			padding-bottom: 0.35em;
 		}
 	}
 </style>

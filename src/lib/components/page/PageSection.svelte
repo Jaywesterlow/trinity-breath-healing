@@ -1,15 +1,15 @@
 <script lang="ts">
 	/**
-	 * One section of a subpage: a heading and its content. On desktop the
-	 * heading takes the left third and stays put while the content on the
-	 * right scrolls past it, the way the landing page's "Over mij" ledger sets
-	 * a label beside its rows. That is how a page of prose uses the width
-	 * without stretching a line of text to 200 characters: the measure is on
-	 * the content column, the page is still full-width.
+	 * One section of a subpage: a heading, and under it its content. Stacked
+	 * on every width. A heading placed in a column beside its content reads as
+	 * a label for something else; above it, it reads as the start of the same
+	 * thought (proximity). An earlier version put the heading in a sticky left
+	 * third to use the width, and that was the mistake: width is used by
+	 * content that is genuinely wide (a grid of cards, a row of steps), never
+	 * by pulling a heading away from its text.
 	 *
-	 * `wide` drops the two columns and lets the content run under the heading
-	 * across the whole container — for grids of cards, steps, and anything
-	 * else that is not a column of text.
+	 * `wide` lets the content run the full container, for grids. Without it
+	 * the content keeps a reading measure.
 	 */
 	import type { Snippet } from 'svelte';
 	import { reveal } from '$lib/actions/reveal';
@@ -18,7 +18,7 @@
 		id: string;
 		title: string;
 		eyebrow?: string;
-		/** Content under the heading across the full container, not beside it. */
+		/** Content across the full container (card grids, rows of steps). */
 		wide?: boolean;
 		children: Snippet;
 	}
@@ -63,39 +63,17 @@
 		font-weight: var(--font-weight-medium);
 		line-height: var(--line-height-tight);
 		color: var(--color-fg-forest);
-		max-width: 16ch;
+		max-width: 22ch;
 		text-wrap: balance;
 	}
 
-	/* The measure lives on the content, see PageShell. Grids inside opt out by
-	   being wider than this on their own (min-width: 0 keeps them honest). */
+	/* The reading measure: the same column the heading sits at the top of. */
 	.psec__body {
 		min-width: 0;
+		max-width: 46rem;
 	}
 
-	.psec__body > :global(p) {
-		max-width: 66ch;
-	}
-
-	@media (min-width: 1100px) {
-		.psec {
-			display: grid;
-			grid-template-columns: minmax(0, 4fr) minmax(0, 8fr);
-			column-gap: var(--space-12);
-			align-items: start;
-		}
-
-		.psec__head {
-			position: sticky;
-			top: calc(var(--nav-height) + var(--space-8));
-		}
-
-		.psec--wide {
-			grid-template-columns: minmax(0, 1fr);
-		}
-
-		.psec--wide .psec__head {
-			position: static;
-		}
+	.psec--wide .psec__body {
+		max-width: none;
 	}
 </style>
