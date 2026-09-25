@@ -102,29 +102,29 @@
 			</thead>
 			<tbody>
 				<tr>
-					<td>Reageren op je bericht</td>
-					<td>Naam, e-mail, telefoon, bericht</td>
-					<td>Toestemming (art. 6 lid 1 sub a)</td>
+					<td data-label="Doel">Reageren op je bericht</td>
+					<td data-label="Gegevens">Naam, e-mail, telefoon, bericht</td>
+					<td data-label="Grondslag (AVG)">Toestemming (art. 6 lid 1 sub a)</td>
 				</tr>
 				<tr>
-					<td>Een afspraak inplannen en bevestigen</td>
-					<td>Naam, e-mail, datum en tijd</td>
-					<td>Uitvoering van de overeenkomst (art. 6 lid 1 sub b)</td>
+					<td data-label="Doel">Een afspraak inplannen en bevestigen</td>
+					<td data-label="Gegevens">Naam, e-mail, datum en tijd</td>
+					<td data-label="Grondslag (AVG)">Uitvoering van de overeenkomst (art. 6 lid 1 sub b)</td>
 				</tr>
 				<tr>
-					<td>Een behandeling veilig en passend uitvoeren</td>
-					<td>Gezondheidsgegevens, aantekeningen</td>
-					<td>Uitdrukkelijke toestemming (art. 9 lid 2 sub a)</td>
+					<td data-label="Doel">Een behandeling veilig en passend uitvoeren</td>
+					<td data-label="Gegevens">Gezondheidsgegevens, aantekeningen</td>
+					<td data-label="Grondslag (AVG)">Uitdrukkelijke toestemming (art. 9 lid 2 sub a)</td>
 				</tr>
 				<tr>
-					<td>Facturatie en administratie</td>
-					<td>Naam, adres, factuurgegevens</td>
-					<td>Wettelijke verplichting (art. 6 lid 1 sub c)</td>
+					<td data-label="Doel">Facturatie en administratie</td>
+					<td data-label="Gegevens">Naam, adres, factuurgegevens</td>
+					<td data-label="Grondslag (AVG)">Wettelijke verplichting (art. 6 lid 1 sub c)</td>
 				</tr>
 				<tr>
-					<td>De website verbeteren</td>
-					<td>Geaggregeerde bezoekstatistieken</td>
-					<td>Gerechtvaardigd belang (art. 6 lid 1 sub f)</td>
+					<td data-label="Doel">De website verbeteren</td>
+					<td data-label="Gegevens">Geaggregeerde bezoekstatistieken</td>
+					<td data-label="Grondslag (AVG)">Gerechtvaardigd belang (art. 6 lid 1 sub f)</td>
 				</tr>
 			</tbody>
 		</table>
@@ -148,37 +148,37 @@
 			</thead>
 			<tbody>
 				<tr>
-					<td>Vercel</td>
-					<td>Hosting van de website en het formulierverkeer</td>
-					<td>Europese Unie (regio Frankfurt)</td>
-					<td>Ja — Verenigde Staten</td>
+					<td data-label="Verwerker">Vercel</td>
+					<td data-label="Waarvoor">Hosting van de website en het formulierverkeer</td>
+					<td data-label="Waar staan de gegevens">Europese Unie (regio Frankfurt)</td>
+					<td data-label="Toegang van buiten de EU">Ja — Verenigde Staten</td>
 				</tr>
 				<tr>
-					<td>Resend</td>
-					<td>Afleveren van formulierinzendingen en bevestigingsmails</td>
-					<td>Europese Unie (regio Ierland)</td>
-					<td>Ja — Verenigde Staten</td>
+					<td data-label="Verwerker">Resend</td>
+					<td data-label="Waarvoor">Afleveren van formulierinzendingen en bevestigingsmails</td>
+					<td data-label="Waar staan de gegevens">Europese Unie (regio Ierland)</td>
+					<td data-label="Toegang van buiten de EU">Ja — Verenigde Staten</td>
 				</tr>
 				<tr>
-					<td>Supabase</td>
-					<td>
+					<td data-label="Verwerker">Supabase</td>
+					<td data-label="Waarvoor">
 						Het vastleggen van bezette afspraakmomenten. Hierin staan alleen de datum, de tijd en de
 						status van een aanvraag — geen naam, geen e-mailadres en niets over je klacht.
 					</td>
-					<td>Europese Unie (regio Ierland)</td>
-					<td>Ja — Verenigde Staten</td>
+					<td data-label="Waar staan de gegevens">Europese Unie (regio Ierland)</td>
+					<td data-label="Toegang van buiten de EU">Ja — Verenigde Staten</td>
 				</tr>
 				<tr>
-					<td>Plausible Analytics</td>
-					<td>Bezoekstatistieken zonder cookies</td>
-					<td>Europese Unie</td>
-					<td>Nee</td>
+					<td data-label="Verwerker">Plausible Analytics</td>
+					<td data-label="Waarvoor">Bezoekstatistieken zonder cookies</td>
+					<td data-label="Waar staan de gegevens">Europese Unie</td>
+					<td data-label="Toegang van buiten de EU">Nee</td>
 				</tr>
 				<tr>
-					<td><Todo>e-mailprovider</Todo></td>
-					<td>De mailbox waarin je bericht binnenkomt</td>
-					<td><Todo>land</Todo></td>
-					<td><Todo>ja of nee</Todo></td>
+					<td data-label="Verwerker"><Todo>e-mailprovider</Todo></td>
+					<td data-label="Waarvoor">De mailbox waarin je bericht binnenkomt</td>
+					<td data-label="Waar staan de gegevens"><Todo>land</Todo></td>
+					<td data-label="Toegang van buiten de EU"><Todo>ja of nee</Todo></td>
 				</tr>
 			</tbody>
 		</table>

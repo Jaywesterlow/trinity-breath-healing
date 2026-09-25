@@ -191,11 +191,6 @@
 		margin-bottom: var(--space-8);
 	}
 
-	/* Two columns from 1024px up: the header holds the left one on its own and
-	   the questions fill the right. The header does NOT stretch to match the
-	   list — the empty space under it is the point, and a section this dense
-	   needs somewhere to breathe. See the breakpoint at the bottom. */
-
 	/* Matches the eyebrow treatment in Werkwijze/Behandelingen so all landing
 	   sections share one header rhythm. */
 	.faq__eyebrow {
@@ -356,22 +351,11 @@
 		color: var(--color-fg-forest);
 	}
 
-	@media (min-width: 1024px) {
-		.faq__container {
-			display: grid;
-			/* 5fr/7fr rather than half and half: a question is a line of text and
-			   wants the room; a two-line heading does not. */
-			grid-template-columns: 5fr 7fr;
-			gap: var(--space-12);
-			align-items: start;
-		}
-
-		.faq__header {
-			margin-bottom: 0;
-		}
-
-		.faq__eyebrow {
-			margin-bottom: var(--space-3);
-		}
+	/* Stacked on every width: the heading sits above the questions it introduces,
+	   never in a column beside them (the owner's layout rule, CLAUDE.md). The list
+	   keeps a reading measure rather than stretching to the container; the space to
+	   its right on desktop is deliberate. */
+	.faq__list {
+		max-width: 46rem;
 	}
 </style>
