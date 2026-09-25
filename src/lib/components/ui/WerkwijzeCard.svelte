@@ -95,7 +95,6 @@
 	.wcard {
 		position: relative;
 		flex-shrink: 0;
-		scroll-snap-align: center;
 		box-sizing: border-box;
 		display: flex;
 		flex-direction: column;
