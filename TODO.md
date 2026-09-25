@@ -37,6 +37,11 @@ machine can check is checked, and anything it cannot is dated.
 
 ## 1. Ask the aunt — one message, thirteen questions
 
+> **The short version lives in `.planning/notes/VAN-BRIGITTE.md`** (2026-09-22):
+> everything still owed by her, grouped by what it blocks, plus the images and a
+> message she can answer. This section stays as the long record — why each answer
+> was needed, what she already said, and what it changed.
+
 Every one of these renders as **red bracketed text** on a live page right now.
 `npm run audit:placeholders` lists them under "Unfilled `<Todo>` markers".
 
