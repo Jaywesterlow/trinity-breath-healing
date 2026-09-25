@@ -250,6 +250,27 @@
 		enabled = true;
 		document.documentElement.classList.add('has-cursor-tooltip');
 
+		/* A modal <dialog> (the treatments modal) is drawn in the browser's top
+		   layer, above every z-index on the page, so a fixed div at z-index 200
+		   ended up underneath it and the pointer vanished over the modal. The
+		   cursor is a manual popover so it lives in the top layer too, and it is
+		   re-shown whenever a dialog opens: within the top layer the most
+		   recently shown element paints on top. */
+		const raise = () => {
+			if (!root) return;
+			try {
+				if (root.matches(':popover-open')) root.hidePopover();
+				root.showPopover();
+			} catch {
+				/* No popover support: the cursor stays where z-index puts it. */
+			}
+		};
+		raise();
+		const dialogs = new MutationObserver((records) => {
+			if (records.some((r) => r.target instanceof HTMLDialogElement && r.target.open)) raise();
+		});
+		dialogs.observe(document.body, { attributes: true, attributeFilter: ['open'], subtree: true });
+
 		window.addEventListener('pointermove', onPointerMove, { passive: true });
 		window.addEventListener('pointerdown', onPress, { passive: true, capture: true });
 		window.addEventListener('pointerup', onRelease, { passive: true, capture: true });
@@ -262,6 +283,7 @@
 		document.addEventListener('visibilitychange', clear);
 
 		return () => {
+			dialogs.disconnect();
 			if (frame) cancelAnimationFrame(frame);
 			document.documentElement.classList.remove('has-cursor-tooltip');
 			window.removeEventListener('pointermove', onPointerMove);
@@ -277,7 +299,13 @@
 </script>
 
 {#if enabled}
-	<div bind:this={root} class="cursor cursor--{mode}" class:cursor--on={visible} aria-hidden="true">
+	<div
+		bind:this={root}
+		popover="manual"
+		class="cursor cursor--{mode}"
+		class:cursor--on={visible}
+		aria-hidden="true"
+	>
 		<!-- One group holds every shape, so the press shrink is a single transform on
 		     a single node rather than a scale applied to each shape separately (which
 		     would fight each shape's own transform). It sits at the wrapper's origin
@@ -345,6 +373,17 @@
 		top: 0;
 		left: 0;
 		z-index: 200; /* over the nav, which is 100 */
+		/* Undo the UA's [popover] box (centred, bordered, padded, painted): the
+		   element is a zero-size anchor at the pointer, see .cursor__scale. */
+		inset: 0 auto auto 0;
+		margin: 0;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		overflow: visible;
+		width: auto;
+		height: auto;
+		color: inherit;
 		pointer-events: none;
 		opacity: 0;
 		transition: opacity 120ms var(--ease-out);

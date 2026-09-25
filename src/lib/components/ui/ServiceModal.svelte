@@ -505,6 +505,37 @@
 		margin-top: var(--space-2);
 	}
 
+	/* The site's button, turned for a green ground. ButtonLink paints its pill
+	   and ring in --btn-fill (brown) on a sand page; brown on this green is
+	   barely there, and its ring is empty, so the arrow floated on nothing.
+	   Here the two colours are sand and green, the ring is filled like the
+	   modal's own close/prev/next circles, and hover inverts both the pill and
+	   the ring, the same swap every other button on the site makes. The extra
+	   .service-modal in front is specificity: ButtonLink's own hover rule is
+	   five selectors deep. ButtonLink.svelte itself is untouched. */
+	.service-modal .service-modal__cta :global(.btn-host),
+	.service-modal .service-modal__cta :global(.btn-pill) {
+		--btn-fill: var(--color-bg-sand);
+		--btn-ink: var(--color-brand-green);
+	}
+
+	.service-modal .service-modal__cta :global(.btn-link__circle) {
+		background: var(--btn-fill);
+		color: var(--btn-ink);
+	}
+
+	.service-modal .service-modal__cta :global(.btn-link:focus-visible .btn-link__circle) {
+		background: var(--btn-ink);
+		color: var(--btn-fill);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.service-modal .service-modal__cta :global(.btn-link:hover .btn-link__circle) {
+			background: var(--btn-ink);
+			color: var(--btn-fill);
+		}
+	}
+
 	.service-modal__media {
 		order: 1;
 		display: grid;
