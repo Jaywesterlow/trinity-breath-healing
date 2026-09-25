@@ -241,6 +241,36 @@
 		schedule();
 	}
 
+	/* A modal <dialog> (the treatments modal) is drawn in the browser's top
+	   layer, above every z-index on the page, so a fixed div at z-index 200
+	   ended up underneath it and the pointer vanished over the modal. The
+	   cursor is therefore a manual popover, which lives in the top layer too,
+	   and it is re-shown whenever a dialog opens so it stays topmost.
+
+	   It must also be shown the moment it exists. It is rendered inside
+	   {#if enabled}, so it does not exist yet when onMount flips `enabled`:
+	   calling showPopover() there found no element, returned, and left the
+	   cursor at display: none until the first modal opened. The $effect below
+	   runs once Svelte has actually created the element.
+
+	   If the browser refuses (no popover support, or anything else), the
+	   popover attribute comes off and the element falls back to an ordinary
+	   fixed layer at z-index 200: visible everywhere but under a modal, which
+	   beats a page with no pointer at all (the native one is hidden). */
+	function raiseCursor() {
+		if (!root) return;
+		try {
+			if (root.matches(':popover-open')) root.hidePopover();
+			root.showPopover();
+		} catch {
+			root.removeAttribute('popover');
+		}
+	}
+
+	$effect(() => {
+		if (root) raiseCursor();
+	});
+
 	onMount(() => {
 		/* A coarse pointer has nothing to replace, and someone who has asked for
 		   less movement has not asked for a second thing following their cursor. */
@@ -250,24 +280,11 @@
 		enabled = true;
 		document.documentElement.classList.add('has-cursor-tooltip');
 
-		/* A modal <dialog> (the treatments modal) is drawn in the browser's top
-		   layer, above every z-index on the page, so a fixed div at z-index 200
-		   ended up underneath it and the pointer vanished over the modal. The
-		   cursor is a manual popover so it lives in the top layer too, and it is
-		   re-shown whenever a dialog opens: within the top layer the most
-		   recently shown element paints on top. */
-		const raise = () => {
-			if (!root) return;
-			try {
-				if (root.matches(':popover-open')) root.hidePopover();
-				root.showPopover();
-			} catch {
-				/* No popover support: the cursor stays where z-index puts it. */
-			}
-		};
-		raise();
+		/* Re-raise the cursor whenever a dialog opens: within the top layer the
+		   most recently shown element paints on top. See raiseCursor(). */
 		const dialogs = new MutationObserver((records) => {
-			if (records.some((r) => r.target instanceof HTMLDialogElement && r.target.open)) raise();
+			if (records.some((r) => r.target instanceof HTMLDialogElement && r.target.open))
+				raiseCursor();
 		});
 		dialogs.observe(document.body, { attributes: true, attributeFilter: ['open'], subtree: true });
 
