@@ -311,7 +311,9 @@
 
 	.hero__body {
 		font-family: var(--font-body);
-		font-size: var(--fs-body-xs); /* fluid hero-intro clamp: 11px → 16px */
+		/* Never under 15px: the fluid clamp alone bottoms out at 12px on a phone, too
+		   small for body copy. Desktop is unchanged (the clamp is 16px by 1440). */
+		font-size: max(15px, var(--fs-body-xs));
 		line-height: var(--line-height-loose);
 		color: var(--color-text-subtle);
 		margin-bottom: var(--space-4);

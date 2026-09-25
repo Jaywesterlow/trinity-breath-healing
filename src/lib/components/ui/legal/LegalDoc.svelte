@@ -186,7 +186,9 @@
 	}
 
 	/* Tables carry the processor list, which is the one place these documents
-	   genuinely need columns. They must not push the page sideways on a phone. */
+	   genuinely need columns. They must not push the page sideways on a phone:
+	   below 640px each row becomes a small stacked block instead (see the end of
+	   this block), so nothing on the page scrolls sideways at all.*/
 	.legal__body :global(.legal-table-wrap) {
 		overflow-x: auto;
 		margin-bottom: var(--space-4);
@@ -213,6 +215,48 @@
 	.legal__body :global(th) {
 		font-weight: var(--font-weight-medium);
 		color: var(--color-fg-forest);
+	}
+
+	@media (max-width: 639.98px) {
+		.legal__body :global(table) {
+			min-width: 0;
+		}
+
+		.legal__body :global(thead) {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip-path: inset(50%);
+			white-space: nowrap;
+		}
+
+		.legal__body :global(tr),
+		.legal__body :global(td) {
+			display: block;
+		}
+
+		.legal__body :global(tr) {
+			padding: var(--space-3) 0;
+			border-bottom: 1px solid color-mix(in srgb, var(--brand-border) 30%, transparent);
+		}
+
+		.legal__body :global(td) {
+			padding: 0;
+			border-bottom: 0;
+		}
+
+		/* The first cell names the row; the rest carry their column name. */
+		.legal__body :global(td:first-child) {
+			font-weight: var(--font-weight-medium);
+			color: var(--color-fg-forest);
+			margin-bottom: var(--space-1);
+		}
+
+		.legal__body :global(td:not(:first-child)[data-label])::before {
+			content: attr(data-label) ': ';
+			font-weight: var(--font-weight-medium);
+		}
 	}
 
 	@media (min-width: 1100px) {
