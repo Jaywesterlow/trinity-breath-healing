@@ -58,7 +58,7 @@
  *    repo's Playwright setup — confirmed empirically (a throwaway spec asserting
  *    `matchMedia('(prefers-reduced-motion: reduce)').matches` via the context option
  *    came back `false`). `page.emulateMedia({ reducedMotion: 'reduce' })` does work
- *    (confirmed `true`, and it's the pattern tests/integration/werkwijze-scrolljack.spec.ts
+ *    (confirmed `true`, and it's the pattern tests/integration/werkwijze-staircase.spec.ts
  *    already relies on) — so it is called explicitly in settle() below, before goto,
  *    rather than trusted to the context option. Without this fix, items 1-3 above are
  *    NOT neutralized and AboutStat in particular renders whatever count-up value a
