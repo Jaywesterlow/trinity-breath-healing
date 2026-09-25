@@ -368,6 +368,10 @@
 		background: transparent;
 		color: inherit;
 		cursor: pointer;
+		/* Above the content: on desktop the content wrapper is positioned (it
+		   carries the sand half), and a positioned sibling later in the DOM
+		   would otherwise paint over these and take their clicks. */
+		z-index: 2;
 		box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-bg-sand) 0%, transparent);
 		transition:
 			background-color var(--motion-arrow) var(--ease-arrow),
@@ -505,6 +509,41 @@
 		margin-top: var(--space-2);
 	}
 
+	/* The site's button, turned for a green ground: phone and tablet only.
+	   ButtonLink paints its pill and ring in --btn-fill (brown) for a sand
+	   page; brown on this green is barely there, and its ring is empty, so
+	   the arrow floated on nothing. Here the two colours are sand and green,
+	   the ring is filled like the modal's own close/prev/next circles, and
+	   hover inverts pill and ring together, the same swap every other button
+	   makes. From 1024px up the words sit on sand and the button is the
+	   ordinary one again. The extra .service-modal in front is specificity:
+	   ButtonLink's own hover rule is five selectors deep. ButtonLink.svelte
+	   itself is untouched. */
+	@media (max-width: 1023.98px) {
+		.service-modal .service-modal__cta :global(.btn-host),
+		.service-modal .service-modal__cta :global(.btn-pill) {
+			--btn-fill: var(--color-bg-sand);
+			--btn-ink: var(--color-brand-green);
+		}
+
+		.service-modal .service-modal__cta :global(.btn-link__circle) {
+			background: var(--btn-fill);
+			color: var(--btn-ink);
+		}
+
+		.service-modal .service-modal__cta :global(.btn-link:focus-visible .btn-link__circle) {
+			background: var(--btn-ink);
+			color: var(--btn-fill);
+		}
+	}
+
+	@media (max-width: 1023.98px) and (hover: hover) and (pointer: fine) {
+		.service-modal .service-modal__cta :global(.btn-link:hover .btn-link__circle) {
+			background: var(--btn-ink);
+			color: var(--btn-fill);
+		}
+	}
+
 	.service-modal__media {
 		order: 1;
 		display: grid;
@@ -595,12 +634,155 @@
 	   both gathered against it and centred on its axis. The drawing's width
 	   follows its ratio from that height, capped so the two text columns
 	   always keep room; the columns take the rest. */
+	/* ─── Desktop: design B, chosen by the owner ───────────────────────────
+	   A centred box rather than 92vw × 92vh, so nothing floats in a sea of
+	   green on a wide screen. Two grounds inside it: the left 42% stays the
+	   card's green and carries the drawing, the right 58% is the page's sand
+	   and carries the words in forest ink, with the site's own brown button.
+	   The dialog's background stays plain green on purpose: the open
+	   animation grows the card into this box (Behandelingen.svelte reads the
+	   target from getBoundingClientRect, so the new size needs no JS), and the
+	   sand arrives with the content fade, as a pseudo-element on the content
+	   wrapper. The box keeps the card's colour for every frame of the grow. */
 	@media (min-width: 1024px) {
-		.service-modal__content {
-			padding: var(--space-8) var(--space-10) 0;
+		.service-modal {
+			--modal-w: min(1180px, 88vw);
+			--modal-h: min(800px, 88vh);
+			--modal-split: 42%;
+			top: calc((100vh - var(--modal-h)) / 2);
+			left: calc((100vw - var(--modal-w)) / 2);
+			width: var(--modal-w);
+			height: var(--modal-h);
+			padding: 0;
 		}
 
-		/* Vertically centred against the dialog's own left/right edge. */
+		.service-modal__content {
+			position: relative;
+			padding: 0;
+			display: grid;
+			grid-template-columns: var(--modal-split) minmax(0, 1fr);
+			grid-template-rows: minmax(0, 1fr) auto;
+		}
+
+		.service-modal__content::before {
+			content: '';
+			position: absolute;
+			inset: 0 0 0 var(--modal-split);
+			background: var(--color-bg-sand);
+		}
+
+		.service-modal__panels {
+			position: relative;
+			grid-column: 1 / -1;
+			grid-row: 1;
+		}
+
+		/* The two columns line up with the two grounds: the panel spans the
+		   whole box and splits at the same 42%. The words sit as one group in
+		   the middle of the right half; the drawing fills the left half. */
+		.service-modal__panel {
+			display: grid;
+			grid-template-columns: var(--modal-split) minmax(0, 1fr);
+			grid-template-rows: 1fr auto auto 1fr;
+			/* The phone layout's flex gap would open a 20px gutter between the
+			   columns and push the words off the disclaimer's edge. */
+			gap: 0;
+			min-height: 100%;
+			height: auto;
+		}
+
+		.service-modal__panel[hidden] {
+			display: none;
+		}
+
+		.service-modal__media {
+			order: 0;
+			grid-column: 1;
+			grid-row: 1 / -1;
+			height: 100%;
+			min-height: 0;
+		}
+
+		.service-modal__art {
+			width: min(calc(80cqh * var(--art-ratio)), 32cqw);
+			/* Height follows the width through the ratio. The phone rule's
+			   max-width: 100% must not apply here: against the auto grid track
+			   it resolves circularly and clamps the drawing to a fraction of
+			   its size. */
+			max-width: none;
+			height: auto;
+		}
+
+		.service-modal__icon-plain {
+			height: 80cqh;
+			max-width: 32cqw;
+		}
+
+		/* Cormorant's digits sit well inside the em box, so the size is well
+		   over the cell height to get a glyph that fills most of it. */
+		.service-modal__number {
+			font-size: min(80cqh, 24cqw);
+		}
+
+		/* Right margin clears the next arrow (2.625rem + its 1rem inset). */
+		.service-modal__text,
+		.service-modal__helps {
+			order: 0;
+			grid-column: 2;
+			margin: 0 5rem 0 clamp(2.5rem, 4vw, 4rem);
+			color: var(--color-fg-forest);
+		}
+
+		.service-modal__text {
+			grid-row: 2;
+			max-width: 44ch;
+			gap: var(--space-4);
+		}
+
+		.service-modal__intro {
+			font-size: var(--fs-body-lg);
+			color: var(--color-text-subtle);
+		}
+
+		.service-modal__helps {
+			grid-row: 3;
+			margin-top: var(--space-5);
+		}
+
+		.service-modal__helps-title {
+			color: var(--brand-muted);
+		}
+
+		/* Two balanced columns, so nine complaints are five rows, not nine.
+		   CSS columns rather than a grid: an item that runs long wraps inside
+		   its own column instead of pushing into the next one. */
+		.service-modal__helps-list {
+			display: block;
+			columns: 2;
+			column-gap: var(--space-10);
+			font-size: var(--fs-body);
+			color: var(--color-text-subtle);
+		}
+
+		.service-modal__helps-list li {
+			break-inside: avoid;
+			margin-bottom: var(--space-1);
+		}
+
+		.service-modal__disclaimer {
+			position: relative;
+			grid-column: 2;
+			grid-row: 2;
+			margin: 0 5rem var(--space-6) clamp(2.5rem, 4vw, 4rem);
+			color: var(--color-text-subtle);
+			opacity: 1;
+			border-top-color: color-mix(in srgb, var(--brand-border) 25%, transparent);
+		}
+
+		/* Vertically centred against the dialog's own left/right edge. Prev
+		   sits on the green half and keeps the sand ring; close and next sit
+		   on the sand half and take the brown ring of every control on a sand
+		   page, with the same fill-and-halo hover in brown. */
 		.service-modal__nav--prev {
 			top: 50%;
 			right: auto;
@@ -614,68 +796,16 @@
 			transform: translateY(-50%);
 		}
 
-		.service-modal__panel {
-			display: grid;
-			grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-			grid-template-rows: minmax(0, 1fr);
-			align-items: center;
-			column-gap: clamp(2.5rem, 4vw, 5rem);
-			height: 100%;
-			min-height: 0;
+		.service-modal__close,
+		.service-modal__nav--next {
+			color: var(--brand-border);
 		}
 
-		.service-modal__panel[hidden] {
-			display: none;
-		}
-
-		.service-modal__text {
-			order: 0;
-			justify-self: end;
-			max-width: 46ch;
-			gap: var(--space-5);
-		}
-
-		.service-modal__intro {
-			font-size: var(--fs-body-lg);
-		}
-
-		.service-modal__media {
-			order: 0;
-			height: 100%;
-			min-height: 0;
-		}
-
-		.service-modal__art {
-			width: min(calc(94cqh * var(--art-ratio)), 34cqw);
-			/* Height follows the width through the ratio, so a wide drawing on
-			   a narrow screen shrinks instead of overflowing. The phone rule's
-			   max-width: 100% must not apply here: against the auto grid track
-			   it resolves circularly and clamps the drawing to a fraction of
-			   its size. */
-			max-width: none;
-			height: auto;
-		}
-
-		.service-modal__icon-plain {
-			height: 94cqh;
-			max-width: 34cqw;
-		}
-
-		/* Cormorant's digits sit well inside the em box, so the size is well
-		   over the cell height to get a glyph that fills most of it. */
-		.service-modal__number {
-			font-size: min(92cqh, 28cqw);
-		}
-
-		.service-modal__helps {
-			order: 0;
-			justify-self: start;
-			max-width: 36ch;
-		}
-
-		.service-modal__helps-list {
-			font-size: var(--fs-body);
-			gap: var(--space-2);
+		.service-modal__close:focus-visible,
+		.service-modal__nav--next:focus-visible {
+			box-shadow: 0 0 0 9px color-mix(in srgb, var(--brand-border) 22%, transparent);
+			background: var(--brand-border);
+			color: var(--color-bg-sand);
 		}
 
 		/* Restore a visible scrollbar at this breakpoint — the hide is a
@@ -688,6 +818,29 @@
 
 		.service-modal__panels::-webkit-scrollbar {
 			display: block;
+		}
+	}
+
+	/* A short laptop screen (1366×768, 1280×720): the box takes more of the
+	   height and the intro drops to body size, so the longest treatments fit
+	   or come close. What still does not fit scrolls inside the panel, with
+	   a visible scrollbar. */
+	@media (min-width: 1024px) and (max-height: 860px) {
+		.service-modal {
+			--modal-h: 94vh;
+		}
+
+		.service-modal__intro {
+			font-size: var(--fs-body);
+		}
+	}
+
+	@media (min-width: 1024px) and (hover: hover) and (pointer: fine) {
+		.service-modal__close:hover,
+		.service-modal__nav--next:hover {
+			box-shadow: 0 0 0 9px color-mix(in srgb, var(--brand-border) 22%, transparent);
+			background: var(--brand-border);
+			color: var(--color-bg-sand);
 		}
 	}
 </style>
