@@ -1,9 +1,9 @@
 <script lang="ts">
 	/**
-	 * The closing block of a subpage: a question, one line under it, the
-	 * button, and the disclaimer under everything. The same ButtonLink as
-	 * everywhere else on the site; the button sits on the right on desktop so
-	 * the block reads as a row, not a third column of text.
+	 * The closing block of a subpage, top to bottom: the question, the line
+	 * under it, the button, and the disclaimer under everything. The same
+	 * ButtonLink as everywhere else on the site. Stacked on every width: the
+	 * button belongs to the sentence above it, so it sits under it.
 	 */
 	import { ButtonLink } from '$lib/components/ui/interactions';
 	import { reveal } from '$lib/actions/reveal';
@@ -36,10 +36,18 @@
 
 <style>
 	.cta {
-		display: grid;
+		display: flex;
+		flex-direction: column;
+		align-items: flex-start;
 		gap: var(--space-6);
 		padding-top: var(--block-gap);
 		border-top: 1px solid color-mix(in srgb, var(--brand-border) 28%, transparent);
+	}
+
+	/* Mid-page (the service pages close with other treatments after it) it
+	   needs its own air before the next section's rule. */
+	.cta:not(:last-child) {
+		padding-bottom: var(--block-gap);
 	}
 
 	.cta__h2 {
@@ -49,7 +57,7 @@
 		font-weight: var(--font-weight-medium);
 		line-height: var(--line-height-tight);
 		color: var(--color-fg-forest);
-		max-width: 20ch;
+		max-width: 22ch;
 		text-wrap: balance;
 	}
 
@@ -75,29 +83,5 @@
 		font-weight: var(--font-weight-light);
 		line-height: var(--line-height-normal);
 		color: var(--color-text-subtle);
-	}
-
-	@media (min-width: 1100px) {
-		.cta {
-			grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-			grid-template-areas:
-				'text button'
-				'note note';
-			column-gap: var(--space-12);
-			align-items: center;
-		}
-
-		.cta__text {
-			grid-area: text;
-		}
-
-		.cta__button {
-			grid-area: button;
-			justify-self: start;
-		}
-
-		.cta__note {
-			grid-area: note;
-		}
 	}
 </style>
