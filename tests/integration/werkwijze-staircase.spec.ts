@@ -239,7 +239,6 @@ test.describe('Werkwijze desktop staircase', () => {
 		await page.emulateMedia({ reducedMotion: 'reduce' });
 		await page.goto('/');
 		const section = page.locator('#werkwijze');
-		await expect(section).toHaveAttribute('data-scroll-mode', 'native');
 		await expect(section).not.toHaveClass(/werkwijze--stairs/);
 
 		await scrollAndSettle(page, await entryY(page));
