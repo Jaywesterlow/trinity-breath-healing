@@ -8,16 +8,18 @@
 	import BehandelingenNote from './BehandelingenNote.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 
-	// Only 3 of the 7 real services have art (260810-mdl) — Raster Energie's old
-	// infinity.png was never the owner's artwork and is gone from this map (the
-	// file itself stays under static/, just unreferenced, in case art arrives
-	// under the same name). A service absent from this map shows a plain card
+	// All 7 services have art since 2026-09-27 (the last four drawn to match the
+	// first three, approved by the owner). A service absent from this map shows a plain card
 	// (no stand-in number since 2026-09-27, the owner's call): drop a new icon
 	// file in, add its entry here and its crop to SERVICE_ART, and it appears.
 	const ICONS: Record<string, string> = {
 		'mahatma-healing': '/images/card-mahatma-healing.svg',
 		goldhealing: '/images/card-goldhealing.svg',
-		'spinal-touch': '/images/card-spinal-touch.svg'
+		'spinal-touch': '/images/card-spinal-touch.svg',
+		'raster-energie': '/images/card-raster-energie.svg',
+		'cranio-fascia-unwinding': '/images/card-cranio-fascia-unwinding.svg',
+		'brtt-body': '/images/card-brtt-body.svg',
+		'trb-breathwork': '/images/card-trb-breathwork.svg'
 	};
 
 	// buttonLabel is placeholder copy, not final — see TreatmentCard.svelte.

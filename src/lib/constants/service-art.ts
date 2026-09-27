@@ -7,6 +7,10 @@
  * goldhealing 1760×960 → 592×587 at 583,187; spinal-touch 1418×774 →
  * 380×613 at 518,82. Re-measure if an SVG is replaced.
  *
+ * The four drawings added 2026-09-27 (raster-energie, trb-breathwork,
+ * brtt-body, cranio-fascia-unwinding) were traced already cropped to the
+ * drawing plus a 12px margin, so their box is the whole viewBox.
+ *
  * Read by the carousel's modal (through Behandelingen.svelte) and by the
  * service pages.
  */
@@ -43,5 +47,37 @@ export const SERVICE_ART: Record<string, ServiceArt> = {
 		w: 0.2681,
 		h: 0.7919,
 		ratio: 0.6203
+	},
+	'raster-energie': {
+		src: '/images/card-raster-energie.svg',
+		x: 0,
+		y: 0,
+		w: 1,
+		h: 1,
+		ratio: 1.2454
+	},
+	'cranio-fascia-unwinding': {
+		src: '/images/card-cranio-fascia-unwinding.svg',
+		x: 0,
+		y: 0,
+		w: 1,
+		h: 1,
+		ratio: 0.3904
+	},
+	'brtt-body': {
+		src: '/images/card-brtt-body.svg',
+		x: 0,
+		y: 0,
+		w: 1,
+		h: 1,
+		ratio: 2.4133
+	},
+	'trb-breathwork': {
+		src: '/images/card-trb-breathwork.svg',
+		x: 0,
+		y: 0,
+		w: 1,
+		h: 1,
+		ratio: 0.5868
 	}
 };
