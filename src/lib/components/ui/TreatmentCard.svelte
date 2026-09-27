@@ -32,6 +32,10 @@
 		 * already this card's one accessible name, so the number itself is `aria-hidden` to
 		 * avoid announcing it twice. */
 		number?: number;
+		/** Where the drawing sits inside `icon` (SERVICE_ART). With it the card shows the
+		 * drawing itself at full size, cropped out of the SVG's empty margins; without it
+		 * the whole SVG is fitted, margins and all. */
+		art?: { x: number; y: number; w: number; h: number; ratio: number } | null;
 		/** Where the corner button goes. Accessible name only for now — the
 		 * arrow itself carries no visible text (not final copy either way). */
 		buttonLabel: string;
@@ -68,6 +72,7 @@
 		label,
 		icon = null,
 		number,
+		art = null,
 		buttonLabel,
 		buttonHref,
 		description,
@@ -96,7 +101,14 @@
 	use:magnetic={{ enabled: isMagnetic, dragging }}
 >
 	<div class="tcard__icon-wrap">
-		{#if icon}
+		{#if icon && art}
+			<div
+				class="tcard__art"
+				style={`--art-x: ${art.x}; --art-y: ${art.y}; --art-w: ${art.w}; --art-h: ${art.h}; --art-ratio: ${art.ratio};`}
+			>
+				<img src={icon} alt="" aria-hidden="true" class="tcard__art-img" draggable="false" />
+			</div>
+		{:else if icon}
 			<img src={icon} alt="" aria-hidden="true" class="tcard__icon" draggable="false" />
 		{:else if number}
 			<span class="tcard__number" aria-hidden="true">{number}</span>
@@ -233,7 +245,30 @@
 		   overflow instead. The icon is fading to nothing across the same
 		   duration, so the give is not visible. */
 		min-height: 0;
+		/* The cropped drawing sizes itself against this box (cqw/cqh below). */
+		container-type: size;
 		transition: opacity var(--tcard-reveal-duration) var(--ease-out);
+	}
+
+	/* The drawing's own box, the same crop the modal uses: as large as the icon
+	   row allows at the drawing's ratio, with a little air to the card's edge.
+	   The SVG inside is scaled by 1/--art-w × 1/--art-h and shifted so its empty
+	   margins fall outside the box. */
+	.tcard__art {
+		position: relative;
+		width: min(86cqw, calc(86cqh * var(--art-ratio)));
+		aspect-ratio: var(--art-ratio);
+		overflow: hidden;
+	}
+
+	.tcard__art-img {
+		position: absolute;
+		display: block;
+		width: calc(100% / var(--art-w));
+		height: calc(100% / var(--art-h));
+		max-width: none;
+		left: calc(-100% * var(--art-x) / var(--art-w));
+		top: calc(-100% * var(--art-y) / var(--art-h));
 	}
 
 	.tcard__icon {

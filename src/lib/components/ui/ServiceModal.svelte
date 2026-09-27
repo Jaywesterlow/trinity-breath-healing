@@ -227,16 +227,6 @@
 		<div class="service-modal__panels">
 			{#each services as service, idx (service.slug)}
 				<section class="service-modal__panel" hidden={idx !== activeIndex}>
-					<div class="service-modal__text">
-						<h3 id={`service-modal-title-${service.slug}`} class="service-modal__title">
-							{service.name}
-						</h3>
-						<p class="service-modal__intro">{service.intro}</p>
-						<div class="service-modal__cta">
-							<ButtonLink label="Naar de pagina" href={`/diensten/${service.slug}`} />
-						</div>
-					</div>
-
 					<div class="service-modal__media">
 						{#if service.icon && service.art}
 							<!-- The drawing's box, not the SVG's: the img is scaled so the
@@ -255,13 +245,29 @@
 						{/if}
 					</div>
 
-					<div class="service-modal__helps">
-						<h4 class="service-modal__helps-title">Helpt bij</h4>
-						<ul class="service-modal__helps-list">
-							{#each service.helpsWith as item (item)}
-								<li>{item}</li>
-							{/each}
-						</ul>
+					<!-- The words: one column on desktop that scrolls on its own when a long
+					     treatment does not fit, while the drawing beside it stays put. On a
+					     phone it is display: contents, so its two children stay items of
+					     the panel's flex column and keep their own order. -->
+					<div class="service-modal__words">
+						<div class="service-modal__text">
+							<h3 id={`service-modal-title-${service.slug}`} class="service-modal__title">
+								{service.name}
+							</h3>
+							<p class="service-modal__intro">{service.intro}</p>
+							<div class="service-modal__cta">
+								<ButtonLink label="Naar de pagina" href={`/diensten/${service.slug}`} />
+							</div>
+						</div>
+
+						<div class="service-modal__helps">
+							<h4 class="service-modal__helps-title">Helpt bij</h4>
+							<ul class="service-modal__helps-list">
+								{#each service.helpsWith as item (item)}
+									<li>{item}</li>
+								{/each}
+							</ul>
+						</div>
 					</div>
 				</section>
 			{/each}
@@ -336,7 +342,11 @@
 	.service-modal__backdrop {
 		position: fixed;
 		inset: 0;
-		background: var(--color-fg-forest-92);
+		/* Transparent: the page behind keeps its own colour while the modal is
+		   open (owner's call, 2026-09-27; it used to be a 92% forest scrim that
+		   turned the whole carousel section dark green). The element stays: it
+		   is still the click-outside target and the fade hook. */
+		background: transparent;
 		opacity: 0;
 		display: none;
 		/* Above Nav's own highest z-index (100) — needs to sit above
@@ -481,6 +491,10 @@
 		flex-direction: column;
 		gap: var(--space-5);
 		min-height: 100%;
+	}
+
+	.service-modal__words {
+		display: contents;
 	}
 
 	.service-modal__text {
@@ -654,6 +668,10 @@
 			width: var(--modal-w);
 			height: var(--modal-h);
 			padding: 0;
+			/* With no scrim the sand half sits on the sand page, so the box needs
+			   its own edge: a hairline in the site's border colour and a soft lift. */
+			border: 1px solid color-mix(in srgb, var(--brand-border) 25%, transparent);
+			box-shadow: 0 1.5rem 4rem color-mix(in srgb, var(--color-fg-forest) 18%, transparent);
 		}
 
 		.service-modal__content {
@@ -671,10 +689,13 @@
 			background: var(--color-bg-sand);
 		}
 
+		/* The panels box no longer scrolls on desktop: the drawing holds still
+		   and only the words column scrolls (see .service-modal__words). */
 		.service-modal__panels {
 			position: relative;
 			grid-column: 1 / -1;
 			grid-row: 1;
+			overflow: hidden;
 		}
 
 		/* The two columns line up with the two grounds: the panel spans the
@@ -683,12 +704,24 @@
 		.service-modal__panel {
 			display: grid;
 			grid-template-columns: var(--modal-split) minmax(0, 1fr);
-			grid-template-rows: 1fr auto auto 1fr;
+			grid-template-rows: minmax(0, 1fr);
 			/* The phone layout's flex gap would open a 20px gutter between the
 			   columns and push the words off the disclaimer's edge. */
 			gap: 0;
-			min-height: 100%;
-			height: auto;
+			height: 100%;
+		}
+
+		/* The right half's own scroller. Centred when the words fit, top-aligned
+		   and scrollable when they do not (`safe` keeps the top reachable). */
+		.service-modal__words {
+			grid-column: 2;
+			grid-row: 1;
+			display: flex;
+			flex-direction: column;
+			justify-content: safe center;
+			min-height: 0;
+			overflow-y: auto;
+			padding-block: var(--space-10);
 		}
 
 		.service-modal__panel[hidden] {
@@ -698,7 +731,7 @@
 		.service-modal__media {
 			order: 0;
 			grid-column: 1;
-			grid-row: 1 / -1;
+			grid-row: 1;
 			height: 100%;
 			min-height: 0;
 		}
@@ -728,24 +761,23 @@
 		.service-modal__text,
 		.service-modal__helps {
 			order: 0;
-			grid-column: 2;
 			margin: 0 5rem 0 clamp(2.5rem, 4vw, 4rem);
 			color: var(--color-fg-forest);
 		}
 
 		.service-modal__text {
-			grid-row: 2;
 			max-width: 44ch;
 			gap: var(--space-4);
 		}
 
+		/* The description at body size, not lead: at lead size it read too large
+		   on desktop (owner, 2026-09-27). */
 		.service-modal__intro {
-			font-size: var(--fs-body-lg);
+			font-size: var(--fs-body);
 			color: var(--color-text-subtle);
 		}
 
 		.service-modal__helps {
-			grid-row: 3;
 			margin-top: var(--space-5);
 		}
 
@@ -811,27 +843,16 @@
 		/* Restore a visible scrollbar at this breakpoint — the hide is a
 		   mobile-only concession to the touch-scroll pattern (see its own
 		   comment); desktop's mouse/trackpad users benefit from seeing one. */
-		.service-modal__panels {
-			scrollbar-width: auto;
-			-ms-overflow-style: auto;
-		}
-
-		.service-modal__panels::-webkit-scrollbar {
-			display: block;
+		.service-modal__words {
+			scrollbar-width: thin;
 		}
 	}
 
 	/* A short laptop screen (1366×768, 1280×720): the box takes more of the
-	   height and the intro drops to body size, so the longest treatments fit
-	   or come close. What still does not fit scrolls inside the panel, with
-	   a visible scrollbar. */
+	   height. What still does not fit scrolls in the words column. */
 	@media (min-width: 1024px) and (max-height: 860px) {
 		.service-modal {
 			--modal-h: 94vh;
-		}
-
-		.service-modal__intro {
-			font-size: var(--fs-body);
 		}
 	}
 
