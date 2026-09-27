@@ -32,14 +32,9 @@
 
 	<!-- Each card keeps its own reveal: the grid is taller than a third of any screen. -->
 	<ul class="index__grid">
-		{#each BRAND.services as service, i (service.slug)}
+		{#each BRAND.services as service (service.slug)}
 			<li use:reveal>
-				<ServiceCard
-					href="/diensten/{service.slug}"
-					name={service.name}
-					teaser={service.teaser}
-					number={i + 1}
-				/>
+				<ServiceCard href="/diensten/{service.slug}" name={service.name} teaser={service.teaser} />
 			</li>
 		{/each}
 	</ul>

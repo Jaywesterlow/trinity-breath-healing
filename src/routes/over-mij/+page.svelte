@@ -111,13 +111,12 @@
 			de kennismaking.
 		</p>
 		<ul class="about-page__services">
-			{#each BRAND.services as service, i (service.slug)}
+			{#each BRAND.services as service (service.slug)}
 				<li use:reveal>
 					<ServiceCard
 						href="/diensten/{service.slug}"
 						name={service.name}
 						teaser={service.teaser}
-						number={i + 1}
 					/>
 				</li>
 			{/each}
