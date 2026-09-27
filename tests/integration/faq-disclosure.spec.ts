@@ -157,6 +157,30 @@ test.describe('FAQ disclosure transition', () => {
 		await expect(el).not.toHaveAttribute('data-closing', '');
 	});
 
+	for (const motion of ['no-preference', 'reduce'] as const) {
+		test(`one row open at a time: opening a second closes the first (${motion})`, async ({
+			page
+		}) => {
+			await page.emulateMedia({ reducedMotion: motion });
+			await page.goto('/');
+			const first = page.locator(item).nth(0);
+			const second = page.locator(item).nth(1);
+			await first.locator('summary').scrollIntoViewIfNeeded();
+
+			await first.locator('summary').click();
+			await page.waitForTimeout(600);
+			await second.locator('summary').click();
+			await page.waitForTimeout(1000);
+
+			const open = await page.evaluate(() =>
+				[...document.querySelectorAll('.faq__item')].map((d) => (d as HTMLDetailsElement).open)
+			);
+			expect(open.filter(Boolean)).toHaveLength(1);
+			expect(open[1]).toBe(true);
+			await expect(first).not.toHaveAttribute('data-closing', '');
+		});
+	}
+
 	test('every answer is in the initial HTML, open or not', async ({ page }) => {
 		// The reason this section is built on <details>: the script must never be what puts
 		// the answers on the page, or crawlers see empty questions.
