@@ -125,6 +125,13 @@
 	.service__art {
 		height: 100%;
 		aspect-ratio: var(--art-ratio);
+		/* Below the side-by-side layout the drawing has the column's full width:
+		   a wide one (BRTT Body's lying figure, 2.4:1) would otherwise run past it
+		   at the slot's full height. Width first, height from the ratio. */
+		@media (max-width: 1099.98px) {
+			height: auto;
+			width: min(100%, calc(var(--phead-visual-h, 14rem) * var(--art-ratio)));
+		}
 		background: var(--color-fg-forest);
 		-webkit-mask-image: var(--art-src);
 		mask-image: var(--art-src);

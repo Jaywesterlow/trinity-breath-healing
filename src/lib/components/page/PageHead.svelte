@@ -92,9 +92,12 @@
 	}
 
 	.phead__visual {
+		/* Exposed so a wide drawing inside can size itself to fit the column
+		   (see ServicePage's .service__art). */
+		--phead-visual-h: 14rem;
 		display: grid;
 		place-items: center;
-		height: 14rem;
+		height: var(--phead-visual-h);
 		overflow: hidden;
 	}
 
