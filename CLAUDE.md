@@ -104,6 +104,8 @@ without being asked:
 1. **A heading and the text it introduces stack vertically.** Never put a
    title in one column and its description, lead, list or button in the column
    beside it. Proximity is what makes them read as one thing.
+   **Exception:** the FAQ section keeps its Figma layout on desktop: eyebrow and
+   heading on the left, questions on the right (owner's call, 2026-09-27).
 2. **Use width only with content that is genuinely wide**: a grid of parallel
    cards, a row of steps, two independent blocks (a main column and a sidebar
    of different content). Never create width by pulling apart what belongs

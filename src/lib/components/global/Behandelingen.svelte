@@ -11,11 +11,9 @@
 	// Only 3 of the 7 real services have art (260810-mdl) — Raster Energie's old
 	// infinity.png was never the owner's artwork and is gone from this map (the
 	// file itself stays under static/, just unreferenced, in case art arrives
-	// under the same name). A service absent from this map renders a number in
-	// the icon slot instead — see SERVICE_ITEMS' own `number` field below and
-	// TreatmentCard's `number` prop. Driven by absence from this map, not a
-	// flag: drop a new icon file in and add its entry here, and the number for
-	// that service disappears on its own.
+	// under the same name). A service absent from this map shows a plain card
+	// (no stand-in number since 2026-09-27, the owner's call): drop a new icon
+	// file in, add its entry here and its crop to SERVICE_ART, and it appears.
 	const ICONS: Record<string, string> = {
 		'mahatma-healing': '/images/card-mahatma-healing.svg',
 		goldhealing: '/images/card-goldhealing.svg',
@@ -35,16 +33,12 @@
 
 	// Seven real services, one card each (260810-mdl) — no "Meer diensten" nav
 	// card any more; a "more services" card inside a carousel that already
-	// shows every service was nonsense. `number` is set only when the service
-	// has no entry in ICONS, and is the service's fixed 1-based position in
-	// BRAND.services — stable regardless of where the fan has rotated it to,
-	// since it's computed from the source array's own index, not from
-	// `positions[]`.
-	const SERVICE_ITEMS = BRAND.services.map((s, i) => ({
+	// shows every service was nonsense.
+	const SERVICE_ITEMS = BRAND.services.map((s) => ({
 		key: s.slug,
 		label: s.name,
 		icon: ICONS[s.slug] ?? null,
-		number: ICONS[s.slug] ? undefined : i + 1,
+		art: SERVICE_ART[s.slug] ?? null,
 		buttonLabel: 'Meer info',
 		buttonHref: `/diensten/${s.slug}`,
 		teaser: s.teaser
@@ -1316,14 +1310,13 @@
 	// One entry per SERVICE (not per slot/duplicate), in BRAND.services'
 	// own fixed order — this is what ServiceModal's Prev/Next index into,
 	// independent of where the fan has rotated any given copy to.
-	const MODAL_SERVICES = BRAND.services.map((s, i) => ({
+	const MODAL_SERVICES = BRAND.services.map((s) => ({
 		slug: s.slug,
 		name: s.name,
 		intro: s.intro,
 		helpsWith: s.helpsWith,
 		icon: ICONS[s.slug] ?? null,
-		art: SERVICE_ART[s.slug],
-		number: ICONS[s.slug] ? undefined : i + 1
+		art: SERVICE_ART[s.slug]
 	}));
 
 	// Bound per pivot in the each-block below (bind:this={pivotEls[i]}) so
@@ -1998,7 +1991,7 @@
 					<TreatmentCard
 						label={item.label}
 						icon={item.icon}
-						number={item.number}
+						art={item.art}
 						buttonLabel={item.buttonLabel}
 						buttonHref={item.buttonHref}
 						description={item.teaser}

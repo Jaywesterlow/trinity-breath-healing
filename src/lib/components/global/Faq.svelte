@@ -51,7 +51,6 @@
 		const found = control.closest('details.faq__item');
 		if (!(found instanceof HTMLDetailsElement)) return;
 		const item = found;
-		const fromAnswer = !control.matches('summary');
 
 		// Clicked again mid-close: cancel the collapse and leave the panel open, rather
 		// than queueing a second one against the first.
@@ -62,16 +61,28 @@
 		}
 
 		// Opening is the browser's job — the CSS handles it and native behaviour is better
-		// than anything reimplemented here. Same when motion is not wanted.
-		if (!item.open) return;
-		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-			// The answer still has to close it; only the animation is skipped.
-			if (fromAnswer) item.open = false;
+		// than anything reimplemented here. One row open at a time: opening a row closes
+		// whichever other row is open, with the same collapse as closing it by hand.
+		if (!item.open) {
+			for (const other of item.parentElement?.querySelectorAll('details.faq__item[open]') ?? []) {
+				if (other !== item && other instanceof HTMLDetailsElement) close(other);
+			}
 			return;
 		}
 
 		// Closing: keep `open` set so the panel stays rendered, and let the CSS collapse it.
 		event.preventDefault();
+		close(item);
+	}
+
+	/** Collapse an open row, then remove `open` once the collapse has run. */
+	function close(item: HTMLDetailsElement) {
+		if (item.hasAttribute('data-closing')) return;
+		if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+			item.open = false;
+			return;
+		}
+
 		item.setAttribute('data-closing', '');
 
 		let settled = false;
@@ -190,6 +201,11 @@
 	.faq__header {
 		margin-bottom: var(--space-8);
 	}
+
+	/* Two columns from 1024px up: the header holds the left one on its own and
+	   the questions fill the right. The header does NOT stretch to match the
+	   list — the empty space under it is the point, and a section this dense
+	   needs somewhere to breathe. See the breakpoint at the bottom. */
 
 	/* Matches the eyebrow treatment in Werkwijze/Behandelingen so all landing
 	   sections share one header rhythm. */
@@ -351,11 +367,22 @@
 		color: var(--color-fg-forest);
 	}
 
-	/* Stacked on every width: the heading sits above the questions it introduces,
-	   never in a column beside them (the owner's layout rule, CLAUDE.md). The list
-	   keeps a reading measure rather than stretching to the container; the space to
-	   its right on desktop is deliberate. */
-	.faq__list {
-		max-width: 46rem;
+	@media (min-width: 1024px) {
+		.faq__container {
+			display: grid;
+			/* 5fr/7fr rather than half and half: a question is a line of text and
+			   wants the room; a two-line heading does not. */
+			grid-template-columns: 5fr 7fr;
+			gap: var(--space-12);
+			align-items: start;
+		}
+
+		.faq__header {
+			margin-bottom: 0;
+		}
+
+		.faq__eyebrow {
+			margin-bottom: var(--space-3);
+		}
 	}
 </style>
