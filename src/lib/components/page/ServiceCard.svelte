@@ -1,6 +1,6 @@
 <script lang="ts">
 	/**
-	 * One service as a card in a grid: index number, name, teaser, and the
+	 * One service as a card in a grid: name, teaser, and the
 	 * arrow circle from the treatment card in the corner. The whole card is
 	 * the link; the arrow runs the shared swap when the card is hovered, the
 	 * same gesture as the carousel card and the modal's controls.
@@ -9,14 +9,11 @@
 		href: string;
 		name: string;
 		teaser: string;
-		/** 1-based position in BRAND.services, shown as "01". */
-		number: number;
 	}
-	let { href, name, teaser, number }: Props = $props();
+	let { href, name, teaser }: Props = $props();
 </script>
 
 <a class="scard roll-host" {href}>
-	<span class="scard__number" aria-hidden="true">{String(number).padStart(2, '0')}</span>
 	<span class="scard__name">{name}</span>
 	<span class="scard__teaser">{teaser}</span>
 	<span class="scard__arrow arrow-swap" aria-hidden="true">
@@ -72,15 +69,6 @@
 			background: color-mix(in srgb, var(--brand-border) 7%, transparent);
 			border-color: var(--brand-border);
 		}
-	}
-
-	/* Position in the list, not a ranking. Quiet enough to read as an index
-	   marker rather than as a score. */
-	.scard__number {
-		font-family: var(--font-display);
-		font-size: var(--fs-body-sm);
-		color: var(--brand-muted);
-		letter-spacing: 0.08em;
 	}
 
 	.scard__name {

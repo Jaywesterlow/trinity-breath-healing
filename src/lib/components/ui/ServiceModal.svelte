@@ -342,11 +342,12 @@
 	.service-modal__backdrop {
 		position: fixed;
 		inset: 0;
-		/* Transparent: the page behind keeps its own colour while the modal is
-		   open (owner's call, 2026-09-27; it used to be a 92% forest scrim that
-		   turned the whole carousel section dark green). The element stays: it
-		   is still the click-outside target and the fade hook. */
-		background: transparent;
+		/* A light dim, not a scrim: the page behind stays recognisably itself
+		   (owner's call, 2026-09-27; it used to be a 92% forest layer that turned
+		   the whole carousel section dark green). It sits under the dialog, which
+		   is in the top layer, and under the cursor, which is raised above that;
+		   neither is affected. Still the click-outside target and the fade hook. */
+		background: color-mix(in srgb, var(--color-fg-forest) 30%, transparent);
 		opacity: 0;
 		display: none;
 		/* Above Nav's own highest z-index (100) — needs to sit above
@@ -668,9 +669,7 @@
 			width: var(--modal-w);
 			height: var(--modal-h);
 			padding: 0;
-			/* With no scrim the sand half sits on the sand page, so the box needs
-			   its own edge: a hairline in the site's border colour and a soft lift. */
-			border: 1px solid color-mix(in srgb, var(--brand-border) 25%, transparent);
+			/* A soft lift off the dimmed page. No border (owner, 2026-09-27). */
 			box-shadow: 0 1.5rem 4rem color-mix(in srgb, var(--color-fg-forest) 18%, transparent);
 		}
 

@@ -29,9 +29,7 @@
 	const service = $derived(BRAND.services.find((s) => s.slug === slug)!);
 
 	/** The other six, for the row at the bottom. Order is BRAND's, not shuffled. */
-	const others = $derived(
-		BRAND.services.map((s, i) => ({ ...s, number: i + 1 })).filter((s) => s.slug !== slug)
-	);
+	const others = $derived(BRAND.services.filter((s) => s.slug !== slug));
 	const art = $derived(SERVICE_ART[slug]);
 </script>
 
@@ -103,12 +101,7 @@
 		<ul class="service__others">
 			{#each others as other (other.slug)}
 				<li use:reveal>
-					<ServiceCard
-						href="/diensten/{other.slug}"
-						name={other.name}
-						teaser={other.teaser}
-						number={other.number}
-					/>
+					<ServiceCard href="/diensten/{other.slug}" name={other.name} teaser={other.teaser} />
 				</li>
 			{/each}
 		</ul>
