@@ -153,7 +153,7 @@
 
 	.stat__label {
 		font-family: var(--font-body);
-		font-size: 0.875rem; /* 14px */
+		font-size: var(--fs-body-sm);
 		letter-spacing: 0.06em;
 		line-height: var(--line-height-normal);
 		color: var(--color-text-subtle);

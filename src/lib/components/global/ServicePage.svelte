@@ -5,13 +5,18 @@
 	 * The content is not written here and must not be: every word comes from
 	 * `BRAND.services`, which is the practitioner's own copy, and the same object
 	 * already feeds the carousel card, the modal and the Service JSON-LD. Seven
-	 * hand-written pages would have drifted from those within a month.
+	 * hand-written pages would have drifted from those within a month. The
+	 * session sentences below are the one shared paragraph every service page
+	 * had, now set as steps; the words are unchanged.
 	 *
-	 * Structure follows what someone arriving from a search actually needs, in
-	 * order: what this is, what it helps with, what a session looks like, and how
-	 * to book one. The "waar het bij helpt" list is the part an AI Overview is
-	 * most likely to lift, so it is a real <ul> of short noun phrases rather than
-	 * a paragraph — the same reason the FAQ answers are marked up the way they are.
+	 * Order, as the owner set it (2026-09-27): the opening with the drawing on
+	 * the right; what it is; a quiet band with the invitation; how a session
+	 * goes, as a line that draws itself; what it can help with; the other
+	 * treatments; the closing card. The two quiet blocks (the band and the
+	 * chips) are kept apart on purpose.
+	 *
+	 * The "waar het bij helpt" list is the part an AI Overview is most likely to
+	 * lift, so it stays a real <ul> of short noun phrases.
 	 *
 	 * The disclaimer is not optional and not per-page. This is a health site in
 	 * the YMYL category; the line that says a session does not replace a doctor
@@ -19,10 +24,13 @@
 	 * constant so it cannot say something slightly different on page four.
 	 */
 	import { Breadcrumbs } from '$lib/components/ui';
-	import { PageShell, PageHead, PageSection, CtaBand, ServiceCard } from '$lib/components/page';
+	import { ButtonLink } from '$lib/components/ui/interactions';
+	import { PageShell, PageHead, PageSection, ServiceCard } from '$lib/components/page';
 	import { SERVICE_ART } from '$lib/constants/service-art';
 	import { BRAND } from '$lib/constants/brand';
 	import { reveal } from '$lib/actions/reveal';
+	import { scrollDraw } from '$lib/actions/scroll-draw';
+	import { spotlight } from '$lib/actions/spotlight';
 
 	let { slug, crumbs }: { slug: string; crumbs: { name: string; path: string }[] } = $props();
 
@@ -31,6 +39,17 @@
 	/** The other six, for the row at the bottom. Order is BRAND's, not shuffled. */
 	const others = $derived(BRAND.services.filter((s) => s.slug !== slug));
 	const art = $derived(SERVICE_ART[slug]);
+
+	/** The shared session paragraph, sentence by sentence. The middle sentence
+	 *  ("je hoeft niets te presteren…") is the band further up the page. Each is a
+	 *  milestone along the line; `top` is where it sits in the section, spaced as the
+	 *  library's five are (a milestone every ~60vh of scroll). */
+	const steps = $derived([
+		'We beginnen met een gesprek over waar je op dit moment tegenaan loopt.',
+		`Daarna werk ik met ${service.name}, afgestemd op wat jij nodig hebt.`,
+		'Na afloop is er tijd om te landen en na te praten.'
+	]);
+	const STEP_TOPS = ['10%', '42%', '74%'];
 </script>
 
 <Breadcrumbs items={crumbs} />
@@ -39,7 +58,7 @@
 	<!-- The one eyebrow left on a subpage. Everywhere else it repeated the word
 	     directly above it in the breadcrumb; here the crumb says the treatment's
 	     name and this says what kind of page it is, so it carries something. -->
-	<PageHead eyebrow="Behandeling" lead={service.teaser}>
+	<PageHead eyebrow="Behandeling" lead={service.teaser} spread>
 		{service.name}
 		{#snippet visual()}
 			{#if art}
@@ -55,50 +74,67 @@
 		{/snippet}
 	</PageHead>
 
-	<PageSection id="wat" title="Wat het is">
+	<PageSection id="wat" title="Wat het is" centered>
 		<p class="service__body" use:reveal>{service.intro}</p>
 	</PageSection>
 
-	<PageSection id="helpt" title="Waar het bij kan helpen">
-		<ul class="service__list">
+	<!-- The quiet band: one sentence from the session paragraph, and the
+	     invitation under it. Full-bleed colour without a 100vw box (which
+	     would add a scrollbar's width of sideways scroll): the shadow paints
+	     the ground out to the viewport edges and the clip-path keeps it from
+	     spilling up or down. -->
+	<section class="service__band" aria-label="Uitnodiging">
+		<p class="service__band-line" use:reveal>
+			Je hoeft niets te presteren en niets te vertellen wat je niet wilt vertellen.
+		</p>
+		<div class="service__band-cta" use:reveal>
+			<ButtonLink label="Plan een kennismaking" href="/contact" />
+		</div>
+	</section>
+
+	<PageSection id="sessie" title="Hoe een sessie verloopt" centered>
+		<!-- Animation 23 from the library (23-scroll-svg-draw.html), ported: the drawing
+		     stays in view while the section scrolls, its line draws with the scroll, and
+		     the steps pass over it, each fading in as it arrives. Path, dots and
+		     proportions are the original's. See actions/scroll-draw.ts. -->
+		<div class="draw" use:scrollDraw>
+			<div class="draw__sticky" aria-hidden="true">
+				<svg class="draw__svg" viewBox="0 0 400 500">
+					<path
+						data-draw-path
+						d="M200,20 C200,20 80,80 80,140 C80,200 320,200 320,260 C320,320 80,320 80,380 C80,440 200,480 200,480"
+					/>
+					<circle cx="200" cy="20" r="6" opacity=".3" />
+					<circle cx="80" cy="140" r="6" opacity=".3" />
+					<circle cx="320" cy="260" r="6" opacity=".3" />
+					<circle cx="80" cy="380" r="6" opacity=".3" />
+					<circle cx="200" cy="480" r="6" opacity=".3" />
+				</svg>
+			</div>
+			<ol class="draw__steps">
+				{#each steps as step, i (i)}
+					<li class="draw__step" data-milestone style:top={STEP_TOPS[i]}>{step}</li>
+				{/each}
+			</ol>
+		</div>
+		<p class="steps__after" use:reveal>
+			Een sessie duurt ongeveer een uur en kan bij jou thuis of op afstand.
+		</p>
+	</PageSection>
+
+	<PageSection id="helpt" title="Waar het bij kan helpen" centered>
+		<ul class="service__chips">
+			<!-- No reveal per chip: nine small fades would spend most of the
+			     page's reveal budget (tests/integration/reveal-audit.spec.ts) on
+			     the quietest block. They simply stand. -->
 			{#each service.helpsWith as item (item)}
-				<li class="service__item" use:reveal>
-					<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-						<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" />
-						<path
-							d="m8.5 12 2.4 2.4 4.6-4.8"
-							stroke="currentColor"
-							stroke-width="1.6"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						/>
-					</svg>
-					<span>{item}</span>
-				</li>
+				<li>{item}</li>
 			{/each}
 		</ul>
 	</PageSection>
 
-	<PageSection id="sessie" title="Hoe een sessie verloopt">
-		<p class="service__body" use:reveal>
-			We beginnen met een gesprek over waar je op dit moment tegenaan loopt. Daarna werk ik met
-			{service.name}, afgestemd op wat jij nodig hebt. Je hoeft niets te presteren en niets te
-			vertellen wat je niet wilt vertellen. Na afloop is er tijd om te landen en na te praten. Een
-			sessie duurt ongeveer een uur en kan bij jou thuis of op afstand.
-		</p>
-	</PageSection>
-
-	<CtaBand
-		id="afspraak"
-		title="Een afspraak maken"
-		lead="Je hoeft niet te weten of dit de juiste behandeling voor je is. Dat zoeken we in het eerste gesprek samen uit."
-		label="Plan een kennismaking"
-		href="/contact"
-		note={BRAND.disclaimer}
-	/>
-
 	<PageSection id="andere" title="Andere behandelingen" wide>
-		<ul class="service__others">
+		<ul class="service__others" use:spotlight>
 			{#each others as other (other.slug)}
 				<li use:reveal>
 					<ServiceCard href="/diensten/{other.slug}" name={other.name} teaser={other.teaser} />
@@ -106,6 +142,19 @@
 			{/each}
 		</ul>
 	</PageSection>
+
+	<section class="service__close" aria-labelledby="afspraak">
+		<div class="service__card">
+			<h2 id="afspraak" class="service__card-title" use:reveal>
+				Je hoeft niet te weten of dit de juiste behandeling voor je is.
+			</h2>
+			<p class="service__card-lead" use:reveal>Dat zoeken we in het eerste gesprek samen uit.</p>
+			<div class="service__card-cta" use:reveal>
+				<ButtonLink label="Plan een kennismaking" href="/contact" />
+			</div>
+		</div>
+		<p class="service__note" use:reveal>{BRAND.disclaimer}</p>
+	</section>
 </PageShell>
 
 <style>
@@ -125,6 +174,12 @@
 			height: auto;
 			width: min(100%, calc(var(--phead-visual-h, 14rem) * var(--art-ratio)));
 		}
+		/* Beside the text the slot's width is its content's, so no percentage
+		   here: a wide drawing is capped in rem instead and keeps its ratio. */
+		@media (min-width: 1100px) {
+			height: auto;
+			width: min(calc(var(--phead-visual-h, 16rem) * var(--art-ratio)), 30rem);
+		}
 		background: var(--color-fg-forest);
 		-webkit-mask-image: var(--art-src);
 		mask-image: var(--art-src);
@@ -139,45 +194,188 @@
 	}
 
 	.service__body {
-		margin: 0;
+		margin: 0 auto;
+		max-width: 46rem;
 		font-family: var(--font-body);
 		/* Lead size from the desktop breakpoint up; on a phone the intro at that size
 		   ran to 298px, over the third-of-the-viewport band the reveal keeps to. */
 		font-size: var(--fs-body);
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		line-height: var(--line-height-loose);
 		color: var(--color-text-subtle);
 	}
 
-	/* Two columns of checks on desktop: nine items in one column beside a
-	   heading were a list a screen tall. */
-	.service__list {
+	/* ─── The quiet band ─── */
+	.service__band {
+		--band: var(--color-fg-forest);
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-8);
+		padding-block: var(--section-pad);
+		text-align: center;
+		background: var(--band);
+		box-shadow: 0 0 0 100vmax var(--band);
+		clip-path: inset(0 -100vmax);
+		color: var(--color-bg-sand);
+	}
+
+	.service__band-line {
+		margin: 0;
+		max-width: 24ch;
+		font-family: var(--font-display);
+		font-size: var(--fs-h2);
+		font-style: italic;
+		font-weight: var(--font-weight-regular);
+		line-height: var(--line-height-tight);
+		text-wrap: balance;
+	}
+
+	/* The site's button, turned for a dark ground: pill and ring in sand with
+	   forest ink, the same swap the modal makes on its green. ButtonLink itself
+	   is untouched; the extra class in front is specificity against its own
+	   hover rule. */
+	.service__band .service__band-cta :global(.btn-host),
+	.service__band .service__band-cta :global(.btn-pill),
+	.service__close .service__card-cta :global(.btn-host),
+	.service__close .service__card-cta :global(.btn-pill) {
+		--btn-fill: var(--color-bg-sand);
+		--btn-ink: var(--color-fg-forest);
+	}
+
+	.service__band .service__band-cta :global(.btn-link__circle),
+	.service__close .service__card-cta :global(.btn-link__circle) {
+		background: var(--btn-fill);
+		color: var(--btn-ink);
+	}
+
+	.service__band .service__band-cta :global(.btn-link:focus-visible .btn-link__circle),
+	.service__close .service__card-cta :global(.btn-link:focus-visible .btn-link__circle) {
+		background: var(--btn-ink);
+		color: var(--btn-fill);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.service__band .service__band-cta :global(.btn-link:hover .btn-link__circle),
+		.service__close .service__card-cta :global(.btn-link:hover .btn-link__circle) {
+			background: var(--btn-ink);
+			color: var(--btn-fill);
+		}
+	}
+
+	/* The rule the next section draws on top would sit on the band's edge. */
+	.service__band + :global(.psec) {
+		border-top: 0;
+	}
+
+	/* ─── How a session goes: animation 23, ported ───
+	   The original's section and sticky frame, sized the same: 800px column, 24px
+	   padding, the drawing up to 600px wide and centred in the viewport while the
+	   section scrolls. Two changes for this site: the frame starts under the fixed
+	   nav instead of at the top of the screen, and the section is 200vh for three
+	   steps where the original is 300vh for five, which keeps its pace per step.
+	   Colours are the page's: the line in forest on sand where the original is white
+	   on black. */
+	.draw {
+		position: relative;
+		min-height: 200vh;
+		max-width: 800px;
+		margin: 0 auto;
+		padding: 0 24px;
+	}
+
+	.draw__sticky {
+		position: sticky;
+		top: var(--nav-height);
+		min-height: calc(100dvh - var(--nav-height));
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.draw__svg {
+		width: 100%;
+		max-width: 600px;
+		max-height: calc(100dvh - var(--nav-height) - var(--space-8));
+	}
+
+	.draw__svg path {
+		fill: none;
+		stroke: var(--color-fg-forest);
+		stroke-width: 2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
+	.draw__svg circle {
+		fill: var(--color-fg-forest);
+	}
+
+	.draw__steps {
 		list-style: none;
 		margin: 0;
 		padding: 0;
-		display: grid;
-		grid-template-columns: 1fr;
-		gap: var(--space-3) var(--space-8);
 	}
 
-	.service__item {
+	/* The original's milestone: absolutely placed down the section, centred, 80%
+	   wide. The sentence is the step's whole content here, so it takes the heading
+	   face the original gives its milestone titles. */
+	.draw__step {
+		position: absolute;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 80%;
+		max-width: 26ch;
+		text-align: center;
+		font-family: var(--font-display);
+		font-size: var(--fs-h3);
+		font-weight: var(--font-weight-medium);
+		line-height: var(--line-height-tight);
+		color: var(--color-fg-forest);
+		/* The line runs behind the sentence, as in the original, but here it is ink on
+		   sand at the text's own weight: a halo of the ground keeps the words whole where
+		   the line crosses them. */
+		text-shadow:
+			0 0 1px var(--color-bg-sand),
+			0 0 2px var(--color-bg-sand),
+			0 0 3px var(--color-bg-sand),
+			0 0 4px var(--color-bg-sand),
+			0 0 6px var(--color-bg-sand),
+			0 0 10px var(--color-bg-sand);
+	}
+
+	.steps__after {
+		margin: var(--space-8) auto 0;
+		max-width: 46ch;
+		font-family: var(--font-body);
+		font-size: var(--fs-body);
+		font-weight: var(--font-weight-regular);
+		line-height: var(--line-height-loose);
+		color: var(--color-text-subtle);
+	}
+
+	/* ─── What it can help with ─── */
+	.service__chips {
+		list-style: none;
+		margin: 0 auto;
+		padding: 0;
+		max-width: 46rem;
 		display: flex;
-		align-items: center;
+		flex-wrap: wrap;
+		justify-content: center;
 		gap: var(--space-3);
-		padding: var(--space-3) 0;
-		border-bottom: 1px solid color-mix(in srgb, var(--brand-border) 20%, transparent);
+	}
+
+	.service__chips li {
+		padding: var(--space-2) var(--space-4);
+		border: 1px solid var(--line-strong);
+		border-radius: 999px;
 		font-family: var(--font-body);
 		font-size: var(--fs-body);
 		color: var(--color-fg-forest);
 	}
 
-	.service__item svg {
-		flex-shrink: 0;
-		width: 1.25rem;
-		height: 1.25rem;
-		color: var(--brand-border);
-	}
-
+	/* ─── Other treatments (unchanged) ─── */
 	.service__others {
 		list-style: none;
 		margin: 0;
@@ -188,7 +386,6 @@
 	}
 
 	@media (min-width: 700px) {
-		.service__list,
 		.service__others {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
@@ -202,5 +399,61 @@
 		.service__others {
 			grid-template-columns: repeat(3, minmax(0, 1fr));
 		}
+	}
+
+	/* ─── The closing card ─── */
+	.service__close {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-6);
+		padding-top: var(--block-gap);
+	}
+
+	.service__card {
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: var(--space-5);
+		padding: clamp(2.5rem, 6vw, 4.5rem) var(--space-6);
+		border-radius: var(--radius-lg);
+		background: var(--color-brand-green);
+		color: var(--color-bg-sand);
+		text-align: center;
+	}
+
+	.service__card-title {
+		margin: 0;
+		max-width: 22ch;
+		font-family: var(--font-display);
+		font-size: var(--fs-h2);
+		font-weight: var(--font-weight-medium);
+		line-height: var(--line-height-tight);
+		text-wrap: balance;
+	}
+
+	.service__card-lead {
+		margin: 0;
+		max-width: 46ch;
+		font-family: var(--font-body);
+		font-size: var(--fs-body-lg);
+		font-weight: var(--font-weight-regular);
+		line-height: var(--line-height-normal);
+	}
+
+	.service__card-cta {
+		margin-top: var(--space-2);
+	}
+
+	.service__note {
+		margin: 0;
+		max-width: 60ch;
+		text-align: center;
+		font-family: var(--font-body);
+		font-size: var(--fs-body-sm);
+		font-weight: var(--font-weight-regular);
+		line-height: var(--line-height-normal);
+		color: var(--color-text-subtle);
 	}
 </style>

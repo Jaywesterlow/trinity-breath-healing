@@ -177,7 +177,7 @@
 	.footer__inner {
 		max-width: var(--container-max);
 		margin: 0 auto;
-		padding: var(--space-8) var(--space-6); /* horizontal matches nav/hero below 1024px; zeroed again there since max-width + centering takes over */
+		padding: var(--space-8) var(--space-6); /* horizontal matches the nav and the page gutter */
 	}
 
 	/* ─── Main grid ─── */
@@ -216,19 +216,30 @@
 	}
 
 	/* The "only on Saturdays" line sits under the region and must read as a caveat
-	   rather than part of it — smaller and lighter, but not so faint that someone
-	   planning a visit skips it. */
+	   rather than part of it — smaller, but not so faint that someone planning a
+	   visit skips it. */
 	.footer__note {
 		display: inline-block;
 		margin-top: 0.5rem;
 		font-family: var(--font-body);
-		font-size: 0.8125rem;
-		font-weight: var(--font-weight-light);
+		font-size: var(--fs-body-sm);
+		font-weight: var(--font-weight-regular);
 		line-height: 1.5;
-		/* Weight, not opacity. The footer's ground is --color-brand-green, which
-		   carries full sand at exactly 4.50:1 — fading this 13px line at all drops
-		   it under AA (0.75 computes to 3.30:1), so the lighter face and the size
-		   are what mark it as secondary. */
+		/* Size, not opacity. The footer's ground is --color-brand-green, which
+		   carries full sand at exactly 4.50:1 — fading this line at all drops it
+		   under AA (0.75 computes to 3.30:1), so the size is what marks it as
+		   secondary. */
+	}
+
+	/* The link keeps its padding for the focus ring; the negative margin puts its text
+	   back on the column edge the region and the note start from. */
+	.footer__contact :global(.text-link) {
+		margin-inline-start: calc(-1 * var(--space-1));
+	}
+
+	/* Same body size as the footer's other links; TextLink's small variant is a fixed 16px. */
+	.footer__contact :global(.text-link--sm .text-link__label) {
+		font-size: var(--fs-body);
 	}
 
 	.footer__contact ul {
@@ -312,7 +323,8 @@
 	/* ─── Desktop (≥ 1024px) ─── */
 	@media (min-width: 1024px) {
 		.footer__inner {
-			padding: var(--space-10) 0;
+			max-width: calc(var(--container-max) + 3rem); /* gutter included, as in the nav */
+			padding: var(--space-10) var(--space-6);
 		}
 
 		.footer__main {
@@ -378,14 +390,14 @@
 
 		.footer__copyright,
 		.footer__legal a {
-			font-size: var(--font-size-base);
+			font-size: var(--fs-body);
 		}
 	}
 
 	/* ─── Figma desktop spec (≥ 1440px) ─── */
 	@media (min-width: 1440px) {
 		.footer__inner {
-			padding: var(--space-10) 0;
+			padding: var(--space-10) var(--space-6);
 		}
 	}
 </style>

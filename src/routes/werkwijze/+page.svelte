@@ -120,7 +120,7 @@
 		/* space-4, not 5: at 1440×900 the tallest step was 302px with 5, two over
 		   the third-of-the-viewport band the reveal keeps to. */
 		padding-top: var(--space-4);
-		border-top: 1px solid color-mix(in srgb, var(--brand-border) 28%, transparent);
+		border-top: 1px solid var(--line-faint);
 	}
 
 	.step__n {
@@ -180,7 +180,7 @@
 		grid-template-columns: minmax(7rem, 1fr) minmax(0, 3fr);
 		gap: var(--space-4);
 		padding: var(--space-4) 0;
-		border-top: 1px solid color-mix(in srgb, var(--brand-border) 20%, transparent);
+		border-top: 1px solid var(--line-faint);
 	}
 
 	.facts__row:first-child {

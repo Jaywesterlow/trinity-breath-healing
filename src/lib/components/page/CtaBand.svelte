@@ -41,7 +41,7 @@
 		align-items: flex-start;
 		gap: var(--space-6);
 		padding-top: var(--block-gap);
-		border-top: 1px solid color-mix(in srgb, var(--brand-border) 28%, transparent);
+		border-top: 1px solid var(--line-faint);
 	}
 
 	/* Mid-page (the service pages close with other treatments after it) it
@@ -66,7 +66,7 @@
 		max-width: 46ch;
 		font-family: var(--font-body);
 		font-size: var(--fs-body-lg);
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		line-height: var(--line-height-normal);
 		color: var(--color-text-subtle);
 	}
@@ -79,8 +79,8 @@
 		padding-left: var(--space-4);
 		border-left: 2px solid var(--brand-border);
 		font-family: var(--font-body);
-		font-size: 0.875rem;
-		font-weight: var(--font-weight-light);
+		font-size: var(--fs-body-sm);
+		font-weight: var(--font-weight-regular);
 		line-height: var(--line-height-normal);
 		color: var(--color-text-subtle);
 	}

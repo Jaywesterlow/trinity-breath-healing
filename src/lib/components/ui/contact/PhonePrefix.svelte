@@ -233,7 +233,7 @@
 		padding: 0.25rem;
 		list-style: none;
 		background: var(--color-card-warm);
-		border: 1px solid rgba(124, 94, 73, 0.28);
+		border: 1px solid var(--line-strong);
 		border-radius: 0.625rem;
 		box-shadow: 0 12px 28px rgb(0 0 0 / 0.35);
 		scrollbar-width: thin;

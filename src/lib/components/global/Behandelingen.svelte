@@ -2486,7 +2486,7 @@
 	.treatments__eyebrow {
 		font-family: var(--font-body);
 		font-size: var(--font-size-xl);
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		color: var(--brand-muted);
 		margin-bottom: var(--space-2);
 	}

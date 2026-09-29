@@ -63,7 +63,7 @@
 		}
 
 		.col__links a {
-			font-size: var(--font-size-base);
+			font-size: var(--fs-body);
 		}
 	}
 </style>

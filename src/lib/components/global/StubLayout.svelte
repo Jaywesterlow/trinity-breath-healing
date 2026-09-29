@@ -91,7 +91,7 @@
 		margin-top: var(--space-4);
 		font-family: var(--font-body);
 		font-size: var(--fs-body-lg);
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		line-height: var(--line-height-normal);
 		color: var(--color-text-subtle);
 	}
@@ -113,7 +113,7 @@
 	.stub__alt {
 		font-family: var(--font-body);
 		font-size: var(--fs-body);
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		line-height: var(--line-height-normal);
 		color: var(--color-text-subtle);
 	}

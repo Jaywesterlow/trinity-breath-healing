@@ -138,7 +138,7 @@
 		width: 100%;
 		font-family: var(--font-body);
 		font-size: var(--fs-body); /* clamp 15→17px; Figma spec is fixed 16px */
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		line-height: var(--line-height-normal);
 	}
 

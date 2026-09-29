@@ -81,7 +81,7 @@
 		display: flex;
 		flex-direction: column;
 		padding-top: var(--space-5);
-		border-top: 1px solid color-mix(in srgb, var(--brand-border) 28%, transparent);
+		border-top: 1px solid var(--line-faint);
 		scroll-margin-top: calc(var(--nav-height) + var(--space-6));
 	}
 
@@ -100,7 +100,7 @@
 		margin: 0;
 		font-family: var(--font-body);
 		font-size: var(--fs-body);
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		line-height: var(--line-height-loose);
 		color: var(--color-text-subtle);
 	}
@@ -119,7 +119,7 @@
 		align-items: center;
 		min-height: 2.25rem; /* 36px — comfortably over the 24px target minimum */
 		padding: 0 var(--space-4);
-		border: 1px solid color-mix(in srgb, var(--brand-border) 40%, transparent);
+		border: 1px solid var(--line-strong);
 		border-radius: var(--radius-full);
 		font-family: var(--font-body);
 		font-size: var(--fs-body-sm);
