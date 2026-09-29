@@ -64,7 +64,7 @@
 			<div class="hero__content">
 				<h1 class="hero__heading" use:reveal={{ entrance: false }}>
 					Rust in je hoofd.<br />
-					Ontspanning in je&nbsp;lichaam.
+					Ontspanning in <span class="hero__keep">je lichaam.</span>
 				</h1>
 				<div class="hero__text" use:reveal={{ entrance: false }}>
 					<p class="hero__body">
@@ -295,6 +295,12 @@
 	.hero__content {
 		padding: var(--space-4) var(--space-6) var(--space-16); /* bottom space so the section doesn't butt the next one */
 		--btn-label-size: var(--font-size-sm); /* 14px on mobile, Figma spec */
+	}
+
+	/* "je lichaam." stays on one line, so the heading never ends on a lone word. A span
+	   rather than &nbsp;: the text stays byte-identical for crawlers and the copy lock. */
+	.hero__keep {
+		white-space: nowrap;
 	}
 
 	.hero__heading {
