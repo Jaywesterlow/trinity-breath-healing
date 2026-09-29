@@ -57,7 +57,7 @@
 		/* 38px from the desktop breakpoint up, 28px on a phone: the same slope shape as
 		   the site's --fs-h2 tokens (390px -> 1024px), one step smaller at the top than
 		   the 42px it opened at (2026-09-17, "a touch smaller and narrower"). */
-		font-size: clamp(1.75rem, 1.366rem + 1.577vw, 2.375rem);
+		font-size: var(--fs-h2);
 		font-weight: var(--font-weight-medium);
 		line-height: var(--line-height-tight);
 		color: var(--color-fg-forest);
@@ -79,8 +79,8 @@
 		border-left: 2px solid var(--brand-border);
 		text-align: left;
 		font-family: var(--font-body);
-		font-size: 0.875rem; /* 14px */
-		font-weight: var(--font-weight-light);
+		font-size: var(--fs-body-sm);
+		font-weight: var(--font-weight-regular);
 		line-height: var(--line-height-normal);
 		color: var(--color-text-subtle);
 	}

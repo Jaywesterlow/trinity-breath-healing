@@ -225,7 +225,7 @@
 	/* Every value in this file now comes from DatePlanner: the two panels sit in
 	   the same slot, one behind the other, and any difference between them reads
 	   as the card changing shape when you switch. Sand ground, hairline border,
-	   18px radius, 28px padding — the planner's card, exactly. */
+	   16px radius (--radius-lg), 28px padding — the planner's card, exactly. */
 	.contact-panel {
 		display: flex; /* gives the form a real box to stretch into, so the textarea can grow */
 		flex-direction: column;
@@ -234,8 +234,8 @@
 		padding: 1.75rem; /* 28px */
 		--panel-bg: var(--color-panel);
 		background: var(--panel-bg);
-		border: 1px solid rgba(124, 94, 73, 0.22);
-		border-radius: 1.125rem; /* 18px */
+		border: 1px solid var(--line-faint);
+		border-radius: var(--radius-lg);
 		color: var(--color-fg-forest);
 		font-family: var(--font-body);
 	}
@@ -289,7 +289,7 @@
 		min-height: 3rem; /* 48px */
 		padding: 0.8125rem 1rem; /* 13px 16px */
 		background: transparent;
-		border: 1px solid rgba(124, 94, 73, 0.28);
+		border: 1px solid var(--line-strong);
 		border-radius: 0.625rem; /* 10px */
 		color: var(--color-fg-forest);
 		font-family: inherit;
@@ -370,7 +370,7 @@
 		display: flex;
 		align-items: stretch;
 		background: transparent;
-		border: 1px solid rgba(124, 94, 73, 0.28);
+		border: 1px solid var(--line-strong);
 		border-radius: 0.625rem;
 		/* Not overflow:hidden — the country popup has to escape this box. */
 		transition:
@@ -400,7 +400,7 @@
 		width: 1px;
 		align-self: stretch;
 		margin: 0.5rem 0;
-		background: rgba(124, 94, 73, 0.28);
+		background: var(--line-strong);
 		flex-shrink: 0;
 	}
 

@@ -446,7 +446,7 @@
 	.carousel__eyebrow {
 		font-family: 'DM Sans', system-ui, sans-serif; /* was var(--font-body) */
 		font-size: 1.25rem; /* was var(--font-size-xl) */
-		font-weight: 300; /* was var(--font-weight-light) */
+		font-weight: 400; /* regular: light DM Sans below 32px reads too thin */
 		color: #5f6d56; /* was var(--brand-muted) */
 		margin-bottom: 0.5rem; /* was var(--space-2) */
 	}

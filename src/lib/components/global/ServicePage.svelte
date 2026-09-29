@@ -195,7 +195,7 @@
 		/* Lead size from the desktop breakpoint up; on a phone the intro at that size
 		   ran to 298px, over the third-of-the-viewport band the reveal keeps to. */
 		font-size: var(--fs-body);
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		line-height: var(--line-height-loose);
 		color: var(--color-text-subtle);
 	}
@@ -340,7 +340,7 @@
 		max-width: 46ch;
 		font-family: var(--font-body);
 		font-size: var(--fs-body);
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		line-height: var(--line-height-loose);
 		color: var(--color-text-subtle);
 	}
@@ -426,7 +426,7 @@
 
 	.service__chips li {
 		padding: var(--space-2) var(--space-4);
-		border: 1px solid color-mix(in srgb, var(--brand-border) 45%, transparent);
+		border: 1px solid var(--line-strong);
 		border-radius: 999px;
 		font-family: var(--font-body);
 		font-size: var(--fs-body);
@@ -496,7 +496,7 @@
 		max-width: 46ch;
 		font-family: var(--font-body);
 		font-size: var(--fs-body-lg);
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		line-height: var(--line-height-normal);
 	}
 
@@ -509,8 +509,8 @@
 		max-width: 60ch;
 		text-align: center;
 		font-family: var(--font-body);
-		font-size: 0.875rem;
-		font-weight: var(--font-weight-light);
+		font-size: var(--fs-body-sm);
+		font-weight: var(--font-weight-regular);
 		line-height: var(--line-height-normal);
 		color: var(--color-text-subtle);
 	}

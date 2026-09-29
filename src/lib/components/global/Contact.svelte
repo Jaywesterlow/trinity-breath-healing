@@ -275,7 +275,7 @@
 	.contact__eyebrow {
 		font-family: var(--font-body);
 		font-size: 1rem; /* 16px */
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		line-height: 1.3125;
 		color: var(--brand-muted);
 		margin: 0;
@@ -293,8 +293,8 @@
 
 	.contact__intro {
 		font-family: var(--font-body);
-		font-size: 1rem;
-		font-weight: var(--font-weight-light);
+		font-size: var(--fs-body);
+		font-weight: var(--font-weight-regular);
 		line-height: var(--line-height-normal);
 		color: var(--color-text-subtle);
 		margin: 0;
@@ -363,7 +363,7 @@
 		width: 100%;
 		padding: var(--space-6);
 		border: none;
-		border-radius: 1.125rem; /* 18px */
+		border-radius: var(--radius-lg);
 		background: var(--color-brand-green);
 		color: var(--color-bg-sand);
 		cursor: pointer;
@@ -382,15 +382,15 @@
 
 	.route__title {
 		font-family: var(--font-display);
-		font-size: 1.5rem; /* 24px */
+		font-size: var(--fs-h3);
 		font-weight: var(--font-weight-medium);
 		line-height: var(--line-height-tight);
 	}
 
 	.route__body {
 		font-family: var(--font-body);
-		font-size: 0.9375rem; /* 15px */
-		font-weight: var(--font-weight-light);
+		font-size: var(--fs-body);
+		font-weight: var(--font-weight-regular);
 		line-height: var(--line-height-normal);
 	}
 
@@ -538,10 +538,10 @@
 	.contact__check {
 		display: flex;
 		align-items: flex-start;
-		gap: 0.8125rem; /* 13px */
+		gap: var(--space-3);
 		font-family: var(--font-body);
 		font-size: 0.9375rem;
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		line-height: var(--line-height-normal);
 		color: var(--color-text-subtle);
 	}
@@ -554,7 +554,7 @@
 
 	.contact__rule {
 		height: 1px;
-		background: color-mix(in srgb, var(--brand-border) 25%, transparent);
+		background: var(--line-faint);
 	}
 
 	.contact__socials {
@@ -587,7 +587,7 @@
 		.contact__header {
 			align-items: center;
 			text-align: center;
-			gap: 0.875rem;
+			gap: var(--space-4);
 		}
 
 		.contact__eyebrow {
@@ -606,7 +606,6 @@
 
 		.contact__intro--desktop {
 			display: block;
-			font-size: 1rem;
 		}
 
 		.contact__grid {
@@ -635,14 +634,6 @@
 			gap: var(--space-4);
 			align-items: flex-start;
 			text-align: left;
-		}
-
-		.route__title {
-			font-size: 1.6875rem; /* 27px */
-		}
-
-		.route__body {
-			font-size: 1rem;
 		}
 
 		/* Desktop: the pill sits at its natural width, left-aligned in the card. */

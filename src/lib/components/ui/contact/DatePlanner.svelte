@@ -849,7 +849,7 @@
 	   the card is sand with a hairline border, the tiles are bare circles, and
 	   nothing is white-on-green any more. The old dark-green card is gone. */
 	.planner {
-		--pl-line: rgba(124, 94, 73, 0.22);
+		--pl-line: var(--line-faint);
 		--pl-ink: var(--color-fg-forest); /* #3d4a35 */
 		--pl-radius: 0.625rem; /* 10px */
 		--panel-bg: var(--color-panel);
@@ -862,7 +862,7 @@
 		padding: 1.75rem; /* 28px */
 		background: var(--panel-bg);
 		border: 1px solid var(--pl-line);
-		border-radius: 1.125rem; /* 18px */
+		border-radius: var(--radius-lg);
 		color: var(--pl-ink);
 		font-family: var(--font-body);
 		/* Nothing here scrolls. Every step is sized to fit the card; content that
@@ -1086,7 +1086,7 @@
 		background: transparent;
 		backdrop-filter: blur(16px);
 		border-top: 1px solid var(--pl-line);
-		border-radius: 1.125rem 1.125rem 0 0;
+		border-radius: var(--radius-lg) var(--radius-lg) 0 0;
 		/* --sheet-drag is written by the pointer handlers while a drag is live and
 		   set back to 0 on release; the transition is what makes a short drag
 		   spring back instead of snapping. */
@@ -1116,7 +1116,7 @@
 		display: block;
 		text-align: center;
 		font-size: 0.6875rem; /* 11px */
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		letter-spacing: 0.02em;
 		color: var(--brand-muted);
 		margin-bottom: 0.75rem; /* 12px */
@@ -1161,7 +1161,7 @@
 		justify-content: center;
 		min-height: 2.75rem; /* 44px — a touch target, and the ranges are wider */
 		padding: 0.375rem 0.5rem;
-		border: 1px solid rgba(124, 94, 73, 0.3);
+		border: 1px solid var(--line-strong);
 		border-radius: var(--pl-radius);
 		background: transparent;
 		color: var(--pl-ink);
@@ -1208,7 +1208,7 @@
 
 	.planner__empty {
 		font-size: 0.8125rem;
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		color: var(--brand-muted);
 		margin: 1rem 0 0;
 	}
@@ -1261,7 +1261,7 @@
 		min-height: 3rem; /* 48px */
 		padding: 0.8125rem 1rem; /* 13px 16px */
 		background: transparent;
-		border: 1px solid rgba(124, 94, 73, 0.28);
+		border: 1px solid var(--line-strong);
 		border-radius: var(--pl-radius);
 		color: var(--pl-ink);
 		font-family: inherit;
@@ -1428,7 +1428,7 @@
 
 	.planner__done-text {
 		font-size: 0.9375rem;
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		line-height: var(--line-height-normal);
 		color: var(--brand-muted);
 		margin: 0;

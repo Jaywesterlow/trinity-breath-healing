@@ -46,7 +46,7 @@
 		flex-direction: column;
 		gap: var(--space-6);
 		padding-block: var(--block-gap);
-		border-top: 1px solid color-mix(in srgb, var(--brand-border) 28%, transparent);
+		border-top: 1px solid var(--line-faint);
 	}
 
 	.psec__eyebrow {

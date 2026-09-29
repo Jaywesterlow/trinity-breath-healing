@@ -98,7 +98,7 @@
 		background: var(--color-bg-sand);
 		/* The hairline between ledger rows: the site's brown at 28%, so it sits on the
 		   sand as a rule rather than a border. */
-		--about-hairline: color-mix(in srgb, var(--brand-border) 28%, transparent);
+		--about-hairline: var(--line-faint);
 	}
 
 	.about__inner {
@@ -117,7 +117,7 @@
 	.about__eyebrow {
 		font-family: var(--font-body);
 		font-size: var(--font-size-xl);
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		color: var(--brand-muted);
 		margin-bottom: var(--space-2);
 	}

@@ -212,7 +212,7 @@
 	.faq__eyebrow {
 		font-family: var(--font-body);
 		font-size: var(--font-size-xl);
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		color: var(--brand-muted);
 		margin-bottom: var(--space-2);
 	}
@@ -307,7 +307,7 @@
 		gap: var(--space-4);
 		padding-block: var(--space-5);
 		cursor: pointer;
-		font-size: var(--font-size-base);
+		font-size: var(--fs-body);
 		font-weight: var(--font-weight-medium);
 		color: var(--color-fg-forest);
 		list-style: none;
@@ -362,7 +362,7 @@
 	.faq__answer {
 		cursor: pointer;
 		padding-bottom: var(--space-5);
-		font-size: var(--font-size-base);
+		font-size: var(--fs-body);
 		line-height: var(--line-height-loose);
 		color: var(--color-fg-forest);
 	}

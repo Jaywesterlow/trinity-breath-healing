@@ -67,7 +67,7 @@
 		margin: 0 0 var(--space-2);
 		font-family: var(--font-body);
 		font-size: var(--font-size-xl);
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		color: var(--brand-muted);
 	}
 
@@ -89,7 +89,7 @@
 		max-width: 46ch;
 		font-family: var(--font-body);
 		font-size: var(--fs-body-lg);
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		line-height: var(--line-height-normal);
 		color: var(--color-text-subtle);
 	}

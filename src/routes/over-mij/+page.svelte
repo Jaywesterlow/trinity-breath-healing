@@ -188,7 +188,7 @@
 		/* Lead size from the desktop breakpoint up; on a phone the intro at that size
 		   ran to 298px, over the third-of-the-viewport band the reveal keeps to. */
 		font-size: var(--fs-body);
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		line-height: var(--line-height-loose);
 		color: var(--color-text-subtle);
 	}
@@ -213,11 +213,11 @@
 		grid-template-columns: 1fr;
 		gap: var(--space-1) var(--space-6);
 		padding: var(--space-3) 0;
-		border-top: 1px solid color-mix(in srgb, var(--brand-border) 20%, transparent);
+		border-top: 1px solid var(--line-faint);
 	}
 
 	.trainings__row:last-child {
-		border-bottom: 1px solid color-mix(in srgb, var(--brand-border) 20%, transparent);
+		border-bottom: 1px solid var(--line-faint);
 	}
 
 	.trainings__date {

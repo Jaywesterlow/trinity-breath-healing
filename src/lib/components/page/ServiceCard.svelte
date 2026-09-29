@@ -51,7 +51,7 @@
 		height: 100%;
 		padding: var(--space-6);
 		padding-bottom: calc(var(--space-6) + 2.625rem + var(--space-4));
-		border: 1px solid color-mix(in srgb, var(--brand-border) 30%, transparent);
+		border: 1px solid var(--line-strong);
 		border-radius: var(--radius-lg);
 		text-decoration: none;
 		transition:
@@ -82,7 +82,7 @@
 	.scard__teaser {
 		font-family: var(--font-body);
 		font-size: var(--fs-body);
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		line-height: var(--line-height-normal);
 		color: var(--color-text-subtle);
 	}

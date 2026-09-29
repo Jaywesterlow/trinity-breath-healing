@@ -64,7 +64,7 @@
 			<div class="hero__content">
 				<h1 class="hero__heading" use:reveal={{ entrance: false }}>
 					Rust in je hoofd.<br />
-					Ontspanning in je lichaam.
+					Ontspanning in je&nbsp;lichaam.
 				</h1>
 				<div class="hero__text" use:reveal={{ entrance: false }}>
 					<p class="hero__body">
@@ -313,7 +313,7 @@
 		font-family: var(--font-body);
 		/* Never under 15px: the fluid clamp alone bottoms out at 12px on a phone, too
 		   small for body copy. Desktop is unchanged (the clamp is 16px by 1440). */
-		font-size: max(15px, var(--fs-body-xs));
+		font-size: var(--fs-body);
 		line-height: var(--line-height-loose);
 		color: var(--color-text-subtle);
 		margin-bottom: var(--space-4);
@@ -330,6 +330,10 @@
 	@media (min-width: 1100px) {
 		.hero__inner {
 			display: grid;
+			/* The page's 1.5rem gutter, with the box widened by it: unchanged from 1248px
+			   up, and below that the text no longer sits flush against the screen edge. */
+			max-width: calc(var(--container-max) + 3rem);
+			padding-inline: var(--space-6);
 			grid-template-columns: 44% 1fr; /* content keeps its reserved 44% share; image gets the rest */
 			/* The fold rule. The hero used to be a fixed 764px (100px nav + 48px padding +
 			   616px drawing), which the owner measured on his three screens: 6px above the
