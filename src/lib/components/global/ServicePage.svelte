@@ -29,6 +29,8 @@
 	import { SERVICE_ART } from '$lib/constants/service-art';
 	import { BRAND } from '$lib/constants/brand';
 	import { reveal } from '$lib/actions/reveal';
+	import { scrollDraw } from '$lib/actions/scroll-draw';
+	import { spotlight } from '$lib/actions/spotlight';
 
 	let { slug, crumbs }: { slug: string; crumbs: { name: string; path: string }[] } = $props();
 
@@ -39,12 +41,15 @@
 	const art = $derived(SERVICE_ART[slug]);
 
 	/** The shared session paragraph, sentence by sentence. The middle sentence
-	 *  ("je hoeft niets te presteren…") is the band further up the page. */
+	 *  ("je hoeft niets te presteren…") is the band further up the page. Each is a
+	 *  milestone along the line; `top` is where it sits in the section, spaced as the
+	 *  library's five are (a milestone every ~60vh of scroll). */
 	const steps = $derived([
 		'We beginnen met een gesprek over waar je op dit moment tegenaan loopt.',
 		`Daarna werk ik met ${service.name}, afgestemd op wat jij nodig hebt.`,
 		'Na afloop is er tijd om te landen en na te praten.'
 	]);
+	const STEP_TOPS = ['10%', '42%', '74%'];
 </script>
 
 <Breadcrumbs items={crumbs} />
@@ -88,30 +93,30 @@
 	</section>
 
 	<PageSection id="sessie" title="Hoe een sessie verloopt" centered>
-		<ol class="steps">
-			{#each steps as step, i (i)}
-				<li class="steps__item" class:steps__item--left={i % 2 === 1}>
-					<span class="steps__rail" aria-hidden="true">
-						<span class="steps__node"></span>
-						{#if i < steps.length - 1}
-							<!-- One segment of the line per gap, each drawn as it scrolls
-							     into view (animation 23 from the library, rebuilt on a CSS
-							     view timeline instead of GSAP). pathLength="1" makes the
-							     dash maths independent of the drawn length. -->
-							<svg class="steps__line" viewBox="0 0 40 120" preserveAspectRatio="xMidYMid meet">
-								<path
-									pathLength="1"
-									d={i % 2 === 0
-										? 'M20 2 C36 30 36 50 20 60 C4 70 4 90 20 118'
-										: 'M20 2 C4 30 4 50 20 60 C36 70 36 90 20 118'}
-								/>
-							</svg>
-						{/if}
-					</span>
-					<p class="steps__text" use:reveal>{step}</p>
-				</li>
-			{/each}
-		</ol>
+		<!-- Animation 23 from the library (23-scroll-svg-draw.html), ported: the drawing
+		     stays in view while the section scrolls, its line draws with the scroll, and
+		     the steps pass over it, each fading in as it arrives. Path, dots and
+		     proportions are the original's. See actions/scroll-draw.ts. -->
+		<div class="draw" use:scrollDraw>
+			<div class="draw__sticky" aria-hidden="true">
+				<svg class="draw__svg" viewBox="0 0 400 500">
+					<path
+						data-draw-path
+						d="M200,20 C200,20 80,80 80,140 C80,200 320,200 320,260 C320,320 80,320 80,380 C80,440 200,480 200,480"
+					/>
+					<circle cx="200" cy="20" r="6" opacity=".3" />
+					<circle cx="80" cy="140" r="6" opacity=".3" />
+					<circle cx="320" cy="260" r="6" opacity=".3" />
+					<circle cx="80" cy="380" r="6" opacity=".3" />
+					<circle cx="200" cy="480" r="6" opacity=".3" />
+				</svg>
+			</div>
+			<ol class="draw__steps">
+				{#each steps as step, i (i)}
+					<li class="draw__step" data-milestone style:top={STEP_TOPS[i]}>{step}</li>
+				{/each}
+			</ol>
+		</div>
 		<p class="steps__after" use:reveal>
 			Een sessie duurt ongeveer een uur en kan bij jou thuis of op afstand.
 		</p>
@@ -129,7 +134,7 @@
 	</PageSection>
 
 	<PageSection id="andere" title="Andere behandelingen" wide>
-		<ul class="service__others">
+		<ul class="service__others" use:spotlight>
 			{#each others as other (other.slug)}
 				<li use:reveal>
 					<ServiceCard href="/diensten/{other.slug}" name={other.name} teaser={other.teaser} />
@@ -263,76 +268,80 @@
 		border-top: 0;
 	}
 
-	/* ─── How a session goes: steps along a line that draws itself ─── */
-	.steps {
-		list-style: none;
+	/* ─── How a session goes: animation 23, ported ───
+	   The original's section and sticky frame, sized the same: 800px column, 24px
+	   padding, the drawing up to 600px wide and centred in the viewport while the
+	   section scrolls. Two changes for this site: the frame starts under the fixed
+	   nav instead of at the top of the screen, and the section is 200vh for three
+	   steps where the original is 300vh for five, which keeps its pace per step.
+	   Colours are the page's: the line in forest on sand where the original is white
+	   on black. */
+	.draw {
+		position: relative;
+		min-height: 200vh;
+		max-width: 800px;
 		margin: 0 auto;
-		padding: 0;
-		max-width: 46rem;
+		padding: 0 24px;
+	}
+
+	.draw__sticky {
+		position: sticky;
+		top: var(--nav-height);
+		min-height: calc(100dvh - var(--nav-height));
 		display: flex;
-		flex-direction: column;
+		align-items: center;
+		justify-content: center;
 	}
 
-	.steps__node {
-		width: 0.75rem;
-		height: 0.75rem;
-		border-radius: 50%;
-		border: 1.5px solid var(--brand-border);
-		background: var(--color-bg-sand);
+	.draw__svg {
+		width: 100%;
+		max-width: 600px;
+		max-height: calc(100dvh - var(--nav-height) - var(--space-8));
 	}
 
-	.steps__line {
-		display: block;
-		width: 2.5rem;
-		height: 6rem;
-		margin-top: var(--space-2);
-		overflow: visible;
-	}
-
-	.steps__line path {
+	.draw__svg path {
 		fill: none;
-		stroke: var(--color-brand-green);
-		stroke-width: 1.5;
+		stroke: var(--color-fg-forest);
+		stroke-width: 2;
 		stroke-linecap: round;
-		stroke-dasharray: 1;
-		stroke-dashoffset: 0;
+		stroke-linejoin: round;
 	}
 
-	.steps__text {
+	.draw__svg circle {
+		fill: var(--color-fg-forest);
+	}
+
+	.draw__steps {
+		list-style: none;
 		margin: 0;
+		padding: 0;
+	}
+
+	/* The original's milestone: absolutely placed down the section, centred, 80%
+	   wide. The sentence is the step's whole content here, so it takes the heading
+	   face the original gives its milestone titles. */
+	.draw__step {
+		position: absolute;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 80%;
 		max-width: 26ch;
+		text-align: center;
 		font-family: var(--font-display);
 		font-size: var(--fs-h3);
 		font-weight: var(--font-weight-medium);
 		line-height: var(--line-height-tight);
 		color: var(--color-fg-forest);
-		text-wrap: balance;
-	}
-
-	/* Phone: everything on the centre line, node, sentence, then the line
-	   down to the next one. The rail holds node and line in the markup, so it
-	   steps aside (display: contents) and the grid places all three. */
-	.steps__item {
-		display: grid;
-		grid-template-areas: 'node' 'text' 'line';
-		justify-items: center;
-		gap: var(--space-3);
-	}
-
-	.steps__rail {
-		display: contents;
-	}
-
-	.steps__node {
-		grid-area: node;
-	}
-
-	.steps__line {
-		grid-area: line;
-	}
-
-	.steps__text {
-		grid-area: text;
+		/* The line runs behind the sentence, as in the original, but here it is ink on
+		   sand at the text's own weight: a halo of the ground keeps the words whole where
+		   the line crosses them. */
+		text-shadow:
+			0 0 1px var(--color-bg-sand),
+			0 0 2px var(--color-bg-sand),
+			0 0 3px var(--color-bg-sand),
+			0 0 4px var(--color-bg-sand),
+			0 0 6px var(--color-bg-sand),
+			0 0 10px var(--color-bg-sand);
 	}
 
 	.steps__after {
@@ -343,73 +352,6 @@
 		font-weight: var(--font-weight-regular);
 		line-height: var(--line-height-loose);
 		color: var(--color-text-subtle);
-	}
-
-	/* Desktop: the line runs down the middle and the sentences sit either
-	   side of it in turn, right, left, right. */
-	@media (min-width: 900px) {
-		.steps__item {
-			grid-template-columns: minmax(0, 1fr) 4rem minmax(0, 1fr);
-			/* The sentence spans both rows, so the line starts right under its
-			   node and runs on to the next one instead of waiting for the text. */
-			grid-template-areas: '. node text' '. line text';
-			align-items: start;
-			justify-items: stretch;
-			column-gap: var(--space-6);
-			row-gap: 0;
-		}
-
-		.steps__item--left {
-			grid-template-areas: 'text node .' 'text line .';
-		}
-
-		.steps__node,
-		.steps__line {
-			justify-self: center;
-		}
-
-		.steps__node {
-			margin-top: 0.75rem;
-		}
-
-		.steps__text {
-			text-align: left;
-		}
-
-		.steps__item--left .steps__text {
-			justify-self: end;
-			text-align: right;
-		}
-
-		.steps__line {
-			height: 7.5rem;
-			margin-top: 0;
-		}
-
-		.steps__text {
-			max-width: 30ch;
-		}
-	}
-
-	/* Drawn by scrolling where the browser can tie an animation to the scroll
-	   position; everywhere else, and under reduced motion, simply drawn. */
-	@supports (animation-timeline: view()) {
-		@media (prefers-reduced-motion: no-preference) {
-			.steps__line path {
-				animation: steps-draw linear both;
-				animation-timeline: view();
-				animation-range: entry 40% cover 55%;
-			}
-		}
-	}
-
-	@keyframes steps-draw {
-		from {
-			stroke-dashoffset: 1;
-		}
-		to {
-			stroke-dashoffset: 0;
-		}
 	}
 
 	/* ─── What it can help with ─── */
