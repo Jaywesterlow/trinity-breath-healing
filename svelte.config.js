@@ -11,7 +11,7 @@ const config = {
 	},
 	kit: {
 		adapter: adapter({
-			runtime: 'nodejs20.x',
+			runtime: 'nodejs22.x', // Vercel discontinued nodejs20.x in October 2026; every deploy on it fails
 			// regions: ['fra1'] applies to Vercel Functions only; static prerender ships globally via Vercel CDN
 			regions: ['fra1']
 		}),

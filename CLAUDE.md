@@ -20,7 +20,7 @@ Marketing website for Trinity Breath & Healing — a Holland-based breathwork an
 - **Discoverability**: SEO + AEO are primary success metrics — overrides aesthetic preferences when in conflict.
 - **Tech rendering**: SSG via SvelteKit prerender; client-only rendering blocks AI crawlers and degrades SEO.
 - **Language**: Dutch primary. Hreflang-ready architecture even though v1 ships Dutch-only.
-- **Verification**: Every SEO/AEO technique adopted must be cross-referenced against the project's `seo-aeo-samenvatting-checklist.md` and fresh online evidence. No speculative tactics.
+- **Verification**: Every SEO/AEO technique adopted must be cross-referenced against `Insights/seo-aeo-samenvatting-checklist.md` and fresh online evidence. No speculative tactics.
 - **Design fidelity**: Match Figma frames for landing page; infer missing frames (Frame 2 mobile accordion, Frame 4 mobile active state) from their desktop counterparts.
 - **Trust signals**: Health/wellness category — E-E-A-T (practitioner identity, credentials, consistency, freshness) is non-negotiable.
 - **Performance**: LCP < 2.5s, INP < 200ms, CLS < 0.1 — measured on real Chrome users via Search Console.
@@ -32,7 +32,7 @@ Marketing website for Trinity Breath & Healing — a Holland-based breathwork an
 | Layer | Choice | Notes |
 |---|---|---|
 | Framework | **SvelteKit 2 + Svelte 5** (runes mode) | `@sveltejs/kit ^2.63`, fully prerendered SSG |
-| Hosting | **Vercel** | `@sveltejs/adapter-vercel`, `regions: ['fra1']` (EU), Node 20.x runtime |
+| Hosting | **Vercel** | `@sveltejs/adapter-vercel`, `regions: ['fra1']` (EU), Node 22.x runtime |
 | Images | **`@sveltejs/enhanced-img`** | Build-time AVIF/WebP + responsive srcset; must come before `sveltekit()` in vite plugins |
 | CSS | **Tailwind v4 + shadcn-svelte** | Design tokens live in `src/app.css` `@theme` block, processed via Vite. Was "Plain CSS, locked per CONTEXT.md D-09" — **D-09 superseded 2026-07-12** by the Tailwind v4 + shadcn migration (Slice 1): the plain-CSS-only lock was reversed to adopt shadcn's component model without hand-rolling equivalents; historical rationale for the original lock remains in `.planning/STATE.md` and `.planning/REQUIREMENTS.md` (FND-02) unedited. |
 | Content | **mdsvex** | `.svx` files; `mdsvex ^0.12` |
