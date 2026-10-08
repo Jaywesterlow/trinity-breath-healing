@@ -593,7 +593,7 @@
 		color: var(--color-bg-sand);
 		font-family: var(--font-body);
 		font-size: 0.8125rem; /* 13px */
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		/* A whole number, not 1.2 — see the width rounding in the script. 13 x 1.2 is
 		   15.6px, which put the card's bottom edge on a fractional device pixel and
 		   spread its hairline across two rows while the top edge stayed crisp. */

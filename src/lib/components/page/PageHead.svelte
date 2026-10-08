@@ -21,15 +21,18 @@
 		/** Something to look at beside the words: a drawing, a portrait. On
 		 * desktop it sits to the right of the text block; on a phone, under it. */
 		visual?: Snippet;
+		/** Desktop: the visual larger and at the container's far edge, text on
+		 * the left, drawing on the right (the service pages). */
+		spread?: boolean;
 		children: Snippet;
 	}
-	let { eyebrow, lead, visual, children }: Props = $props();
+	let { eyebrow, lead, visual, spread = false, children }: Props = $props();
 </script>
 
 <!-- Reveals per part, never on the header: title and lead together are well
      over a third of a phone screen, the band the reveal action keeps to
      (tests/integration/reveal-audit.spec.ts). The visual draws itself. -->
-<header class="phead" class:phead--visual={!!visual}>
+<header class="phead" class:phead--visual={!!visual} class:phead--spread={spread && !!visual}>
 	<div class="phead__text">
 		<div class="phead__title" use:reveal>
 			{#if eyebrow}
@@ -64,7 +67,7 @@
 		margin: 0 0 var(--space-2);
 		font-family: var(--font-body);
 		font-size: var(--font-size-xl);
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		color: var(--brand-muted);
 	}
 
@@ -86,7 +89,7 @@
 		max-width: 46ch;
 		font-family: var(--font-body);
 		font-size: var(--fs-body-lg);
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		line-height: var(--line-height-normal);
 		color: var(--color-text-subtle);
 	}
@@ -117,6 +120,18 @@
 
 		.phead__visual {
 			height: clamp(10rem, 16vw, 16rem);
+		}
+	}
+
+	@media (min-width: 1100px) {
+		.phead--spread {
+			justify-content: space-between;
+			align-items: center;
+		}
+
+		.phead--spread .phead__visual {
+			--phead-visual-h: clamp(16rem, 24vw, 22rem);
+			height: var(--phead-visual-h);
 		}
 	}
 </style>

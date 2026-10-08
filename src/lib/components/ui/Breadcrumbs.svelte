@@ -43,7 +43,7 @@
 		max-width: calc(var(--container-max) + 3rem);
 		margin: 0 auto;
 		padding: var(--space-4) 1.5rem 0;
-		font-size: 0.875rem;
+		font-size: var(--fs-body-sm);
 		color: var(--color-text-subtle);
 	}
 

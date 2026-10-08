@@ -16,6 +16,7 @@
 	import { PageShell, PageHead, CtaBand, ServiceCard } from '$lib/components/page';
 	import { BRAND } from '$lib/constants/brand';
 	import { reveal } from '$lib/actions/reveal';
+	import { spotlight } from '$lib/actions/spotlight';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -31,7 +32,7 @@
 	</PageHead>
 
 	<!-- Each card keeps its own reveal: the grid is taller than a third of any screen. -->
-	<ul class="index__grid">
+	<ul class="index__grid" use:spotlight>
 		{#each BRAND.services as service (service.slug)}
 			<li use:reveal>
 				<ServiceCard href="/diensten/{service.slug}" name={service.name} teaser={service.teaser} />

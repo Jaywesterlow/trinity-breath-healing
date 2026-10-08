@@ -4,6 +4,11 @@
 	 * arrow circle from the treatment card in the corner. The whole card is
 	 * the link; the arrow runs the shared swap when the card is hovered, the
 	 * same gesture as the carousel card and the modal's controls.
+	 *
+	 * Under the cursor the card lights up where the pointer is: animation 33 from the
+	 * library (33-spotlight-border-cards.html). The grid holding the cards carries
+	 * `use:spotlight`, which hands every card the pointer's position; the light is the
+	 * ::before below.
 	 */
 	interface Props {
 		href: string;
@@ -13,7 +18,7 @@
 	let { href, name, teaser }: Props = $props();
 </script>
 
-<a class="scard roll-host" {href}>
+<a class="scard roll-host" {href} data-spotlight>
 	<span class="scard__name">{name}</span>
 	<span class="scard__teaser">{teaser}</span>
 	<span class="scard__arrow arrow-swap" aria-hidden="true">
@@ -51,9 +56,11 @@
 		height: 100%;
 		padding: var(--space-6);
 		padding-bottom: calc(var(--space-6) + 2.625rem + var(--space-4));
-		border: 1px solid color-mix(in srgb, var(--brand-border) 30%, transparent);
+		border: 1px solid var(--line-strong);
 		border-radius: var(--radius-lg);
 		text-decoration: none;
+		overflow: hidden;
+		isolation: isolate; /* the light sits behind the words, inside the card */
 		transition:
 			background-color var(--motion-hover) var(--ease-hover),
 			border-color var(--motion-hover) var(--ease-hover);
@@ -64,10 +71,31 @@
 		border-color: var(--brand-border);
 	}
 
+	/* Animation 33's light, as its source has it: a 180px circle at the pointer,
+	   fading in over .3s on the card under the cursor. White at 6% on black there;
+	   the brand's brown on sand here, at a strength that reads the same. */
+	.scard::before {
+		content: '';
+		position: absolute;
+		inset: -1px;
+		z-index: -1;
+		background: radial-gradient(
+			circle 180px at var(--mx, 50%) var(--my, 50%),
+			color-mix(in srgb, var(--brand-border) 12%, transparent),
+			transparent
+		);
+		opacity: 0;
+		transition: opacity 0.3s;
+		pointer-events: none;
+	}
+
 	@media (hover: hover) and (pointer: fine) {
 		.scard:hover {
-			background: color-mix(in srgb, var(--brand-border) 7%, transparent);
 			border-color: var(--brand-border);
+		}
+
+		.scard:hover::before {
+			opacity: 1;
 		}
 	}
 
@@ -82,7 +110,7 @@
 	.scard__teaser {
 		font-family: var(--font-body);
 		font-size: var(--fs-body);
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		line-height: var(--line-height-normal);
 		color: var(--color-text-subtle);
 	}

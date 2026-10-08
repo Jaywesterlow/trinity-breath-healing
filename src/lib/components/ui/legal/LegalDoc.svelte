@@ -70,7 +70,7 @@
 		flex-direction: column;
 		gap: var(--space-8);
 		padding-top: var(--block-gap);
-		border-top: 1px solid color-mix(in srgb, var(--brand-border) 28%, transparent);
+		border-top: 1px solid var(--line-faint);
 		color: var(--color-fg-forest);
 	}
 
@@ -207,7 +207,7 @@
 		text-align: left;
 		vertical-align: top;
 		padding: var(--space-3) var(--space-4) var(--space-3) 0;
-		border-bottom: 1px solid color-mix(in srgb, var(--brand-border) 30%, transparent);
+		border-bottom: 1px solid var(--line-faint);
 		color: var(--color-text-subtle);
 		line-height: var(--line-height-normal);
 	}
@@ -238,7 +238,7 @@
 
 		.legal__body :global(tr) {
 			padding: var(--space-3) 0;
-			border-bottom: 1px solid color-mix(in srgb, var(--brand-border) 30%, transparent);
+			border-bottom: 1px solid var(--line-faint);
 		}
 
 		.legal__body :global(td) {

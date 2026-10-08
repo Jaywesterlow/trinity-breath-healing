@@ -20,12 +20,15 @@
 		eyebrow?: string;
 		/** Content across the full container (card grids, rows of steps). */
 		wide?: boolean;
+		/** Heading and body on the page's centre line, the way the landing page
+		 * sets its sections. The body keeps its reading measure, centred. */
+		centered?: boolean;
 		children: Snippet;
 	}
-	let { id, title, eyebrow, wide = false, children }: Props = $props();
+	let { id, title, eyebrow, wide = false, centered = false, children }: Props = $props();
 </script>
 
-<section class="psec" class:psec--wide={wide} aria-labelledby={id}>
+<section class="psec" class:psec--wide={wide} class:psec--center={centered} aria-labelledby={id}>
 	<div class="psec__head" use:reveal>
 		{#if eyebrow}
 			<p class="psec__eyebrow">{eyebrow}</p>
@@ -43,7 +46,7 @@
 		flex-direction: column;
 		gap: var(--space-6);
 		padding-block: var(--block-gap);
-		border-top: 1px solid color-mix(in srgb, var(--brand-border) 28%, transparent);
+		border-top: 1px solid var(--line-faint);
 	}
 
 	.psec__eyebrow {
@@ -75,5 +78,14 @@
 
 	.psec--wide .psec__body {
 		max-width: none;
+	}
+
+	.psec--center {
+		align-items: center;
+		text-align: center;
+	}
+
+	.psec--center .psec__body {
+		width: 100%;
 	}
 </style>

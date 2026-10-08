@@ -807,7 +807,7 @@
 			margin: 0 5rem var(--space-6) clamp(2.5rem, 4vw, 4rem);
 			color: var(--color-text-subtle);
 			opacity: 1;
-			border-top-color: color-mix(in srgb, var(--brand-border) 25%, transparent);
+			border-top-color: var(--line-faint);
 		}
 
 		/* Vertically centred against the dialog's own left/right edge. Prev

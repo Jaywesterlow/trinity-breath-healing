@@ -303,7 +303,7 @@
 	.werkwijze__eyebrow {
 		font-family: var(--font-body);
 		font-size: var(--font-size-xl); /* 20px — Figma spec, exact token match */
-		font-weight: var(--font-weight-light);
+		font-weight: var(--font-weight-regular);
 		color: var(--brand-muted);
 		margin-bottom: var(--space-2);
 	}

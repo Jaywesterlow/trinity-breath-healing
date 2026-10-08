@@ -25,6 +25,10 @@
 	   it actually sits on: 4.98:1 on --color-bg-sand, 4.55:1 on --color-card-warm. */
 	--color-text-subtle: #656962; /* neutral stone gray — body text on light bg */
 	--brand-border: #7c5e49; /* dark cream, darkened for WCAG AA — dividers, input borders, CTA chrome (was #b68a6b, 2.73:1; now 5.25:1 on --color-bg-sand) */
+	/* Two strengths of the brown line, not six. Faint for dividers and containers,
+	   strong for edges you read as an object: cards, chips, fields, time slots. */
+	--line-faint: color-mix(in srgb, var(--brand-border) 28%, transparent);
+	--line-strong: color-mix(in srgb, var(--brand-border) 40%, transparent);
 	--color-accent-gold-soft: #c7a27a; /* Figma-sourced — Over mij mobile CTA/link accents on dark overlay */
 	/* Forest taken down 20% so it can carry *text* on gold-soft. Plain
 	   --color-fg-forest is 3.98:1 there: enough for a glyph under WCAG 1.4.11,
@@ -435,6 +439,16 @@ h6 {
 	font-family: var(--font-display);
 	line-height: var(--line-height-tight);
 	font-weight: var(--font-weight-bold);
+	text-wrap: balance;
+}
+
+/* No single word stranded on a paragraph's last line. The browser picks the breaks, the
+   copy stays as written; browsers without support simply wrap as before. */
+p,
+li,
+dd,
+blockquote {
+	text-wrap: pretty;
 }
 
 /* --- Global utilities (the only "components" allowed in global.css) --- */

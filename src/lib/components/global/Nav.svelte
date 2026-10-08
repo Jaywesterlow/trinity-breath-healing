@@ -280,7 +280,11 @@
 
 		.nav__inner {
 			height: 100%;
-			padding: 0; /* zero — matches footer; max-width + centering alone sets the edge */
+			/* The same 1.5rem gutter as the page, with the box widened by it so the edge
+			   is unchanged once the screen is wider than the container. With no gutter
+			   the logo sat flush against the screen edge from 1024 to 1247px. */
+			max-width: calc(var(--container-max) + 3rem);
+			padding: 0 var(--space-6);
 			gap: var(--space-6);
 		}
 
@@ -295,7 +299,7 @@
 		.nav__links {
 			display: flex;
 			align-items: center;
-			gap: 1.125rem;
+			gap: var(--space-4);
 			flex: 1;
 			justify-content: center;
 		}
@@ -314,21 +318,21 @@
 			font-size: var(--font-size-xl);
 			color: var(--brand-muted);
 			text-decoration: none;
-			padding: var(--space-1) 0.375rem;
+			padding: var(--space-1) var(--space-2);
 			white-space: nowrap;
 			transition: color var(--motion-fast);
 		}
 
 		/* Wider than the word by 0.5rem at each end — the link's own padding is
-		   0.375rem, so -0.125rem puts the line half a rem clear of the first and
-		   last glyph. And 1px, not the shared 2px: at nav size a heavier rule
+		   0.5rem, so the line runs edge to edge of the box and ends half a rem clear
+		   of the first and last glyph. And 1px, not the shared 2px: at nav size a heavier rule
 		   reads as a border under the item rather than as an underline. */
 		.nav__link::before,
 		.nav__link::after {
 			content: '';
 			position: absolute;
-			left: -0.125rem;
-			right: -0.125rem;
+			left: 0;
+			right: 0;
 			bottom: 0;
 			height: 1px;
 			transform: scaleX(0);
@@ -372,6 +376,21 @@
 
 		.nav__link--active::after {
 			transition-delay: var(--underline-stage-delay);
+		}
+	}
+
+	/* Narrow desktops. At full size the six links need 625px, which leaves room for the
+	   logo, the button and the gutters from about 1124px up; below that the button ran
+	   off the right edge of the screen. One step down in size and tighter spacing fits
+	   them from 1024px, with the button ending on the gutter. */
+	@media (min-width: 1024px) and (max-width: 1149.98px) {
+		.nav__links {
+			gap: var(--space-2);
+		}
+
+		.nav__link {
+			font-size: var(--font-size-lg);
+			padding-inline: var(--space-1);
 		}
 	}
 </style>
