@@ -13,6 +13,13 @@ set -uo pipefail
 
 echo "=== Placeholder grep (informational — non-blocking in Phase 0) ==="
 grep -rEn 'TODO|PLACEHOLDER|TBD_' src/ static/ || true
+
+# <Todo> markers on the legal and About pages. These are different in kind from
+# the TODO_ constants above: they are rendered, so an unfilled one ships a
+# visible red "[KvK-nummer]" to a real visitor on a legal document. Listed
+# separately so the launch gate can tell the two cases apart.
+echo "--- Unfilled <Todo> markers (rendered to visitors) ---"
+grep -rEn '<Todo>|<Todo$' src/routes/ || echo "  none"
 echo "=== End placeholder grep ==="
 
 # Always exit 0 in Phase 0.

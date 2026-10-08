@@ -9,7 +9,13 @@ export const prerender = true;
 export const load: PageLoad = async ({ url }) => {
 	const stub = STUB_META[url.pathname];
 	if (!stub) throw new Error(`no STUB_META entry for ${url.pathname}`);
-	const meta = { title: stub.title, description: stub.description, path: url.pathname };
+	/* Placeholder content: keep it out of the index until it says something. */
+	const meta = {
+		title: stub.title,
+		description: stub.description,
+		path: url.pathname,
+		noindex: true
+	};
 	const pageSpecific = [
 		buildBreadcrumb(stub.crumbs),
 		buildWebPage({ title: stub.title, description: stub.description, path: url.pathname })

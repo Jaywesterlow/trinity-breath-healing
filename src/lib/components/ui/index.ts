@@ -8,3 +8,4 @@ export { default as WerkwijzeCard } from './WerkwijzeCard.svelte';
 export { default as FooterNavColumn } from './FooterNavColumn.svelte';
 export * from './interactions';
 export * from './media';
+export * from './legal';

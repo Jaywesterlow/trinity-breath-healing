@@ -1,0 +1,18 @@
+{
+	"name": "TRINITY Breath & Healing",
+	"short_name": "TRINITY",
+	"description": "Ademwerk en energetische behandelingen bij Trinity Breath & Healing.",
+	"lang": "nl-NL",
+	"start_url": "/",
+	"scope": "/",
+	"display": "browser",
+	"background_color": "#faf0e6",
+	"theme_color": "#faf0e6",
+	"icons": [
+		{ "src": "/favicon.svg", "type": "image/svg+xml", "sizes": "any" },
+		{ "src": "/favicon-96x96.png", "type": "image/png", "sizes": "96x96" },
+		{ "src": "/apple-touch-icon.png", "type": "image/png", "sizes": "180x180" },
+		{ "src": "/android-chrome-512x512.png", "type": "image/png", "sizes": "512x512", "purpose": "any" },
+		{ "src": "/android-chrome-maskable-512x512.png", "type": "image/png", "sizes": "512x512", "purpose": "maskable" }
+	]
+}

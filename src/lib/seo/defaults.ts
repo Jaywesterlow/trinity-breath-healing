@@ -14,7 +14,7 @@ if (!env.PUBLIC_SITE_URL) {
 	);
 }
 
-/** Canonical site origin — no trailing slash. e.g. 'https://trinity-breath-healing.vercel.app' */
+/** Canonical site origin — no trailing slash. e.g. 'https://trinitybreathhealing.nl' */
 export const SITE_URL: string = env.PUBLIC_SITE_URL.replace(/\/$/, '');
 
 /**

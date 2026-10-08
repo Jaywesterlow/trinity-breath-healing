@@ -1,8 +1,10 @@
 /**
  * schema-services.test.ts — TDD gate for Task 1
- * Tests: makeServiceNode factory + allServiceNodes (4 modalities)
+ * Tests: makeServiceNode factory + allServiceNodes (7 modalities, 260810-mdl)
  * Requirements: SCH-04
- * D-locked: service slugs mahatma-healing, goldhealing, raster-energie, spinal-touch
+ * Service slugs: mahatma-healing, goldhealing, raster-energie, cranio-fascia-unwinding,
+ * spinal-touch, brtt-body, trb-breathwork — was 4, superseded by the 260810-mdl owner
+ * decision to ship all 7 real services.
  *
  * Uses vi.doMock() for env override.
  *
@@ -59,17 +61,22 @@ describe('services.ts — Service schema nodes', () => {
 		expect(node['url']).toBe('https://trinity-breath-healing.vercel.app/diensten/mahatma-healing');
 	});
 
-	it('Test 5: allServiceNodes has exactly 4 entries', async () => {
+	it('Test 5: allServiceNodes has exactly 7 entries', async () => {
 		const { allServiceNodes } = await loadServices();
-		expect(allServiceNodes).toHaveLength(4);
+		expect(allServiceNodes).toHaveLength(7);
 	});
 
-	it('Test 6: allServiceNodes covers the 4 locked slugs', async () => {
+	it('Test 6: allServiceNodes covers all 7 slugs', async () => {
 		const { allServiceNodes } = await loadServices();
 		const slugs = allServiceNodes.map((n) => (n as unknown as SchemaNode)['@id']?.toString() ?? '');
 		expect(slugs).toContain('https://trinity-breath-healing.vercel.app/#service-mahatma-healing');
 		expect(slugs).toContain('https://trinity-breath-healing.vercel.app/#service-goldhealing');
 		expect(slugs).toContain('https://trinity-breath-healing.vercel.app/#service-raster-energie');
+		expect(slugs).toContain(
+			'https://trinity-breath-healing.vercel.app/#service-cranio-fascia-unwinding'
+		);
 		expect(slugs).toContain('https://trinity-breath-healing.vercel.app/#service-spinal-touch');
+		expect(slugs).toContain('https://trinity-breath-healing.vercel.app/#service-brtt-body');
+		expect(slugs).toContain('https://trinity-breath-healing.vercel.app/#service-trb-breathwork');
 	});
 });

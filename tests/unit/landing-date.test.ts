@@ -13,7 +13,7 @@
  * Requirements: SEO-09, BLOCKER-3
  *
  * NOTE: This test reads the prerendered HTML. Run `npm run build` before running this test.
- * Use: `PUBLIC_SITE_URL=https://trinity-breath-healing.vercel.app npm run build && pnpm test:unit -- --run landing-date`
+ * Use: `PUBLIC_SITE_URL=https://trinitybreathhealing.nl npm run build && pnpm test:unit -- --run landing-date`
  */
 import { describe, it, expect } from 'vitest';
 import { readFileSync, existsSync } from 'fs';

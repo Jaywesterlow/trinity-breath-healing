@@ -4,8 +4,9 @@
  * Companion to the hero's pure-CSS cascade (`Hero.svelte`), but the opposite mechanism on
  * purpose: below the fold, arming the hidden state has to happen from JavaScript, because the
  * element hasn't painted yet when the action runs. See the root `HANDOFF.md`, "Above the fold
- * vs below it", for the full reasoning. Never apply this to the hero — it already has its own
- * entrance.
+ * vs below it", for the full reasoning. Never give the hero an entrance from here — it
+ * already has its own. Its text column does use this action, but in `entrance: false` mode:
+ * exit fade only, nothing on the way in.
  *
  * Contract, in order:
  *   1. Under `prefers-reduced-motion: reduce`, bail before touching any style. No inline
@@ -15,14 +16,25 @@
  *      user can already see would flash it.
  *   3. Otherwise arm synchronously, in the action body: hidden opacity + a small upward
  *      offset, set before the next paint.
- *   4. Release on `load` (next frame) or on first intersection for `view` (the default) —
- *      one observer, fires once, disconnects.
- *   5. Releasing plays the fade/rise, then clears the values once it finishes so the element
- *      is left at its natural, unstyled state.
- *   6. Once the fade ends (backed by a timeout, since a never-painted element never fires a
- *      finish event), strip every inline style this action set. A leftover `transform` makes
- *      the element a containing block for any `position: fixed`/`sticky` descendant, which
- *      would silently break that positioning elsewhere on the page.
+ *   4. Release on `load` (next frame) or on first intersection for `view` (the default).
+ *   5. Releasing plays the fade/rise, then strips the `transform` once it finishes. A
+ *      leftover `transform` makes the element a containing block for any `position:
+ *      fixed`/`sticky` descendant, which would silently break that positioning elsewhere
+ *      on the page. Backed by a timeout, since a never-painted element never fires a
+ *      finish event.
+ *   6. From then on the observer STAYS, and opacity follows the viewport in both
+ *      directions: the element fades out as it leaves and fades back in when it returns.
+ *      Only opacity — the rise is a one-time entrance, and re-animating `transform` would
+ *      reintroduce the compositing-layer problem described below.
+ *
+ * The band is inset from the real viewport (see BAND_TOP / BAND_BOTTOM), so the fade starts
+ * while the element is still on screen rather than at the instant it clips. That is the whole
+ * point of it: something sliding off the top edge at full opacity reads as the page cutting
+ * it off, and the same element easing out reads as the page moving on.
+ *
+ * The two halves are separable. `entrance: false` is exit-only (the hero's text column);
+ * `exit: false` is entrance-only, for something whose exit is owned one level up (the
+ * Werkwijze cards, which fade as whole cards in a staggered row).
  *
  * Implementation notes:
  *
@@ -52,6 +64,12 @@
  * module scope.
  */
 
+/** Set false and every element keeps its entrance but never fades out; the owner may want
+ *  this after judging the effect. One line to flip, nothing else to touch: with it off every
+ *  call is treated as `exit: false` — nothing drifts to 0, not on the way out and not on the
+ *  return path either — and the entrance is exactly what it was. */
+export const EXIT_FADE = true;
+
 export type RevealOptions = {
 	/** Delay before the release transition starts, in ms. */
 	delay?: number;
@@ -61,18 +79,178 @@ export type RevealOptions = {
 	distance?: number;
 	/** 'load' releases on the next frame; 'view' releases on first scroll-into-view. */
 	trigger?: 'load' | 'view';
+	/**
+	 * false = no entrance at all. The element is never armed, never rises and never fades
+	 * in on first sight; it starts exactly as rendered and only ever answers the exit fade
+	 * below. This is the mode the hero's text column uses — its entrance is the pure-CSS
+	 * cascade in Hero.svelte, and all it wants from here is the way out.
+	 */
+	entrance?: boolean;
+	/**
+	 * false = entrance only. The element fades in once and then stops answering the
+	 * viewport. Used where something outside this element owns the exit — a card that
+	 * fades as a whole, say, whose inner lines must not fade a second time inside it.
+	 */
+	exit?: boolean;
 };
 
 const DEFAULTS: Required<RevealOptions> = {
 	delay: 0,
-	duration: 1300,
+	duration: 600,
 	distance: 10,
-	trigger: 'view'
+	trigger: 'view',
+	entrance: true,
+	exit: true
 };
 
 const FADE_EASING = 'cubic-bezier(0.25, 0.46, 0.45, 0.94)';
 const RISE_EASING = 'cubic-bezier(0.16, 1, 0.3, 1)';
-const RISE_DURATION = 1100;
+/* Longer than the fade on purpose, but not by much. The rise's curve is an expo-out that has
+   done most of its travel by the time the fade ends; the tail is what keeps the last pixels
+   from stopping dead. 2026-09-15: 1100 -> 800 alongside the fade's 1300 -> 600, so the two
+   still end within 200ms of each other rather than the rise running on for half a second. */
+const RISE_DURATION = 800;
+
+/* THE RULE, and it is the same for every revealed element on the site — one band, no
+   per-element exceptions, because content fading at slightly different scroll positions is
+   what makes the whole effect read as a bug rather than as a decision.
+
+   Two horizontal lines are drawn across the viewport and never move:
+
+     the fade-in line    BAND_BOTTOM of the viewport height ABOVE the bottom edge
+     the fade-out line   BAND_TOP of the viewport height BELOW the top edge
+
+   An element fades IN when its TOP crosses the fade-in line, and fades OUT when its BOTTOM
+   crosses the fade-out line. Top on the way in and bottom on the way out is the part that
+   matters: measure from an element's middle and a 500px block starts fading 250px into the
+   screen while a 100px block starts 50px in, so nothing ever lines up. Measure from the
+   leading edge in each direction and a heading, a card and a whole form all begin at the
+   same instant regardless of how tall they are.
+
+   This is precisely what one IntersectionObserver with threshold 0 and a negative
+   rootMargin computes, which is why it is an observer and not a scroll handler: the root
+   rect is inset to [BAND_TOP, viewportHeight - BAND_BOTTOM], intersection begins when
+   `rect.top < viewportHeight - BAND_BOTTOM` and ends when `rect.bottom <= BAND_TOP`. The
+   two conditions ARE the two rules above. Do not add a threshold, a per-element margin or
+   a scroll listener on top of it — each of those reintroduces the drift this replaced.
+
+   Percentages rather than pixels so the band means the same thing on a 844px phone as on a
+   1080px laptop; the site is mobile-first and these were tuned there.
+
+   Both edges have been walked in twice now. 22%/80px read as leaving too late and arriving
+   already lit; 34%/18% overcorrected — with a third of the screen spent fading at the top
+   and a fifth at the bottom, too little of the page was ever at full strength at once.
+   28%/12% was the settled pair for a while: the exit still began while the element was
+   comfortably on screen, and the entrance still waited until it properly was.
+
+   2026-09-14: 12%/12%. The owner asked for both lines closer to the edges, and what actually
+   read wrong was the lopsidedness — the exit line sat 2.3x further in than the entrance line,
+   so a block was leaving a quarter-screen before it clipped while arriving almost at the
+   edge. Symmetric now, at the value the bottom edge had already settled on. */
+const BAND_TOP = 0.12;
+const BAND_BOTTOM = 0.12;
+
+/** The band as a rootMargin string. Exported so observers outside this action arrive on the
+ *  same two lines — Werkwijze's staggered card row is the one that does. */
+export const REVEAL_ROOT_MARGIN = `${-BAND_TOP * 100}% 0px ${-BAND_BOTTOM * 100}% 0px`;
+
+/**
+ * Some boxes are much bigger than what they draw. The treatments carousel is the one that
+ * forced this: its track is tall enough to hold a rotated card at every fan position, so the
+ * box's top edge is over a hundred pixels above anything the reader can see, and it was
+ * fading in long before the cards arrived. (Since the 2026-09-15 audit that wrap carries no
+ * reveal at all — its header does — so nothing on the site sets these at the moment. The
+ * correction stays, because any box bigger than what it draws will need it again.)
+ *
+ * `--reveal-inset-top` / `--reveal-inset-bottom`, in px on the element itself, say how far
+ * inside the box the visible content actually starts and ends. This corrects the ELEMENT,
+ * not the band: the two lines stay exactly where they are for everything on the page, and
+ * what changes is which edge of this element is measured against them. Read from computed
+ * style rather than passed as an option so the correction lives in CSS beside the geometry
+ * it is correcting, and is re-read whenever the observer is rebuilt.
+ */
+function insetsOf(node: HTMLElement): { top: number; bottom: number } {
+	const style = getComputedStyle(node);
+	return {
+		top: parseFloat(style.getPropertyValue('--reveal-inset-top')) || 0,
+		bottom: parseFloat(style.getPropertyValue('--reveal-inset-bottom')) || 0
+	};
+}
+
+/**
+ * The rootMargin for one element.
+ *
+ * With no inset this is the shared percentage band, so a viewport resize needs no rebuild.
+ * With one, the whole thing has to be resolved to px — an inset is a length and cannot be
+ * added to a percentage inside rootMargin — and the element then depends on the rebuild that
+ * the document-height watcher below triggers.
+ *
+ * Intersection begins when `rect.top < rootBottom` and ends when `rect.bottom <= rootTop`, so
+ * pushing rootBottom UP by the top inset delays the entrance until the visible top has
+ * crossed, and pushing rootTop DOWN by the bottom inset delays the exit until the visible
+ * bottom has.
+ */
+function rootMarginFor(node: HTMLElement): string {
+	const { top, bottom } = insetsOf(node);
+	if (!top && !bottom) return REVEAL_ROOT_MARGIN;
+	const vh = window.innerHeight;
+	return `${-(vh * BAND_TOP + bottom)}px 0px ${-(vh * BAND_BOTTOM + top)}px 0px`;
+}
+
+/**
+ * True when this element can never reach the fade-in line, however far the page is
+ * scrolled — i.e. it sits inside the last screenful, below the line even at maximum
+ * scroll. The footer's legal row (privacy statement, terms, copyright) is exactly that,
+ * and it was invisible: armed at 0, waiting for a crossing that cannot happen.
+ *
+ * The answer is NOT to give those elements their own band — that is the inconsistency
+ * this file exists to avoid. They get the band like everything else, plus the fallback
+ * below, which reveals them when they enter the viewport at all. They also never fade out,
+ * correctly: an element already at its highest possible position cannot rise past the
+ * fade-out line either.
+ */
+function unreachable(node: HTMLElement): boolean {
+	const vh = window.innerHeight;
+	const maxScroll = Math.max(0, document.documentElement.scrollHeight - vh);
+	const highestTop = node.getBoundingClientRect().top + window.scrollY - maxScroll;
+	return highestTop >= vh * (1 - BAND_BOTTOM);
+}
+
+/* One height watcher for the whole page rather than one per revealed element (there are
+   a few dozen of them). A document that grows or shrinks — a font swapping in, an image landing,
+   the viewport rotating — moves every element's ceiling at once. */
+const heightListeners = new Set<() => void>();
+let heightWatcher: ResizeObserver | null = null;
+
+/** For a component that has just measured and written its own --reveal-inset-*: the vars
+ *  did not exist when the action first read them, so ask every band to be re-read. */
+export function refreshRevealBands() {
+	for (const listener of heightListeners) listener();
+}
+
+function watchDocumentHeight(fn: () => void) {
+	heightListeners.add(fn);
+	if (!heightWatcher && typeof ResizeObserver !== 'undefined') {
+		heightWatcher = new ResizeObserver(() => {
+			for (const listener of heightListeners) listener();
+		});
+		heightWatcher.observe(document.documentElement);
+	}
+	return () => {
+		heightListeners.delete(fn);
+		if (heightListeners.size === 0) {
+			heightWatcher?.disconnect();
+			heightWatcher = null;
+		}
+	};
+}
+
+/* Leaving is quicker than arriving. A slow fade-out on scroll feels like lag; a slow fade-in
+   feels like the section settling. 2026-09-15: everything got faster together — the owner's
+   verdict on the 1300/450/600 set was that the entrance dragged — but the asymmetry is kept:
+   a first arrival at 600, a return at 400, and the way out quickest of all at 300. */
+const EXIT_DURATION = 300;
+const RETURN_DURATION = 400;
 
 export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 	// matchMedia is guarded, not assumed. Svelte actions do not run during SSR, but they DO run
@@ -90,19 +268,32 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 		return;
 	}
 
-	const rect = node.getBoundingClientRect();
-	if (rect.top < window.innerHeight) {
-		return;
-	}
+	const {
+		delay,
+		duration,
+		distance,
+		trigger,
+		entrance,
+		exit: wantsExit
+	} = { ...DEFAULTS, ...options };
+	/* The kill switch at the top of the file wins over any option: with it off, this is
+	   `exit: false` for everyone, and the rest of the action never learns the difference. */
+	const exit = EXIT_FADE && wantsExit;
+	const hasRise = entrance && distance > 0;
 
-	const { delay, duration, distance, trigger } = { ...DEFAULTS, ...options };
-	const hasRise = distance > 0;
+	/* Already on screen when this runs (hydration happens after the prerendered HTML has
+	   painted), so there is nothing to arm — showing it would only flash it. It still gets
+	   the observer below, because it will leave the viewport eventually. */
+	const rect = node.getBoundingClientRect();
+	const armed = entrance && rect.top >= window.innerHeight;
 
 	// Arm synchronously, before the next paint. Plain property writes — independent of
 	// whatever the element's own `transition`/`animation` CSS is doing.
-	node.style.opacity = '0';
-	if (hasRise) {
-		node.style.transform = `translate3d(0, ${distance}px, 0)`;
+	if (armed) {
+		node.style.opacity = '0';
+		if (hasRise) {
+			node.style.transform = `translate3d(0, ${distance}px, 0)`;
+		}
 	}
 
 	let observer: IntersectionObserver | null = null;
@@ -110,26 +301,66 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 	let releaseFrame: number | null = null;
 	let fadeAnimation: Animation | null = null;
 	let riseAnimation: Animation | null = null;
-	let cleaned = false;
+	let driftAnimation: Animation | null = null;
+	let released = false;
+	let shown = !armed;
 
-	function cleanup() {
-		if (cleaned) return;
-		cleaned = true;
+	/** Ends the entrance: strips the transform, keeps opacity under our control. Also called
+	 *  from driftTo when the element crosses the band mid-entrance; the `opacity: 1` written
+	 *  here is harmless there, because the drift started in the same tick outranks it while
+	 *  running and writes the real end value when it finishes. */
+	function settle() {
 		if (cleanupTimer !== null) {
 			clearTimeout(cleanupTimer);
 			cleanupTimer = null;
 		}
-		fadeAnimation?.removeEventListener('finish', cleanup);
+		fadeAnimation?.removeEventListener('finish', settle);
 		fadeAnimation?.cancel();
 		riseAnimation?.cancel();
 		fadeAnimation = null;
 		riseAnimation = null;
-		node.style.removeProperty('opacity');
+		/* The transform has to go — while it is set, this element is a containing block for
+		   any fixed or sticky descendant. Opacity stays: it is what the drift below animates,
+		   and an inline `opacity: 1` costs nothing. */
 		node.style.removeProperty('transform');
 		node.style.removeProperty('will-change');
+		node.style.opacity = '1';
+	}
+
+	/** The ongoing in/out fade, once the entrance is done. Opacity only. */
+	function driftTo(value: number, duration: number) {
+		if (shown === (value === 1)) return;
+		shown = value === 1;
+		/* Start from what is on screen, never from the inline style. While the entrance (or an
+		   earlier drift) is still running, the inline value is whatever was written before that
+		   animation began — `0` for an armed element — and a drift started from it animated
+		   0 -> 0 on top of the entrance instead of replacing it. Nothing showed while that
+		   no-op ran, and the moment it finished the entrance underneath was uncovered
+		   mid-flight: a pop from 0 to ~0.65 in one frame, with no scroll, on an element
+		   already above the viewport. Read BEFORE anything is cancelled, because cancelling an
+		   animation drops the computed value straight back to that stale inline one. */
+		const rendered = Number(getComputedStyle(node).opacity);
+		const from = Number.isNaN(rendered) ? (value === 1 ? 0 : 1) : rendered;
+		driftAnimation?.cancel();
+		/* The entrance is over the moment the element crosses the band. Left running, it keeps
+		   animating underneath this drift and wins again the instant the drift ends. */
+		if (fadeAnimation || riseAnimation) settle();
+		driftAnimation = node.animate([{ opacity: from }, { opacity: value }], {
+			duration,
+			easing: FADE_EASING,
+			fill: 'forwards'
+		});
+		driftAnimation.addEventListener('finish', () => {
+			node.style.opacity = String(value);
+			driftAnimation?.cancel();
+			driftAnimation = null;
+		});
 	}
 
 	function release() {
+		if (released) return;
+		released = true;
+		shown = true;
 		// Two independent Web Animations, not one — the fade and the rise want different
 		// curves and durations (see Hero.svelte's cascade for the same reasoning). Neither
 		// touches the CSS `transition` property, so this can never collide with a
@@ -155,43 +386,114 @@ export function reveal(node: HTMLElement, options: RevealOptions = {}) {
 			);
 		}
 
-		fadeAnimation.addEventListener('finish', cleanup);
+		fadeAnimation.addEventListener('finish', settle);
 		// A `finish` event never fires for an animation that's never painted (e.g. the tab
 		// is backgrounded before the element is shown), so back it with a timeout.
-		cleanupTimer = setTimeout(cleanup, delay + duration + 100);
+		cleanupTimer = setTimeout(settle, delay + duration + 100);
 	}
 
-	if (trigger === 'load') {
+	/* Nothing to observe: no entrance to release and no exit to answer. */
+	if (!entrance && !exit) return;
+
+	if (entrance && trigger === 'load') {
 		releaseFrame = requestAnimationFrame(() => {
 			releaseFrame = null;
 			release();
 		});
-	} else {
-		observer = new IntersectionObserver(
+	}
+
+	/* One observer for the whole life of the element, not one that fires once and
+	   disconnects. The first intersection releases the entrance; every one after that is the
+	   element crossing the band's edge, in either direction. */
+	/* The observer's first callback reports where the element already is, which is not a
+	   crossing — nobody scrolled anywhere. An element sitting below the fade-in line at load
+	   would otherwise fade out in front of the reader before it had ever faded in. Snap it
+	   instead, and animate from the second callback on. */
+	let firstReport = true;
+
+	const onCross: IntersectionObserverCallback = (entries) => {
+		for (const entry of entries) {
+			if (entry.isIntersecting) {
+				if (!released) release();
+				else if (exit) driftTo(1, firstReport ? 0 : RETURN_DURATION);
+			} else if (released && exit) {
+				driftTo(0, firstReport ? 0 : EXIT_DURATION);
+			}
+			firstReport = false;
+		}
+	};
+
+	observer = new IntersectionObserver(onCross, { threshold: 0, rootMargin: rootMarginFor(node) });
+	observer.observe(node);
+
+	/* The last-screenful fallback described on unreachable() above. A second observer on the
+	   real viewport, attached only to elements the band cannot reach, and only ever used to
+	   show them. */
+	let tail: IntersectionObserver | null = null;
+
+	function syncTail() {
+		const needed = unreachable(node);
+		if (needed === !!tail) return;
+		if (!needed) {
+			tail?.disconnect();
+			tail = null;
+			return;
+		}
+		tail = new IntersectionObserver(
 			(entries) => {
 				for (const entry of entries) {
-					if (entry.isIntersecting) {
-						observer?.disconnect();
-						observer = null;
-						release();
-						break;
-					}
+					if (!entry.isIntersecting) continue;
+					if (!released) release();
+					else driftTo(1, RETURN_DURATION);
 				}
 			},
-			{ threshold: 0, rootMargin: '0px 0px -80px 0px' }
+			{ threshold: 0 }
 		);
-		observer.observe(node);
+		tail.observe(node);
+	}
+
+	/* A rebuild, because an element carrying an inset resolves its band in px and both the
+	   inset and the viewport height can have moved. Cheap: the string is compared first and
+	   the observer is only replaced when it actually differs. */
+	let margin = rootMarginFor(node);
+
+	function resync() {
+		const next = rootMarginFor(node);
+		if (next !== margin) {
+			margin = next;
+			observer?.disconnect();
+			observer = new IntersectionObserver(onCross, { threshold: 0, rootMargin: margin });
+			observer.observe(node);
+		}
+		syncTail();
+	}
+
+	syncTail();
+	const unwatch = watchDocumentHeight(resync);
+
+	/* An element that starts on screen never had an entrance to release, so mark it done and
+	   let the observer drive it from here. */
+	if (!armed) {
+		released = true;
+		/* An exit-only element is left exactly as rendered — writing opacity here would
+		   override whatever its own stylesheet or entrance animation is doing to it. The
+		   first drift reads the computed value instead. */
+		if (entrance) node.style.opacity = '1';
 	}
 
 	return {
 		destroy() {
+			unwatch();
+			tail?.disconnect();
+			tail = null;
 			observer?.disconnect();
 			observer = null;
 			if (releaseFrame !== null) cancelAnimationFrame(releaseFrame);
 			if (cleanupTimer !== null) clearTimeout(cleanupTimer);
-			fadeAnimation?.removeEventListener('finish', cleanup);
+			fadeAnimation?.removeEventListener('finish', settle);
 			fadeAnimation?.cancel();
 			riseAnimation?.cancel();
+			driftAnimation?.cancel();
 		}
 	};
 }

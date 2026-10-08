@@ -96,6 +96,45 @@ No project skills found. Add skills to any of: `.claude/skills/`, `.agents/skill
 <!-- GSD:skills-end -->
 
 <!-- GSD:workflow-start source:GSD defaults -->
+## Layout rules (always on)
+
+The owner cannot review every page for basic design mistakes, so these hold
+without being asked:
+
+1. **A heading and the text it introduces stack vertically.** Never put a
+   title in one column and its description, lead, list or button in the column
+   beside it. Proximity is what makes them read as one thing.
+   **Exception:** the FAQ section keeps its Figma layout on desktop: eyebrow and
+   heading on the left, questions on the right (owner's call, 2026-09-27).
+2. **Use width only with content that is genuinely wide**: a grid of parallel
+   cards, a row of steps, two independent blocks (a main column and a sidebar
+   of different content). Never create width by pulling apart what belongs
+   together.
+3. **When the content cannot fill the width, say so** and propose what would
+   (more content, a sidebar with genuinely different material, a narrower
+   container). A reading column with empty space beside it is correct for a
+   text page; a forced layout is not.
+4. **Text keeps a measure**: body about 46rem / 60–70ch, leads 46ch, headings
+   about 22ch balanced.
+
+## Cost Guard (always on)
+
+The owner pays per token and cannot see inside a running turn. Load the `cost-guard`
+skill from the skill library before any suite, subagent brief, screenshot sweep or re-run.
+The four rules, so they hold even if the skill is not loaded:
+
+1. **Run the check that proves the claim, nothing wider.** Touched spec files, prettier and
+   eslint on changed files. The full gate chain (build, all Playwright, a11y, audits) runs
+   **once per task**, before the final push. Never per iteration. A gate that passed on
+   this tree stays passed until a file it covers changes.
+2. **No subagent for work under ~30 minutes.** Do it in the main conversation. A brief
+   always carries a budget line (tool calls, minutes) and says which gates run how often.
+   One agent at a time.
+3. **Three breakpoints is a sweep** (smallest phone, the tablet he tests on, his own
+   desktop width). Thirteen only when he asks for thirteen.
+4. **Say what is running** before anything over ~10 minutes, and report minutes and tool
+   calls at hand-back.
+
 ## GSD Workflow Enforcement
 
 Before using Edit, Write, or other file-changing tools, start work through a GSD command so planning artifacts and execution context stay in sync.

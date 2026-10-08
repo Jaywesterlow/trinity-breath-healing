@@ -21,7 +21,9 @@ import path from 'path';
 // Baseline HTML — passes all check-html.ts + validate-json-ld.ts assertions.
 // Uses a real canonical URL so the landing-only <time datetime> gate fires.
 // ---------------------------------------------------------------------------
-const SITE_URL = 'https://trinity-breath-healing.vercel.app';
+/* Follows whatever the build used, so pointing PUBLIC_SITE_URL at the real
+   domain does not silently break every canonical assertion here. */
+const SITE_URL = process.env.PUBLIC_SITE_URL ?? 'https://trinitybreathhealing.nl';
 
 const VALID_JSON_LD = {
 	'@context': 'https://schema.org',

@@ -3,7 +3,7 @@
 </script>
 
 <div class="nav__cta">
-	<ButtonLink label="Maak een afspraak" href="/contact" withArrow={true} />
+	<ButtonLink label="Maak een afspraak" href="/contact" />
 </div>
 
 <style>

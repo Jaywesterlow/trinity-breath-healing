@@ -26,7 +26,7 @@
  *
  * Env:
  *   HTML_AUDIT_ROOT  — override default .svelte-kit/output/prerendered/pages
- *   PUBLIC_SITE_URL  — canonical base URL (default: https://trinity-breath-healing.vercel.app)
+ *   PUBLIC_SITE_URL  — canonical base URL (default: https://trinitybreathhealing.nl)
  *
  * Exit 0 → all checks pass.  Exit 1 → at least one violation (all printed to stderr).
  */
@@ -34,9 +34,10 @@ import { readFileSync, readdirSync } from 'fs';
 import path from 'path';
 import { parse } from 'node-html-parser';
 
-const _SITE_URL = (
-	process.env.PUBLIC_SITE_URL ?? 'https://trinity-breath-healing.vercel.app'
-).replace(/\/$/, '');
+const _SITE_URL = (process.env.PUBLIC_SITE_URL ?? 'https://trinitybreathhealing.nl').replace(
+	/\/$/,
+	''
+);
 const ROOT_DIR = process.env.HTML_AUDIT_ROOT ?? '.svelte-kit/output/prerendered/pages';
 
 const DESC_MIN = 148;

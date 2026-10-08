@@ -1,21 +1,28 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy, tick } from 'svelte';
 	import { reveal } from '$lib/actions/reveal';
 	import { BRAND } from '$lib/constants/brand';
 	import TreatmentCard from '$lib/components/ui/TreatmentCard.svelte';
+	import ServiceModal from '$lib/components/ui/ServiceModal.svelte';
+	import { SERVICE_ART } from '$lib/constants/service-art';
+	import BehandelingenNote from './BehandelingenNote.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 
+	// All 7 services have art since 2026-09-27 (the last four drawn to match the
+	// first three, approved by the owner). A service absent from this map shows a plain card
+	// (no stand-in number since 2026-09-27, the owner's call): drop a new icon
+	// file in, add its entry here and its crop to SERVICE_ART, and it appears.
 	const ICONS: Record<string, string> = {
 		'mahatma-healing': '/images/card-mahatma-healing.svg',
 		goldhealing: '/images/card-goldhealing.svg',
-		'raster-energie': '/images/infinity.png',
-		'spinal-touch': '/images/card-spinal-touch.svg'
+		'spinal-touch': '/images/card-spinal-touch.svg',
+		'raster-energie': '/images/card-raster-energie.svg',
+		'cranio-fascia-unwinding': '/images/card-cranio-fascia-unwinding.svg',
+		'brtt-body': '/images/card-brtt-body.svg',
+		'trb-breathwork': '/images/card-trb-breathwork.svg'
 	};
 
 	// buttonLabel is placeholder copy, not final — see TreatmentCard.svelte.
-	// 5th card by design (see ROADMAP.md LND-05) — never implemented on the old
-	// auto-scroll version. No icon file for it; TreatmentCard renders it with
-	// no image, same as every other card would if it had none.
 
 	// Slots that are actually on screen at once. Desktop shows five cards
 	// (0, +/-1, +/-2) since the fan was widened. Declared up here because the
@@ -26,26 +33,18 @@
 		return Math.abs(position) <= VISIBLE_SLOT_MAX;
 	}
 
-	const SERVICE_ITEMS = [
-		...BRAND.services.map((s) => ({
-			key: s.slug,
-			label: s.name,
-			icon: ICONS[s.slug] as string | null,
-			buttonLabel: 'Meer info',
-			buttonHref: `/diensten/${s.slug}`,
-			description: s.description
-		})),
-		{
-			key: 'meer-diensten',
-			label: 'Meer diensten',
-			icon: null,
-			buttonLabel: 'Bekijk alles',
-			buttonHref: '/diensten',
-			// Placeholder copy (260809-hov), same TODO_-prefixed convention as
-			// BRAND.services' own descriptions — not ours to invent, see brand.ts.
-			description: 'TODO_ Korte omschrijving van het volledige aanbod volgt nog.'
-		}
-	];
+	// Seven real services, one card each (260810-mdl) — no "Meer diensten" nav
+	// card any more; a "more services" card inside a carousel that already
+	// shows every service was nonsense.
+	const SERVICE_ITEMS = BRAND.services.map((s) => ({
+		key: s.slug,
+		label: s.name,
+		icon: ICONS[s.slug] ?? null,
+		art: SERVICE_ART[s.slug] ?? null,
+		buttonLabel: 'Meer info',
+		buttonHref: `/diensten/${s.slug}`,
+		teaser: s.teaser
+	}));
 
 	const BASE_COUNT = SERVICE_ITEMS.length;
 
@@ -54,17 +53,51 @@
 	// once it steps past HIGH_SLOT/LOW_SLOT, and the whole design rests on
 	// that wrap only ever touching an item nobody can see.
 	//
-	// With 5 real services and 5 visible slots there is nowhere to hide it —
-	// HIGH_SLOT = floor(5/2) = 2 lands exactly on the visible edge, so every
-	// single step would teleport a card from +2 straight to -2 in full view.
-	// It was masked until now only because 3 throwaway TESTKAART diagnostic
-	// cards (since removed) pushed the count to 8.
+	// At 7 real services and 5 visible slots there's a spare slot on each
+	// side already (HIGH_SLOT/LOW_SLOT below work out to ±3), so REPEATS
+	// collapses to 1 below and this list is exactly BRAND.services, no
+	// duplicates. Kept general rather than hardcoded to 7, because a smaller
+	// service count needs exactly this padding — at 5 services and 5 visible
+	// slots there is nowhere to hide the recycle: HIGH_SLOT = floor(5/2) = 2
+	// lands exactly on the visible edge, so every single step would teleport
+	// a card from +2 straight to -2 in full view (the bug e3ad763 fixed once
+	// TESTKAART's throwaway padding cards were removed).
+	//
+	// `+ 3`, not `+ 2`: an EVEN base count breaks the smaller margin. Perfect
+	// symmetry around slot 0 is impossible for an even count, so the one
+	// extra slot always lands on the positive side (see HIGH_SLOT/LOW_SLOT's
+	// own comment below) — which means the NEGATIVE side is one slot short
+	// of the positive side's margin, and `+ 2` alone doesn't cover that
+	// shortfall. Concretely, at a hypothetical count=6 with the old `+ 2`,
+	// REPEATS stays 1 (MIN_ITEMS=6 exactly meets BASE_COUNT), giving
+	// HIGH_SLOT=3 but LOW_SLOT=-2 — a *visible* slot, so every step would
+	// teleport a card in full view, the exact e3ad763 failure again. `+ 3`
+	// forces one more repeat whenever the base count alone can't cover it,
+	// which is harmless here (7 already clears it) and correct at any count.
 	//
 	// So the list is repeated until it is long enough. Duplicates are visually
 	// identical and carry aria-hidden + tabindex="-1", so the accessibility
 	// tree and the tab order still see each service exactly once.
-	const MIN_ITEMS = 2 * VISIBLE_SLOT_MAX + 2;
-	const REPEATS = Math.max(1, Math.ceil(MIN_ITEMS / BASE_COUNT));
+	//
+	// 2026-09-17: the ring is two laps of the seven, fourteen slots, whatever
+	// the padding rule above works out to. Seven slots put the recycle at
+	// ±3, one slot past the outermost card of the design, and "off-screen"
+	// there was only ever true of a desktop: on a tablet (768-1023, the
+	// phone geometry) slot ±3 is on screen, clipped by the fan box's bottom
+	// edge, and the transient slot ±3.5 a card passes through on its way
+	// round is on screen too at 820 — the owner watched cards "spawn in"
+	// at the edge. With fourteen slots the recycle sits at -6/+7 (see
+	// HIGH_SLOT/LOW_SLOT), 98deg round the hub on the 14deg geometry and
+	// 56deg on the 8deg one, far below the box and behind the edge fade at
+	// every width, and slots ±3 to ±6 are ordinary cards that pass through
+	// the fade like the rest. The visible order of the seven never changes
+	// — the second lap is the same seven in the same order — and the dots
+	// still count services, not slots (see nearestCopyOf / the dots'
+	// own comment in the template), so pagination stays seven and wraps
+	// 1 -> 7 -> 1 as before. Fourteen pivots, not seven, is the whole cost.
+	const RING_LAPS = 2;
+	const MIN_ITEMS = 2 * VISIBLE_SLOT_MAX + 3;
+	const REPEATS = Math.max(RING_LAPS, Math.ceil(MIN_ITEMS / BASE_COUNT));
 
 	const items = Array.from({ length: REPEATS }, (_, r) =>
 		SERVICE_ITEMS.map((item) => ({
@@ -335,7 +368,34 @@
 	onMount(() => {
 		remeasurePxPerStep();
 		window.addEventListener('resize', remeasurePxPerStep);
-		return () => window.removeEventListener('resize', remeasurePxPerStep);
+
+		// Idle auto-drift's own countdown starts here too, not only after a
+		// first real interaction — a page that loads and is never touched is
+		// exactly as "idle" as one that was touched once and then left
+		// alone (see scheduleIdleDrift/beginDrift, and IDLE_DRIFT_DELAY_MS's
+		// own comment).
+		scheduleIdleDrift();
+
+		// A backgrounded tab has no business running an indefinite rAF
+		// loop — most browsers already throttle/suspend rAF there, but this
+		// is the one motion in this file with no natural end, so it's worth
+		// being explicit rather than relying on that. Cancel outright on
+		// hide (cancelMotion also clears any pending countdown), restart the
+		// countdown fresh on return rather than resuming mid-drift.
+		function onVisibilityChange(): void {
+			if (document.hidden) {
+				cancelMotion();
+			} else {
+				scheduleIdleDrift();
+			}
+		}
+		document.addEventListener('visibilitychange', onVisibilityChange);
+
+		return () => {
+			window.removeEventListener('resize', remeasurePxPerStep);
+			document.removeEventListener('visibilitychange', onVisibilityChange);
+			cancelMotion();
+		};
 	});
 
 	const VELOCITY_WINDOW_MS = 80; // trailing window the exit velocity is averaged over
@@ -467,6 +527,25 @@
 	// trailing the spring's asymptotic tail indefinitely.
 	const LATCH_DONE_EPSILON = 0.01;
 
+	// Idle auto-drift — a slow, continuous, ambient advance through the
+	// cards (owner request: "moving slowly, scrolling towards the right,"
+	// clarified as "advance through the list in the direction of the next
+	// button" — same direction driveBy(-1)/next() already moves offset in,
+	// not a literal rightward pixel drift). Two directly-tunable numbers:
+	// IDLE_DRIFT_DELAY_MS (how long nothing has to happen before it starts
+	// or resumes) and DRIFT_SECONDS_PER_STEP (how long one full card-to-card
+	// advance takes while drifting — bigger number, slower/more ambient).
+	// Runs as a third motionPhase (see motionTick) so every existing
+	// interruption point — onPointerDown's cancelMotion(), driveMotion's own
+	// cancelMotion() before starting a fresh latch — already supersedes it
+	// for free, with no special-casing added at those call sites.
+	const IDLE_DRIFT_DELAY_MS = 2000; // 4000 / 2 — owner request, "halve the pause duration"
+	const DRIFT_SECONDS_PER_STEP = 6.4; // 8 / 1.25 — owner request, "speed up by 1.25"
+	// Negative: matches next()'s own driveBy(-1) direction (see driveBy),
+	// i.e. drifting is indistinguishable from someone slowly, continuously
+	// pressing "Volgende."
+	const DRIFT_VELOCITY_PER_MS = -1 / (DRIFT_SECONDS_PER_STEP * 1000);
+
 	const DRAG_SLOP_PX = 4; // past this, the gesture is a drag and not a click
 
 	let dragging = $state(false); // true only while the pointer is actually down and moving the fan
@@ -497,13 +576,20 @@
 	let pendingDx = 0;
 	let rafId: number | null = null;
 
-	// Coast and latch run in the same rAF loop (see motionTick) as two
-	// regimes of one motion, not two separate loops — a new pointerdown
-	// cancels whichever is running (see cancelMotion).
+	// Coast, latch, AND drift run in the same rAF loop (see motionTick) as
+	// three regimes of one motion, not separate loops — a new pointerdown or
+	// driveMotion cancels whichever is running (see cancelMotion).
 	let motionRafId: number | null = null;
-	let motionPhase: 'coast' | 'latch' = 'coast';
+	let motionPhase: 'coast' | 'latch' | 'drift' = 'coast';
 	let velocity = 0; // steps per ms, decays toward 0 during coast
 	let lastFrameTime = 0;
+	// setTimeout handle for the idle auto-drift's own countdown (see
+	// IDLE_DRIFT_DELAY_MS) — separate from motionRafId, which tracks an
+	// ACTIVE rAF loop; this tracks a pending FUTURE one. Cleared by
+	// cancelMotion (any real interaction/motion supersedes a pending drift
+	// start the same way it supersedes a running one) and by endGesture
+	// (which reschedules it fresh once whatever just happened settles).
+	let idleDriftTimer: ReturnType<typeof setTimeout> | null = null;
 	// Latch spring state, set once by beginLatch at the exact instant coast
 	// hands off (see its own comment for why: y0/v0 carry over coast's real
 	// position and velocity, which is what makes the handoff continuous).
@@ -570,17 +656,54 @@
 		inGesture = false;
 		motionRafId = null;
 		velocity = 0;
+		// Whatever just happened (drag settle, button-driven latch, an
+		// instant reduced-motion jump) is real activity — restart the idle
+		// countdown from here, not from whenever the page originally loaded.
+		scheduleIdleDrift();
 	}
 
 	// A new pointerdown while coast or latch is still running must take
 	// over from wherever the fan currently is, not fight it or snap it back
 	// — cancel the loop, leave offset/positions exactly as they are, and let
-	// onPointerDown's dragBaseOffset pick up from there.
+	// onPointerDown's dragBaseOffset pick up from there. Also clears a
+	// pending idle-drift countdown (see idleDriftTimer) — any real
+	// interaction, or any new motion superseding drift itself, has to push
+	// the next idle start back out, not let a stale timer fire mid-gesture.
 	function cancelMotion(): void {
 		if (motionRafId !== null) {
 			cancelAnimationFrame(motionRafId);
 			motionRafId = null;
 		}
+		if (idleDriftTimer !== null) {
+			clearTimeout(idleDriftTimer);
+			idleDriftTimer = null;
+		}
+	}
+
+	// Starts (or restarts) the countdown to the next idle auto-drift.
+	// Reduced motion is checked when the timer actually FIRES, not here at
+	// schedule time — cheap, and correct even if the OS-level setting
+	// changes mid-session, matching how every other motion entry point in
+	// this file (driveMotion, etc.) checks it live rather than once.
+	function scheduleIdleDrift(): void {
+		if (idleDriftTimer !== null) clearTimeout(idleDriftTimer);
+		idleDriftTimer = setTimeout(() => {
+			idleDriftTimer = null;
+			if (!prefersReducedMotion()) beginDrift();
+		}, IDLE_DRIFT_DELAY_MS);
+	}
+
+	// Slow, indefinite advance in next()'s own direction (see
+	// DRIFT_VELOCITY_PER_MS) — runs until cancelMotion() (any real
+	// interaction, or a button/dot/card press driving its own motion) cuts
+	// it off, same as coast/latch. inGesture=true for the same reason it's
+	// true through coast/latch: .treatments__pivot--motion has to disable
+	// the CSS transition for this continuous, per-frame offset write too.
+	function beginDrift(): void {
+		motionPhase = 'drift';
+		inGesture = true;
+		lastFrameTime = performance.now();
+		motionRafId = requestAnimationFrame(motionTick);
 	}
 
 	function beginMotion(): void {
@@ -614,17 +737,26 @@
 		latchOmega = SPRING_OMEGA;
 	}
 
-	// One rAF loop, two regimes of the same continuous motion — see this
-	// file's release-physics comment for why it's two regimes and not one
-	// formula throughout (a pure spring aimed at the nearest card from the
-	// moment of release would prevent a hard flick from ever coasting past
-	// its immediate neighbour, which is real, desired behaviour — see
-	// behandelingen-momentum.spec.ts).
+	// One rAF loop, three regimes of the same continuous motion — see this
+	// file's release-physics comment for why coast/latch are two regimes and
+	// not one formula throughout (a pure spring aimed at the nearest card
+	// from the moment of release would prevent a hard flick from ever
+	// coasting past its immediate neighbour, which is real, desired
+	// behaviour — see behandelingen-momentum.spec.ts). drift (see
+	// beginDrift) is the third: constant velocity, never decays, never
+	// hands off to latch — it just runs until something else cancels it.
 	function motionTick(now: number): void {
 		// Clamped so a stalled/backgrounded frame can't integrate one huge,
 		// visibly-teleporting jump — a normal frame is ~16ms.
 		const dt = Math.min(now - lastFrameTime, 50);
 		lastFrameTime = now;
+
+		if (motionPhase === 'drift') {
+			offset += DRIFT_VELOCITY_PER_MS * dt;
+			absorbWholeSteps();
+			motionRafId = requestAnimationFrame(motionTick);
+			return;
+		}
 
 		if (motionPhase === 'coast') {
 			velocity *= Math.exp(-dt / MOMENTUM_TAU_MS);
@@ -1132,18 +1264,17 @@
 	// discriminator): centring on Enter would strand a keyboard user on a
 	// card they cannot then open without a second, different key press, and
 	// the dots and Prev/Next already give them centring.
-	// Desktop-only, matching the media query that used to hide the overlay
-	// below 1024px. That `display: none` was load-bearing, not cosmetic:
-	// mobile navigates this section by swiping the fan, so tapping a card
-	// there has always meant "open it", and every card was a live link. Losing
-	// the overlay without reproducing its breakpoint gate would have silently
-	// changed mobile from "tap opens the page" to "tap centres the card".
-	const JUMP_ON_CLICK_MQ = '(min-width: 1024px)';
-
-	function canJumpOnClick(): boolean {
-		if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return false;
-		return window.matchMedia(JUMP_ON_CLICK_MQ).matches;
-	}
+	//
+	// Pointer clicks always centre, on every viewport — an earlier version
+	// gated this to desktop only (min-width: 1024px), on the reasoning that
+	// mobile navigates the fan by swiping so tapping a card there had always
+	// meant "open it." That reasoning predates the modal: once only the
+	// CENTRE card opens anything (openModal, above) and every other card is
+	// reachable purely by re-centring, a mobile tap on a non-centre card
+	// navigating straight to its real page is a bug, not a feature — the
+	// owner's own report ("clicking a card that is not centred redirects to
+	// the actual page... it should never redirect; only in the modal do you
+	// have a link"). There is no longer a device split to make here.
 
 	// The item list is repeated so the loop has off-screen slots to recycle
 	// through (see REPEATS), so every service exists at more than one index.
@@ -1168,19 +1299,671 @@
 		return false;
 	}
 
+	// ---------------------------------------------------------------------
+	// Service modal (260810-mdl) — the centre card, and only the centre
+	// card, opens a near-fullscreen modal instead of navigating. Side cards
+	// keep click-to-jump exactly as above; the centre card is the one card
+	// the fan never rotates, which is what makes the rect maths below
+	// honest (a rotated card's bounding box is not its true rectangle — see
+	// getCardBandY's own comment for the same fact used elsewhere in this
+	// file).
+	// ---------------------------------------------------------------------
+
+	// One entry per SERVICE (not per slot/duplicate), in BRAND.services'
+	// own fixed order — this is what ServiceModal's Prev/Next index into,
+	// independent of where the fan has rotated any given copy to.
+	const MODAL_SERVICES = BRAND.services.map((s) => ({
+		slug: s.slug,
+		name: s.name,
+		intro: s.intro,
+		helpsWith: s.helpsWith,
+		icon: ICONS[s.slug] ?? null,
+		art: SERVICE_ART[s.slug]
+	}));
+
+	// Bound per pivot in the each-block below (bind:this={pivotEls[i]}) so
+	// the modal can find a service's live card element without a fresh
+	// click event — needed for Prev/Next inside the modal (no click ever
+	// happens on those cards) and for close (which must shrink back onto
+	// whichever service is active, not necessarily the one that was
+	// originally clicked).
+	let pivotEls: (HTMLElement | null)[] = [];
+
+	// Same "which copy is nearest centre" reasoning nearestCopyOf already
+	// uses for the dots — reused rather than assuming index === service
+	// index. True 1:1 at today's REPEATS=1, but this stays correct if the
+	// service count ever drops low enough to need duplicates again.
+	function cardElFor(serviceIndex: number): HTMLElement | null {
+		const i = nearestCopyOf(serviceIndex);
+		return pivotEls[i]?.querySelector('a.tcard') ?? null;
+	}
+
+	let modalIndex = $state(0); // which SERVICE (0..BASE_COUNT-1) the modal is showing
+	let modalDialogEl = $state<HTMLDialogElement | null>(null);
+	let modalContentEl = $state<HTMLElement | null>(null);
+	let modalBackdropEl = $state<HTMLElement | null>(null);
+	let modalAnimating = false; // guards re-entrancy — plain, not $state: nothing renders from it
+
+	// Swipe-to-navigate inside the modal (mobile only — see onModalContentPointerDown's
+	// own touch-only gate). A discrete swipe-and-release, not a live drag-follow like
+	// the fan's own gesture: the modal already has a JS-driven transition for stepping
+	// between services (modalStep, via modalNext/modalPrev below), so a swipe just
+	// decides direction and calls the same thing a button press would, rather than
+	// tracking the finger continuously.
+	const MODAL_SWIPE_THRESHOLD_PX = 50; // deliberately far above DRAG_SLOP_PX (4px) —
+	// this has to reject an ordinary vertical scroll-with-a-little-horizontal-wobble,
+	// not just a click.
+	let modalSwipeStartX = 0;
+	let modalSwipeStartY = 0;
+	// Set true only when a swipe actually crossed the threshold and fired a step —
+	// read once by onModalContentClickCapture to swallow the click a touch release
+	// synthesises on whatever sat under the finger (the same problem, and the same
+	// fix, onFanClickCapture's own dragMoved check addresses for the fan itself).
+	let modalSwiped = false;
+
+	const MODAL_CARD_FADE_MS = 150; // step 1 of the open animation, per the plan's contract
+	const MODAL_BOX_GROW_MS = 400; // step 2
+	const MODAL_CONTENT_FADE_MS = 250; // step 3 — matches --motion-base; not otherwise specified
+	// Per-element stagger inside step 3: content leads (0ms extra delay), then
+	// close/prev/next each start NAV_STAGGER_MS later than the one before —
+	// see fadeElements' own `staggerMs` param. Small enough that the whole
+	// group still reads as one movement, not four separate pops.
+	const NAV_STAGGER_MS = 60;
+	// WAAPI's `easing` option is parsed independently of this element's own
+	// cascade, so a var() reference does not resolve here the way it would
+	// in a stylesheet — MODAL_EASE_IN_OUT is a literal copy of app.css's own
+	// --ease-in-out token (keep them in sync if that token ever changes).
+	// Drives fadeElements (opacity): a first attempt used app.css's --ease-out
+	// instead, whose steep initial velocity was exactly why the card's own
+	// content used to read as "instantly vanishing" rather than fading —
+	// front-loading ~80% of the opacity change into the first third of
+	// MODAL_CARD_FADE_MS is technically a 150ms animation but not a visible
+	// one. --ease-in-out departs from rest instead, which is what actually
+	// reads as a fade.
+	const MODAL_EASE_IN_OUT = 'cubic-bezier(0.65, 0, 0.35, 1)';
+	// growBox's own curve (box grow/shrink) — went through two owner rounds:
+	// app.css's --ease-out first (a direct request for "a lot more ease-out"
+	// over the previous --ease-in-out), then this, a second, more specific
+	// request for still more, "move slowly at the end." --ease-out itself
+	// already reaches y=1 within the first ~65% of its duration (the tail is
+	// there but short) — this is easings.net's own "easeOutExpo"
+	// (cubic-bezier(0.19, 1, 0.22, 1)), a standard, well-known curve rather
+	// than a hand-tuned guess, whose smaller x2 control point (0.22 vs
+	// --ease-out's 0.3) stretches that same deceleration out over noticeably
+	// more of the animation's back half — the box keeps visibly slowing
+	// right up to the last frame instead of arriving early and sitting
+	// still. Kept as its own constant rather than overwriting app.css's
+	// --ease-out token itself: this curve is stronger than that token on
+	// purpose, specific to this one box-morph animation, not a change to the
+	// site's shared motion language.
+	const MODAL_BOX_EASE_OUT = 'cubic-bezier(0.19, 1, 0.22, 1)';
+
+	// Close's own box-shrink timing — deliberately separate from growBox/
+	// MODAL_BOX_GROW_MS above, and NOT a bezier curve. Two rounds of tuning a
+	// single cubic-bezier for "more ease-out" (--ease-in-out, then --ease-out,
+	// then easeOutExpo above) never read as a felt difference on this specific
+	// animation — a curve's shape is a small, easy-to-miss signal at 400ms.
+	// shrinkBox below instead samples a power curve into many small keyframes
+	// (see MODAL_BOX_SHRINK_EASE_POWER's own comment) — a single legible knob
+	// for "how drastic the slow-down is," without reasoning about what a
+	// bezier curve's control points do. An earlier version tried to fake the
+	// same shape with just 2 straight-line segments glued together at a fixed
+	// point, which is a real velocity discontinuity, not an ease — it read as
+	// a stutter rather than a slow-down.
+	const MODAL_BOX_SHRINK_MS = 417; // 500 / 1.2 — a direct "speed the close up 1.2x" owner
+	// request on top of the earlier 500ms (itself 400 * 1.25, "25% slower" —
+	// still net slower than growBox's own 400ms open-side duration).
+	// Close's own content/nav fade-out duration — separate from
+	// MODAL_CONTENT_FADE_MS (open's fade-in, and modalStep's prev/next
+	// transition) precisely so this 1.2x speed-up applies to the close path
+	// only, not open or in-modal navigation.
+	const MODAL_CLOSE_FADE_MS = 208; // 250 / 1.2
+	// Tunable ease-out for the close-shrink: progress(t) = 1 - (1-t)^POWER.
+	// One number — raise it for a more drastic slow-down at the tail, lower
+	// it for a gentler one. This replaced an earlier 2-segment piecewise-
+	// linear version (fixed % of distance in a fixed % of time) that glued
+	// two different constant speeds together at one exact keyframe — a real
+	// velocity discontinuity (a ~7x instantaneous speed change at the seam)
+	// that read as a stutter partway through the close, not an ease.
+	const MODAL_BOX_SHRINK_EASE_POWER = 3;
+
+	// Tracks the most recent fadeElements() animation per element, so a new
+	// call can cancel it before starting its own. Necessary, not defensive:
+	// a fade-OUT is deliberately left in its finished fill:'forwards' state
+	// (see below) rather than cancelled — so when modalStep's fade-IN later
+	// runs on the SAME element, cancelling the fade-IN once IT finishes
+	// only removes the top of that element's effect stack. The never-
+	// cancelled fade-OUT animation is still sitting underneath it, and once
+	// the fade-IN is gone, ITS finished opacity:0 effect reasserts itself —
+	// the element silently snaps back to invisible (and, since opacity < 1
+	// promotes a new stacking context, back to intercepting clicks meant
+	// for the modal's Prev/Next/Close buttons). Confirmed exactly this way:
+	// a second Prev/Next press inside the modal timed out on
+	// ".service-modal__content intercepts pointer events" only after a
+	// first successful fade cycle, never on the first press. Cancelling the
+	// previous animation up front, every call, means at most one WAAPI
+	// effect ever exists per element for this property.
+	const lastFade = new WeakMap<HTMLElement, Animation>();
+
+	// Fades one or more elements' opacity via the Web Animations API — never
+	// node.style.transition, for the reason src/lib/actions/reveal.ts
+	// documents (the shorthand replaces whatever the stylesheet declared;
+	// TreatmentCard's own hover-reveal transition on these exact elements
+	// would be silently clobbered). `instant` (prefers-reduced-motion) skips
+	// the animation and writes the end state directly.
+	//
+	// `staggerMs` (default 0) delays each element in `els` by its own index
+	// times this value — used to fade the modal's close/prev/next buttons in
+	// one after another instead of all at once (see the openModal call site).
+	// `fill: 'both'`, not just 'forwards': a delayed animation with only
+	// 'forwards' fill has NO effect during its own delay, so a staggered
+	// fade-IN element would sit at whatever opacity the cascade already gives
+	// it (1, since nothing else sets a resting opacity on these elements)
+	// for the length of its delay — visible immediately, stagger or not.
+	// 'both' also fills backwards, holding keyframe 0 (opacity 0) for the
+	// delay's duration, which is what actually makes the stagger visible.
+	//
+	// Fading OUT is left in its animated end state on purpose — nothing
+	// clears it, so the element stays hidden for as long as the modal is
+	// open with no separate inline-style bookkeeping required. Fading IN
+	// cancels its own animation once finished, handing the property back to
+	// the normal CSS cascade (same cleanup discipline reveal.ts uses) — and
+	// also clears any leftover inline opacity from an earlier INSTANT call
+	// (openModal's pre-hide, below): cancelling only removes the WAAPI
+	// effect, so without this an element instant-hidden via el.style.opacity
+	// = '0' would cancel back down to that stale inline value instead of the
+	// cascade's true resting opacity (1), snapping invisible again right
+	// after it had just finished fading in.
+	function fadeElements(
+		els: HTMLElement[],
+		visible: boolean,
+		instant: boolean,
+		duration: number,
+		staggerMs = 0
+	): Promise<void> {
+		if (els.length === 0) return Promise.resolve();
+		if (instant) {
+			els.forEach((el) => {
+				lastFade.get(el)?.cancel();
+				lastFade.delete(el);
+				el.style.opacity = visible ? '' : '0';
+			});
+			return Promise.resolve();
+		}
+		const anims = els.map((el, i) => {
+			lastFade.get(el)?.cancel();
+			const anim = el.animate([{ opacity: visible ? 0 : 1 }, { opacity: visible ? 1 : 0 }], {
+				duration,
+				delay: staggerMs * i,
+				easing: MODAL_EASE_IN_OUT,
+				fill: 'both'
+			});
+			lastFade.set(el, anim);
+			return anim;
+		});
+		return Promise.all(anims.map((a) => a.finished.catch(() => {}))).then(() => {
+			if (visible) {
+				anims.forEach((a) => a.cancel());
+				els.forEach((el) => {
+					lastFade.delete(el);
+					el.style.opacity = '';
+				});
+			}
+		});
+	}
+
+	function cardFaceEls(cardEl: HTMLElement): HTMLElement[] {
+		return Array.from(cardEl.querySelectorAll<HTMLElement>('.tcard__icon-wrap, .tcard__bottom'));
+	}
+
+	// Close/Prev/Next — queried live off modalDialogEl rather than given their
+	// own bindable refs, since ServiceModal already exposes the one ref
+	// (dialogRef) needed to find them. Order here is the stagger order (see
+	// NAV_STAGGER_MS): close leads, then prev, then next.
+	function modalNavEls(): HTMLElement[] {
+		if (!modalDialogEl) return [];
+		return Array.from(
+			modalDialogEl.querySelectorAll<HTMLElement>('.service-modal__close, .service-modal__nav')
+		);
+	}
+
+	// Morphs the dialog box between two live rects — used for both the open
+	// grow and the close shrink (same helper, `from`/`to` swapped), so
+	// there's exactly one geometry animation to reason about. top/left/
+	// width/height rather than a transform matrix: simpler to get right for
+	// a one-shot, rare (open/close only) animation than compounding scale
+	// and translate against a rotated-fan coordinate frame, and easy to
+	// verify directly with Playwright's own boundingBox() the way this
+	// file's carousel geometry already is (see the file-level tuning
+	// history above).
+	function growBox(dialog: HTMLDialogElement, from: DOMRect, to: DOMRect): Promise<void> {
+		const anim = dialog.animate(
+			[
+				{
+					top: `${from.top}px`,
+					left: `${from.left}px`,
+					width: `${from.width}px`,
+					height: `${from.height}px`
+				},
+				{
+					top: `${to.top}px`,
+					left: `${to.left}px`,
+					width: `${to.width}px`,
+					height: `${to.height}px`
+				}
+			],
+			{ duration: MODAL_BOX_GROW_MS, easing: MODAL_BOX_EASE_OUT, fill: 'forwards' }
+		);
+		// Hand control back to the stylesheet once settled — .service-modal's
+		// own CSS already expresses the near-fullscreen size responsively
+		// (vh/vw), which an inline WAAPI end-state would otherwise pin in
+		// place across a later viewport resize.
+		return anim.finished.then(
+			() => {
+				anim.cancel();
+			},
+			() => {}
+		);
+	}
+
+	// Close's own box-shrink — NOT growBox run with from/to swapped. Built
+	// from many small keyframes sampled off a genuine ease-out power curve
+	// (see MODAL_BOX_SHRINK_EASE_POWER's own comment) rather than a bezier,
+	// so the "how drastic" knob stays a single legible number — but unlike
+	// the old 2-segment piecewise-linear version, consecutive samples here
+	// are close enough in slope that there's no seam, so no stutter.
+	function shrinkBox(dialog: HTMLDialogElement, from: DOMRect, to: DOMRect): Promise<void> {
+		const SAMPLES = 24;
+		const at = (t: number, a: number, b: number) => a + (b - a) * t;
+		const keyframes = Array.from({ length: SAMPLES + 1 }, (_, i) => {
+			const t = i / SAMPLES;
+			const p = 1 - Math.pow(1 - t, MODAL_BOX_SHRINK_EASE_POWER);
+			return {
+				top: `${at(p, from.top, to.top)}px`,
+				left: `${at(p, from.left, to.left)}px`,
+				width: `${at(p, from.width, to.width)}px`,
+				height: `${at(p, from.height, to.height)}px`,
+				offset: t
+			};
+		});
+		const anim = dialog.animate(keyframes, {
+			duration: MODAL_BOX_SHRINK_MS,
+			easing: 'linear',
+			fill: 'forwards'
+		});
+		// dialog.close() runs immediately after this in closeModal, which
+		// removes the whole dialog from layout — cancelling still happens for
+		// hygiene/consistency with growBox, but nothing depends on it here.
+		return anim.finished.then(
+			() => {
+				anim.cancel();
+			},
+			() => {}
+		);
+	}
+
+	// Opacity fade for modalBackdropEl — a real element standing in for the
+	// dialog's native ::backdrop (see its own CSS comment for why: an
+	// earlier version animated ::backdrop directly via WAAPI's pseudoElement
+	// option, which worked in this project's own Chromium-based testing but
+	// was confirmed NOT to fade on a real device — pseudo-element animation
+	// support is real but inconsistent across browsers, whereas a plain
+	// el.animate() call on an actual element has no such gap).
+	//
+	// display is toggled here too, not left to CSS: 'none' keeps this out of
+	// the hit-testing tree while the modal is closed (mirrors the dialog's
+	// own native display:none-when-closed), and has to flip to 'block'
+	// BEFORE the fade-in starts or there's nothing to animate. Opacity 0 is
+	// this element's own CSS resting value (see its own comment) — no
+	// separate pre-hide step needed the way content/nav's fade-in does,
+	// since fading in from resting IS the first keyframe already.
+	function fadeBackdrop(el: HTMLElement, visible: boolean, duration: number): Promise<void> {
+		if (visible) el.style.display = 'block';
+		// A rapid open→close→open (or the reverse) can start a new fade before
+		// the previous one's .then() below has run, leaving an old, uncancelled
+		// animation on the composite stack. Per WAAPI's default 'replace'
+		// composite order, a still-active older effect can end up applying
+		// OVER this element's own inline opacity once THIS animation later
+		// cancels itself — cancel any prior one first, same as fadeElements'
+		// own lastFade bookkeeping above.
+		lastFade.get(el)?.cancel();
+		const anim = el.animate([{ opacity: visible ? 0 : 1 }, { opacity: visible ? 1 : 0 }], {
+			duration,
+			easing: MODAL_EASE_IN_OUT,
+			fill: visible ? 'both' : 'forwards'
+		});
+		lastFade.set(el, anim);
+		return anim.finished.then(
+			() => {
+				lastFade.delete(el);
+				if (visible) {
+					// Cancelling only removes the WAAPI effect — with no inline
+					// opacity of its own, the element falls back to the
+					// stylesheet's resting `opacity: 0`, snapping the backdrop
+					// invisible again right as the rest of the open sequence
+					// (box grow / content fade) is still finishing. Pin the
+					// inline value first so cancel() has something correct to
+					// fall back to.
+					el.style.opacity = '1';
+					anim.cancel();
+				} else {
+					el.style.display = 'none';
+				}
+			},
+			() => {}
+		);
+	}
+
+	// Native showModal() makes the rest of the page inert (unclickable,
+	// unfocusable) but does NOT reliably stop it scrolling underneath — the
+	// backdrop blocks pointer/click but a wheel/trackpad gesture or the
+	// keyboard can still move the page in some engines, since nothing about
+	// [inert] or ::backdrop is a scroll gate. Explicit overflow:hidden on the
+	// body is the standard fix; toggled here (not a CSS class keyed off the
+	// dialog's own [open] state) because it has to be paired with the JS
+	// sequence's own start/end, not the dialog's, so it locks BEFORE the open
+	// animation's first frame and unlocks only once the close animation's
+	// last one has actually landed.
+	function setBodyScrollLocked(locked: boolean): void {
+		// Guarded, not assumed: onDestroy below fires during SSR prerendering
+		// too (SvelteKit mounts and destroys each component once per request
+		// to render its HTML), and there is no `document` there.
+		if (typeof document === 'undefined') return;
+		document.body.style.overflow = locked ? 'hidden' : '';
+	}
+
+	// The modal's own CTA ("Naar de pagina") client-side-navigates away —
+	// SvelteKit tears this component down on that route change without ever
+	// running closeModal(), which would otherwise leave the body permanently
+	// unscrollable on the destination page.
+	onDestroy(() => setBodyScrollLocked(false));
+
+	async function openModal(cardEl: HTMLElement, serviceIndex: number): Promise<void> {
+		if (modalAnimating) return;
+		modalAnimating = true;
+		setBodyScrollLocked(true);
+		// The fan itself (idle drift in particular — see beginDrift) has no
+		// business still moving underneath a fullscreen modal the user is
+		// reading: wasted work while hidden, and closeModal's own shrink-back
+		// morph reads the origin card's LIVE rect at close time, so a fan
+		// that kept drifting the whole time the modal was open would morph
+		// back into a different on-screen spot than where it was opened
+		// from. Idle countdown resumes once the modal actually closes (see
+		// closeModal's own scheduleIdleDrift() call).
+		cancelMotion();
+
+		const reduced = prefersReducedMotion();
+		// Captured before the fade below touches opacity — hiding the card's
+		// inner content doesn't change the card's own outer box, but doing
+		// this first keeps the intent ("where did the user click") obvious.
+		const originRect = cardEl.getBoundingClientRect();
+
+		await fadeElements(cardFaceEls(cardEl), false, reduced, MODAL_CARD_FADE_MS);
+
+		modalIndex = serviceIndex;
+		await tick(); // let the newly-active panel's `hidden` attribute update land first
+
+		const dialog = modalDialogEl;
+		if (!dialog) {
+			// Pathological — the ref should always be bound by the time a
+			// click can happen — but restore the card's face rather than
+			// leave it stuck invisible if it somehow occurs.
+			await fadeElements(cardFaceEls(cardEl), true, true, 0);
+			setBodyScrollLocked(false);
+			modalAnimating = false;
+			return;
+		}
+
+		if (!reduced) {
+			// Hide content and nav buttons BEFORE the dialog is shown at all —
+			// otherwise their resting opacity (1; nothing else in the
+			// cascade hides them) paints for real on showModal()'s first
+			// frame, at the dialog's full stylesheet size, before growBox
+			// below has a chance to even start. The box is supposed to grow
+			// out of the card completely blank; without this instant
+			// pre-hide it instead flashes the full panel then snaps back
+			// down to card size as growBox's first keyframe takes over.
+			fadeElements([...(modalContentEl ? [modalContentEl] : []), ...modalNavEls()], false, true, 0);
+		}
+
+		dialog.showModal();
+
+		if (reduced) {
+			// No WAAPI call at all under reduced motion (see fadeElements'
+			// own instant path for the same reasoning) — just the end state,
+			// directly, matching the dialog's own instant showModal() above.
+			if (modalBackdropEl) {
+				modalBackdropEl.style.display = 'block';
+				modalBackdropEl.style.opacity = '1';
+			}
+			modalAnimating = false;
+			return;
+		}
+
+		// Started here, right alongside showModal(), not inside the
+		// Promise.all below — the backdrop's own resting opacity is already 0
+		// (see its CSS comment), so there's no flash to guard against the way
+		// content/nav's instant pre-hide above needs to; this is just so the
+		// backdrop fades in over the same window the box is growing in,
+		// rather than starting late.
+		const backdropIn = modalBackdropEl
+			? fadeBackdrop(modalBackdropEl, true, MODAL_BOX_GROW_MS)
+			: Promise.resolve();
+
+		// One rAF so the dialog's own stylesheet-driven near-fullscreen size
+		// is what gets measured below — showModal() alone doesn't yet reflect
+		// post-layout geometry synchronously in every engine.
+		await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+		const targetRect = dialog.getBoundingClientRect();
+
+		await Promise.all([growBox(dialog, originRect, targetRect), backdropIn]);
+		// Content leads, then close/prev/next fade in one after another
+		// (NAV_STAGGER_MS apart) — same fade, same easing, just staggered,
+		// so the buttons read as part of the same reveal instead of popping
+		// in ahead of it.
+		await fadeElements(
+			[...(modalContentEl ? [modalContentEl] : []), ...modalNavEls()],
+			true,
+			false,
+			MODAL_CONTENT_FADE_MS,
+			NAV_STAGGER_MS
+		);
+		modalAnimating = false;
+	}
+
+	async function closeModal(): Promise<void> {
+		if (modalAnimating) return;
+		modalAnimating = true;
+
+		const dialog = modalDialogEl;
+		const reduced = prefersReducedMotion();
+		const cardEl = cardElFor(modalIndex);
+
+		if (!dialog) {
+			modalAnimating = false;
+			return;
+		}
+
+		if (reduced) {
+			dialog.close();
+			if (modalBackdropEl) modalBackdropEl.style.display = 'none';
+			if (cardEl) await fadeElements(cardFaceEls(cardEl), true, true, 0);
+			setBodyScrollLocked(false);
+			modalAnimating = false;
+			scheduleIdleDrift();
+			return;
+		}
+
+		const fromRect = dialog.getBoundingClientRect();
+		// No sensible shrink target if the card has somehow vanished from the
+		// DOM mid-session — shrink toward its own current box instead of
+		// throwing, which is visually a plain fade-out rather than a morph.
+		const toRect = cardEl ? cardEl.getBoundingClientRect() : fromRect;
+
+		// Content and nav buttons fade out TOGETHER (no stagger — owner
+		// request, replacing an earlier version that staggered the nav
+		// buttons after content and let their tail run unawaited alongside
+		// the shrink) — box-shrink starts immediately after, with no added
+		// delay, since content shrinking along with the box crops it
+		// mid-fade.
+		await fadeElements(
+			[...(modalContentEl ? [modalContentEl] : []), ...modalNavEls()],
+			false,
+			false,
+			MODAL_CLOSE_FADE_MS
+		);
+		await Promise.all([
+			shrinkBox(dialog, fromRect, toRect),
+			modalBackdropEl
+				? fadeBackdrop(modalBackdropEl, false, MODAL_BOX_SHRINK_MS)
+				: Promise.resolve()
+		]);
+
+		dialog.close();
+		if (cardEl) await fadeElements(cardFaceEls(cardEl), true, false, MODAL_CARD_FADE_MS);
+		setBodyScrollLocked(false);
+		modalAnimating = false;
+		// Idle countdown paused for the whole time the modal was open (see
+		// openModal's own cancelMotion() call) — resumes fresh from here.
+		scheduleIdleDrift();
+	}
+
+	// Switches which service the modal shows AND drives the carousel
+	// underneath to match (goTo — the same JS spring latch Prev/Next/dots
+	// already use, BUTTON_SPRING_OMEGA and all; no new constant), so the
+	// fan is already centred correctly by the time the modal closes,
+	// whether or not the user ever presses the fan's own Prev/Next.
+	async function modalStep(delta: number): Promise<void> {
+		// Same guard openModal/closeModal use, and set for the same reason:
+		// without it, a Close pressed mid-transition could run its own fade
+		// concurrently against this one, both targeting modalContentEl.
+		if (modalAnimating) return;
+		modalAnimating = true;
+
+		const reduced = prefersReducedMotion();
+		const nextIndex = (modalIndex + delta + BASE_COUNT) % BASE_COUNT;
+		const content = modalContentEl ? [modalContentEl] : [];
+
+		if (reduced) {
+			modalIndex = nextIndex;
+			goTo(nearestCopyOf(nextIndex));
+			modalAnimating = false;
+			return;
+		}
+
+		await fadeElements(content, false, false, MODAL_CONTENT_FADE_MS);
+		modalIndex = nextIndex;
+		goTo(nearestCopyOf(nextIndex));
+		await tick();
+		await fadeElements(content, true, false, MODAL_CONTENT_FADE_MS);
+		modalAnimating = false;
+	}
+
+	function modalNext(): void {
+		modalStep(1);
+	}
+	function modalPrev(): void {
+		modalStep(-1);
+	}
+
+	// Touch-only (mouse/trackpad users already have the Prev/Next buttons, and
+	// a mouse-drag gesture here would fight text selection inside the
+	// description/helps list, which was never a problem worth trading away for
+	// a gesture nobody asked for on desktop). window-level pointerup, not a
+	// listener on the content element itself, for the same reason the fan's
+	// own drag uses window listeners: a real swipe can easily end with the
+	// finger outside the element it started on.
+	function onModalContentPointerDown(e: PointerEvent): void {
+		if (e.pointerType !== 'touch') return;
+		modalSwipeStartX = e.clientX;
+		modalSwipeStartY = e.clientY;
+		window.addEventListener('pointerup', onModalContentPointerUp);
+		window.addEventListener('pointercancel', onModalContentPointerCancel);
+	}
+
+	function endModalSwipeTracking(): void {
+		window.removeEventListener('pointerup', onModalContentPointerUp);
+		window.removeEventListener('pointercancel', onModalContentPointerCancel);
+	}
+
+	// Direction only, decided once on release — not a live drag-follow. dx > 0
+	// (finger moved right) means the PREVIOUS service; dx < 0 means NEXT,
+	// matching the usual "swipe left to advance" convention image galleries
+	// and card stacks already use.
+	function onModalContentPointerUp(e: PointerEvent): void {
+		endModalSwipeTracking();
+		const dx = e.clientX - modalSwipeStartX;
+		const dy = e.clientY - modalSwipeStartY;
+		// Predominantly horizontal AND past the threshold — an ordinary
+		// vertical scroll (reading a long description) has to pass through
+		// here untouched, same as it already does for the fan's own drag.
+		if (Math.abs(dx) <= Math.abs(dy) || Math.abs(dx) < MODAL_SWIPE_THRESHOLD_PX) return;
+		modalSwiped = true;
+		if (dx < 0) modalNext();
+		else modalPrev();
+	}
+
+	function onModalContentPointerCancel(): void {
+		endModalSwipeTracking();
+	}
+
+	// A touch release synthesises a click on whatever sat under the finger —
+	// without this, a swipe ending over the CTA link or a helps-list item
+	// would also fire that element's own click right after navigating.
+	// Capture phase, mirroring onFanClickCapture's identical reasoning for
+	// the fan's own drag-then-click problem.
+	function onModalContentClickCapture(e: MouseEvent): void {
+		if (modalSwiped) {
+			e.preventDefault();
+			modalSwiped = false;
+		}
+	}
+
+	// Esc fires 'cancel' and would close the native dialog INSTANTLY —
+	// prevented so the animated close above runs instead; the dialog only
+	// actually closes once that sequence calls dialog.close() itself.
+	function onModalCancel(e: Event): void {
+		e.preventDefault();
+		closeModal();
+	}
+
+	// A click that lands on the dialog element itself, not any of its
+	// children, is a backdrop click — the dialog's own box IS the click
+	// target in that case, since nothing inside it covers that point.
+	function onModalBackdropClick(e: MouseEvent): void {
+		if (e.target === modalDialogEl) closeModal();
+	}
+
 	function onCardClick(e: MouseEvent, i: number): void {
-		if (positions[i] === 0) return; // centre card: follow its own link
+		if (positions[i] === 0) {
+			// onFanClickCapture (capture phase, runs first) already calls
+			// preventDefault() when a drag ended on this link — checking
+			// defaultPrevented here reuses that exact signal instead of
+			// re-testing dragMoved a second time, per the plan's own
+			// instruction not to add a second guard. When it's already
+			// true, the browser's default has been suppressed and there's
+			// nothing left to do.
+			if (e.defaultPrevented) return;
+			e.preventDefault();
+			openModal(e.currentTarget as HTMLElement, i % BASE_COUNT);
+			return;
+		}
 		if (e.detail === 0) return; // keyboard: navigate directly
-		if (!canJumpOnClick()) return; // mobile: tap opens the page, as before
 		e.preventDefault();
 		jumpTo(i);
 	}
 </script>
 
 <section class="treatments" aria-label="Behandelingen">
-	<header class="treatments__header">
-		<p class="treatments__eyebrow" use:reveal={{ delay: 0 }}>Diensten</p>
-		<h2 class="treatments__heading" use:reveal={{ delay: 120 }}>
+	<!-- The header is the section's one reveal. The fan below used to fade as a unit, with
+	     a measured --reveal-inset-* correction for a box far taller than what it draws; at
+	     608px on desktop it was still the tallest fading thing on the page, lit for a whole
+	     screen after its top had gone. Since the 2026-09-15 audit nothing over a third of
+	     the viewport carries a reveal, so the fan and its controls simply are there — the
+	     cards have their own hover motion, and the modal animates their faces. -->
+	<header class="treatments__header" use:reveal>
+		<p class="treatments__eyebrow">Diensten</p>
+		<h2 class="treatments__heading">
 			Elke behandeling is uniek, met een centraal doel: jouw herstel.
 		</h2>
 	</header>
@@ -1205,13 +1988,15 @@
 					class:treatments__pivot--jump={noTransitionKeys.has(item.key)}
 					class:treatments__pivot--motion={inGesture}
 					style="--pos: {positions[i]! + offset}"
+					bind:this={pivotEls[i]}
 				>
 					<TreatmentCard
 						label={item.label}
 						icon={item.icon}
+						art={item.art}
 						buttonLabel={item.buttonLabel}
 						buttonHref={item.buttonHref}
-						description={item.description}
+						description={item.teaser}
 						magnetic={isVisibleSlot(positions[i]!)}
 						duplicate={item.duplicate}
 						onCardClick={(e) => onCardClick(e, i)}
@@ -1222,7 +2007,36 @@
 		</div>
 
 		<div class="treatments__controls">
-			<button type="button" class="treatments__nav" onclick={prev} aria-label="Vorige">Prev</button>
+			<button
+				type="button"
+				class="treatments__nav treatments__nav--prev arrow-swap roll-host"
+				data-tooltip="Vorige"
+				onclick={prev}
+				aria-label="Vorige"
+			>
+				<span class="arrow-swap__glyph arrow-swap__glyph--out">
+					<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+						<path
+							d="M11 8H3M3 8L6.5 4.5M3 8L6.5 11.5"
+							stroke="currentColor"
+							stroke-width="1.5"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
+				</span>
+				<span class="arrow-swap__glyph arrow-swap__glyph--in">
+					<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+						<path
+							d="M11 8H3M3 8L6.5 4.5M3 8L6.5 11.5"
+							stroke="currentColor"
+							stroke-width="1.5"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
+				</span>
+			</button>
 
 			<!-- One dot per SERVICE, not per slot: the item list is repeated so the
 			     loop has hidden slots to recycle through (see REPEATS), and surfacing
@@ -1244,11 +2058,64 @@
 				{/each}
 			</ul>
 
-			<button type="button" class="treatments__nav" onclick={next} aria-label="Volgende"
-				>Next</button
+			<button
+				type="button"
+				class="treatments__nav treatments__nav--next arrow-swap roll-host"
+				data-tooltip="Volgende"
+				onclick={next}
+				aria-label="Volgende"
 			>
+				<span class="arrow-swap__glyph arrow-swap__glyph--out">
+					<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+						<path
+							d="M5 8H13M13 8L9.5 4.5M13 8L9.5 11.5"
+							stroke="currentColor"
+							stroke-width="1.5"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
+				</span>
+				<span class="arrow-swap__glyph arrow-swap__glyph--in">
+					<svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+						<path
+							d="M5 8H13M13 8L9.5 4.5M13 8L9.5 11.5"
+							stroke="currentColor"
+							stroke-width="1.5"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
+				</span>
+			</button>
 		</div>
 	</div>
+
+	<!-- The section's closing block: the sentence under the carousel and the
+	     disclaimer. Mounted here since 2026-09-16 rather than as a section of its
+	     own, so it sits on this band with 112px above it and the section's 64px
+	     below — more air above than below, which was the owner's ask. -->
+	<BehandelingenNote />
+
+	<!-- Rendered once, always — every service's full body is prerendered
+	     inside it (see ServiceModal.svelte), inactive ones carrying `hidden`.
+	     Nothing here is built by JS at open time; showModal()/close() only
+	     ever toggle visibility of what's already in the initial HTML. -->
+	<ServiceModal
+		services={MODAL_SERVICES}
+		activeIndex={modalIndex}
+		disclaimer={BRAND.disclaimer}
+		bind:dialogRef={modalDialogEl}
+		bind:contentRef={modalContentEl}
+		bind:backdropRef={modalBackdropEl}
+		onPrev={modalPrev}
+		onNext={modalNext}
+		onClose={closeModal}
+		onCancel={onModalCancel}
+		onBackdropClick={onModalBackdropClick}
+		onContentPointerDown={onModalContentPointerDown}
+		onContentClickCapture={onModalContentClickCapture}
+	/>
 </section>
 
 <style>
@@ -1257,7 +2124,12 @@
 		min-height: 70vh; /* 30% less than desktop's 100vh on mobile */
 		display: flex;
 		flex-direction: column;
-		padding: var(--space-16) 0 var(--space-8);
+		/* Top is the shared section pad; bottom is a flat 64px. The note block
+		   (BehandelingenNote) closes this section now, and the owner asked for more
+		   air above it than below: 112px from the pagination to its heading, 64px
+		   from its disclaimer to the section's end. On a phone --section-pad is 64px
+		   anyway, so only desktop changes. */
+		padding: var(--section-pad) 0 var(--space-16);
 	}
 
 	.treatments__header {
@@ -1309,8 +2181,19 @@
 		   -2 to 2, verified empirically (rendered bounding boxes measured
 		   directly, not hand-computed — a rotated rectangle's bounding box
 		   doesn't move the way simple trig on one reference point predicts,
-		   see the commit message). */
-		height: 20.76rem;
+		   see the commit message).
+
+		   2026-09-17: 20.76rem + 2rem. On a tablet (768-1023, this geometry)
+		   slot ±3 is on screen and its bottom corner was 50px below the box,
+		   slot 2.5's 4px; the box's bottom edge cut them in plain view. Two
+		   rem lower, slot 2.5 clears it by 20px and slot ±3's cut moves to
+		   374-424px from the centre line, behind the solid part of the edge
+		   fade (see the fade block). --pivot-baseline and the controls' tuck
+		   move by the same 2rem, so the cards, the controls and the section's
+		   height are exactly where they were; only the clip edge is lower.
+		   Not more than 2rem: the box overhangs the controls, and the note
+		   under the carousel starts 31px below its new bottom edge. */
+		height: 22.76rem;
 		overflow: hidden;
 		/* Horizontal gestures drive next()/prev() (see onPointerDown/Up in the
 		   script) — pan-y keeps vertical page scroll working through a touch
@@ -1321,6 +2204,45 @@
 		   DOWN the tree, and .treatments__pivot (the card's own parent) needs
 		   to read this too. A child can't hand a variable up to its parent. */
 		--card-width: 6.27rem;
+		/* Declared here rather than on .treatments__pivot so BOTH the pivots
+		   (which inherit it) and this element's own edge-fade pseudo-elements
+		   can read it — see the ultra-wide block for why the fade needs the
+		   card's rotation angle. */
+		--tilt-step: 14deg;
+		/* Geometry for the edge fade, all measured off the live DOM — see the
+		   fade block at the end of this style sheet for the derivation. The
+		   four numbers are retuned per breakpoint (the 1024 and 1536 blocks
+		   below override them), and --fade-start is composed here, once, from
+		   whichever set is live. Declared in the base rule rather than inside
+		   a media query: the dead-CSS-var guard resolves every var() against
+		   a real element at its own viewport width, so a custom property both
+		   declared AND consumed inside the same media query reads as dead
+		   whenever that query is inactive.
+
+		   These are the phone/tablet numbers (this geometry: 14deg, 532px,
+		   100px cards). 75px in from the screen edge, a 50px ramp and an 8deg
+		   lean: the card the screen cuts on a phone is slot ±1, and the screen
+		   crosses its top edge ~125px above the strip's rotation origin (the
+		   box's mid-height), where the lean puts the inner edge 18px further
+		   out, plus 51px for the ramp along the lean, is 69; 75 leaves 6. The
+		   lean is 8deg and not the card's own 14deg because the lean is paid
+		   for out of the same budget: at 14deg the top corner took 31px, and
+		   with a 60px ramp the whole visible width of slot ±1 at 390 was
+		   inside the ramp — a gradient where a card should be. At 8deg the
+		   card keeps ~24px of solid before the ramp, the boundary is still
+		   within 6deg of its edge, and at 320px wide the inner edge is 85px
+		   from the centre, 81 at the centre card's bottom corners (which are
+		   at 50, and rounded). The cap, 340px, is what a tablet needs: from
+		   ~830px wide the screen rule would let the inner edge past slot ±3's
+		   cut on the box's bottom edge (374px from the centre at that row,
+		   see the box's own height comment), and the solid boundary has to
+		   be inside that at the bottom row, where the lean pulls the edge
+		   26px in: 340 - 26 + 51 = 365. */
+		--fade-cap: 340px; /* furthest the fade's inner edge ever sits from the centre line */
+		--fade-edge: 75px; /* how far inside the viewport edge the inner edge sits before the cap */
+		--fade-ramp: 50px; /* transparent -> solid, measured along the fade's own axis */
+		--fade-lean: 8deg; /* the strip's tilt, near-parallel to the card it sits against */
+		--fade-start: min(var(--fade-cap), calc(50vw - var(--fade-edge)));
 		/* A drag over the fan was selecting the card title/number text
 		   underneath the pointer instead of dragging the carousel — the
 		   fan has no other user-facing text to lose, and selection isn't
@@ -1357,6 +2279,26 @@
 		cursor: grabbing;
 	}
 
+	/* Registers --pos as a typed, animatable custom property (Houdini
+	   @property — Chrome/Edge 85+, Safari 16.4+, Firefox 128+; older
+	   browsers just ignore this rule and fall back to the untyped
+	   behaviour below, so this is pure progressive enhancement, never a
+	   regression). Without it, the browser can't hand off transform:
+	   rotate(calc(var(--pos) * ...)) to the compositor — every one of
+	   onWindowPointerMove's per-frame writes below forces a full main-
+	   thread style recalculation instead, which desktop CPUs shrug off
+	   but a weaker mobile CPU can't keep up with, visibly: 6x CPU-throttled
+	   Playwright profiling during a simulated swipe measured 69% of frames
+	   over 20ms (avg 39ms/frame, ~25fps) unregistered, dropping to 11%
+	   (avg 20ms/frame, ~50fps) with this plus will-change below — not a
+	   stutter, genuinely fewer frames rendered. Owner report: "choppy...
+	   looks like low FPS" on mobile specifically, never on desktop. */
+	@property --pos {
+		syntax: '<number>';
+		inherits: false;
+		initial-value: 0;
+	}
+
 	/* Rotates around ONE shared point far below the row (a real fan hub) —
 	   this is what makes the PATH curve, not just the card's own tilt.
 	   translateX alone (independent per card) gave the right angle but a
@@ -1366,13 +2308,23 @@
 	   overlap and pop bugs. Bottom-anchored, not top: see the same
 	   reasoning as the very first arc version (further up in this file's
 	   history) — anchoring from the top made an unrotated, full-size card
-	   hang lower than its smaller, more-rotated neighbors. */
+	   hang lower than its smaller, more-rotated neighbors. will-change:
+	   transform (see @property --pos's own comment just above for the
+	   measured reasoning) hints the compositor to keep this on its own
+	   layer rather than recreating one every frame. */
 	.treatments__pivot {
 		position: absolute;
 		left: 50%;
-		bottom: var(--pivot-baseline, 7.54rem);
+		/* 7.54rem + the 2rem the box grew on 2026-09-17 (see the fan's height),
+		   so the cards stay where they were. */
+		bottom: var(--pivot-baseline, 9.54rem);
+		will-change: transform;
 		--pivot-distance: 532px; /* smaller = more overlap risk, bigger = flatter curve — verified empirically, not by trig alone */
-		--tilt-step: 14deg;
+		/* --tilt-step is declared on .treatments__fan, not here, and
+		   inherits down: the edge fade below is a pseudo-element of the FAN
+		   and has to derive its angle from the same value the cards rotate
+		   by, and a child cannot hand a variable back up to its parent
+		   (same reason --card-width lives up there). */
 		transform-origin: 50% calc(100% + var(--pivot-distance));
 		transform: translateX(-50%) rotate(calc(var(--pos) * var(--tilt-step)));
 		transition: transform 600ms var(--ease-in-out);
@@ -1423,42 +2375,75 @@
 		   same tight ~2rem look without touching the safety margin. Setting
 		   this to exactly -1x --pivot-baseline cancels the buffer out
 		   entirely, leaving just the flex gap (--space-8, 2rem) above
-		   .treatments__controls as the visual distance to the card. */
-		margin-top: -7.54rem;
+		   .treatments__controls as the visual distance to the card. 9.54rem
+		   since 2026-09-17, with the baseline (see .treatments__pivot). */
+		margin-top: -9.54rem;
 		/* .treatments__fan is position:relative, which — regardless of DOM
 		   order — paints after (on top of) non-positioned siblings. Without
 		   this, the overlap from the negative margin above makes the fan's
 		   own (invisible but still hit-testable) box swallow clicks meant for
-		   Prev/Next/the dots. */
+		   Prev/Next/the dots.
+
+		   3, not 1, since the edge fade exists on every width (2026-09-17):
+		   the fade strips are the fan's own pseudo-elements at z-index 2, in
+		   this same stacking context, and on a phone the fade's inner edge
+		   sits ~70px from the centre line at this row — the outer dots, 84px
+		   out, would be painted over in sand. The strips are pointer-events:
+		   none, so this is paint order only; the hit-testing reason above is
+		   unchanged. */
 		position: relative;
-		z-index: 1;
+		z-index: 3;
 	}
 
+	/* The same circle the CTA buttons carry, pointing sideways instead of up:
+	   40px, a 2px ring in --brand-border, transparent until hover and filled
+	   after it. The two arrows and their clipping come from .arrow-swap in
+	   app.css; this only sets the axis each one travels along. */
 	.treatments__nav {
 		/* Mobile/tablet navigate by swiping the carousel itself (see
 		   onPointerDown/Up) — Prev/Next are desktop-only, restored below. */
 		display: none;
-		border: none;
-		border-radius: var(--radius-full);
-		background: var(--color-fg-forest);
-		color: var(--color-bg-sand);
-		font-family: var(--font-body);
-		font-size: var(--fs-cta);
-		font-weight: var(--font-weight-medium);
-		padding: var(--space-2) var(--space-5);
+		width: var(--space-10);
+		height: var(--space-10);
+		padding: 0;
+		border: 2px solid var(--brand-border);
+		border-radius: 50%;
+		background: transparent;
+		color: var(--brand-border);
 		cursor: pointer;
-		transition: background-color var(--motion-fast);
+		--swap-y: 0px;
+		transition:
+			background-color var(--motion-arrow) var(--ease-arrow),
+			color var(--motion-arrow) var(--ease-arrow);
 	}
 
-	.treatments__nav:hover {
-		background: var(--brand-muted);
+	.treatments__nav--prev {
+		--swap-x: calc(-1 * var(--arrow-roll));
+	}
+
+	.treatments__nav--next {
+		--swap-x: var(--arrow-roll);
+	}
+
+	.treatments__nav:focus-visible {
+		background: var(--brand-border);
+		color: var(--color-bg-sand);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.treatments__nav:hover {
+			background: var(--brand-border);
+			color: var(--color-bg-sand);
+		}
 	}
 
 	.treatments__dots {
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: var(--space-2);
+		/* No gap: each dot's target is already 24px wide, so the targets sit edge to
+		   edge and their centres land exactly 24px apart. */
+		gap: 0;
 		list-style: none;
 		margin: 0;
 		padding: 0;
@@ -1467,23 +2452,34 @@
 	.treatments__dot {
 		display: grid;
 		place-items: center;
-		width: 0.7rem;
-		height: 0.7rem;
 	}
 
+	/* The button is the 24x24 the WCAG 2.2 target-size minimum asks for; the dot
+	   you see is drawn by ::before and stays 6.4px. Sizing the button to the dot
+	   is what made these seven a 6.4px target. */
 	.treatments__dot-visual {
+		display: grid;
+		place-items: center;
+		width: 1.5rem;
+		height: 1.5rem;
+		border: none;
+		background: transparent;
+		padding: 0;
+		appearance: none;
+		cursor: pointer;
+	}
+
+	.treatments__dot-visual::before {
+		content: '';
 		width: 0.4rem;
 		height: 0.4rem;
 		border-radius: var(--radius-full);
 		border: 1px solid var(--color-fg-forest);
 		background: transparent;
-		padding: 0;
-		appearance: none;
-		cursor: pointer;
 		transition: background-color var(--motion-fast);
 	}
 
-	.treatments__dot-visual--active {
+	.treatments__dot-visual--active::before {
 		background: var(--color-fg-forest);
 	}
 
@@ -1508,18 +2504,14 @@
 	@media (min-width: 1024px) {
 		.treatments {
 			min-height: 100vh;
-			/* Real breathing room below the carousel, an older owner request
-			   that was never actioned (see .treatments__controls' own comment:
-			   past rounds grew .treatments__fan's height instead, which only
-			   adds invisible internal buffer that this element's negative
-			   margin-top pulls straight back over — the visible gap below the
-			   nav never actually changed). The base rule's var(--space-8) (2rem)
-			   bottom padding is the ENTIRE visible gap between the nav and the
-			   next section on desktop; doubled here to match the top padding
-			   (var(--space-16)) for a section that reads as symmetrically
-			   spaced rather than bottom-heavy. Desktop only, per the owner's
-			   ask — mobile's tighter 70vh section keeps its existing padding. */
-			padding-bottom: var(--space-16);
+			/* No padding override any more. This carried a doubled bottom padding
+			   because the base rule ended in var(--space-8) (2rem) and that 2rem was
+			   the entire visible gap below the carousel nav — growing
+			   .treatments__fan instead never worked, since this element's negative
+			   margin-top pulls that buffer straight back over. The base rule is now
+			   var(--section-pad) on both sides, so the symmetry this was reaching for
+			   comes for free, and leaving the override in would make the bottom
+			   smaller than the top again. */
 		}
 
 		.treatments__header {
@@ -1560,6 +2552,26 @@
 			   not a length, so it doesn't scale with card size. */
 			height: 49.5rem;
 			--card-width: 15rem;
+			/* The edge fade on this geometry (14deg, 1304px, 240px cards; see
+			   the fade block). 160px in from the screen edge with a 100px
+			   ramp: at 1024 the card the screen cuts is slot ±1, by 14px at
+			   its top corner, which sits 203px above the strip's origin — a
+			   14deg lean puts the inner edge 51px further out there, plus
+			   103px for the ramp along the lean, is 154. From 1100 up the
+			   cut card is slot ±2, whose top corner is only 28px above the
+			   origin, so the same 160 leaves it more room. The cap never
+			   binds in this branch (50vw - 160 is at most 607px at 1535, and
+			   slot ±3's innermost point is 783px out); 660 is a guard for the
+			   box's bottom edge, which slot 2.5 crosses 822px from the
+			   centre: 660 + 103 keeps the solid boundary inside that if the
+			   branch is ever widened. The lean is the card's own 14deg — the
+			   base rule's 8deg is a phone compromise (see there) that this
+			   geometry, with ~250px between the cut card's inner edge and
+			   the screen, does not need. */
+			--fade-cap: 660px;
+			--fade-edge: 160px;
+			--fade-ramp: 100px;
+			--fade-lean: 14deg;
 		}
 
 		.treatments__pivot {
@@ -1598,7 +2610,208 @@
 		}
 
 		.treatments__nav {
-			display: inline-block;
+			display: inline-flex;
 		}
+	}
+
+	/* Ultra-wide: flatten the arc so the outermost cards stop being cut off.
+
+	   .treatments__fan is full-bleed (100vw), so the wider the screen the
+	   more of the arc it reveals. When this was tuned there were only ever
+	   7 cards (MIN_ITEMS = 2 * VISIBLE_SLOT_MAX + 3), so slots ran exactly
+	   -3..3 and ±3 was the outermost pair — nothing deeper could appear,
+	   which is why one flattened setting covers every width from here up
+	   rather than needing a ladder of breakpoints. Since 2026-09-17 the
+	   ring is fourteen slots (see RING_LAPS in the script) and ±4 to ±6
+	   exist as cards, but they change nothing here: on this geometry slot
+	   ±4 is 1488px from the centre line and 183px below the box's bottom
+	   edge, each slot further out is deeper still, and the edge fade's
+	   cap (1040px, see the fade block) has them behind solid sand at any
+	   width — so one setting still covers every width.
+
+	   Below ~1560px the ±3 pair sits fully past the viewport edge, so its
+	   rotation never mattered. From ~1600px it enters the viewport still
+	   carrying the steep 14deg-per-slot tilt, which drops it 127px below
+	   .treatments__fan's clip box — measured, identical at 1600/1920/2560/
+	   3440px, since the drop is a function of rotation alone and not of
+	   viewport width. This breakpoint fires at 1536px, just before that
+	   pair can appear at all, so the cut is never visible at any width.
+
+	   Radius and angle move together on purpose. Horizontal spacing is
+	   R_eff * sin(--tilt-step), where R_eff is --pivot-distance plus half
+	   the card's height (the pivot sits below the card's BOTTOM edge, so
+	   the radius to its centre is the longer one). Raising the radius while
+	   lowering the angle by the matching amount therefore holds the cards
+	   where they already were left-to-right and changes only how far they
+	   dive: at 6.5deg on this radius the measured spacing stayed 362px
+	   (unchanged from the 1024px breakpoint) while slot ±3 gained 76px of
+	   bottom clearance instead of overflowing by 127px — the same clearance
+	   slot ±2, the outermost card at 1440px, has, so the widest layout kept
+	   the safety margin the design was signed off with. Verified by
+	   bounding-box readout at 1600, 1920, 2560 and 3440px; as everywhere
+	   else in this file the numbers come from measuring rendered boxes,
+	   never from trig on one reference point (see the file-level comment).
+	   --pivot-baseline, the fan's height and .treatments__controls' margin
+	   all stay untouched: the centre card never moves, and every other card
+	   only moves UP.
+
+	   2026-09-16: 6.5deg -> 8deg, a quarter more per slot, at the owner's
+	   "a little more" on the curve; the radius is deliberately left alone,
+	   which is the one way to change the curve by one number. On a fixed
+	   radius the angle also sets the spread, so the outer cards moved out
+	   with it — measured at 1600/1920/2560 after the change, identical at
+	   all three: slot ±1's centre 362 -> 445px from the centre line, slot
+	   ±2 719 -> 881px, slot ±3 1067 -> 1300px; slot ±2's bottom clearance
+	   184 -> 139px and slot ±3's 76 -> -20px. If the owner wanted the dive
+	   without the spread, the radius is the other number: ~2420px at this
+	   angle holds the 362px spacing.
+
+	   2026-09-17: the box grows 3rem (48px) with the angle, so that -20px
+	   is +28px and slot ±3 sits inside the box again. --pivot-baseline and
+	   the controls' tuck (below) move by the same 3rem, so the cards, the
+	   controls and the section's height are exactly where they were; only
+	   the box's bottom edge is lower, and the edge fade — a pseudo-element
+	   of this box, clipped with it — reaches down with it. The transient
+	   positions a card passes through on its way to being recycled (slot
+	   ±3.5 at 1302..1698px, bottom 119px under the old box edge; slot ±4 at
+	   1488..1899px, 231px under) still cross the bottom edge, and that is
+	   left alone on purpose: they are entirely behind the fade's solid
+	   part at every width (pixel-diffed, see the fade block), so the box
+	   edge never shows on them, and a box deep enough for slot ±4 would
+	   push the controls' tuck past what the negative margin can reach. */
+	@media (min-width: 1536px) {
+		.treatments__fan {
+			--tilt-step: 8deg;
+			height: 52.5rem;
+			/* The fade numbers this geometry was measured for (see the fade
+			   block): the same values as before 2026-09-17, now stated here
+			   because the narrower branches carry their own. */
+			--fade-cap: 1040px;
+			--fade-edge: 180px;
+			--fade-ramp: 100px;
+			--fade-lean: 16deg; /* 2 * --tilt-step: parallel to slot ±2, the outermost card on show */
+		}
+
+		.treatments__pivot {
+			--pivot-distance: 3000px;
+			--pivot-baseline: 21rem;
+		}
+
+		.treatments__controls {
+			margin-top: -19rem;
+		}
+	}
+
+	/* Edge fade — every card that leaves the fan leaves through this, and
+	   every card that arrives arrives through it, on every width. Slots
+	   0/±1/±2 are the design; everything past them is on its way round the
+	   ring (fourteen slots since 2026-09-17, see RING_LAPS in the script),
+	   and the rule the owner set is that no card is ever seen appearing or
+	   disappearing and nothing is ever hard-cut — not by the screen, not by
+	   the fan box's clip. Two rules, and the fade's inner edge is the smaller
+	   of the two distances they give:
+
+	   1. From the VIEWPORT EDGE, --fade-edge inward. Whatever the width, a
+	      card reaching the edge of the screen is already fading before it
+	      gets there, so the screen edge itself never cuts one. Before
+	      2026-09-17 the fade only existed from 1536px, so every phone,
+	      tablet and laptop below that cut the outer cards off at the
+	      viewport ("the blur isn't visible on some cards, it's just a
+	      cut-off"). --fade-edge is derived per geometry from where the cut
+	      card's top corner sits relative to the strip's rotation origin
+	      (the lean moves the edge outward above the origin) plus the ramp
+	      along the lean; each breakpoint's own comment has the arithmetic.
+
+	   2. From the CENTRE LINE, never further out than --fade-cap. Every
+	      slot sits at a fixed distance from the centre no matter how wide
+	      the screen is, and so does the point where a deep slot crosses the
+	      box's bottom edge; once the screen is wide enough to show that
+	      crossing, the viewport rule alone would let a card be cut by the
+	      box in plain sight. The cap holds the solid boundary inside the
+	      nearest such crossing: 340px on the phone geometry (slot ±3 crosses
+	      the bottom row 374px out, and the lean pulls the edge 26px in at
+	      that row), 1040px from 1536 up (between slot ±2's outermost corner
+	      at 1050 and slot ±3's innermost at 1111, and slots ±3.5 and ±4
+	      cross the box edge 1302 and 1488px out). The 1024 branch never
+	      reaches its own crossing (822px, slot 2.5) below 1536; its 660 is
+	      a guard.
+
+	   --fade-lean is the strip's tilt: 8deg on the phone geometry, 14deg
+	   (1 * --tilt-step) on the 1024 one, 16deg (2 * --tilt-step) from 1536.
+	   Parallel to the card the fade sits against, or as close as one angle
+	   per breakpoint and the lean's own cost allow: the strip rotates
+	   about its inner edge's midpoint, so above the origin the edge leans
+	   outward by (origin - y) * tan(lean) and the solid boundary sits a
+	   further ramp / cos(lean) out, and both come out of the distance
+	   between the cut card's inner edge and the screen. On the phone
+	   geometry that distance is ~100px, so the lean is held to 8deg (see
+	   the base rule's numbers); on the 1024 geometry 28deg would put a
+	   third of slot ±1 under the fade at 1024, where its 203px-tall top
+	   corner is what the screen cuts, so 14deg; 16deg from 1536 is the
+	   value the 8deg geometry was measured with (see the ultra-wide block).
+
+	   Measured inner edge / solid boundary at the box's mid-height: 120 /
+	   170 at 390, 140 / 190 at 430, 309 / 359 at 768, 335 / 385 at 820,
+	   340 / 390 from ~830 up on the phone geometry; 352 / 455 at 1024, 430
+	   / 533 at 1180, 523 / 626 at 1366, 560 / 663 at 1440; 588 / 692 at
+	   1536, 620 / 724 at 1600, 780 / 884 at 1920, 1040 / 1144 at 2560. What
+	   it costs: on a phone the outer 50px of slot ±1 fade where its top
+	   corner was cut; on a tablet slot ±2's outer corner fades and slot
+	   ±3, which was on screen and cut by the box, is a fading sliver; at
+	   1024 slot ±1's outer third fades where 14px of its tip was cut; at
+	   1440 slot ±2 is a fading sliver of ~45px where it was a 214px
+	   hard-cut chunk. From 1536 up nothing changed.
+
+	   Checked by pixel-diffing the fan with one pivot forced to each of
+	   slots ±2.5, ±3, ±3.5 and ±4 against the same frame with that pivot
+	   hidden, and by driving the fan through two recycles by drag while
+	   sampling the viewport's outermost columns and the box's top and
+	   bottom rows: sand only, at 390, 430, 768, 820, 1024, 1180, 1280,
+	   1366, 1440, 1536, 1600, 1920 and 2560. behandelingen-edges.spec.ts
+	   keeps the drag check at five of those widths.
+
+	   The strip is a ROTATED ELEMENT with an axis-aligned gradient inside it,
+	   NOT an upright box with an angled gradient. The latter was tried and is
+	   the obvious-looking version that does not work: a gradient's colour
+	   stops run along its own axis, but the element is still a rectangle, so
+	   the fade gets truncated by the box's vertical inner edge. That leaves a
+	   hard vertical seam exactly where the thing is supposed to be reaching
+	   transparency, and the tilt barely reads. Rotating the element instead
+	   makes its edges and its gradient axis the same frame, so the
+	   transparent boundary is a genuine straight line parallel to the card
+	   beside it. */
+	.treatments__fan::before,
+	.treatments__fan::after {
+		content: '';
+		position: absolute;
+		/* Rotated about its inner edge, so the far end swings vertically
+		   by width * sin(angle) — at 3440px that is ~950px. The strip has
+		   to stay taller than that swing plus the fan itself, or the far
+		   top corner is left uncovered. Everything past the fan's own box
+		   is clipped, so the excess costs nothing. */
+		top: -250%;
+		height: 600%;
+		width: 100vw;
+		/* Above the cards (positioned, but un-z-indexed) and below the
+		   controls (z-index 3, see .treatments__controls), and never a
+		   hit-test target — the fan underneath is a drag surface. */
+		z-index: 2;
+		pointer-events: none;
+	}
+
+	/* Right: transparent at the inner edge, solid by --fade-ramp, then
+	   flat sand the rest of the way out. */
+	.treatments__fan::after {
+		left: calc(50% + var(--fade-start));
+		transform-origin: left center;
+		transform: rotate(var(--fade-lean));
+		background: linear-gradient(to right, transparent 0, var(--color-bg-sand) var(--fade-ramp));
+	}
+
+	.treatments__fan::before {
+		right: calc(50% + var(--fade-start));
+		transform-origin: right center;
+		transform: rotate(calc(-1 * var(--fade-lean)));
+		background: linear-gradient(to left, transparent 0, var(--color-bg-sand) var(--fade-ramp));
 	}
 </style>

@@ -8,8 +8,8 @@
 	let { label, type = 'button', onclick }: Props = $props();
 </script>
 
-<button {type} class="btn" {onclick}>
-	<span class="btn__label">{label}</span>
+<button {type} class="btn btn-host" {onclick}>
+	<span class="btn__label btn-pill">{label}</span>
 </button>
 
 <style>
@@ -19,17 +19,21 @@
 		border: none;
 		cursor: pointer;
 		padding: 0;
-		transition: opacity var(--motion-fast);
+		background: transparent;
+		transition:
+			transform var(--motion-hover) var(--ease-hover),
+			box-shadow var(--motion-hover) var(--ease-hover);
+		border-radius: var(--radius-full);
 	}
 
+	/* Geometry only — fill, edge, ink and the hover swap are .btn-pill's, see the
+	   button rule in app.css. No arrow here, ever: this is an in-place action. */
 	.btn__label {
 		display: flex;
 		align-items: center;
 		height: 40px;
 		padding: 0 24px;
 		border-radius: var(--radius-full);
-		background: var(--brand-border);
-		color: var(--color-bg-sand);
 		font-family: var(--font-display);
 		font-size: var(--font-size-xl);
 		font-weight: 400;
@@ -37,7 +41,16 @@
 		line-height: 1;
 	}
 
-	.btn:hover {
-		opacity: 0.88;
+	@media (hover: hover) and (pointer: fine) {
+		.btn:hover {
+			transform: translateY(var(--lift-hover));
+			box-shadow: var(--shadow-hover);
+		}
+	}
+
+	/* Press cancels the lift — the button meets the finger instead of dodging it. */
+	.btn:active {
+		transform: translateY(0);
+		box-shadow: none;
 	}
 </style>

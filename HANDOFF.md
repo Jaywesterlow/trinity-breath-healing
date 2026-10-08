@@ -22,6 +22,40 @@ further session that added the card hover reveal and the magnetic cursor-follow,
 TESTKAART diagnostic, and fixed the recycle-slot bug that removal exposed. The carousel now
 lives on `main`; there is no unmerged carousel work.
 
+Updated **2026-08-17**. The sentence immediately above is **no longer true.** A long run of
+sessions between 2026-08-10 and 2026-08-17 built the seven real services, the service modal,
+two extracted standalone library components, carousel idle-drift, and two desktop bug fixes —
+all on `feat/behandelingen-service-modal`, **open as PR #14 and not merged**. Read
+**"Session 2026-08-10/17 — PR #14"** below before touching the carousel, the cards or the
+modal; it supersedes the geometry, the card markup and the item-count arithmetic described in
+the two older carousel sections.
+
+**Start here if you are picking this up cold:** read **`TODO.md`** in the repo root. It is the
+single live backlog — open threads, what needs the owner, and where each thread was left —
+and it supersedes the "Owner action items" table below, which is kept here for its detail.
+Everything else in this file is background on how things were built and why.
+
+---
+
+## ⚠️ Owner action items — things only you can do
+
+Nothing in this list can be done from inside a session. Two of them are actively blocking work.
+
+| # | What | Why it needs you | Blocking? |
+|---|---|---|---|
+| 1 | ~~Enable the Figma connector for the chat.~~ **Resolved 2026-08-19** — the exported frames in `Figma/Landingpage/` carry the design; `Desktop _ Home 5.png` and `Mobile _ Home 5.png` were enough to build the Contact form and the date planner without the connector. | — | No longer blocking. |
+| 2 | **Sort the treatment images**, then say so. | The owner asked to animate the images as they load into the modal, and deliberately deferred it until the real art exists. | **Yes** — blocks the modal image animation. |
+| 3 | **Review / merge PR #14** (or say to keep stacking on it). It is ~95 commits ahead of `main` and carries everything below. **`claude/trinity-contact-hover-t7xsrf` now contains all of it** — merging that branch merges PR #14's work too. | Merge decisions are the owner's. | No, but it is a large unmerged surface. |
+| 4 | **Decide on PR #13** (`docs/consolidate`), open since 2026-08-10. | Same. | No. |
+| 5 | **Check LCP in Search Console** once the site is live and has a few weeks of traffic. | Cannot be measured in the container. Full detail in the section further down — the fix, if needed, is to shorten the hero draw, not to remove the wait. | No — post-launch. |
+| 6 | **Set the mail env vars in Vercel**: `RESEND_API_KEY`, `CONTACT_FROM_EMAIL` (verified sender on the Resend EU domain), optionally `CONTACT_TO_EMAIL`. Both the contact form and the booking flow use them. | Only the owner has the accounts. Unset, both still render and tell the visitor to mail `info@trinitybreathhealing.nl` instead of failing silently. | **Yes** — neither form can deliver until these exist. |
+| 6b | **Paste a permanent Google Meet room link** somewhere the confirmation e-mail can use it (a constant for now, the CMS later). | Cal.com was dropped, so nothing generates a Meet link automatically. A permanent personal room is the one-off that keeps her off any other site. | Blocks sending a link with the confirmation. |
+| 7 | **Regenerate the visual-regression baselines on Windows** (`npm run test:visual -- --update-snapshots`). The committed baselines are `*-win32.png` and the landing page now renders a real contact form where a placeholder used to be. | The spec skips on Linux, so CI cannot do it. | No. |
+| 8 | **Decide on the sitewide colour contrast.** pa11y reports contrast errors on `/`; `--brand-muted` and `--brand-border` were already darkened for AA, but the tan CTA pills (nav "Maak een afspraak", the form's "Verstuur email") still fail at ~2.1-2.7:1. Fixing them changes the brand look. | A design decision, not a component one. | No. |
+| 9 | **Provide the real phone number.** `brand.ts` still ships `TODO_PHONE`, and the Phase 5 launch gate blocks on residual `TODO_` values in that file. | Only the practitioner has it. | Blocks launch, not current work. |
+
+Item 6 is the one to do first — everything else about the contact form is finished and waiting on it.
+
 **Read these first — they are maintained, this one is background:**
 
 | document | what it holds |
@@ -67,6 +101,210 @@ harmless.** Details under "Open risk: LCP" further down.
 
 ---
 
+## Session 2026-08-19 — second review pass: the planner is a framed wizard
+
+The card is now a fixed frame — a header/footer that never move, and a stage
+between them that swaps one step for the next. This replaced the previous model,
+where picking a date appended the slots underneath and everything below shifted.
+
+- **Steps slide, they do not stack.** The outgoing panel leaves to one side and
+  fades; the incoming one arrives from the other **after** it has gone (`out`
+  160ms, `in` 300ms delayed by 160ms). Nothing is ever obscured. `direction`
+  flips the axis so going back genuinely looks like going back, and
+  `prefers-reduced-motion` collapses both to zero.
+- **The footer never moves.** Step 1 puts the legend there, steps 2-3 put a bare
+  chevron and one pill. Both controls share a height, a radius and a type size —
+  the labelled back link was the odd one out.
+- **Six week rows are always rendered.** A five-row month used to pull the header
+  and footer up by a row on every page. Pinned by a test.
+- **Labels:** `Verder` on the times step, `Verzenden` on the details step.
+  Not "Volgende" — the carousel already owns that accessible name, and two
+  buttons called the same thing is a genuine ambiguity, not just a test problem.
+- **Legend is Beschikbaar / Niet beschikbaar**, the second swatch drawn exactly
+  as an unavailable tile.
+- **Desktop fills the card:** `--pl-measure` becomes 100%, day type is a flat
+  1rem, and tiles fill their cell (70x84 at 1440x900) rather than being squares
+  sized by row height — a square at that row height is wider than its column and
+  pushes the seventh day out through the side, which is the bug that produced the
+  clipped grid twice.
+- **Times are four columns only above 1200px.** Below that the card is too narrow
+  for four labels and forcing them overflows sideways.
+
+Nothing scrolls, verified at ten viewports from 1920x1080 to 360x640 across all
+three steps, both axes.
+
+**Still open, and deliberately not guessed at:** the times and details steps hold
+much less than the calendar, so they centre in a card sized for the calendar and
+leave visible room. Filling it either means inflating twelve slots into
+billboards or letting the card change height between steps. The owner asked for
+neither, so it stands as-is pending a decision.
+
+---
+
+## Session 2026-08-19 — first review pass on the contact section
+
+Owner review of the built section. What changed, and the reasoning worth keeping:
+
+- **The planner never scrolls.** It used to give the calendar a scroll container
+  with a fade mask; the real problem was that everything inside was drawn at
+  Figma's absolute sizes. Month type 40→30, day numbers 20→16, weekday letters
+  24→16, tiles, gaps and buttons all down to match. Verified at nine viewports
+  from 1920x1080 to 360x640, all three steps: nothing overflows. `overflow: hidden`
+  on the card is a guard, not the mechanism — if content ever exceeds it, that is
+  a sizing bug to fix rather than a scrollbar to add.
+- **`--pl-measure` caps the inner column at 23rem.** Without it the seven day
+  columns stretch across the whole card, which is what made the tiles large and
+  the gaps wide at the same time. The grid is additionally capped at `42vh`, so on
+  a short viewport it narrows and the tiles shrink with it.
+- **The details step hides the calendar** rather than fading it. Nothing is being
+  picked from it any more, and it was the only thing that could not be made to fit.
+- **Tile fills were re-ranked.** Unavailable now uses the fill that used to mean
+  available (`0.6` alpha at 35%); available is undimmed at `0.65`; selected is
+  unchanged. The old available state was a 35%-opacity control that read as
+  disabled and failed contrast twice over.
+- **The phone prefix is a country picker** (`PhonePrefix.svelte`, list in
+  `src/lib/forms/countries.ts`). Not a native `<select>`: browsers draw the open
+  option list with OS chrome, which would put a white menu in a dark green card.
+  Flags are inline SVG, not emoji, because Windows ships no flag glyphs and would
+  render 🇳🇱 as the letters "NL". `landcode` now travels with the submission.
+- **The message field cannot be dragged.** `resize: none` plus internal scroll —
+  dragging it grew the textarea past the card and took the send button with it.
+- **Toggle type is 16px**, down from 20px, in line with every other control.
+
+**Open, for the owner:** a site-wide button pass. The contact section is now
+internally consistent, but the nav and hero CTAs still speak at 20px in the display
+face while form controls speak at 16px in the body face. Proposal recorded in the
+session: tan pill = primary action only, dark green = surfaces not buttons,
+everything else a quiet text control; one 16px control scale throughout. That
+touches nav, hero and carousel, so it was not done unasked.
+
+---
+
+## Session 2026-08-19 (later still) — the three-step booking flow
+
+Cal.com is gone. It could not meet the owner's condition — using it means an account,
+a connected Google Calendar and an event type, all created by her on their site — and
+the whole point is that the site is one station she never has to leave. The booking is
+ours now, which also removes the two-sources-of-truth problem: the CMS will own her
+availability *and* the requests.
+
+The planner is a three-step machine, `datum → tijd → gegevens → klaar`:
+
+- The **back control is labelled with the step it returns to** (`Kies datum`, `Kies tijd`),
+  left chevron, so from the details step it takes two presses to reach the calendar.
+  That is the owner's explicit design, not an accident.
+- The **proceed button changes with the step**: `Gegevens invullen` on the times step,
+  `Boek een gesprek` on the details step. Each is disabled until its own step is
+  satisfied — a time picked, or voornaam/achternaam/e-mail filled.
+- The calendar stays faded under its mask for every step past the first, so the card
+  never changes shape between steps.
+- Confirming turns the card into a confirmation in place, with a control to plan
+  another moment. No `/bedankt` route.
+
+`POST /api/booking` re-validates the details **and re-derives the slot from the
+schedule** — a well-formed payload naming a time the schedule does not offer is
+refused with 409. `src/lib/server/email.ts` now delivers both forms through one
+`deliver()`, so the contact and booking mails cannot drift apart.
+
+**Still open:** nothing generates a Google Meet link now that Cal.com is gone (owner
+action item 6b), and the confirmation e-mail to the visitor is not written yet — only
+the notification to the practitioner is.
+
+---
+
+## Session 2026-08-19 (later) — the planner's two booking states
+
+Figma frame `441-48` draws the planner in two states; both are built.
+
+**State 1** is the month grid plus the Beschikbaar/Geselecteerd legend.
+**State 2** — a date is picked — compresses the calendar under a bottom fade mask
+(the design draws that fade; it is what makes the state fit), and reveals the chosen
+date, its time slots, a back control, and the confirm button **disabled**. Picking a
+time enables it. That flow is the one the owner described, and it is what the tests
+in `contact-section.spec.ts` pin.
+
+**Availability lives in `src/lib/booking/schedule.ts`, not in the component.** This is
+deliberate and it matters: a CMS is the end goal — the practitioner logging in at some
+URL to set the hours she is free. That module is the seam. It exports a `Schedule`
+shape, a `DEFAULT_SCHEDULE` (weekdays 10:00-16:00, 30-minute slots — the twelve slots
+Figma draws), and pure functions `slotsFor()` / `isBookable()`. `<DatePlanner>` takes
+`schedule` as a prop defaulting to `DEFAULT_SCHEDULE`. When the CMS exists, a `load()`
+fetches the same shape and passes it in; the component does not change. Do **not**
+reintroduce hardcoded times in the component — that is the thing this design avoids.
+
+**Sizing follows Figma's proportions, not its pixels.** Reference frame `424-113` puts
+an 800px card in 1024px of viewport — 78% — so the 80vh cap *is* the design's own
+proportion rather than a limit imposed on it. Tile size comes from the column width,
+and the 2.26% column gap reproduces Figma's 60px-tile-in-486px-grid exactly at any
+card width. The 542px card on the states board is an artefact of laying two panels
+side by side; the real section is 588.
+
+**Known gaps, deliberately not invented:**
+
+- Figma draws no disabled state for "Boek een gesprek". It reuses the enabled pill at
+  the 0.35 opacity the design already uses for not-yet-active tiles.
+- Confirming hands off to Cal.com with the date and time prefilled, because **nothing
+  in the design captures who is booking**. An own-endpoint booking (the owner's
+  preference) needs a name and e-mail somewhere — a third state, or a step after
+  confirm. That decision is open; `/api/booking` was deliberately not written until
+  it is made, rather than shipping an endpoint nothing can call.
+- The design shows every day as available, including weekends. `DEFAULT_SCHEDULE` is
+  weekdays only, so Saturdays and Sundays render unavailable. Give them opening hours
+  if she works them.
+- The available-day and time tiles carry Figma's `opacity: 0.35`, which makes
+  interactive controls look disabled and fails contrast. Kept as drawn; it belongs
+  with the palette decision in owner action item 8.
+
+---
+
+## Session 2026-08-19 — the Contact section is real
+
+Both panels were dark-green placeholders reading "contact form" and "date planner". They now
+render what Figma specifies, and the section is finished apart from the env vars in item 6.
+
+**`ContactForm.svelte`** — Figma `Desktop _ Home 5`: Voornaam/Achternaam, Email, Telefoon with
+the static `+31` segment fused to the input, Bericht, tan "Verstuur email" pill. One zod schema
+(`src/lib/forms/contact.ts`) backs both the browser and the endpoint, so a Dutch message can
+only be wrong in one place. Errors bind to their field with `aria-describedby`, the result goes
+to an `aria-live` region, and the `<form>` keeps a real method/action pair so a no-JS submit
+still reaches the endpoint.
+
+**`POST /api/contact`** — the only route that opts out of prerendering, so the marketing pages
+keep their static HTML for crawlers while the form has somewhere to post. Re-validates
+independently, throttles per IP, sends through Resend over `fetch` (no SDK in the bundle), and
+answers HTML to a browser navigation but JSON to `fetch`. Every env var is optional.
+
+**`DatePlanner.svelte`** — Figma spells the planner out as a custom calendar (`Mobile _ Home 5`),
+not a Cal.com embed, so that is what it is: Dutch month/weekday labels, past days disabled,
+roving-tabindex arrow keys, Beschikbaar/Geselecteerd legend. Cal.com owns the slots — picking a
+day hands off to the booking link rather than putting an iframe on the landing page, which the
+LCP budget could not absorb.
+
+**The mode toggle is a radio group.** Figma draws radio dots; native radios bring the keyboard
+behaviour a pair of `aria-pressed` buttons would have to fake.
+
+**Hover, sitewide.** Four tokens in `app.css` — `--motion-hover`, `--ease-hover`,
+`--lift-hover`, `--shadow-hover`. Buttons and cards lift with a shadow; plain text links wipe an
+underline in. The reduced-motion block flattens `--lift-hover` to zero rather than merely making
+the teleport instant.
+
+**Desktop height.** Figma draws the card 800px tall inside a 1440x1024 frame. Taken literally it
+overflows every real laptop, so the card is capped at `min(80vh, 50rem)` and everything inside
+it is sized off `vh` with the same clamp shape — the card scales as a whole instead of
+overflowing. The section's block padding scales the same way, so the whole section clears the
+viewport (94vh at 1440x800). Both panels share the cap, or the page would jump on toggle.
+
+**Tests.** `tests/unit/contact-form.test.ts` (schema boundaries) and
+`tests/integration/contact-section.spec.ts` (validation, the endpoint contract, the planner's
+keyboard and hand-off). `html-audit.spec.ts`'s A11Y-02 label test, skipped since Phase 0 waiting
+on this form, is enabled.
+
+**One deliberate a11y report entry.** HTML_CodeSniffer flags `autocomplete="tel-national"` (H98).
+The token is valid per the HTML spec for `type="tel"`; it is kept because the field holds the
+national part only, next to the static `+31`.
+
+---
+
 ## Branches
 
 As of **2026-08-09** the repo has exactly **two** branches. Ten were deleted on 2026-08-08 —
@@ -76,10 +314,24 @@ As of **2026-08-09, after the PR #10 merge**, `main` is the only branch. It carr
 work, the Contact section (PR #11), and the full carousel rebuild including the hover/magnet
 work. There is no unmerged work anywhere.
 
-| branch | state |
+> **Superseded 2026-08-17.** There is unmerged work again, and `origin` still lists several
+> branches this file previously recorded as deleted. Current picture:
+
+| branch | state as of 2026-08-17 |
 |---|---|
-| `main` | Everything. |
-| ~~`claude/accessible-work-repos-kb67gy`~~ | Merged via PR #10 and deleted. Its commits live on `main` — the SHAs cited throughout this file and in KNOWN-ISSUES.md are still valid, which is why this was merged with a merge commit rather than squashed. |
+| `main` | Everything up to the PR #10 merge. **Does not have** the services/modal/library work. |
+| `feat/behandelingen-service-modal` | **The live branch. PR #14, open, ~95 commits ahead of `main`.** Everything in the "Session 2026-08-10/17" section below. Push here. |
+| `claude/accessible-work-repos-kb67gy` | Merged via PR #10. Still present on `origin` despite the deletion note above, and it is also the branch name some tooling defaults to — **do not develop on it**, it is 76 commits behind the live branch. |
+| `feat/contact-section`, `polish/site-polish`, `preview/mobile-view` | Merged long ago; still listed on `origin`. Nobody has cleaned them up. |
+
+> **Superseded again 2026-08-19.** `claude/trinity-contact-hover-t7xsrf` is now the live
+> branch. It carries the contact-section work below **and** all of PR #14, merged in on
+> 2026-08-19. `feat/behandelingen-service-modal` is no longer ahead of it. Push here.
+> `docs/consolidate` (PR #13) is still open and deliberately **not** merged — it is a
+> docs-only reorganisation, unrelated to this feature work.
+
+The SHAs cited throughout this file remain valid — PR #10 was merged with a merge commit
+rather than squashed, on purpose.
 
 ### Branch cleanup, 2026-08-08
 
@@ -220,7 +472,13 @@ corner link button), identical for all 5 cards so nothing can drift out of sync 
 
 ---
 
-## Carousel session 2026-08-08/09 — the current state of that component
+## Carousel session 2026-08-08/09 — background, superseded in part
+
+> **Superseded 2026-08-17.** This was "the current state of that component" until the PR #14
+> work below. The motion model, the tuning constants and the `|delta| = 1` rule described here
+> are all still accurate and still load-bearing — read them. What changed underneath it: the
+> item count and therefore the slot arithmetic, the card's internal markup, and the desktop
+> geometry above 1536px. See **"Session 2026-08-10/17 — PR #14"**.
 
 Same branch, same PR #10, ~20 commits after the section above. Two things happened: the
 release motion was rewritten from stepped animation to continuous physics, and the desktop
@@ -445,19 +703,191 @@ glitch rather than a maths error.
 
 ### Still open here
 
-- **Description copy is still `TODO_` placeholder** on all five cards — it is live in the
-  prerendered HTML. It is the hover text, and it needs the practitioner's own words; not ours to
-  invent for a health practice whose primary metric is E-E-A-T trust.
+- ~~**Description copy is still `TODO_` placeholder** on all five cards~~ — **RESOLVED
+  2026-08-10.** There are seven services now, with the practitioner's own owner-approved copy in
+  `brand.ts`. The `TODO_` that remains in that file is `TODO_PHONE`, which is a different item
+  (owner action 6).
 - Swipe feel has still never been checked by a real thumb on a real phone — every measurement
   above is a synthetic Playwright gesture. The owner has reviewed the *result* on their phone
   via Vercel previews, which is not the same as the gesture having been tuned there.
 
 ---
 
+## Session 2026-08-10/17 — PR #14, the current state of the carousel
+
+Branch `feat/behandelingen-service-modal`, **open as PR #14**. This supersedes the geometry,
+the card markup and the item-count arithmetic in both older carousel sections. All four CI
+checks (`build-and-audit`, `playwright-integration`, `lighthouse-and-a11y`, Vercel) are green
+on `396e707`.
+
+### Seven real services, and what that broke
+
+`D-08` was superseded (`260810-mdl`): the owner approved **7 real services** with
+practitioner-written, owner-approved copy, living in `brand.ts`. Cards with no art yet render a
+**number** instead of an icon, driven by absence from the `ICONS` map rather than a flag, so
+dropping art in later makes the number disappear on its own.
+
+Two consequences that matter:
+
+- **The hover description copy is no longer placeholder.** The "Still open" note in the older
+  section saying all five cards ship `TODO_` description text is **resolved** — the copy is
+  real, and it is what the hover reveal shows.
+- **`MIN_ITEMS` is now `2 * VISIBLE_SLOT_MAX + 3`, not `+ 2`.** With 7 services this yields
+  `REPEATS = 1` and `count = 7`, so slots run **exactly −3..3** and ±3 is always the outermost
+  pair. Re-read the "recycle slot bug" section before changing the service count — that
+  arithmetic is still the thing that fails silently and looks like a rendering glitch.
+
+### The service modal
+
+Clicking the **centre** card opens a near-fullscreen modal that grows out of the card itself
+and shrinks back into it on close (box morph, content fade, backdrop fade, staggered nav
+reveal, all Web Animations API). Prev/Next inside the modal drive the carousel underneath so it
+is already centred correctly by the time the modal closes. Touch swipe navigates. Esc and
+backdrop click both close.
+
+Clicking a **non-centre** card centres it instead of navigating — on mobile too (`487ce47`),
+which was a real reported bug: a tap used to follow the card's `href` and leave the page.
+
+### Two extracted, standalone library components
+
+`src/lib/components/library/morph-modal/` and `src/lib/components/library/carousel/`, each with
+its own `README.md`. These exist because the owner wanted to reuse the carousel and modal in
+other projects. **Every global design-token `var()` is resolved to a literal value**, each
+annotated with a `/* was var(--token) */` comment, so the folder can be pasted into any
+Svelte 5 project without silently breaking on a token that does not exist there.
+
+Structure in both: a plain class holding all behaviour (`carousel-engine.svelte.ts`,
+`morph-modal-engine.svelte.ts`) and a deliberately dumb `.svelte` file owning only markup and
+layout. The carousel library composes the modal library rather than duplicating it.
+
+**These are copies, not the live site's components.** The live site still uses
+`Behandelingen.svelte` + `TreatmentCard.svelte`. Any carousel or card change has to be made in
+both places or they drift — that has been the practice so far and the owner has asked for it
+explicitly ("fully up to date with all the latest changes").
+
+One API detail worth knowing: `MorphModalEngineOptions.onClosed` exists because `onCancel`
+(Esc) and `onBackdropClick` call the engine's own `close()` directly, bypassing whatever
+function is passed to the `onClose` prop. Anything that must run on *every* close path — the
+carousel resuming idle-drift, for instance — has to hang off `onClosed`, not off an `onClose`
+wrapper.
+
+### Idle auto-drift
+
+The fan slowly advances on its own once nothing has happened for a while, as a third
+`motionPhase` alongside coast and latch — so every existing interruption point (a drag, a
+button press) already cancels it for free. Opening the modal cancels it; closing the modal
+(any path, via `onClosed`) reschedules it.
+
+| constant | value | why |
+|---|---|---|
+| `IDLE_DRIFT_DELAY_MS` | 2000 | Started at 4000; owner asked to halve the pause before drift resumes after an interaction. |
+| `DRIFT_SECONDS_PER_STEP` | 6.4 | Started at 10, sped up ×1.75, then ×1.25. Bigger = slower. |
+
+Three existing specs had to be retimed when the delay was halved — their own margins had been
+written assuming a 4000ms pause and started colliding with the drift.
+
+### Mobile swipe smoothness
+
+`@property --pos` (registered as `<number>`) plus `will-change: transform` on the pivot. Without
+the registration the browser cannot hand `transform: rotate(calc(var(--pos) * …))` to the
+compositor, so every per-frame drag write forced a full main-thread style recalculation — which
+reads as choppy on weaker mobile CPUs while looking perfect on desktop. Documented in
+`.planning/quick/` under the smoothness-fix task.
+
+### 2026-08-16/17 — two desktop bugs, both owner-reported
+
+**Ultra-wide cutoff.** `.treatments__fan` is full-bleed (100vw), so a wider screen reveals more
+of the arc. Below ~1560px the ±3 pair sits fully past the viewport edge — which is why 1440px
+always looked fine. From ~1600px it enters the viewport still carrying the steep 14°-per-slot
+tilt and drops **127px** below the fan's own `overflow: hidden` box, shearing its bottom off.
+The overflow is a function of rotation alone, not viewport width: measured at exactly 127px at
+1600, 1920, 2560 and 3440px alike.
+
+Fixed with one `@media (min-width: 1536px)` block — placed just before that pair can appear at
+all — flattening the arc to `--pivot-distance: 3000px` / `--tilt-step: 6.5deg`. Because there
+are only ever 7 cards, ±3 is permanently the outermost slot, so **one flattened setting covers
+every width from there up**; no ladder of breakpoints is needed.
+
+The two numbers move **together**, and that is the part to preserve if they are ever retuned:
+horizontal spacing is `R_eff * sin(--tilt-step)`, where `R_eff` is `--pivot-distance` plus half
+the card's height (the pivot sits below the card's *bottom* edge, so the radius to its centre is
+the longer one). Raising the radius while lowering the angle to match holds the cards exactly
+where they were left-to-right and changes only how far they dive — measured spacing stays 362px,
+unchanged from the 1024px breakpoint. Slot ±3 gains **76px** of bottom clearance, which is not
+an arbitrary number: it is the clearance slot ±2, the outermost card at 1440px, already had, so
+the widest layout keeps the margin the design was signed off with. `--pivot-baseline`, the fan's
+height and the controls' margin are untouched, so the centre card never moves and every other
+card only moves up. Verified 1440–3440px: zero clipped cards, 1440px byte-identical.
+
+**Hover reveal overlapping its own copy.** The title row translated up by a fixed
+`--tcard-desc-shift` (3.5rem desktop) while the description was `position: absolute` — so the
+shift was a guess that never knew how tall the description actually was. Every card's copy
+currently wraps to 4 lines (72px) and needs 80px including the gap, so the title landed 24px
+short and sat on top of the text.
+
+The description now lives in a collapsible grid row inside a shared bottom-anchored column
+(`.tcard__footer` → `.tcard__bottom` + `.tcard__desc-wrap`), animating `grid-template-rows`
+from `0fr` to `1fr` — and `1fr` resolves to exactly the content height, so **the copy itself
+lifts the title** and it always lands directly above, one line or ten, with nothing to re-tune
+per card or per breakpoint. `--tcard-desc-shift` is deleted. Verified under real hover across
+content heights from 17px to 202px: the gap stays exactly 8px at every height, nothing
+overflows.
+
+Three traps in that mechanism, all of which cost a round:
+
+- **The gap cannot be `padding-top` on the description.** Padding cannot collapse below its own
+  size (border-box floors the element at 8px even with `min-height: 0`), so it left the row 8px
+  tall at rest and lifted the *resting* title off the card's bottom edge. It lives on the
+  wrapper's `margin-top`, which is 0 until hover. Resting layout was then confirmed identical
+  to the pre-change build by measuring both.
+- **`min-height: 0` is required in two places** — on the description (or the grid row refuses to
+  shrink below the text) and on `.tcard__icon-wrap` (or the icon row refuses to give up the
+  height the description is expanding into, and the card overflows instead).
+- **Collapse with `grid-template-rows`, never `display: none`.** The copy has to stay real,
+  crawlable DOM content at rest; this project is judged first on AEO.
+
+### Measuring this component, if you have to
+
+Both fixes above were tuned by reading rendered boxes, never by trig — same rule the older
+sections give, and it held again. Two specific gotchas that produced garbage readings first:
+
+- **`getBoundingClientRect()` is useless for comparing elements inside different cards.** The
+  cards are rotated, so each rect is an inflated axis-aligned box; comparing a title's rect to a
+  description's rect across two cards produced negative "gaps" that meant nothing. Use
+  `offsetTop` / `offsetHeight`, which are untransformed layout values in the card's own space
+  (`.tcard` is `position: relative`, so it is the `offsetParent`).
+- **Svelte re-renders over `textContent` writes.** Trying to vary description length by writing
+  text into the DOM silently reverted. Vary the *rendered* height with an injected stylesheet
+  (`font-size`) instead — Svelte does not own that.
+
+---
+
 ## Outstanding
 
 Moved to `.planning/notes/KNOWN-ISSUES.md`, which has a numbered index at the top and is kept
-current. Do not maintain a second list here.
+current. Do not maintain a second list here. **Its header still reads 2026-08-09** — everything
+in the session section above post-dates it, so check both before answering "what is open?"
+
+### Carried forward, not yet done
+
+Code tasks, in the order they would sensibly be picked up. None of these are blocked on anything
+except where noted.
+
+1. **Contact section accuracy** — make it match Figma Frame `424-113` (desktop) and `519-15`
+   (mobile), using the real dev-mode values rather than eyeballing, and responsive between the
+   two. The form itself stays as-is. **Blocked on owner action item 1 (Figma connector).**
+2. **Animate the images loading into the modal.** **Blocked on owner action item 2 (images).**
+   The existing draw-on machinery is the obvious starting point — `DrawOn.svelte` plus
+   `.planning/quick/20260713-hero-draw-on/DRAW-ON-PLAYBOOK.md`, which documents how
+   `drawtrace.py` traces a PNG into a self-drawing SVG (the `--animate` flag is what emits the
+   mask). It is currently wired into Hero, OverMij, AboutFeature and WerkwijzeCard — **not**
+   into the treatment cards or the modal.
+3. **Keep the two library copies in sync** with any further carousel/card change. See the
+   library section above.
+4. **Swipe feel has still never been checked by a real thumb**, only synthetic Playwright
+   gestures. Reviewing the result on a phone via Vercel is not the same thing.
+5. **Branch cleanup on `origin`** — four merged branches are still listed. Needs an owner
+   decision, not a code change.
 
 The owner's own priority for the three that block launch: **pick the real domain → fill in the
 practitioner name and phone → fix the contrast failures.**
@@ -604,6 +1034,22 @@ outstanding item 2 anyway.
   `use: { launchOptions: { executablePath: '/opt/pw-browsers/chromium' } }`, `testDir` pointing
   at the repo's `tests/integration`, and `webServer.cwd` set to the repo root. Do **not** run
   `playwright install`.
+
+  **The exact working path as of 2026-08-17 is
+  `/opt/pw-browsers/chromium-1194/chrome-linux/chrome`.** This matters more than it looks:
+  without the override, `npx playwright test` does not fail loudly — it reports **69 failures
+  that are purely "Executable doesn't exist"**, and **34 of those are the carousel specs**, i.e.
+  exactly the tests that would catch a regression in the component most likely to be under
+  edit. A run that looks like "208 passed, 69 pre-existing failures" is a run that never tested
+  the thing being changed. With the override: **277 passed, 6 skipped, 0 failed.** Always patch
+  the config, run, then restore it before committing — the path is container-specific and must
+  not be committed.
+- **The container resets mid-session, silently.** It happened three times on 2026-08-16/17: the
+  working tree reverts to an older commit, files written earlier in the session are simply gone,
+  and nothing announces it. Pushed work is safe; unpushed work is not. **Begin every work
+  segment with `git fetch origin <branch>` and `git merge --ff-only origin/<branch>`**, and
+  treat "a file I know I wrote is missing" as a reset rather than as a mystery. This is the
+  strongest practical argument for the existing push-after-every-change rule.
 - `npm run build` needs `PUBLIC_SITE_URL` set — it fails loudly without it, by design (FND-07).
   Use a gitignored `.env`, never a tracked file.
 - The shell's working directory drifts between calls. Use absolute paths in scripts.

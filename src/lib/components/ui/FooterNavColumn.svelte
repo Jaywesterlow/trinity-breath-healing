@@ -8,11 +8,14 @@
 	} = $props();
 </script>
 
+<!-- No reveal in here: the footer fades its nav columns as one block (see Footer.svelte).
+     They used to fade per heading and per link, which at 43 footer lines was the bulk of
+     the "everything fades" the 2026-09-15 audit set out to remove. -->
 <section class="col">
 	<h2 class="col__heading">{heading}</h2>
 	<ul class="col__links">
 		{#each links as link (link.href)}
-			<li><a href={link.href}>{link.label}</a></li>
+			<li><a class="link-underline" href={link.href}>{link.label}</a></li>
 		{/each}
 	</ul>
 </section>
@@ -42,13 +45,12 @@
 		font-weight: var(--font-weight-regular);
 		color: var(--color-bg-sand);
 		text-decoration: none;
-		transition: opacity var(--motion-fast);
 		line-height: var(--line-height-normal);
+		position: relative;
 	}
 
-	.col__links a:hover {
-		opacity: 0.7;
-	}
+	/* Underline reveal — same vocabulary as the footer's legal links. */
+	/* The wipe is .link-underline in app.css. */
 
 	@media (min-width: 1024px) {
 		.col__heading {

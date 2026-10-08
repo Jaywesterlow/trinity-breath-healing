@@ -2,11 +2,11 @@ import { describe, it, expect } from 'vitest';
 import { ALL_ROUTES } from '$lib/constants/routes';
 
 describe('ALL_ROUTES manifest', () => {
-	it('contains exactly 15 entries', () => {
-		expect(ALL_ROUTES.length).toBe(15);
+	it('contains exactly 18 entries (2026-09-18: /faq merged into /contact, /blog dropped)', () => {
+		expect(ALL_ROUTES.length).toBe(18);
 	});
 
-	it('paths match exact 15-route list in order', () => {
+	it('paths match the reserved route list, in order', () => {
 		const paths = ALL_ROUTES.map((r) => r.path);
 		expect(paths).toEqual([
 			'/',
@@ -18,28 +18,38 @@ describe('ALL_ROUTES manifest', () => {
 			'/diensten/mahatma-healing',
 			'/diensten/goldhealing',
 			'/diensten/raster-energie',
+			'/diensten/cranio-fascia-unwinding',
 			'/diensten/spinal-touch',
-			'/blog',
+			'/diensten/brtt-body',
+			'/diensten/trb-breathwork',
 			'/artikelen',
-			'/faq',
 			'/privacyverklaring',
-			'/algemene-voorwaarden'
+			'/algemene-voorwaarden',
+			'/disclaimer',
+			'/reviews'
 		]);
 	});
 
 	it('first entry is landing page with kind="landing"', () => {
-		expect(ALL_ROUTES[0].kind).toBe('landing');
-		expect(ALL_ROUTES[0].path).toBe('/');
+		expect(ALL_ROUTES[0]!.kind).toBe('landing');
+		expect(ALL_ROUTES[0]!.path).toBe('/');
 	});
 
-	it('has exactly 4 service-stub entries covering the 4 modality slugs', () => {
-		const serviceStubs = ALL_ROUTES.filter((r) => r.kind === 'service-stub');
-		expect(serviceStubs.length).toBe(4);
-		const paths = serviceStubs.map((r) => r.path);
+	it('has exactly 7 modality routes, and they all carry real content', () => {
+		// Was "7 service-stub entries". They graduated to `kind: 'page'` on 2026-09-09
+		// when each got a real /diensten/{slug} page, which is what puts them in the
+		// sitemap. The count and the slugs are still the thing worth pinning.
+		const modalities = ALL_ROUTES.filter((r) => r.path.startsWith('/diensten/'));
+		expect(modalities.length).toBe(7);
+		expect(modalities.every((r) => r.kind === 'page')).toBe(true);
+		const paths = modalities.map((r) => r.path);
 		expect(paths).toContain('/diensten/mahatma-healing');
 		expect(paths).toContain('/diensten/goldhealing');
 		expect(paths).toContain('/diensten/raster-energie');
+		expect(paths).toContain('/diensten/cranio-fascia-unwinding');
 		expect(paths).toContain('/diensten/spinal-touch');
+		expect(paths).toContain('/diensten/brtt-body');
+		expect(paths).toContain('/diensten/trb-breathwork');
 	});
 
 	it('no non-root path contains a trailing slash', () => {
