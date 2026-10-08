@@ -12,9 +12,9 @@
 
 ## Phases
 
-- [ ] **Phase 0: Foundation & SEO Scaffolding** — SvelteKit + Svelte 5 (runes) + Vercel + GitHub Actions CI + primitives + robots.txt + sitemap + shared schema + design-token placeholders + CI gates skeleton + 14 reserved stub URLs (lock-in BEFORE any visible section)
-- [ ] **Phase 1: Landing Sections (Mobile-First, 8 sub-units in Figma frame order)** — Build the landing page section by section: hero → header + mobile menu → Werkwijze 3 cards → About + stats → Behandelingen selector → Contact + booking toggle → inline FAQ → footer
-- [ ] **Phase 2: Reserved-Page v1 Content** — Real content for the 3 routes that MUST be real before launch: `/privacyverklaring`, `/algemene-voorwaarden`, `/contact` (standalone form + booking). Other 11 routes stay as Phase 0 stubs through v1.
+- [x] **Phase 0: Foundation & SEO Scaffolding** — SvelteKit + Svelte 5 (runes) + Vercel + GitHub Actions CI + primitives + robots.txt + sitemap + shared schema + design-token placeholders + CI gates skeleton + 14 reserved stub URLs (lock-in BEFORE any visible section)
+- [x] **Phase 1: Landing Sections (Mobile-First, 8 sub-units in Figma frame order)** — Build the landing page section by section: hero → header + mobile menu → Werkwijze 3 cards → About + stats → Behandelingen selector → Contact + booking toggle → inline FAQ → footer
+- [ ] **Phase 2: Reserved-Page v1 Content** — Real content for the 3 routes that MUST be real before launch: `/privacyverklaring`, `/algemene-voorwaarden`, `/contact` (standalone form + booking). Other reserved routes stay as Phase 0 stubs through v1.
 - [ ] **Phase 3: Integrations (Vercel Function + Resend + Cal.com inline + Plausible)** — `/api/contact` Vercel Function → Resend EU dispatch; Cal.com 30-min Google Meet inline embed wired inside landing contact-section toggle; Plausible cookieless analytics; DST end-to-end booking test
 - [ ] **Phase 4: Legal & Copy Gate (Pre-Launch)** — Hedge-language grep, two-sentence-pattern enforcement, Dutch counsel sign-off on health claims, AVG flow verification, NAP off-site consistency, placeholder-grep CI gate must pass
 - [ ] **Phase 5: Launch & Monitoring** — Production deploy to Vercel `fra1`, Search Console submission, AI-crawler curl verification per route, 28-day CrUX CWV check, 60–90-day Perplexity/ChatGPT/Claude/Apple Intelligence citation tracking
@@ -100,7 +100,7 @@ Plans:
 
 ### Phase 2: Reserved-Page v1 Content
 
-**Goal**: The 3 routes that MUST be real before launch (`/privacyverklaring`, `/algemene-voorwaarden`, `/contact`) ship with full content; the other 11 stub routes from Phase 0 (`/werkwijze`, `/over-mij`, `/behandelingen`, 4× `/diensten/<slug>`, `/diensten`, `/blog`, `/artikelen`, `/faq`) remain stubs through v1 and are deepened in v2 milestones.
+**Goal**: The 3 routes that MUST be real before launch (`/privacyverklaring`, `/algemene-voorwaarden`, `/contact`) ship with full content; the other stub routes from Phase 0 (`/werkwijze`, `/over-mij`, `/behandelingen`, 7× `/diensten/<slug>`, `/diensten`, `/blog`, `/artikelen`) remain stubs through v1 and are deepened in v2 milestones.
 
 **Depends on**: Phase 1 (reuses landing primitives: header, footer, contact form block) AND Phase 3's processor configurations for the privacy-policy data-processor list (so Phase 3 must complete BEFORE Phase 2 privacy-policy content lands). Phase 2 plans may begin in parallel with Phase 3 and merge once processors are confirmed.
 
@@ -180,7 +180,7 @@ Plans:
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 0. Foundation & SEO Scaffolding | 9/9 | COMPLETE | 2026-06-22 |
-| 1. Landing Sections (8 sub-units) | 1/10 | In Progress|  |
+| 1. Landing Sections (8 sub-units) | 10/10 | EXECUTED (not formally verified) | 2026-06-25 |
 | 2. Reserved-Page v1 Content | 0/? | Not started | - |
 | 3. Integrations | 0/? | Not started | - |
 | 4. Legal & Copy Gate | 0/? | Not started | - |
