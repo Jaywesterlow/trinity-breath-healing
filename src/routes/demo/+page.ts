@@ -2,6 +2,7 @@ import type { PageLoad } from './$types';
 import { buildGraph } from '$lib/schema/buildGraph';
 import { buildWebPage } from '$lib/schema/webpage';
 import { buildFaqPage } from '$lib/schema/faq';
+import { buildBreadcrumb } from '$lib/schema/breadcrumb';
 import { DEMO_FAQ } from '$lib/demo/content';
 
 /**
@@ -20,7 +21,7 @@ import { DEMO_FAQ } from '$lib/demo/content';
 export const load: PageLoad = () => {
 	const title = 'Ademwerk en lichaamswerk, Amsterdam';
 	const description =
-		'Lichaamsgerichte therapie, ademwerk en energetische behandelingen in Amsterdam en omgeving. ' +
+		'Lichaamsgerichte therapie, ademwerk en energetische behandelingen in Amsterdam. ' +
 		'Rustig, persoonlijk en op jouw tempo. Plan een vrijblijvende kennismaking.';
 	return {
 		bare: true,
@@ -28,7 +29,11 @@ export const load: PageLoad = () => {
 		graph: buildGraph({
 			pageSpecific: [
 				buildWebPage({ title, description, path: '/demo', dateModified: __BUILD_DATE__ }),
-				buildFaqPage(DEMO_FAQ)
+				buildFaqPage(DEMO_FAQ),
+				buildBreadcrumb([
+					{ name: 'Home', path: '/' },
+					{ name: 'Demo', path: '/demo' }
+				])
 			],
 			path: '/demo'
 		})
