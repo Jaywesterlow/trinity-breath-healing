@@ -368,23 +368,20 @@
 
 	function onScrollDrive(): void {
 		const y = window.scrollY;
-		const rawDy = y - scrollDriveLastY;
+		const dy = y - scrollDriveLastY;
 		scrollDriveLastY = y;
 		if (!scrollDriveInView || dragging || document.hidden || prefersReducedMotion()) return;
-		const dy = Math.max(-SCROLL_DRIVE_MAX_DY, Math.min(SCROLL_DRIVE_MAX_DY, rawDy));
 		if (dy === 0) return;
-		cancelMotion();
-		if (scrollDriveSettleTimer !== null) clearTimeout(scrollDriveSettleTimer);
-		inGesture = true;
-		offset += -dy / SCROLL_DRIVE_PX_PER_STEP;
-		absorbWholeSteps();
-		scrollDriveSettleTimer = setTimeout(() => {
-			scrollDriveSettleTimer = null;
-			// Velocity 0 into the coast regime hands straight off to the latch
-			// spring on its first frame (see motionTick), onto the nearest card.
-			velocity = 0;
-			beginMotion();
-		}, SCROLL_DRIVE_SETTLE_MS);
+		if (Math.abs(dy) > SCROLL_DRIVE_MAX_DY) {
+			scrollDriveAccum = 0;
+			return;
+		}
+		scrollDriveAccum += dy;
+		const steps = Math.trunc(scrollDriveAccum / SCROLL_DRIVE_PX_PER_STEP);
+		if (steps === 0) return;
+		scrollDriveAccum -= steps * SCROLL_DRIVE_PX_PER_STEP;
+		// Down is "Volgende": next() is driveBy(-1).
+		driveBy(-steps);
 	}
 
 	onMount(() => {
@@ -402,6 +399,7 @@
 								// Re-sync on entry so the scroll that brought the
 								// section on screen does not count as a turn.
 								scrollDriveLastY = window.scrollY;
+								scrollDriveAccum = 0;
 							}
 						},
 						{ threshold: 0 }
@@ -435,7 +433,6 @@
 			window.removeEventListener('resize', remeasurePxPerStep);
 			window.removeEventListener('scroll', onScrollDrive);
 			scrollDriveObserver?.disconnect();
-			if (scrollDriveSettleTimer !== null) clearTimeout(scrollDriveSettleTimer);
 			document.removeEventListener('visibilitychange', onVisibilityChange);
 			cancelMotion();
 		};
@@ -593,22 +590,28 @@
 	// connected motion"). The drift machinery stays in place behind this flag.
 	const IDLE_DRIFT_ENABLED = false;
 
-	// Scroll drive. While the section is on screen, every pixel the page
-	// scrolls turns the fan the way a drag would: down is "Volgende" (the
-	// same direction next() moves offset), up is back. One card per
-	// SCROLL_DRIVE_PX_PER_STEP of scroll; a single scroll event is clamped to
-	// SCROLL_DRIVE_MAX_DY so a jump (an anchor link, a programmatic scroll)
-	// nudges the fan rather than spinning it. SCROLL_DRIVE_SETTLE_MS after
-	// the last scroll event the fan latches onto the nearest card through the
-	// same spring a released drag uses, so the handoff is the one the owner
-	// already signed off on. A drag in progress wins over scroll, and reduced
-	// motion turns the drive off.
-	const SCROLL_DRIVE_PX_PER_STEP = 320;
-	const SCROLL_DRIVE_MAX_DY = 80;
-	const SCROLL_DRIVE_SETTLE_MS = 160;
+	// Scroll drive. While the section is on screen the page's scroll turns the
+	// fan one whole card at a time: every SCROLL_DRIVE_PX_PER_STEP of scroll,
+	// down or up, fires one step through driveBy — the same spring Prev/Next
+	// run — so a card is always animated into the centre and the fan never
+	// sits between two cards while the page moves. The first version (earlier
+	// on 2026-10-14) scrubbed offset 1:1 with the scroll and latched after a
+	// pause; the owner found it far too fast and the cards never centred
+	// ("de kaart moet in het midden staan"). Stepped is also how the pinned
+	// scroll carousels he pointed at behave: a scroll distance per slide, and
+	// a snap so one slide is always centred.
+	//
+	// The accumulator carries the leftover between steps, so a wheel notch
+	// (about 100px) does nothing on its own and three of them turn one card.
+	// A single scroll event bigger than SCROLL_DRIVE_MAX_DY is a jump (an
+	// anchor link, a programmatic scroll), not a gesture: it clears the
+	// accumulator and turns nothing. A drag in progress wins over scroll, and
+	// reduced motion turns the drive off.
+	const SCROLL_DRIVE_PX_PER_STEP = 280;
+	const SCROLL_DRIVE_MAX_DY = 200;
 	let scrollDriveInView = false;
 	let scrollDriveLastY = 0;
-	let scrollDriveSettleTimer: ReturnType<typeof setTimeout> | null = null;
+	let scrollDriveAccum = 0;
 
 	const DRAG_SLOP_PX = 4; // past this, the gesture is a drag and not a click
 
@@ -2663,8 +2666,10 @@
 			   margin-top below did not need retuning. Card size
 			   (--card-width) is untouched — only the fan's spread changed. */
 			/* A further touch closer per the owner (2026-10-14, "a tiny bit"): 1304 to
-			   1270, about 2.5%. */
-			--pivot-distance: 1270px;
+			   1270, about 2.5%. Then "nog dichter bij elkaar" the same day: 1190px,
+			   another 6%. Desktop only; the 1536px+ branch below keeps its own
+			   radius, on his word that the cards must not crowd on an ultrawide. */
+			--pivot-distance: 1190px;
 		}
 
 		.treatments__controls {

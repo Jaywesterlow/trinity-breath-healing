@@ -1,22 +1,22 @@
 /**
- * behandelingen-scroll-drive.spec.ts — the Behandelingen fan turns with the
+ * behandelingen-scroll-drive.spec.ts — the Behandelingen fan steps with the
  * page's scroll (2026-10-14; it used to drift on its own after an idle delay).
  *
- * Covers: (i) nothing moves on its own — no idle drift any more; (ii) scrolling
- * the page while the fan is on screen turns it in next()'s direction
- * (decreasing --pos), and scrolling back turns it back; (iii) once the scroll
- * stops the fan latches onto a whole card; (iv) the spacing invariant holds
- * throughout; (v) reduced motion turns the drive off.
+ * Covers: (i) nothing moves on its own — no idle drift any more; (ii) less than
+ * a step's worth of scroll turns nothing; (iii) a step's worth while the fan is
+ * on screen turns it one card in next()'s direction, animated and landing on a
+ * whole card, and the same scroll back turns it back; (iv) the spacing
+ * invariant holds throughout; (v) reduced motion turns the drive off.
  *
- * The constants mirror SCROLL_DRIVE_* in Behandelingen.svelte only as rough
- * budgets; the direction and a generous band are asserted, not exact numbers.
+ * STEP_PX mirrors SCROLL_DRIVE_PX_PER_STEP in Behandelingen.svelte.
  */
 import { test, expect, type Page } from '@playwright/test';
 
 const DESKTOP = { width: 1440, height: 900 };
 test.use({ viewport: DESKTOP });
 
-const SETTLE_MS = 900; // SCROLL_DRIVE_SETTLE_MS plus the latch spring's landing
+const STEP_PX = 280; // SCROLL_DRIVE_PX_PER_STEP
+const SETTLE_MS = 1800; // the Prev/Next spring lands in ~1.2s (BUTTON_SPRING_OMEGA)
 
 /** The pivot nearest the centre: its --pos and which card it is (DOM index). A
  *  whole card of scroll folds into the integer positions, so --pos alone cannot
@@ -36,6 +36,19 @@ async function centre(page: Page): Promise<{ pos: number; index: number }> {
 			}
 		});
 		return { pos: best, index };
+	});
+}
+
+/** DOM index of the card at --pos +1 (the one next() brings to the centre: --pos
+ *  decreases, so the card at +1 lands on 0). */
+async function centreIndexes(page: Page): Promise<{ next: number }> {
+	return page.evaluate(() => {
+		const els = document.querySelectorAll('.treatments__pivot');
+		let next = -1;
+		els.forEach((el, i) => {
+			if (Math.abs(Number(getComputedStyle(el).getPropertyValue('--pos')) - 1) < 1e-3) next = i;
+		});
+		return { next };
 	});
 }
 
@@ -78,35 +91,51 @@ test('nothing moves on its own', async ({ page }) => {
 	expect(await centre(page), 'no idle drift').toEqual(a);
 });
 
-test("scrolling down turns the fan in next()'s direction, scrolling up turns it back, and it latches", async ({
+test('less than a step of scroll turns nothing', async ({ page }) => {
+	await openOnFan(page);
+	const a = await centre(page);
+	await scrollBy(page, STEP_PX / 2);
+	await page.waitForTimeout(SETTLE_MS);
+	expect(await centre(page)).toEqual(a);
+});
+
+test("a step of scroll turns the fan one card in next()'s direction, and the same back turns it back", async ({
 	page
 }) => {
 	await openOnFan(page);
 	const start = await centre(page);
 	expect(start.pos).toBe(0);
+	const startIndexes = await centreIndexes(page);
 
-	await scrollBy(page, 320);
+	await scrollBy(page, STEP_PX);
 	await page.waitForTimeout(SETTLE_MS);
 	const after = await centre(page);
-	expect(after.index, 'a different card is at the centre after a card of scroll').not.toBe(
-		start.index
-	);
-	expect(Number.isInteger(after.pos), 'latched onto a whole card').toBe(true);
+	expect(after.index, 'the next card is at the centre').toBe(startIndexes.next);
+	expect(Number.isInteger(after.pos), 'landed on a whole card').toBe(true);
 	expect(await spacingInvariantHolds(page)).toBe(true);
 
-	await scrollBy(page, -320);
+	await scrollBy(page, -STEP_PX);
 	await page.waitForTimeout(SETTLE_MS);
 	const back = await centre(page);
 	expect(back.index, 'scrolling back turns it back').toBe(start.index);
-	expect(Number.isInteger(back.pos), 'latched again on the way back').toBe(true);
+	expect(Number.isInteger(back.pos), 'landed again on the way back').toBe(true);
 	expect(await spacingInvariantHolds(page)).toBe(true);
+});
+
+test('a card is animated, not teleported, into the centre', async ({ page }) => {
+	await openOnFan(page);
+	await scrollBy(page, STEP_PX);
+	// Mid-spring: the centre pivot is between two whole positions.
+	await page.waitForTimeout(150);
+	const mid = await centre(page);
+	expect(Number.isInteger(mid.pos), 'still travelling 150ms after the step').toBe(false);
 });
 
 test('prefers-reduced-motion: reduce → the scroll does not turn the fan', async ({ page }) => {
 	await page.emulateMedia({ reducedMotion: 'reduce' });
 	await openOnFan(page);
 	const a = await centre(page);
-	await scrollBy(page, 320);
+	await scrollBy(page, STEP_PX);
 	await page.waitForTimeout(SETTLE_MS);
 	expect(await centre(page)).toEqual(a);
 });
