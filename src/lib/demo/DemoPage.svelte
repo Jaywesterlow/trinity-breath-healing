@@ -4,6 +4,11 @@
 	 * chrome, its own tokens on `.demo`; nothing here is shared with the live
 	 * components so the two can be compared side by side and either one can be
 	 * thrown away. Recipe and motion concept: src/lib/demo/RECIPE.md.
+	 *
+	 * The palette meets the logo: the mark is gold (#C19E22), so gold is the
+	 * page's accent (eyebrows, the werkwijze line, the figures, the badge's
+	 * centre) and deep water is the action hue. Sand is the ground, ink the
+	 * text, one tint band and one deep band.
 	 */
 	import { onMount } from 'svelte';
 	import { BRAND } from '$lib/constants/brand';
@@ -40,6 +45,13 @@
 		'eerste gesprek samen uit.'
 	] as const;
 
+	// Three stroke icons, one per fact, drawn on entry (pathLength 1).
+	const ICONS: Record<string, string[]> = {
+		door: ['M6 21V10a6 6 0 0 1 12 0v11', 'M3 21h18', 'M12 14v3'],
+		path: ['M4 20c5-3 2-8 6-11s8 1 10-5', 'M7 9l2 1', 'M14 16l2 1'],
+		waves: ['M3 8c3-3 6 3 9 0s6-3 9 0', 'M3 14c3-3 6 3 9 0s6-3 9 0', 'M3 20c3-3 6 3 9 0s6-3 9 0']
+	};
+
 	onMount(() => {
 		let cleanup: (() => void) | undefined;
 		if (root) initMotion(root).then((c) => (cleanup = c));
@@ -55,7 +67,7 @@
 	<header class="bar" class:bar--solid={solid}>
 		<div class="bar__inner">
 			<a class="brand" href="/demo" aria-label="TRINITY Breath & Healing, naar boven">
-				<img class="brand__mark" src="/trinity-logo.svg" alt="" width="36" height="36" />
+				<img class="brand__mark" src="/trinity-logo.svg" alt="" width="40" height="40" />
 				<span class="brand__text">
 					<span class="brand__name">TRINITY</span>
 					<span class="brand__sub">Breath &amp; Healing</span>
@@ -70,7 +82,7 @@
 				</ul>
 			</nav>
 
-			<a class="pill pill--bar" href="/contact">Maak een afspraak</a>
+			<a class="pill pill--bar" href="#contact">Maak een afspraak</a>
 
 			<button
 				class="bar__menu-btn"
@@ -88,7 +100,9 @@
 				{#each NAV as item (item.href)}
 					<li><a href={item.href} onclick={() => (menuOpen = false)}>{item.label}</a></li>
 				{/each}
-				<li><a class="pill" href="/contact">Maak een afspraak</a></li>
+				<li>
+					<a class="pill" href="#contact" onclick={() => (menuOpen = false)}>Maak een afspraak</a>
+				</li>
 			</ul>
 		</nav>
 	</header>
@@ -96,19 +110,36 @@
 	<div id="inhoud">
 		<DemoHero />
 
-		<!-- The statement: one thought, under-filled on purpose (a 46ch column
-		     on the sand), then the three facts about how she works. -->
+		<!-- The statement: one thought on the sand, under-filled on purpose, with
+		     a gold rule above it; then the three facts about how she works, each
+		     with a drawn icon, floating up one after another. -->
 		<section class="statement" aria-labelledby="statement-heading">
 			<div class="frame">
+				<span class="rule" aria-hidden="true"></span>
 				<h2 id="statement-heading" class="statement__text" data-lines>
 					{#each STATEMENT_LINES as line, i (i)}
 						<span class="line"><span>{line}</span></span>
 					{/each}
 				</h2>
 				<p class="visually-hidden">{STATEMENT}</p>
-				<ul class="practice">
+				<ul class="practice" data-float>
 					{#each PRACTICE as item (item.label)}
-						<li class="practice__item">
+						<li class="practice__item" data-tilt="4">
+							<svg
+								class="practice__icon"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								stroke-width="1.4"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								aria-hidden="true"
+								data-icon-draw
+							>
+								{#each ICONS[item.icon] ?? [] as d, i (i)}
+									<path {d} pathLength="1" />
+								{/each}
+							</svg>
 							<span class="eyebrow">{item.label}</span>
 							<p>{item.text}</p>
 						</li>
@@ -127,8 +158,13 @@
 	<footer class="foot">
 		<div class="frame foot__grid">
 			<div class="foot__brand">
-				<span class="brand__name brand__name--foot">TRINITY</span>
-				<span class="brand__sub brand__sub--foot">Breath &amp; Healing</span>
+				<a class="brand brand--foot" href="/demo" aria-label="TRINITY Breath & Healing, naar boven">
+					<img class="brand__mark" src="/trinity-logo.svg" alt="" width="48" height="48" />
+					<span class="brand__text">
+						<span class="brand__name">TRINITY</span>
+						<span class="brand__sub">Breath &amp; Healing</span>
+					</span>
+				</a>
 				<address class="foot__address">
 					<span>{BRAND.workArea.label}</span>
 					<span class="foot__note">{BRAND.practice.homeVisitNote} {BRAND.practice.remoteNote}</span>
@@ -172,8 +208,10 @@
 		--d-deep: #1e4e58;
 		--d-water: #4f8f9c;
 		--d-tint: #dfeaec;
-		--d-sand: #f6f2ea;
-		--d-paper: #fbf9f5;
+		--d-sand: #f5efe4;
+		--d-paper: #fbf8f2;
+		--d-gold: #a8861f; /* the logo's #C19E22, taken down to 4.6:1 on the sand */
+		--d-gold-light: #dcc06b; /* the same gold for type on the deep band */
 		--d-on-dark: #f3ece0;
 		--d-on-dark-soft: #c9d6d8;
 		--d-line: rgba(23, 51, 58, 0.14);
@@ -187,9 +225,9 @@
 		--d-fs-body: 1rem;
 		--d-fs-lead: 1.125rem;
 		--d-fs-h3: 1.375rem;
-		--d-fs-stat: 2rem;
+		--d-fs-stat: 2.25rem;
 		--d-fs-h2: clamp(2rem, 1.4rem + 2.2vw, 3rem);
-		--d-fs-h1: clamp(2.5rem, 1.5rem + 4.2vw, 4.5rem);
+		--d-fs-h1: clamp(2.5rem, 1.6rem + 3.4vw, 4rem);
 
 		/* spacing scale, 8-base */
 		--d-s1: 0.5rem;
@@ -218,69 +256,70 @@
 		overflow-x: clip;
 	}
 
-	/* ─── Shared pieces, global inside .demo so the sections can use them ─── */
-	.demo :global(.frame) {
+	/* ─── Shared pieces. Written as :global(.demo …) so they carry the
+	   specificity of a plain class + element and never outrank a section's
+	   own rule (a scoped `.demo :global(p)` compiles to `.demo.svelte-x p`,
+	   which beat every component's margins: the first build's off-centre
+	   leads came from exactly that). ─── */
+	:global(.demo .frame) {
 		max-width: var(--d-frame);
 		margin-inline: auto;
 		padding-inline: var(--d-gutter);
 	}
-
-	.demo :global(.eyebrow) {
+	:global(.demo .eyebrow) {
 		display: block;
 		font-family: var(--d-font-body);
 		font-size: var(--d-fs-eyebrow);
 		font-weight: 700;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
-		color: var(--d-ink-soft);
+		color: var(--d-gold);
 	}
-	.demo :global(.eyebrow--dark) {
-		color: var(--d-on-dark-soft);
+	:global(.demo .eyebrow--dark) {
+		color: var(--d-gold-light);
 	}
-
-	.demo :global(h2),
-	.demo :global(h3) {
+	:global(.demo h2),
+	:global(.demo h3) {
 		font-family: var(--d-font-display);
 		font-weight: 700;
 		line-height: 1.1;
 		margin: 0;
 		text-wrap: balance;
 	}
-	.demo :global(h2) {
+	:global(.demo h2) {
 		font-size: var(--d-fs-h2);
 	}
-	.demo :global(h3) {
+	:global(.demo h3) {
 		font-size: var(--d-fs-h3);
 	}
-	.demo :global(p) {
+	:global(.demo p) {
 		margin: 0;
 		text-wrap: pretty;
 	}
-	.demo :global(.lead) {
+	:global(.demo .lead) {
 		font-size: var(--d-fs-lead);
 		color: var(--d-ink-soft);
 		max-width: 46ch;
 	}
 	/* eyebrow 8–12 above a heading, heading to subline 16–24, header to content 40–64 */
-	.demo :global(.eyebrow + h2) {
+	:global(.demo .eyebrow + h2) {
 		margin-top: var(--d-s1);
 	}
-	.demo :global(h2 + .lead) {
+	:global(.demo h2 + .lead) {
 		margin-top: var(--d-s2);
 	}
-
 	/* 03b's masks: a line is a window; what rises inside it comes from below the window */
-	.demo :global(.line) {
+	:global(.demo .line) {
 		display: block;
 		overflow: hidden;
-		padding-bottom: 0.12em;
-		margin-bottom: -0.12em;
+		padding-bottom: 0.14em;
+		margin-bottom: -0.14em;
 	}
-	.demo :global(.line > *) {
+	:global(.demo .line > *) {
 		display: block;
 	}
 
-	.demo :global(.pill) {
+	:global(.demo .pill) {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -295,50 +334,56 @@
 		font-weight: 700;
 		text-decoration: none;
 		white-space: nowrap;
+		cursor: pointer;
 		transition:
 			background-color 150ms var(--d-ease),
 			color 150ms var(--d-ease),
 			border-color 150ms var(--d-ease);
 	}
-	.demo :global(.pill:hover),
-	.demo :global(.pill:focus-visible) {
+	:global(.demo .pill:hover),
+	:global(.demo .pill:focus-visible) {
 		background: var(--d-ink);
 		border-color: var(--d-ink);
 	}
-	.demo :global(.pill--ghost) {
+	/* The outlined tier: on hover it takes a light tint, never the full fill,
+	   so the two tiers stay two tiers. */
+	:global(.demo .pill--ghost) {
 		background: transparent;
 		color: var(--d-deep);
 	}
-	.demo :global(.pill--ghost:hover),
-	.demo :global(.pill--ghost:focus-visible) {
-		background: var(--d-deep);
-		color: #fff;
+	:global(.demo .pill--ghost:hover),
+	:global(.demo .pill--ghost:focus-visible) {
+		background: var(--d-tint);
+		border-color: var(--d-deep);
+		color: var(--d-deep);
 	}
-	.demo :global(.pill--sand) {
+	:global(.demo .pill--sand) {
 		background: var(--d-on-dark);
 		border-color: var(--d-on-dark);
 		color: var(--d-ink);
 	}
-	.demo :global(.pill--sand:hover),
-	.demo :global(.pill--sand:focus-visible) {
+	:global(.demo .pill--sand:hover),
+	:global(.demo .pill--sand:focus-visible) {
 		background: #fff;
 		border-color: #fff;
+		color: var(--d-ink);
 	}
-	.demo :global(.pill--light) {
+	:global(.demo .pill--light) {
 		background: transparent;
 		border-color: var(--d-on-dark);
 		color: var(--d-on-dark);
 	}
-	.demo :global(.pill--light:hover),
-	.demo :global(.pill--light:focus-visible) {
-		background: var(--d-on-dark);
-		color: var(--d-ink);
+	:global(.demo .pill--light:hover),
+	:global(.demo .pill--light:focus-visible) {
+		background: rgba(243, 236, 224, 0.16);
+		border-color: var(--d-on-dark);
+		color: var(--d-on-dark);
 	}
-	.demo :global(:focus-visible) {
-		outline: 2px solid var(--d-water);
+	:global(.demo :focus-visible) {
+		outline: 2px solid var(--d-gold);
 		outline-offset: 3px;
 	}
-	.demo :global(.visually-hidden) {
+	:global(.demo .visually-hidden) {
 		position: absolute;
 		width: 1px;
 		height: 1px;
@@ -392,19 +437,20 @@
 	.brand {
 		display: flex;
 		align-items: center;
-		gap: var(--d-s1);
+		gap: 0.625rem;
 		color: inherit;
 		text-decoration: none;
 		flex-shrink: 0;
 	}
 	.brand__mark {
-		width: 2.25rem;
-		height: 2.25rem;
+		width: 2.5rem;
+		height: 2.5rem;
 	}
 	.brand__text {
 		display: flex;
 		flex-direction: column;
 		line-height: 1;
+		gap: 0.2rem;
 	}
 	.brand__name {
 		font-family: 'Cinzel', var(--d-font-display);
@@ -413,9 +459,8 @@
 	}
 	.brand__sub {
 		font-family: var(--d-font-display);
-		font-size: 0.875rem;
+		font-size: 0.9375rem;
 		font-style: italic;
-		opacity: 0.85;
 	}
 	.bar__nav {
 		display: none;
@@ -452,7 +497,7 @@
 	.bar__link:focus-visible::after {
 		transform: scaleX(1);
 	}
-	.demo :global(.pill--bar) {
+	:global(.demo .pill--bar) {
 		display: none;
 		min-height: 2.5rem;
 		padding-inline: 1.25rem;
@@ -463,6 +508,10 @@
 		background: var(--d-on-dark);
 		border-color: var(--d-on-dark);
 		color: var(--d-ink);
+	}
+	.bar:not(.bar--solid) :global(.pill--bar:hover) {
+		background: #fff;
+		border-color: #fff;
 	}
 	.bar__menu-btn {
 		margin-left: auto;
@@ -502,7 +551,7 @@
 		.bar__nav {
 			display: flex;
 		}
-		.demo :global(.pill--bar) {
+		:global(.demo .pill--bar) {
 			display: inline-flex;
 		}
 		.bar__menu-btn,
@@ -514,6 +563,13 @@
 	/* ─── The statement ─── */
 	.statement {
 		padding-block: var(--d-s7);
+	}
+	.rule {
+		display: block;
+		width: 3rem;
+		height: 2px;
+		margin: 0 auto var(--d-s4);
+		background: var(--d-gold);
 	}
 	.statement__text {
 		max-width: 42ch;
@@ -529,13 +585,21 @@
 		gap: var(--d-s3);
 	}
 	.practice__item {
-		padding: var(--d-s3) var(--d-s3) var(--d-s3);
+		padding: var(--d-s4) var(--d-s3) var(--d-s3);
 		background: var(--d-tint);
 		border-radius: var(--d-radius);
+	}
+	.practice__icon {
+		display: block;
+		width: 2.5rem;
+		height: 2.5rem;
+		margin-bottom: var(--d-s3);
+		color: var(--d-deep);
 	}
 	.practice__item p {
 		margin-top: var(--d-s1);
 		color: var(--d-ink);
+		max-width: 34ch;
 	}
 	@media (min-width: 768px) {
 		.practice {
@@ -556,12 +620,20 @@
 	.foot__brand {
 		display: flex;
 		flex-direction: column;
+		align-items: flex-start;
 	}
-	.brand__name--foot {
-		font-size: 1.5rem;
+	.brand--foot {
+		border: 0 !important;
 	}
-	.brand__sub--foot {
-		font-size: 1.125rem;
+	.brand--foot .brand__mark {
+		width: 3rem;
+		height: 3rem;
+	}
+	.brand--foot .brand__name {
+		font-size: 1.375rem;
+	}
+	.brand--foot .brand__sub {
+		font-size: 1.0625rem;
 	}
 	.foot__address {
 		font-style: normal;
@@ -573,15 +645,15 @@
 	.foot__note {
 		max-width: 36ch;
 	}
-	.foot a {
+	.foot a:not(.brand) {
 		color: var(--d-on-dark);
 		text-decoration: none;
 		border-bottom: 1px solid var(--d-line-dark);
 		width: fit-content;
 		transition: border-color 150ms var(--d-ease);
 	}
-	.foot a:hover,
-	.foot a:focus-visible {
+	.foot a:not(.brand):hover,
+	.foot a:not(.brand):focus-visible {
 		border-bottom-color: var(--d-on-dark);
 	}
 	.foot__col {

@@ -9,10 +9,7 @@ import { faqItems } from '$lib/content/faq/index';
 
 /** The hero, as locked on the live page. */
 export const HERO = {
-	lines: [
-		['Rust', 'in', 'je', 'hoofd.'],
-		['Ontspanning', 'in', 'je', 'lichaam.']
-	],
+	lines: ['Rust in je hoofd.', 'Ontspanning in je lichaam.'],
 	body:
 		'Ik weet hoe het voelt om vast te lopen, fysiek, mentaal en emotioneel. Via lichaamsgerichte ' +
 		'therapie, ademwerk en energetische behandelingen help ik jou terug naar rust, herstel en jezelf.',
@@ -24,11 +21,11 @@ export const HERO = {
 export const STATEMENT =
 	'Je hoeft niet te weten welke behandeling je nodig hebt. Dat zoeken we in het eerste gesprek samen uit.';
 
-/** Where and how she works, from BRAND.practice. */
+/** Where and how she works, from BRAND.practice, each with a drawn icon. */
 export const PRACTICE = [
-	{ label: 'Zaterdag', text: BRAND.practice.locationNote },
-	{ label: 'Doordeweeks', text: BRAND.practice.homeVisitNote },
-	{ label: 'Op afstand', text: BRAND.practice.remoteNote }
+	{ icon: 'door', label: 'Zaterdag', text: BRAND.practice.locationNote },
+	{ icon: 'path', label: 'Doordeweeks', text: BRAND.practice.homeVisitNote },
+	{ icon: 'waves', label: 'Op afstand', text: BRAND.practice.remoteNote }
 ] as const;
 
 /** The three steps of the live Werkwijze section, each body with the title it describes. */

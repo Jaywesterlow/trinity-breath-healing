@@ -1,12 +1,12 @@
 <script lang="ts">
 	/**
 	 * Over mij on the deep water band: her words (the live about intro), two
-	 * figures from BRAND.stats, and a photo that wipes open from the right
-	 * (library 12). The photo is a generated stand-in in her kind of light and
-	 * clothing, no face; her own portrait replaces it before anything goes
-	 * live, which is what the sector's E-E-A-T asks for.
+	 * figures from BRAND.stats, and her own drawn portrait from the live site,
+	 * drawing its strokes in sand as it comes into view (the site's DrawOn).
+	 * No generated person: the drawing is hers.
 	 */
-	import hands from './images/hands.jpg?enhanced';
+	import DrawOn from '$lib/components/ui/DrawOn.svelte';
+	import portrait from '$lib/images/about-portrait-1.svg?raw';
 	import { ABOUT_INTRO } from '$lib/content/about';
 	import { BRAND } from '$lib/constants/brand';
 </script>
@@ -33,15 +33,8 @@
 			<a class="pill pill--light" href="/over-mij">Lees meer over mij</a>
 		</div>
 
-		<div class="about__media">
-			<div class="about__photo" data-reveal-img data-dir="left">
-				<enhanced:img
-					src={hands}
-					alt="Iemand zit rustig op een houten stoel in zandkleurig linnen, de handen open in de schoot, zacht licht van een raam links"
-					sizes="(min-width: 1024px) 40vw, 100vw"
-					loading="lazy"
-				/>
-			</div>
+		<div class="about__portrait">
+			<DrawOn svg={portrait} />
 		</div>
 	</div>
 </section>
@@ -79,6 +72,7 @@
 		font-size: var(--d-fs-stat);
 		font-weight: 700;
 		line-height: 1;
+		color: var(--d-gold-light);
 		font-variant-numeric: tabular-nums;
 	}
 	.about__stats dt {
@@ -89,23 +83,27 @@
 		text-transform: uppercase;
 		font-weight: 700;
 	}
-	.about__photo {
-		border-radius: var(--d-radius);
-		overflow: hidden;
-		aspect-ratio: 4 / 5;
-		background: var(--d-ink);
+	.about__portrait {
+		max-width: 22rem;
+		margin: 0 auto;
 	}
-	.about__photo :global(img) {
+	/* DrawOn is display:contents, so the <svg> is the box; the painted path
+	   takes the band's sand so the drawing is ink on the water. */
+	.about__portrait :global(svg.lt) {
 		display: block;
 		width: 100%;
-		height: 100%;
-		object-fit: cover;
-		transform-origin: center;
+		height: auto;
+	}
+	.about__portrait :global(svg.lt > path) {
+		fill: var(--d-on-dark);
 	}
 	@media (min-width: 1024px) {
 		.about__grid {
 			grid-template-columns: 7fr 5fr;
 			gap: var(--d-s6);
+		}
+		.about__portrait {
+			max-width: 26rem;
 		}
 	}
 </style>

@@ -1,9 +1,11 @@
 <script lang="ts">
 	/**
-	 * The three steps along a line that draws itself as you scroll (library
-	 * 23, without the pin: the line runs down the column and the page keeps
-	 * moving). Each step brightens as the line reaches it. The copy is the live
-	 * Werkwijze section's, each body under the title it describes.
+	 * The three steps along a line down the middle of the screen. The line
+	 * draws itself as you scroll (library 23, no pin) and each step appears
+	 * the moment the line reaches it: both run on one scrubbed timeline, so
+	 * scrolling back undraws them in the same order. Steps alternate sides
+	 * of the line on desktop and sit to its right on a phone. The copy is the
+	 * live Werkwijze section's, each body under the title it describes.
 	 */
 	import { STEPS } from './content';
 </script>
@@ -19,14 +21,16 @@
 
 		<div class="way__body" data-draw>
 			<svg class="way__line" viewBox="0 0 24 1000" preserveAspectRatio="none" aria-hidden="true">
-				<path d="M12,0 C12,180 4,260 12,340 C20,420 20,560 12,660 C4,760 12,880 12,1000" />
+				<path d="M12,0 C12,160 6,240 12,330 C18,420 18,560 12,660 C6,760 12,880 12,1000" />
 			</svg>
 			<ol class="way__steps">
 				{#each STEPS as step, i (step.title)}
 					<li class="way__step" data-milestone>
 						<span class="way__num" aria-hidden="true">{i + 1}</span>
-						<h3>{step.title}</h3>
-						<p>{step.body}</p>
+						<div class="way__card">
+							<h3>{step.title}</h3>
+							<p>{step.body}</p>
+						</div>
 					</li>
 				{/each}
 			</ol>
@@ -45,13 +49,13 @@
 	}
 	.way__body {
 		position: relative;
-		max-width: 40rem;
+		max-width: 56rem;
 		margin: var(--d-s6) auto 0;
-		padding-left: 3.5rem;
+		padding-block: var(--d-s2);
 	}
 	.way__line {
 		position: absolute;
-		left: 0.25rem;
+		left: 0.9rem;
 		top: 0;
 		width: 1.5rem;
 		height: 100%;
@@ -59,7 +63,7 @@
 	}
 	.way__line path {
 		fill: none;
-		stroke: var(--d-water);
+		stroke: var(--d-gold);
 		stroke-width: 2;
 		stroke-linecap: round;
 		vector-effect: non-scaling-stroke;
@@ -73,25 +77,62 @@
 	}
 	.way__step {
 		position: relative;
+		display: grid;
+		grid-template-columns: 3.5rem 1fr;
+		align-items: start;
 	}
 	.way__num {
-		position: absolute;
-		left: -3.5rem;
-		top: 0.1em;
-		width: 2rem;
-		height: 2rem;
+		width: 2.5rem;
+		height: 2.5rem;
 		display: grid;
 		place-items: center;
 		border-radius: 50%;
 		background: var(--d-sand);
-		border: 2px solid var(--d-water);
-		color: var(--d-deep);
-		font-size: var(--d-fs-eyebrow);
+		border: 2px solid var(--d-gold);
+		color: var(--d-ink);
+		font-family: var(--d-font-body);
+		font-size: var(--d-fs-body);
 		font-weight: 700;
+		margin-left: 0.4rem;
 	}
-	.way__step p {
+	.way__card {
+		padding: var(--d-s3) var(--d-s4);
+		background: var(--d-paper);
+		border: 1px solid var(--d-line);
+		border-radius: var(--d-radius);
+	}
+	.way__card p {
 		margin-top: var(--d-s1);
 		color: var(--d-ink-soft);
 		max-width: 46ch;
+	}
+
+	@media (min-width: 900px) {
+		.way__line {
+			left: 50%;
+			margin-left: -0.75rem;
+		}
+		.way__step {
+			grid-template-columns: 1fr 5rem 1fr;
+		}
+		.way__num {
+			grid-column: 2;
+			grid-row: 1;
+			justify-self: center;
+			margin-left: 0;
+		}
+		.way__card {
+			grid-row: 1;
+		}
+		.way__step:nth-child(odd) .way__card {
+			grid-column: 1;
+			text-align: right;
+		}
+		.way__step:nth-child(odd) .way__card p {
+			margin-left: auto;
+		}
+		.way__step:nth-child(even) .way__card {
+			grid-column: 3;
+		}
 	}
 </style>

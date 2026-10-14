@@ -1,9 +1,11 @@
 <script lang="ts">
 	/**
-	 * The seven treatments as a hairline list beside a photo: the sector's
-	 * service rows, on the page's one tint band. The photo wipes open from
-	 * below as it enters (library 12). Names and teasers are BRAND.services,
-	 * verbatim; each row links to the treatment's own page.
+	 * The seven treatments as the card grid the owner likes on the service
+	 * pages (name, teaser, the arrow circle in the corner, the whole card a
+	 * link), laid out as a bento: the stones photo takes the first double cell,
+	 * seven cards fill the rest with no orphan. The cards float up one after
+	 * another (library 08a) and tilt toward the cursor (27b); the photo wipes
+	 * open (12). Names and teasers are BRAND.services, verbatim.
 	 */
 	import stones from './images/stones.jpg?enhanced';
 	import { BRAND } from '$lib/constants/brand';
@@ -20,45 +22,37 @@
 			</p>
 		</header>
 
-		<div class="treat__grid">
-			<div class="treat__media">
+		<ul class="treat__grid" data-float>
+			<li class="treat__photo-cell">
 				<div class="treat__photo" data-reveal-img data-dir="up">
 					<enhanced:img
 						src={stones}
 						alt="Helder, langzaam stromend water over gladde grijsgroene stenen, van boven gezien"
-						sizes="(min-width: 1024px) 40vw, 100vw"
+						sizes="(min-width: 1024px) 66vw, 100vw"
 						loading="lazy"
 					/>
 				</div>
-			</div>
-
-			<ul class="treat__list">
-				{#each BRAND.services as service (service.slug)}
-					<li class="treat__row">
-						<a class="treat__link" href="/diensten/{service.slug}">
-							<span class="treat__name">{service.name}</span>
-							<span class="treat__teaser">{service.teaser}</span>
-							<svg
-								class="treat__arrow"
-								width="20"
-								height="20"
-								viewBox="0 0 24 24"
-								aria-hidden="true"
-							>
+			</li>
+			{#each BRAND.services as service (service.slug)}
+				<li>
+					<a class="tcard" href="/diensten/{service.slug}" data-tilt="5">
+						<span class="tcard__name">{service.name}</span>
+						<span class="tcard__teaser">{service.teaser}</span>
+						<span class="tcard__arrow" aria-hidden="true">
+							<svg width="16" height="16" viewBox="0 0 16 16" fill="none">
 								<path
-									d="M5 12h14M13 6l6 6-6 6"
-									fill="none"
+									d="M4 12L12 4M12 4H7M12 4V9"
 									stroke="currentColor"
-									stroke-width="1.8"
+									stroke-width="1.5"
 									stroke-linecap="round"
 									stroke-linejoin="round"
 								/>
 							</svg>
-						</a>
-					</li>
-				{/each}
-			</ul>
-		</div>
+						</span>
+					</a>
+				</li>
+			{/each}
+		</ul>
 	</div>
 </section>
 
@@ -71,82 +65,111 @@
 		max-width: 46rem;
 	}
 	.treat__grid {
-		margin-top: var(--d-s5);
+		list-style: none;
+		margin: var(--d-s5) 0 0;
+		padding: 0;
 		display: grid;
-		gap: var(--d-s5);
-		align-items: start;
+		gap: var(--d-s3);
 	}
-	.treat__media {
-		position: sticky;
-		top: calc(var(--d-bar) + var(--d-s3));
+	.treat__grid > li {
+		min-width: 0;
 	}
+	/* The photo takes the row's height from the card beside it, never the
+	   other way round: the <picture> is absolute inside the tile (gsap scales
+	   it, and a transformed box is the containing block for anything absolute
+	   inside it, so the <img> itself stays in flow at 100%). */
 	.treat__photo {
+		position: relative;
+		height: 100%;
+		min-height: 14rem;
 		border-radius: var(--d-radius);
 		overflow: hidden;
-		aspect-ratio: 4 / 5;
 		background: var(--d-deep);
+	}
+	.treat__photo :global(picture) {
+		position: absolute;
+		inset: 0;
+		display: block;
+		transform-origin: center;
 	}
 	.treat__photo :global(img) {
 		display: block;
 		width: 100%;
 		height: 100%;
 		object-fit: cover;
-		transform-origin: center;
 	}
 
-	.treat__list {
-		list-style: none;
-		margin: 0;
-		padding: 0;
-		border-top: 1px solid var(--d-line);
-	}
-	.treat__row {
-		border-bottom: 1px solid var(--d-line);
-	}
-	.treat__link {
-		display: grid;
-		grid-template-columns: 1fr auto;
-		grid-template-areas:
-			'name arrow'
-			'teaser arrow';
-		column-gap: var(--d-s3);
-		row-gap: var(--d-s1);
-		align-items: center;
-		padding: var(--d-s3) 0;
+	.tcard {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		gap: var(--d-s1);
+		height: 100%;
+		padding: var(--d-s3);
+		padding-bottom: calc(var(--d-s3) + 2.625rem + var(--d-s2));
+		border: 1px solid var(--d-line);
+		border-radius: var(--d-radius);
+		background: var(--d-paper);
 		color: inherit;
 		text-decoration: none;
+		transition:
+			background-color 150ms var(--d-ease),
+			border-color 150ms var(--d-ease);
 	}
-	.treat__name {
-		grid-area: name;
+	.tcard:hover,
+	.tcard:focus-visible {
+		background: #fff;
+		border-color: var(--d-water);
+	}
+	.tcard__name {
 		font-family: var(--d-font-display);
 		font-size: var(--d-fs-h3);
 		font-weight: 700;
-		line-height: 1.1;
-		transition: color 150ms var(--d-ease);
+		line-height: 1.15;
 	}
-	.treat__teaser {
-		grid-area: teaser;
+	.tcard__teaser {
 		color: var(--d-ink-soft);
-		max-width: 60ch;
 	}
-	.treat__arrow {
-		grid-area: arrow;
+	/* The arrow circle from the service pages: a ring that fills on hover,
+	   with a soft halo. */
+	.tcard__arrow {
+		position: absolute;
+		right: var(--d-s3);
+		bottom: var(--d-s3);
+		width: 2.625rem;
+		height: 2.625rem;
+		display: grid;
+		place-items: center;
+		border-radius: var(--d-pill);
+		border: 1px solid var(--d-deep);
 		color: var(--d-deep);
-		transition: transform 200ms var(--d-ease);
+		box-shadow: 0 0 0 0 rgba(30, 78, 88, 0);
+		transition:
+			background-color 200ms var(--d-ease),
+			color 200ms var(--d-ease),
+			box-shadow 200ms var(--d-ease);
 	}
-	.treat__link:hover .treat__name,
-	.treat__link:focus-visible .treat__name {
-		color: var(--d-deep);
-	}
-	.treat__link:hover .treat__arrow,
-	.treat__link:focus-visible .treat__arrow {
-		transform: translateX(4px);
+	.tcard:hover .tcard__arrow,
+	.tcard:focus-visible .tcard__arrow {
+		background: var(--d-deep);
+		color: #fff;
+		box-shadow: 0 0 0 6px rgba(30, 78, 88, 0.18);
 	}
 
+	@media (min-width: 700px) {
+		.treat__grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+		.treat__photo-cell {
+			grid-column: span 2;
+		}
+	}
 	@media (min-width: 1024px) {
 		.treat__grid {
-			grid-template-columns: 5fr 7fr;
-			gap: var(--d-s6);
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+		.treat__photo-cell {
+			grid-column: span 2;
 		}
 	}
 </style>
