@@ -22,6 +22,11 @@
 	// of the per-page meta each +page.ts already computes from stub-meta.ts.
 	const meta = $derived($page.data.meta ?? data.meta);
 
+	// A route that carries its own chrome (the /demo page) sets `bare: true`
+	// in its load and gets the head, the analytics and the JSON-LD from here,
+	// and nothing else: no Nav, no Footer, no cursor tooltip, no nav offset.
+	const bare = $derived(Boolean($page.data.bare));
+
 	onNavigate((navigation) => {
 		if (!document.startViewTransition) return;
 		return new Promise((resolve) => {
@@ -65,15 +70,27 @@
 <Head {meta} />
 <Analytics />
 <JsonLd {graph} />
-<Nav />
-<main class="page-content" style="view-transition-name: page-content">
+{#if !bare}
+	<Nav />
+{/if}
+<main
+	class="page-content"
+	class:page-content--bare={bare}
+	style="view-transition-name: page-content"
+>
 	{@render children()}
 </main>
-<Footer />
-<CursorTooltip />
+{#if !bare}
+	<Footer />
+	<CursorTooltip />
+{/if}
 
 <style>
 	.page-content {
 		padding-top: var(--nav-height);
+	}
+
+	.page-content--bare {
+		padding-top: 0;
 	}
 </style>
