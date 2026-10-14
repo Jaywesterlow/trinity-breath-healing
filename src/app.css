@@ -175,6 +175,9 @@
 	   ceiling at about 1370px wide. Gaps land at 128px on a phone and 192px on a
 	   desktop, against 112 and 128 before. */
 	--section-pad: clamp(4rem, 7vw, 6rem);
+	/* One and a half of it, for the seams the owner wanted airier (2026-10-14): under
+	   the treatments, and above and below the FAQ. */
+	--section-pad-lg: calc(var(--section-pad) * 1.5);
 
 	/* The same job one level down: the gap between the <section>s inside a single
 	   subpage article. Not --section-pad — those separate full-bleed bands of the

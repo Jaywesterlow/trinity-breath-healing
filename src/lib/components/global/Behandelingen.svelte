@@ -324,6 +324,7 @@
 	const FALLBACK_PX_PER_STEP = 90; // only in effect before the first live measurement lands
 	let pxPerStep = $state(FALLBACK_PX_PER_STEP);
 	let fanEl: HTMLElement | undefined;
+	let sectionEl: HTMLElement | undefined;
 
 	// Reads positions[]/offset (both $state) but is called imperatively from
 	// onMount/resize below, never from inside a Svelte $effect — so it never
@@ -365,9 +366,48 @@
 		if (measured !== null) pxPerStep = measured;
 	}
 
+	function onScrollDrive(): void {
+		const y = window.scrollY;
+		const rawDy = y - scrollDriveLastY;
+		scrollDriveLastY = y;
+		if (!scrollDriveInView || dragging || document.hidden || prefersReducedMotion()) return;
+		const dy = Math.max(-SCROLL_DRIVE_MAX_DY, Math.min(SCROLL_DRIVE_MAX_DY, rawDy));
+		if (dy === 0) return;
+		cancelMotion();
+		if (scrollDriveSettleTimer !== null) clearTimeout(scrollDriveSettleTimer);
+		inGesture = true;
+		offset += -dy / SCROLL_DRIVE_PX_PER_STEP;
+		absorbWholeSteps();
+		scrollDriveSettleTimer = setTimeout(() => {
+			scrollDriveSettleTimer = null;
+			// Velocity 0 into the coast regime hands straight off to the latch
+			// spring on its first frame (see motionTick), onto the nearest card.
+			velocity = 0;
+			beginMotion();
+		}, SCROLL_DRIVE_SETTLE_MS);
+	}
+
 	onMount(() => {
 		remeasurePxPerStep();
 		window.addEventListener('resize', remeasurePxPerStep);
+
+		scrollDriveLastY = window.scrollY;
+		window.addEventListener('scroll', onScrollDrive, { passive: true });
+		const scrollDriveObserver =
+			typeof IntersectionObserver === 'function' && sectionEl
+				? new IntersectionObserver(
+						(entries) => {
+							for (const entry of entries) {
+								scrollDriveInView = entry.isIntersecting;
+								// Re-sync on entry so the scroll that brought the
+								// section on screen does not count as a turn.
+								scrollDriveLastY = window.scrollY;
+							}
+						},
+						{ threshold: 0 }
+					)
+				: null;
+		if (scrollDriveObserver && sectionEl) scrollDriveObserver.observe(sectionEl);
 
 		// Idle auto-drift's own countdown starts here too, not only after a
 		// first real interaction — a page that loads and is never touched is
@@ -393,6 +433,9 @@
 
 		return () => {
 			window.removeEventListener('resize', remeasurePxPerStep);
+			window.removeEventListener('scroll', onScrollDrive);
+			scrollDriveObserver?.disconnect();
+			if (scrollDriveSettleTimer !== null) clearTimeout(scrollDriveSettleTimer);
 			document.removeEventListener('visibilitychange', onVisibilityChange);
 			cancelMotion();
 		};
@@ -545,6 +588,27 @@
 	// i.e. drifting is indistinguishable from someone slowly, continuously
 	// pressing "Volgende."
 	const DRIFT_VELOCITY_PER_MS = -1 / (DRIFT_SECONDS_PER_STEP * 1000);
+	// Off since 2026-10-14: the owner wants the fan tied to the page's scroll
+	// rather than running on its own ("from a continuous motion to a scroll
+	// connected motion"). The drift machinery stays in place behind this flag.
+	const IDLE_DRIFT_ENABLED = false;
+
+	// Scroll drive. While the section is on screen, every pixel the page
+	// scrolls turns the fan the way a drag would: down is "Volgende" (the
+	// same direction next() moves offset), up is back. One card per
+	// SCROLL_DRIVE_PX_PER_STEP of scroll; a single scroll event is clamped to
+	// SCROLL_DRIVE_MAX_DY so a jump (an anchor link, a programmatic scroll)
+	// nudges the fan rather than spinning it. SCROLL_DRIVE_SETTLE_MS after
+	// the last scroll event the fan latches onto the nearest card through the
+	// same spring a released drag uses, so the handoff is the one the owner
+	// already signed off on. A drag in progress wins over scroll, and reduced
+	// motion turns the drive off.
+	const SCROLL_DRIVE_PX_PER_STEP = 320;
+	const SCROLL_DRIVE_MAX_DY = 80;
+	const SCROLL_DRIVE_SETTLE_MS = 160;
+	let scrollDriveInView = false;
+	let scrollDriveLastY = 0;
+	let scrollDriveSettleTimer: ReturnType<typeof setTimeout> | null = null;
 
 	const DRAG_SLOP_PX = 4; // past this, the gesture is a drag and not a click
 
@@ -686,6 +750,7 @@
 	// changes mid-session, matching how every other motion entry point in
 	// this file (driveMotion, etc.) checks it live rather than once.
 	function scheduleIdleDrift(): void {
+		if (!IDLE_DRIFT_ENABLED) return;
 		if (idleDriftTimer !== null) clearTimeout(idleDriftTimer);
 		idleDriftTimer = setTimeout(() => {
 			idleDriftTimer = null;
@@ -1954,7 +2019,7 @@
 	}
 </script>
 
-<section class="treatments" aria-label="Behandelingen">
+<section class="treatments" aria-label="Behandelingen" bind:this={sectionEl}>
 	<!-- The header is the section's one reveal. The fan below used to fade as a unit, with
 	     a measured --reveal-inset-* correction for a box far taller than what it draws; at
 	     608px on desktop it was still the tallest fading thing on the page, lit for a whole
@@ -2129,7 +2194,7 @@
 		   air above it than below: 112px from the pagination to its heading, 64px
 		   from its disclaimer to the section's end. On a phone --section-pad is 64px
 		   anyway, so only desktop changes. */
-		padding: var(--section-pad) 0 var(--space-16);
+		padding: var(--section-pad) 0 var(--section-pad-lg);
 	}
 
 	.treatments__header {
@@ -2597,7 +2662,9 @@
 			   widths, so --pivot-baseline/height/.treatments__controls
 			   margin-top below did not need retuning. Card size
 			   (--card-width) is untouched — only the fan's spread changed. */
-			--pivot-distance: 1304px;
+			/* A further touch closer per the owner (2026-10-14, "a tiny bit"): 1304 to
+			   1270, about 2.5%. */
+			--pivot-distance: 1270px;
 		}
 
 		.treatments__controls {
