@@ -175,7 +175,7 @@
 <style>
 	.faq {
 		background: var(--color-bg-sand);
-		padding-block: var(--section-pad);
+		padding-block: var(--section-pad-lg);
 
 		/* Local to this section rather than the global motion tokens: --motion-base (250ms) with
 		   --ease-out (a steep expo curve, ~80% travelled in its first quarter) put nearly all of
