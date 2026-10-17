@@ -7,7 +7,8 @@
  * down, card 2 506, card 3 812 — and over the scroll it takes the row's rest top to reach
  * the middle of the screen (vh / 2 + the row's offset below the section's top: 450 + 214
  * = 664px here) they catch up, so they are aligned the moment the row's top crosses the
- * viewport's centre. Over the next 0.4 viewport all three rise past the page by the
+ * viewport's centre. Aligned, they hold under the heading until its top reaches the foot of
+ * the nav (+24px). Over the next 0.4 viewport all three rise past the page by the
  * header block, the gap under it and half a card (348px at this width) and fade to 0,
  * and once fully faded they are `visibility: hidden` so the link in card 3 is not a
  * keyboard trap. Every step reverses on the way back up, because the whole thing is a
@@ -27,6 +28,7 @@ const VH = 900;
 const BASE = 200;
 const STEP = 306;
 const FADE_SPAN = 0.4;
+const RISE_CLEARANCE = 24;
 const SETTLE_MS = 800;
 
 /** scrollY at which the section's top sits exactly on the viewport's bottom edge. */
@@ -44,6 +46,22 @@ async function alignedY(page: Page): Promise<number> {
 		const row = document.querySelector('.werkwijze__row') as HTMLElement;
 		return Math.round(row.getBoundingClientRect().top + window.scrollY - window.innerHeight / 2);
 	});
+}
+
+/** scrollY at which the heading's top (by layout, so its reveal transform does not count)
+ *  reaches the foot of the nav plus RISE_CLEARANCE: the end of the pause, where the lift
+ *  and the fade begin. */
+async function riseStartY(page: Page): Promise<number> {
+	return page.evaluate((clearance) => {
+		const row = document.querySelector('.werkwijze__row') as HTMLElement;
+		const header = document.querySelector('.werkwijze__header') as HTMLElement;
+		const navH = parseFloat(
+			getComputedStyle(document.documentElement).getPropertyValue('--nav-height')
+		);
+		const headerDocTop =
+			row.getBoundingClientRect().top + window.scrollY - (row.offsetTop - header.offsetTop);
+		return Math.round(headerDocTop - navH - clearance);
+	}, RISE_CLEARANCE);
 }
 
 async function scrollAndSettle(page: Page, y: number) {
@@ -162,15 +180,34 @@ test.describe('Werkwijze desktop staircase', () => {
 		expect(Math.abs(gap - pad)).toBeLessThanOrEqual(2);
 	});
 
-	test('a further 0.4 viewport on, the cards have passed the header, faded out, hidden and unfocusable', async ({
+	test('aligned, the cards hold under the heading until it reaches the nav', async ({ page }) => {
+		await open(page);
+		const entry = await entryY(page);
+		const aligned = await alignedY(page);
+		const riseStart = await riseStartY(page);
+		/* The pause is a real stretch of scroll, not a single point. */
+		expect(riseStart - aligned).toBeGreaterThan(100);
+		await scrollAndSettle(page, entry);
+		await scrollAndSettle(page, aligned);
+
+		for (const y of [Math.round((aligned + riseStart) / 2), riseStart - 2]) {
+			await scrollAndSettle(page, y);
+			const rest = await rowTop(page);
+			for (const top of await cardTops(page)) expect(Math.abs(top - rest)).toBeLessThanOrEqual(2);
+			expect(await cardOpacities(page)).toEqual([1, 1, 1]);
+		}
+	});
+
+	test('a further 0.4 viewport past the pause, the cards have passed the header, faded out, hidden and unfocusable', async ({
 		page
 	}) => {
 		await open(page);
 		const entry = await entryY(page);
 		const aligned = await alignedY(page);
+		const riseStart = await riseStartY(page);
 		await scrollAndSettle(page, entry);
 		await scrollAndSettle(page, aligned);
-		await scrollAndSettle(page, aligned + VH * FADE_SPAN);
+		await scrollAndSettle(page, riseStart + VH * FADE_SPAN);
 
 		for (const opacity of await cardOpacities(page)) expect(opacity).toBeLessThan(0.05);
 
@@ -217,7 +254,7 @@ test.describe('Werkwijze desktop staircase', () => {
 		const entry = await entryY(page);
 		const aligned = await alignedY(page);
 		await scrollAndSettle(page, entry);
-		await scrollAndSettle(page, aligned + VH * FADE_SPAN);
+		await scrollAndSettle(page, (await riseStartY(page)) + VH * FADE_SPAN);
 		await scrollAndSettle(page, aligned);
 
 		const alignedTops = await cardTops(page);

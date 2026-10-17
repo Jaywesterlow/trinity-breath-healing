@@ -187,30 +187,30 @@
 	--font-size-xs: 0.75rem;
 	--font-size-sm: 0.875rem;
 	--font-size-base: 1rem;
-	--font-size-lg: 1.125rem;
-	--font-size-xl: 1.25rem;
-	--font-size-heading-sm: 1.75rem;
-	--font-size-2xl: clamp(1.5rem, 4vw, 2rem);
-	--font-size-3xl: clamp(2rem, 6vw, 3rem);
+	--font-size-lg: 1.0625rem;
+	--font-size-xl: 1.125rem; /* was 1.25rem; the owner asked for smaller type throughout (2026-10-17) */
+	--font-size-heading-sm: 1.5rem;
+	--font-size-2xl: clamp(1.25rem, 4vw, 1.75rem);
+	--font-size-3xl: clamp(1.75rem, 6vw, 2.5rem);
 
 	/* --- Semantic fluid type scale                                              */
 	/* Each token: 2 sizes (mobile @ 375px, desktop @ 1440px) + one clamp.      */
 	/* Formula: clamp(MIN, calc(intercept + slope·vw), MAX)                      */
 	/* Range: 375px → 1440px (1065px denominator). All values in px.             */
-	--fs-display: clamp(36px, calc(24.74px + 3.005vw), 68px); /* hero H1        36→68 */
-	--fs-title: clamp(36px, calc(31.77px + 1.127vw), 48px); /* hero H1 (Figma) 36→48 */
+	--fs-display: clamp(30px, calc(20.49px + 2.535vw), 57px); /* hero H1        30→57 */
+	--fs-title: clamp(30px, calc(26.48px + 0.939vw), 40px); /* hero H1        30→40 (was 36→48) */
 	--fs-h2: clamp(
-		28px,
-		calc(23.77px + 1.127vw),
-		40px
-	); /* section H2     28→40; was 28→48, colliding with H1's 48px ceiling */
-	--fs-h3: clamp(22px, calc(18.48px + 0.939vw), 32px); /* sub-heading H3 22→32 */
-	--fs-body-lg: clamp(17px, calc(15.94px + 0.282vw), 20px); /* lead / intro   17→20 */
-	--fs-body: clamp(15px, calc(14.3px + 0.188vw), 17px); /* body copy      15→17 */
-	--fs-body-sm: clamp(13px, calc(12.3px + 0.188vw), 15px); /* captions       13→15 */
-	--fs-body-xs: clamp(12px, calc(10.59px + 0.376vw), 16px); /* hero intro      12→16 */
+		24px,
+		calc(20.48px + 0.939vw),
+		34px
+	); /* section H2     24→34; was 28→40 (and before that 28→48) */
+	--fs-h3: clamp(19px, calc(16.18px + 0.751vw), 27px); /* sub-heading H3 19→27 */
+	--fs-body-lg: clamp(16px, calc(15.3px + 0.188vw), 18px); /* lead / intro   16→18 */
+	--fs-body: clamp(15px, calc(14.65px + 0.094vw), 16px); /* body copy      15→16 */
+	--fs-body-sm: clamp(13px, calc(12.65px + 0.094vw), 14px); /* captions       13→14 */
+	--fs-body-xs: clamp(12px, calc(10.94px + 0.282vw), 15px); /* hero intro      12→15 */
 	--fs-label: clamp(13px, calc(12.65px + 0.094vw), 14px); /* nav / labels   13→14 */
-	--fs-cta: clamp(14px, calc(13.3px + 0.188vw), 16px); /* button text    14→16 */
+	--fs-cta: clamp(13px, calc(12.3px + 0.188vw), 15px); /* button text    13→15 */
 
 	--line-height-snug: 1;
 	--line-height-tight: 1.2;
@@ -267,7 +267,9 @@
 	   rounds up to 2px, and then snaps back to 1.5px the instant the animation
 	   settles — so every footer link's underline visibly thinned at the end of
 	   its own reveal. An integral height renders the same mid-wipe as at rest. */
-	--underline-height: 2px;
+	/* 1px since 2026-10-17, the same as the desktop nav's two lines, so every
+	   underline on the site is one weight. */
+	--underline-height: 1px;
 	--motion-underline: 260ms;
 	/* The underline arrives in two stages: a neutral line first, then the link's
 	   own colour sweeping over it. --brand-muted used to play the first part and
@@ -320,9 +322,12 @@
 	--nav-height: 80px; /* mobile: 20px padding × 2 + 40px logo */
 }
 
-@media (min-width: 1024px) {
+/* 1100, not 1024, since 2026-10-17: the nav switches to its desktop row on the
+   same line as the hero and the Werkwijze pin (the owner's rule that tablets render
+   as mobile). At 1024 the six links, the logo and the buttons did not fit. */
+@media (min-width: 1100px) {
 	:root {
-		--nav-height: 100px; /* desktop: explicit height from Nav.svelte */
+		--nav-height: 88px; /* desktop: explicit height from Nav.svelte (was 100 before the smaller logo) */
 	}
 }
 
@@ -511,12 +516,31 @@ h6 {
    collapsing pulls the line off toward the right; on hover it is the left edge,
    so growing pushes it out to the right. In and out therefore travel the same
    direction instead of rewinding. */
+/* Both stages are two background layers of one pseudo-element, and the wipe is
+   their width, not a scaleX (2026-10-17). It was two stacked lines, each on its
+   own compositing layer for the length of its transform: mid-wipe the line was
+   rasterised on that layer, at rest it was painted with the page, and the two
+   antialiased edges of the stacked lines added up, so the line looked laggy and
+   visibly thickened the moment the animation ended. A background is painted on
+   whole pixels with the page in every frame, and the two layers occupy exactly
+   the same pixels, so it is the same line during the wipe as after it. */
+@property --ul-idle {
+	syntax: '<percentage>';
+	inherits: false;
+	initial-value: 0%;
+}
+
+@property --ul-full {
+	syntax: '<percentage>';
+	inherits: false;
+	initial-value: 0%;
+}
+
 .link-underline {
 	position: relative;
 	text-decoration: none;
 }
 
-.link-underline::before,
 .link-underline::after {
 	content: '';
 	position: absolute;
@@ -524,55 +548,49 @@ h6 {
 	right: 0;
 	bottom: -0.125rem;
 	height: var(--underline-height);
-	transform: scaleX(0);
-	transform-origin: right center;
-	transition: transform var(--motion-underline) var(--ease-out);
+	pointer-events: none;
+	/* Top layer: the second stage, the link's own colour. Bottom layer: the first
+	   stage, currentcolor faded rather than the flat grey the nav uses: these
+	   links sit on sand in one place and on the footer's green in another, and a
+	   fixed grey would vanish on the second. */
+	background-image:
+		linear-gradient(currentcolor, currentcolor),
+		linear-gradient(
+			color-mix(in srgb, currentcolor 45%, transparent),
+			color-mix(in srgb, currentcolor 45%, transparent)
+		);
+	background-repeat: no-repeat;
+	background-size:
+		var(--ul-full) 100%,
+		var(--ul-idle) 100%;
+	background-position: right center; /* collapse pulls the line off to the right */
+	transition:
+		--ul-idle var(--motion-underline) var(--ease-out),
+		--ul-full var(--motion-underline) var(--ease-out);
 }
 
-/* First stage. currentcolor faded rather than the flat grey the nav uses: these
-   links sit on sand in one place and on the footer's green in another, and a
-   fixed grey would vanish on the second. Faded, it is always a quieter version
-   of whatever colour the link already is. */
-.link-underline::before {
-	background: color-mix(in srgb, currentcolor 45%, transparent);
-}
-
-/* Second stage, and the one that waits. Both lines occupy the same pixels, so
-   without the delay the full-strength one simply covers the faded one on the
-   way out and there is no first stage to see. */
-.link-underline::after {
-	background: currentColor;
-}
-
+/* The second stage waits, so the first one is seen at all. */
 .link-underline:focus-visible::after {
-	transition-delay: var(--underline-stage-delay);
+	--ul-idle: 100%;
+	--ul-full: 100%;
+	background-position: left center; /* growing pushes it out to the right */
+	transition-delay: 0ms, var(--underline-stage-delay);
 }
 
 @media (hover: hover) and (pointer: fine) {
 	.link-underline:hover::after {
-		transition-delay: var(--underline-stage-delay);
-	}
-}
-
-.link-underline:focus-visible::before,
-.link-underline:focus-visible::after {
-	transform: scaleX(1);
-	transform-origin: left center;
-}
-
-@media (hover: hover) and (pointer: fine) {
-	.link-underline:hover::before,
-	.link-underline:hover::after {
-		transform: scaleX(1);
-		transform-origin: left center;
+		--ul-idle: 100%;
+		--ul-full: 100%;
+		background-position: left center;
+		transition-delay: 0ms, var(--underline-stage-delay);
 	}
 }
 
 /* Permanently drawn, and not animated: the current page in a nav, or a link in
    body copy that has to read as a link before anyone points at it. */
 .link-underline--always::after {
-	transform: scaleX(1);
-	transform-origin: left center;
+	--ul-idle: 100%;
+	--ul-full: 100%;
 }
 
 /* ─── The button label roll ──────────────────────────────────────────────────
@@ -797,4 +815,19 @@ h6 {
 .has-cursor-tooltip *::before,
 .has-cursor-tooltip *::after {
 	cursor: none !important;
+}
+
+/* ─── Smaller buttons (2026-10-17) ─────────────────────────────────────────────
+   The owner asked for buttons a good deal smaller. ButtonLink.svelte is locked
+   (byte-identical), so the size is set here: one step more specific than its own
+   scoped rules (a.btn-link beats .btn-link), nothing else about it changes. The
+   label size already follows --font-size-xl / --btn-label-size. */
+a.btn-link .btn-link__label {
+	height: 2.25rem; /* 36px, was 40 */
+	padding: 0 1.25rem; /* 20px, was 24 */
+}
+
+a.btn-link .btn-link__circle {
+	width: 2.25rem;
+	height: 2.25rem;
 }

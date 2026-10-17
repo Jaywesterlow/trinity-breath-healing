@@ -48,7 +48,8 @@
 	// Not a viewport later, as it first shipped: the reader had card 1 in place before the
 	// section was half in.
 	//
-	// Past that point the row does not stop. Over the next 0.4 viewport of scroll all three
+	// Past that point the row pauses, aligned under its heading, until the heading's top
+	// reaches the foot of the nav (STAIR_RISE_CLEARANCE below it). Over the next 0.4 viewport of scroll all three
 	// keep rising faster than the page by the height of the header block (eyebrow + h2), the
 	// gap under it and half a card — measured live each time, 86 + 32 + 229.5 = 348px at
 	// 1440 — so they visibly overtake the heading, which scrolls at the page's own speed
@@ -82,6 +83,14 @@
 	/** The scroll the lift and the fade take, as a fraction of the viewport height. The lift
 	 *  itself is not a constant: it is the header block, the gap and half a card, measured. */
 	const STAIR_FADE_SPAN = 0.4;
+	/** px between the nav's foot and the heading's top at the moment the lift begins. */
+	const STAIR_RISE_CLEARANCE = 24;
+
+	function navHeight(): number {
+		return (
+			parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav-height')) || 0
+		);
+	}
 	/** s for the row to close ~95% of the gap to its scroll-given target (three time
 	 *  constants of the exponential lerp in `frame`). */
 	const STAIR_SETTLE_S = 0.25;
@@ -105,6 +114,7 @@
 		let raf: number | null = null;
 		let last = 0;
 		let near = false;
+		let navH = navHeight();
 
 		/** Where the scroll says the row should be. `fall` is how much of its entry drop each
 		 *  card still has to make up: 1 with the section's top at the bottom edge of the
@@ -120,8 +130,17 @@
 			const rowTop = row!.getBoundingClientRect().top;
 			const rowOffset = rowTop - sectionTop;
 			const fall = Math.min(Math.max((rowTop - vh / 2) / (vh / 2 + rowOffset), 0), 1);
-			const rise = Math.min(Math.max((vh / 2 - rowTop) / (STAIR_FADE_SPAN * vh), 0), 1);
-			const lift = row!.offsetTop - header!.offsetTop + items[0]!.offsetHeight / 2;
+			// The pause: aligned, the row stays put under its heading while the heading
+			// scrolls up to the foot of the nav, and only then lifts and fades. It began
+			// the moment the row aligned on the centre line, which the owner read as the
+			// cards "floating over their title far too quickly" (2026-10-14). The
+			// heading's top comes from layout, not its rect, so its reveal transform
+			// cannot shift the line.
+			const headerGap = row!.offsetTop - header!.offsetTop;
+			const headerTop = rowTop - headerGap;
+			const riseLine = navH + STAIR_RISE_CLEARANCE;
+			const rise = Math.min(Math.max((riseLine - headerTop) / (STAIR_FADE_SPAN * vh), 0), 1);
+			const lift = headerGap + items[0]!.offsetHeight / 2;
 			for (let i = 0; i < drop.length; i++) targetY[i] = drop[i]! * fall - lift * rise;
 			targetFade = 1 - rise;
 		}
@@ -181,6 +200,11 @@
 			if (near) sync();
 		}
 
+		function onResize() {
+			navH = navHeight(); // --nav-height changes at the 1100px breakpoint
+			onScroll();
+		}
+
 		// One viewport of margin either side: the cards are promoted and aimed before the
 		// section is in view, and dropped once it is a screen away. Leaving the band snaps
 		// to the final state, so a jump that skips the whole approach (an anchor link to the
@@ -201,12 +225,12 @@
 		);
 		watcher.observe(section);
 		window.addEventListener('scroll', onScroll, { passive: true });
-		window.addEventListener('resize', onScroll);
+		window.addEventListener('resize', onResize);
 
 		return () => {
 			watcher.disconnect();
 			window.removeEventListener('scroll', onScroll);
-			window.removeEventListener('resize', onScroll);
+			window.removeEventListener('resize', onResize);
 			if (raf !== null) cancelAnimationFrame(raf);
 			for (const item of items) {
 				item.style.removeProperty('transform');

@@ -100,8 +100,12 @@
 		flex-direction: column;
 		width: 17.625rem; /* 282px — Figma spec */
 		height: 28.688rem; /* 459px — Figma spec, rounded to 3dp */
-		padding: var(--space-4); /* equal on all sides */
-		gap: var(--space-4);
+		/* Spacing in two steps (2026-10-17), the way clean cards elsewhere do it: an inset
+		   about the size of the corner radius, so the title no longer sits in the curve,
+		   and the title tight on its body (12px) with twice that between the text and
+		   whatever follows it (24px). It was 16px for all three, so nothing grouped. */
+		padding: var(--space-6);
+		gap: 0;
 		border-radius: 1.563rem; /* 25px — Figma spec; --radius-lg (16px) is 9px off, too large to round */
 		overflow: hidden;
 	}
@@ -130,6 +134,7 @@
 		font-size: var(--font-size-2xl); /* clamp 24→32px; Figma spec is fixed 24px */
 		font-weight: var(--font-weight-medium);
 		line-height: var(--line-height-tight);
+		margin-bottom: var(--space-3);
 	}
 
 	.wcard__body {
@@ -170,6 +175,7 @@
 		width: 100%;
 		flex: 1 1 0%; /* fills whatever vertical space the title+body don't use — never overflows the fixed card height */
 		min-height: 0;
+		margin-top: var(--space-6);
 		object-fit: cover;
 	}
 
@@ -179,15 +185,21 @@
 	   class; the scoped .wcard parent keeps it contained. Scoped to --outline only: the filled
 	   variant's inline svg (.wcard__img-draw above) needs normal flex-flow sizing, not this
 	   absolute-position backdrop treatment. */
+	/* Since 2026-10-17 the art is in the flow, not absolutely placed: it takes all the
+	   height the text and the button leave, bled out to the card's side edges (the
+	   negative margins undo the padding; overflow clips it) but inset at the top, where
+	   the tree's crown reaches the very edge of the drawing,
+	   and keeps the same 24px above the title as everything else in the card. Placed
+	   absolutely at its Figma offset it ran into the title once the type and the
+	   padding changed. */
 	.wcard__art,
 	.wcard--outline :global(svg.lt) {
-		position: absolute;
-		top: 1.723rem; /* 27.56px — Figma spec offset, rounded to 3dp */
-		left: -0.125rem; /* -2px — Figma spec */
-		z-index: 0;
-		width: 24.847rem; /* 397.55px — Figma spec; wider than the card, clipped by wcard's overflow:hidden */
+		display: block;
+		flex: 1 1 0%;
+		min-height: 0;
+		width: calc(100% + 2 * var(--space-6));
 		max-width: none; /* global.css caps all <img> at max-width:100% — this art intentionally bleeds past the card edge */
-		height: 13.553rem; /* 216.85px — Figma spec, rounded to 3dp */
+		margin: 0 calc(-1 * var(--space-6)) var(--space-6);
 		object-fit: cover;
 		pointer-events: none;
 	}
@@ -196,5 +208,6 @@
 		position: relative;
 		z-index: 1;
 		width: 100%;
+		margin-top: var(--space-6);
 	}
 </style>
