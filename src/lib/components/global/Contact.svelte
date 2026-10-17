@@ -283,7 +283,7 @@
 
 	.contact__heading {
 		font-family: var(--font-display);
-		font-size: 2rem; /* 32px */
+		font-size: 1.75rem; /* 28px, was 32 */
 		font-weight: var(--font-weight-medium);
 		line-height: 1.21875;
 		color: var(--color-fg-forest);
@@ -382,7 +382,7 @@
 
 	.route__title {
 		font-family: var(--font-display);
-		font-size: 1.5rem; /* 24px */
+		font-size: 1.25rem; /* 20px, was 24 */
 		font-weight: var(--font-weight-medium);
 		line-height: var(--line-height-tight);
 	}
@@ -596,7 +596,7 @@
 		}
 
 		.contact__heading {
-			font-size: 3rem; /* 48px */
+			font-size: 2.5rem; /* 40px, was 48 */
 			line-height: 1.2;
 		}
 
@@ -638,7 +638,7 @@
 		}
 
 		.route__title {
-			font-size: 1.6875rem; /* 27px */
+			font-size: 1.4375rem; /* 23px, was 27 */
 		}
 
 		.route__body {

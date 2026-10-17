@@ -30,8 +30,8 @@
 	/* Clipping wrapper matches Figma: 50×40 box, image slightly overflows and is cropped */
 	.logo__icon {
 		position: relative;
-		width: 3.125rem;
-		height: var(--space-10);
+		width: 2.5rem; /* 40px, was 50 — the owner asked for a smaller logo */
+		height: 2rem; /* 32px, was 40 */
 		flex-shrink: 0;
 		overflow: hidden;
 	}
@@ -50,16 +50,16 @@
 		flex-direction: column;
 		justify-content: space-around;
 		align-items: center;
-		width: 7.1875rem;
+		width: auto; /* was a fixed 115px; at the smaller size the text sets its own width */
 		height: 100%;
 		flex-shrink: 0;
 	}
 
 	.logo__name {
 		font-family: 'Cinzel', serif;
-		font-size: 1.5rem;
+		font-size: 1.2rem; /* was 1.5rem */
 		font-weight: var(--font-weight-regular);
-		letter-spacing: 2.88px;
+		letter-spacing: 2.3px;
 		color: #404040;
 		line-height: 1;
 		width: 100%;
@@ -69,8 +69,9 @@
 	.logo__sub {
 		font-family: 'Montserrat', sans-serif;
 		font-weight: 300;
-		font-size: 0.625rem;
-		letter-spacing: 1.5px;
+		font-size: 0.5625rem; /* 9px, was 10 */
+		white-space: nowrap;
+		letter-spacing: 1.2px;
 		color: #73684a; /* darkened for WCAG AA: was #7a6f4f at 4.43:1, now 4.90:1 on --color-bg-sand */
 		line-height: 1;
 		width: 100%;
@@ -105,12 +106,12 @@
 	}
 
 	.logo--footer .logo__icon {
-		width: 3.5rem; /* 56px mobile */
-		height: 2.8125rem; /* 45px mobile */
+		width: 3rem; /* 48px mobile */
+		height: 2.4rem;
 	}
 
 	.logo--footer .logo__name {
-		font-size: 1.5rem;
+		font-size: 1.25rem;
 		letter-spacing: 0.12em;
 	}
 
@@ -121,16 +122,16 @@
 
 	@media (min-width: 1100px) {
 		.logo--footer .logo__icon {
-			width: 4.5rem; /* 72px desktop */
-			height: 3.625rem; /* 58px desktop */
+			width: 3.75rem; /* 60px desktop, was 72 */
+			height: 3rem;
 		}
 
 		.logo--footer .logo__name {
-			font-size: 2.25rem;
+			font-size: 1.875rem; /* was 2.25rem */
 		}
 
 		.logo--footer .logo__sub {
-			font-size: 1rem;
+			font-size: 0.875rem;
 		}
 	}
 </style>

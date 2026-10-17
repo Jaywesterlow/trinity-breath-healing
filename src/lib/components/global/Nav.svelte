@@ -291,7 +291,7 @@
 	.mobile-menu__link {
 		position: relative;
 		font-family: var(--font-display);
-		font-size: 1.5rem;
+		font-size: 1.375rem; /* was 1.5rem */
 		font-weight: 500;
 		color: var(--color-bg-sand);
 		text-decoration: none;
@@ -432,7 +432,7 @@
 			}
 
 			.nav__link {
-				font-size: 1.125rem;
+				font-size: 1rem;
 			}
 		}
 	}

@@ -190,30 +190,30 @@
 	--font-size-xs: 0.75rem;
 	--font-size-sm: 0.875rem;
 	--font-size-base: 1rem;
-	--font-size-lg: 1.125rem;
-	--font-size-xl: 1.25rem;
-	--font-size-heading-sm: 1.75rem;
-	--font-size-2xl: clamp(1.5rem, 4vw, 2rem);
-	--font-size-3xl: clamp(2rem, 6vw, 3rem);
+	--font-size-lg: 1.0625rem;
+	--font-size-xl: 1.125rem; /* was 1.25rem; the owner asked for smaller type throughout (2026-10-17) */
+	--font-size-heading-sm: 1.5rem;
+	--font-size-2xl: clamp(1.25rem, 4vw, 1.75rem);
+	--font-size-3xl: clamp(1.75rem, 6vw, 2.5rem);
 
 	/* --- Semantic fluid type scale                                              */
 	/* Each token: 2 sizes (mobile @ 375px, desktop @ 1440px) + one clamp.      */
 	/* Formula: clamp(MIN, calc(intercept + slope·vw), MAX)                      */
 	/* Range: 375px → 1440px (1065px denominator). All values in px.             */
-	--fs-display: clamp(36px, calc(24.74px + 3.005vw), 68px); /* hero H1        36→68 */
-	--fs-title: clamp(36px, calc(31.77px + 1.127vw), 48px); /* hero H1 (Figma) 36→48 */
+	--fs-display: clamp(30px, calc(20.49px + 2.535vw), 57px); /* hero H1        30→57 */
+	--fs-title: clamp(30px, calc(26.48px + 0.939vw), 40px); /* hero H1        30→40 (was 36→48) */
 	--fs-h2: clamp(
-		28px,
-		calc(23.77px + 1.127vw),
-		40px
-	); /* section H2     28→40; was 28→48, colliding with H1's 48px ceiling */
-	--fs-h3: clamp(22px, calc(18.48px + 0.939vw), 32px); /* sub-heading H3 22→32 */
-	--fs-body-lg: clamp(17px, calc(15.94px + 0.282vw), 20px); /* lead / intro   17→20 */
-	--fs-body: clamp(15px, calc(14.3px + 0.188vw), 17px); /* body copy      15→17 */
-	--fs-body-sm: clamp(13px, calc(12.3px + 0.188vw), 15px); /* captions       13→15 */
-	--fs-body-xs: clamp(12px, calc(10.59px + 0.376vw), 16px); /* hero intro      12→16 */
+		24px,
+		calc(20.48px + 0.939vw),
+		34px
+	); /* section H2     24→34; was 28→40 (and before that 28→48) */
+	--fs-h3: clamp(19px, calc(16.18px + 0.751vw), 27px); /* sub-heading H3 19→27 */
+	--fs-body-lg: clamp(16px, calc(15.3px + 0.188vw), 18px); /* lead / intro   16→18 */
+	--fs-body: clamp(15px, calc(14.65px + 0.094vw), 16px); /* body copy      15→16 */
+	--fs-body-sm: clamp(13px, calc(12.65px + 0.094vw), 14px); /* captions       13→14 */
+	--fs-body-xs: clamp(12px, calc(10.94px + 0.282vw), 15px); /* hero intro      12→15 */
 	--fs-label: clamp(13px, calc(12.65px + 0.094vw), 14px); /* nav / labels   13→14 */
-	--fs-cta: clamp(14px, calc(13.3px + 0.188vw), 16px); /* button text    14→16 */
+	--fs-cta: clamp(13px, calc(12.3px + 0.188vw), 15px); /* button text    13→15 */
 
 	--line-height-snug: 1;
 	--line-height-tight: 1.2;
@@ -328,7 +328,7 @@
    as mobile). At 1024 the six links, the logo and the buttons did not fit. */
 @media (min-width: 1100px) {
 	:root {
-		--nav-height: 100px; /* desktop: explicit height from Nav.svelte */
+		--nav-height: 88px; /* desktop: explicit height from Nav.svelte (was 100 before the smaller logo) */
 	}
 }
 
@@ -803,4 +803,19 @@ h6 {
 .has-cursor-tooltip *::before,
 .has-cursor-tooltip *::after {
 	cursor: none !important;
+}
+
+/* ─── Smaller buttons (2026-10-17) ─────────────────────────────────────────────
+   The owner asked for buttons a good deal smaller. ButtonLink.svelte is locked
+   (byte-identical), so the size is set here: one step more specific than its own
+   scoped rules (a.btn-link beats .btn-link), nothing else about it changes. The
+   label size already follows --font-size-xl / --btn-label-size. */
+a.btn-link .btn-link__label {
+	height: 2.25rem; /* 36px, was 40 */
+	padding: 0 1.25rem; /* 20px, was 24 */
+}
+
+a.btn-link .btn-link__circle {
+	width: 2.25rem;
+	height: 2.25rem;
 }

@@ -98,8 +98,8 @@
 
 	@media (min-width: 1100px) {
 		.call {
-			width: var(--space-10);
-			height: var(--space-10);
+			width: 2.25rem; /* the same 36px as the buttons beside it */
+			height: 2.25rem;
 		}
 	}
 
