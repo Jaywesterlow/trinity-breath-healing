@@ -119,7 +119,7 @@
 		letter-spacing: 0.15em;
 	}
 
-	@media (min-width: 1024px) {
+	@media (min-width: 1100px) {
 		.logo--footer .logo__icon {
 			width: 4.5rem; /* 72px desktop */
 			height: 3.625rem; /* 58px desktop */

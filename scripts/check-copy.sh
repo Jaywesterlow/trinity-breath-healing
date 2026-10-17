@@ -36,7 +36,7 @@ check_string() {
 
 # LND-09 — locked Figma copy strings (must appear verbatim in rendered HTML)
 # Hero (Plan 01-01)
-check_string "Rust in je hoofd. Ontspanning in je lichaam."
+check_string "Rust in je geest. Ontspanning in je lichaam. Verbinding met je ziel."
 check_string "Maak een afspraak"
 # Werkwijze (Plan 01-03)
 check_string "Rustig, persoonlijk en op jouw tempo."

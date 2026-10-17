@@ -54,8 +54,8 @@
 		     Two exit fades, not one and not three. The whole column is 365px, over a third
 		     of either viewport, so faded as one block the heading would sit well above the
 		     screen while the button kept it lit; the heading therefore answers the band on
-		     its own bottom edge, and the body and the button leave together, since a button
-		     never fades alone. `entrance: false` on both: the arrival is the pure-CSS cascade
+		     its own bottom edge, and the intro leaves a paragraph at a time, the last one
+		     with the button, since a button never fades alone. `entrance: false` on both: the arrival is the pure-CSS cascade
 		     below and nothing else, so all they ask the action for is the way out. The
 		     wrapper is a plain block — the spacing is the children's own margins, which
 		     collapse through it. The drawing above is deliberately not wrapped: it neither
@@ -63,17 +63,39 @@
 		<div class="hero__left" bind:this={leftEl}>
 			<div class="hero__content">
 				<h1 class="hero__heading" use:reveal={{ entrance: false }}>
-					Rust in je hoofd.<br />
-					Ontspanning in je lichaam.
+					<span class="hero__line">Rust in je geest.</span>
+					<span class="hero__line">Ontspanning in je lichaam.</span>
+					<span class="hero__line">Verbinding met je ziel.</span>
 				</h1>
-				<div class="hero__text" use:reveal={{ entrance: false }}>
-					<p class="hero__body">
-						Ik weet hoe het voelt om vast te lopen, fysiek, mentaal en emotioneel. Via
-						lichaamsgerichte therapie, ademwerk en energetische behandelingen help ik jou terug naar
-						rust, herstel en jezelf.
-					</p>
-					<div class="hero__cta">
-						<ButtonLink href="/contact" label="Maak een afspraak" />
+				<div class="hero__text">
+					<!-- Her words, verbatim (2026-10-17). Four paragraphs, 450px and more at
+					     either width, so the intro no longer leaves as one block (the reveal
+					     audit's limit is a third of the viewport): each paragraph fades out on
+					     its own, and the last one leaves together with the button, since a
+					     button never fades alone. The last paragraph is a second .hero__body
+					     so it keeps the same type and the same entrance as the others. -->
+					<div class="hero__body hero__body--lead">
+						<p use:reveal={{ entrance: false }}>
+							Soms draag je meer met je mee dan je beseft. Stress, emoties en ervaringen kunnen zich
+							uiten in lichamelijke spanning, innerlijke onrust of terugkerende patronen.
+						</p>
+						<p use:reveal={{ entrance: false }}>
+							Bij Trinity Breath &amp; Healing krijg je de ruimte om stil te staan, te voelen en
+							weer in verbinding te komen met jezelf.
+						</p>
+						<p use:reveal={{ entrance: false }}>
+							Met lichaamsgerichte therapie, ademwerk en energetische behandelingen begeleid ik je
+							op een persoonlijke en respectvolle manier. Er is aandacht voor wat jij op dat moment
+							nodig hebt, op jouw tempo en zonder oordeel.
+						</p>
+					</div>
+					<div class="hero__close" use:reveal={{ entrance: false }}>
+						<p class="hero__body">
+							Een plek waar je mag vertragen, loslaten en weer in balans kunt komen.
+						</p>
+						<div class="hero__cta">
+							<ButtonLink href="/contact" label="Maak een afspraak" />
+						</div>
 					</div>
 				</div>
 			</div>
@@ -319,6 +341,24 @@
 		margin-bottom: var(--space-4);
 	}
 
+	/* One sentence per line, as she wrote it. On a phone a sentence may still have to
+	   wrap, and then it splits evenly instead of leaving one word behind; from 1100px
+	   up there is room for each on one line, so it never wraps there. */
+	.hero__line {
+		display: block;
+		text-wrap: balance;
+	}
+
+	.hero__body p + p {
+		margin-top: 0.75em;
+	}
+
+	/* The first three paragraphs sit one paragraph gap above the fourth, which is a
+	   block of its own (see the markup). */
+	.hero__body.hero__body--lead {
+		margin-bottom: 0.75em;
+	}
+
 	/* ─── Desktop (≥ 1100px) — two-column, image beside text ───
 	   1100px, not 768 and not 1024. It was 768, which handed every iPad in portrait (768,
 	   810, 820, 834) the two-column hero, and 1024 would still hand it to an iPad Pro 12.9
@@ -405,8 +445,12 @@
 		   --fs-title-sm the 768-1023 range used to get is gone with that range. */
 		.hero__heading {
 			font-size: var(--fs-title); /* 36→48 */
-			max-width: 25rem;
+			max-width: none; /* was 25rem for two short lines; each line now holds itself */
 			margin-bottom: var(--space-4);
+		}
+
+		.hero__line {
+			white-space: nowrap;
 		}
 
 		.hero__body {

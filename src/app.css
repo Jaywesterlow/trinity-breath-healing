@@ -323,7 +323,10 @@
 	--nav-height: 80px; /* mobile: 20px padding × 2 + 40px logo */
 }
 
-@media (min-width: 1024px) {
+/* 1100, not 1024, since 2026-10-17: the nav switches to its desktop row on the
+   same line as the hero and the Werkwijze pin (the owner's rule that tablets render
+   as mobile). At 1024 the six links, the logo and the buttons did not fit. */
+@media (min-width: 1100px) {
 	:root {
 		--nav-height: 100px; /* desktop: explicit height from Nav.svelte */
 	}
