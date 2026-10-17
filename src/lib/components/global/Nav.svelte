@@ -240,11 +240,11 @@
 
 	/* Same two-line idea as the desktop nav, minus the hover half: a touch screen
 	   has no hover, so only the current-page line is ever drawn. Sand on forest,
-	   and the same 2px as every other underline on the site. */
+	   and the same --underline-height as every other underline on the site. */
 	.mobile-menu__link {
 		position: relative;
 		font-family: var(--font-display);
-		font-size: 1.5rem;
+		font-size: 1.375rem; /* was 1.5rem */
 		font-weight: 500;
 		color: var(--color-bg-sand);
 		text-decoration: none;
@@ -272,8 +272,8 @@
 		transform: scaleX(1);
 	}
 
-	/* ─── Desktop ≥ 1024px ─── */
-	@media (min-width: 1024px) {
+	/* ─── Desktop ≥ 1100px ─── (was 1024; there the row ran ~50px past the edge) */
+	@media (min-width: 1100px) {
 		.nav {
 			height: var(--nav-height);
 		}
@@ -282,6 +282,9 @@
 			height: 100%;
 			padding: 0; /* zero — matches footer; max-width + centering alone sets the edge */
 			gap: var(--space-6);
+			/* Below 1248px the 1200 container is wider than the screen, which put the
+			   logo and the buttons on the screen's very edge; keep 24px clear there. */
+			width: min(var(--container-max), 100% - 3rem);
 		}
 
 		.hamburger {
@@ -372,6 +375,19 @@
 
 		.nav__link--active::after {
 			transition-delay: var(--underline-stage-delay);
+		}
+
+		/* 1100 to 1279: the row is tight (logo, six links, the CTA), so the links
+		   sit a little closer and a step smaller until there is room. Last in the
+		   block, or the base .nav__link rule above wins. */
+		@media (max-width: 1279.98px) {
+			.nav__links {
+				gap: 0.5rem;
+			}
+
+			.nav__link {
+				font-size: 1rem;
+			}
 		}
 	}
 </style>

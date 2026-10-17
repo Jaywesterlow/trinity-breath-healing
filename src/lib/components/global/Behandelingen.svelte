@@ -324,6 +324,7 @@
 	const FALLBACK_PX_PER_STEP = 90; // only in effect before the first live measurement lands
 	let pxPerStep = $state(FALLBACK_PX_PER_STEP);
 	let fanEl: HTMLElement | undefined;
+	let sectionEl: HTMLElement | undefined;
 
 	// Reads positions[]/offset (both $state) but is called imperatively from
 	// onMount/resize below, never from inside a Svelte $effect — so it never
@@ -365,9 +366,41 @@
 		if (measured !== null) pxPerStep = measured;
 	}
 
+	// Scroll drive (see SCROLL_PX_PER_STEP). Only the delta of each scroll event
+	// is used, so where the page is does not matter, only how it moves.
+	function onScrollDrive(): void {
+		const y = window.scrollY;
+		const dy = y - scrollDriveLastY;
+		scrollDriveLastY = y;
+		if (!scrollDriveInView || dragging || document.hidden || prefersReducedMotion()) return;
+		if (dy === 0 || Math.abs(dy) > SCROLL_DRIVE_MAX_DY) return;
+		// Down is "Volgende", and next() is driveBy(-1): down lowers offset.
+		scrollPendingSteps -= dy / SCROLL_PX_PER_STEP;
+		lastScrollInputTime = performance.now();
+		if (motionPhase !== 'scroll' || motionRafId === null) beginScrollFollow();
+	}
+
 	onMount(() => {
 		remeasurePxPerStep();
 		window.addEventListener('resize', remeasurePxPerStep);
+
+		scrollDriveLastY = window.scrollY;
+		window.addEventListener('scroll', onScrollDrive, { passive: true });
+		const scrollDriveObserver =
+			typeof IntersectionObserver === 'function' && sectionEl
+				? new IntersectionObserver(
+						(entries) => {
+							for (const entry of entries) {
+								scrollDriveInView = entry.isIntersecting;
+								// Re-sync on entry, so the scroll that brought the section
+								// on screen does not count as a turn.
+								scrollDriveLastY = window.scrollY;
+							}
+						},
+						{ threshold: 0 }
+					)
+				: null;
+		if (scrollDriveObserver && sectionEl) scrollDriveObserver.observe(sectionEl);
 
 		// Idle auto-drift's own countdown starts here too, not only after a
 		// first real interaction — a page that loads and is never touched is
@@ -393,6 +426,8 @@
 
 		return () => {
 			window.removeEventListener('resize', remeasurePxPerStep);
+			window.removeEventListener('scroll', onScrollDrive);
+			scrollDriveObserver?.disconnect();
 			document.removeEventListener('visibilitychange', onVisibilityChange);
 			cancelMotion();
 		};
@@ -546,6 +581,39 @@
 	// pressing "Volgende."
 	const DRIFT_VELOCITY_PER_MS = -1 / (DRIFT_SECONDS_PER_STEP * 1000);
 
+	// Scroll drive (2026-10-17). While the section is on screen the page's
+	// scroll turns the fan, continuously: every SCROLL_PX_PER_STEP of scroll
+	// moves it one card, fraction by fraction, so the cards travel with the
+	// page rather than in steps. When the scroll stops the fan does not halt
+	// on the spot: it keeps the speed it had and brakes over
+	// SCROLL_BRAKE_TAU_MS, and it comes to rest where that leaves it, with
+	// no snap to the nearest card (the owner's call; it replaces both the
+	// 1:1 scrub and the one-card-per-280px steps tried on 2026-10-14).
+	//
+	// A single scroll event bigger than SCROLL_DRIVE_MAX_DY is a jump (an
+	// anchor link, a programmatic scroll), not a gesture, and turns nothing.
+	// A drag in progress wins over scroll, and reduced motion turns the drive
+	// off.
+	const SCROLL_PX_PER_STEP = 280;
+	const SCROLL_DRIVE_MAX_DY = 200;
+	/** Time constant of the brake once the scroll stops: about 95% of the
+	 *  remaining speed is gone after three of these, so the fan glides for a
+	 *  short beat instead of stopping dead. */
+	const SCROLL_BRAKE_TAU_MS = 120;
+	/** No scroll event for this long and the scroll has stopped; the brake
+	 *  takes over. A little over three frames, so a dropped frame in a
+	 *  running scroll does not count as a stop. */
+	const SCROLL_IDLE_MS = 60;
+	/** Below this (steps/ms) the braking fan is at rest. Far below
+	 *  VELOCITY_EPSILON on purpose: that one hands off to the latch spring,
+	 *  and ending the brake at it would be the abrupt stop the brake exists
+	 *  to avoid. */
+	const SCROLL_REST_VELOCITY = 0.00002;
+	let scrollDriveInView = false;
+	let scrollDriveLastY = 0;
+	let scrollPendingSteps = 0;
+	let lastScrollInputTime = 0;
+
 	const DRAG_SLOP_PX = 4; // past this, the gesture is a drag and not a click
 
 	let dragging = $state(false); // true only while the pointer is actually down and moving the fan
@@ -580,7 +648,7 @@
 	// three regimes of one motion, not separate loops — a new pointerdown or
 	// driveMotion cancels whichever is running (see cancelMotion).
 	let motionRafId: number | null = null;
-	let motionPhase: 'coast' | 'latch' | 'drift' = 'coast';
+	let motionPhase: 'coast' | 'latch' | 'drift' | 'scroll' = 'coast';
 	let velocity = 0; // steps per ms, decays toward 0 during coast
 	let lastFrameTime = 0;
 	// setTimeout handle for the idle auto-drift's own countdown (see
@@ -706,6 +774,18 @@
 		motionRafId = requestAnimationFrame(motionTick);
 	}
 
+	// Takes over from whatever is running (drift, a button's latch, a coast),
+	// keeping offset where it is, so the scroll picks the fan up mid-motion.
+	function beginScrollFollow(): void {
+		const carried = inGesture ? velocity : 0;
+		cancelMotion();
+		motionPhase = 'scroll';
+		inGesture = true;
+		velocity = carried;
+		lastFrameTime = performance.now();
+		motionRafId = requestAnimationFrame(motionTick);
+	}
+
 	function beginMotion(): void {
 		motionPhase = 'coast';
 		lastFrameTime = performance.now();
@@ -753,6 +833,29 @@
 
 		if (motionPhase === 'drift') {
 			offset += DRIFT_VELOCITY_PER_MS * dt;
+			absorbWholeSteps();
+			motionRafId = requestAnimationFrame(motionTick);
+			return;
+		}
+
+		if (motionPhase === 'scroll') {
+			if (scrollPendingSteps !== 0) {
+				// Following: the fan moves exactly as far as the page did since
+				// the last frame. The speed is tracked (smoothed over a few
+				// frames) only to hand the brake below a real starting speed.
+				offset += scrollPendingSteps;
+				if (dt > 0) velocity = velocity * 0.6 + (scrollPendingSteps / dt) * 0.4;
+				scrollPendingSteps = 0;
+			} else if (now - lastScrollInputTime > SCROLL_IDLE_MS) {
+				// Stopped scrolling: brake from the speed it had.
+				velocity *= Math.exp(-dt / SCROLL_BRAKE_TAU_MS);
+				offset += velocity * dt;
+				if (Math.abs(velocity) < SCROLL_REST_VELOCITY) {
+					absorbWholeSteps();
+					endGesture();
+					return;
+				}
+			}
 			absorbWholeSteps();
 			motionRafId = requestAnimationFrame(motionTick);
 			return;
@@ -1954,7 +2057,7 @@
 	}
 </script>
 
-<section class="treatments" aria-label="Behandelingen">
+<section class="treatments" aria-label="Behandelingen" bind:this={sectionEl}>
 	<!-- The header is the section's one reveal. The fan below used to fade as a unit, with
 	     a measured --reveal-inset-* correction for a box far taller than what it draws; at
 	     608px on desktop it was still the tallest fading thing on the page, lit for a whole

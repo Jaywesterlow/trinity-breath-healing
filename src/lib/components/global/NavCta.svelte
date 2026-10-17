@@ -11,7 +11,7 @@
 		display: none;
 	}
 
-	@media (min-width: 1024px) {
+	@media (min-width: 1100px) {
 		.nav__cta {
 			display: flex;
 			align-items: center;
