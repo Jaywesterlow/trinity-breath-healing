@@ -82,6 +82,12 @@
 	/** The scroll the lift and the fade take, as a fraction of the viewport height. The lift
 	 *  itself is not a constant: it is the header block, the gap and half a card, measured. */
 	const STAIR_FADE_SPAN = 0.4;
+	/** Where the lift and the fade begin, as the row's rest top in viewport heights from the
+	 *  top. It was the centre (0.5): the cards started leaving the moment they had aligned,
+	 *  which the owner read as "they fade away and float over their title far too quickly"
+	 *  (2026-10-14). Now they stay aligned while the row scrolls up from the centre to this
+	 *  line, and only then lift and fade over STAIR_FADE_SPAN. */
+	const STAIR_RISE_START = 0.12;
 	/** s for the row to close ~95% of the gap to its scroll-given target (three time
 	 *  constants of the exponential lerp in `frame`). */
 	const STAIR_SETTLE_S = 0.25;
@@ -120,7 +126,10 @@
 			const rowTop = row!.getBoundingClientRect().top;
 			const rowOffset = rowTop - sectionTop;
 			const fall = Math.min(Math.max((rowTop - vh / 2) / (vh / 2 + rowOffset), 0), 1);
-			const rise = Math.min(Math.max((vh / 2 - rowTop) / (STAIR_FADE_SPAN * vh), 0), 1);
+			const rise = Math.min(
+				Math.max((STAIR_RISE_START * vh - rowTop) / (STAIR_FADE_SPAN * vh), 0),
+				1
+			);
 			const lift = row!.offsetTop - header!.offsetTop + items[0]!.offsetHeight / 2;
 			for (let i = 0; i < drop.length; i++) targetY[i] = drop[i]! * fall - lift * rise;
 			targetFade = 1 - rise;

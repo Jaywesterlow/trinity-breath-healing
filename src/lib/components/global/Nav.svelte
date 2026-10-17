@@ -2,6 +2,7 @@
 	import { page } from '$app/stores';
 	import NavLogo from './NavLogo.svelte';
 	import NavCta from './NavCta.svelte';
+	import NavCall from './NavCall.svelte';
 	import { ButtonLink } from '$lib/components/ui/interactions';
 
 	const NAV_LINKS = [
@@ -19,6 +20,11 @@
 	let prevScrollY = 0;
 	let hidden = $state(false);
 	let rotation = $state(0);
+
+	// Off the top of the page the bar gets its own surface (see .header--scrolled):
+	// at the top it is one with the sand hero, as designed; anywhere else the page
+	// slides under it and it needs an edge.
+	const scrolled = $derived(scrollY > 8);
 
 	$effect(() => {
 		if (scrollY > 80 && scrollY > prevScrollY) {
@@ -52,7 +58,12 @@
 
 <svelte:window bind:scrollY onkeydown={handleKeydown} />
 
-<header class="header" class:header--hidden={hidden} class:header--open={menuOpen}>
+<header
+	class="header"
+	class:header--hidden={hidden}
+	class:header--open={menuOpen}
+	class:header--scrolled={scrolled && !menuOpen}
+>
 	<nav class="nav" class:nav--open={menuOpen} aria-label="Site navigatie">
 		<div class="nav__inner">
 			<NavLogo inverted={menuOpen} />
@@ -71,37 +82,44 @@
 				{/each}
 			</div>
 
-			<!-- Desktop CTA — hidden on mobile -->
-			<NavCta />
+			<!-- Call, the desktop CTA and the mobile menu button, as one group so that
+			     on a phone the call ring sits beside the menu button rather than being
+			     spread into the middle of the bar by space-between. -->
+			<div class="nav__actions">
+				<NavCall hidden={menuOpen} />
 
-			<!-- Mobile hamburger — 44×44 touch target -->
-			<button
-				bind:this={hamburgerEl}
-				class="hamburger"
-				aria-label={menuOpen ? 'Menu sluiten' : 'Menu openen'}
-				aria-expanded={menuOpen}
-				aria-controls="mobile-menu"
-				onclick={toggleMenu}
-			>
-				<svg
-					class="dot-grid"
-					style="transform: rotate({rotation}deg)"
-					width="21"
-					height="21"
-					viewBox="0 0 21 21"
-					aria-hidden="true"
+				<!-- Desktop CTA — hidden on mobile -->
+				<NavCta />
+
+				<!-- Mobile hamburger — 44×44 touch target -->
+				<button
+					bind:this={hamburgerEl}
+					class="hamburger"
+					aria-label={menuOpen ? 'Menu sluiten' : 'Menu openen'}
+					aria-expanded={menuOpen}
+					aria-controls="mobile-menu"
+					onclick={toggleMenu}
 				>
-					<circle cx="1.5" cy="1.5" r="1.5" />
-					<circle cx="10.5" cy="1.5" r="1.5" />
-					<circle cx="19.5" cy="1.5" r="1.5" />
-					<circle cx="1.5" cy="10.5" r="1.5" />
-					<circle cx="10.5" cy="10.5" r="1.5" />
-					<circle cx="19.5" cy="10.5" r="1.5" />
-					<circle cx="1.5" cy="19.5" r="1.5" />
-					<circle cx="10.5" cy="19.5" r="1.5" />
-					<circle cx="19.5" cy="19.5" r="1.5" />
-				</svg>
-			</button>
+					<svg
+						class="dot-grid"
+						style="transform: rotate({rotation}deg)"
+						width="21"
+						height="21"
+						viewBox="0 0 21 21"
+						aria-hidden="true"
+					>
+						<circle cx="1.5" cy="1.5" r="1.5" />
+						<circle cx="10.5" cy="1.5" r="1.5" />
+						<circle cx="19.5" cy="1.5" r="1.5" />
+						<circle cx="1.5" cy="10.5" r="1.5" />
+						<circle cx="10.5" cy="10.5" r="1.5" />
+						<circle cx="19.5" cy="10.5" r="1.5" />
+						<circle cx="1.5" cy="19.5" r="1.5" />
+						<circle cx="10.5" cy="19.5" r="1.5" />
+						<circle cx="19.5" cy="19.5" r="1.5" />
+					</svg>
+				</button>
+			</div>
 		</div>
 	</nav>
 
@@ -152,7 +170,36 @@
 		background: var(--color-bg-sand);
 		position: relative;
 		z-index: 20;
-		transition: background var(--motion-base) var(--ease-out);
+		transition:
+			background var(--motion-base) var(--ease-out),
+			box-shadow var(--motion-base) var(--ease-out);
+	}
+
+	/* Off the top of the page, the bar separates from what scrolls under it: a
+	   brown hairline at its foot, a soft shadow below that, and a sand that lets
+	   a little of the page through, frosted, so it reads as a layer above the page
+	   rather than as more page. Same colours as the site, nothing new. The
+	   transparency needs backdrop-filter to stay legible; without it (old
+	   browsers) the bar stays solid sand. */
+	.header--scrolled .nav {
+		box-shadow:
+			0 1px 0 color-mix(in srgb, var(--brand-border) 22%, transparent),
+			0 12px 28px -20px color-mix(in srgb, var(--color-fg-forest) 55%, transparent);
+	}
+
+	@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+		.header--scrolled .nav {
+			background: color-mix(in srgb, var(--color-bg-sand) 84%, transparent);
+			-webkit-backdrop-filter: blur(14px) saturate(1.2);
+			backdrop-filter: blur(14px) saturate(1.2);
+		}
+	}
+
+	.nav__actions {
+		display: flex;
+		align-items: center;
+		gap: var(--space-3);
+		flex-shrink: 0;
 	}
 
 	/* Content row, capped at the same --container-max as the footer so every
@@ -244,7 +291,7 @@
 	.mobile-menu__link {
 		position: relative;
 		font-family: var(--font-display);
-		font-size: 1.5rem;
+		font-size: 1.375rem; /* was 1.5rem */
 		font-weight: 500;
 		color: var(--color-bg-sand);
 		text-decoration: none;
@@ -273,7 +320,7 @@
 	}
 
 	/* ─── Desktop ≥ 1024px ─── */
-	@media (min-width: 1024px) {
+	@media (min-width: 1100px) {
 		.nav {
 			height: var(--nav-height);
 		}
@@ -282,6 +329,9 @@
 			height: 100%;
 			padding: 0; /* zero — matches footer; max-width + centering alone sets the edge */
 			gap: var(--space-6);
+			/* Below 1248px the 1200 container is wider than the screen, which put the
+			   logo and the buttons on the screen's very edge; keep 24px clear there. */
+			width: min(var(--container-max), 100% - 3rem);
 		}
 
 		.hamburger {
@@ -372,6 +422,18 @@
 
 		.nav__link--active::after {
 			transition-delay: var(--underline-stage-delay);
+		}
+
+		/* 1100 to 1279: the row is tight (logo, six links, call ring, the CTA), so
+		   the links sit a little closer and a step smaller until there is room. */
+		@media (max-width: 1279.98px) {
+			.nav__links {
+				gap: 0.5rem;
+			}
+
+			.nav__link {
+				font-size: 1rem;
+			}
 		}
 	}
 </style>

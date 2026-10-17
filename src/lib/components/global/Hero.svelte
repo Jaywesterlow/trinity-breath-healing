@@ -63,8 +63,9 @@
 		<div class="hero__left" bind:this={leftEl}>
 			<div class="hero__content">
 				<h1 class="hero__heading" use:reveal={{ entrance: false }}>
-					Rust in je hoofd.<br />
-					Ontspanning in je lichaam.
+					<span class="hero__line">Rust in je geest.</span>
+					<span class="hero__line">Ontspanning in je lichaam.</span>
+					<span class="hero__line">Verbinding met je ziel.</span>
 				</h1>
 				<div class="hero__text" use:reveal={{ entrance: false }}>
 					<p class="hero__body">
@@ -319,6 +320,14 @@
 		margin-bottom: var(--space-4);
 	}
 
+	/* One sentence per line, as she wrote it. On a phone a sentence may still have to
+	   wrap, and then it splits evenly instead of leaving one word behind; from 1100px
+	   up there is room for each on one line, so it never wraps there. */
+	.hero__line {
+		display: block;
+		text-wrap: balance;
+	}
+
 	/* ─── Desktop (≥ 1100px) — two-column, image beside text ───
 	   1100px, not 768 and not 1024. It was 768, which handed every iPad in portrait (768,
 	   810, 820, 834) the two-column hero, and 1024 would still hand it to an iPad Pro 12.9
@@ -405,8 +414,12 @@
 		   --fs-title-sm the 768-1023 range used to get is gone with that range. */
 		.hero__heading {
 			font-size: var(--fs-title); /* 36→48 */
-			max-width: 25rem;
+			max-width: none; /* was 25rem for two short lines; each line now holds itself */
 			margin-bottom: var(--space-4);
+		}
+
+		.hero__line {
+			white-space: nowrap;
 		}
 
 		.hero__body {
