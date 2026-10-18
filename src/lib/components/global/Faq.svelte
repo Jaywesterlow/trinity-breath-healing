@@ -26,6 +26,7 @@
 	 */
 	import { faqItems } from '$lib/content/faq/index';
 	import { reveal } from '$lib/actions/reveal';
+	import { TextLink } from '$lib/components/ui/interactions';
 
 	/**
 	 * showHeading — defaults true so the landing page (which has no <h1> of its own above
@@ -169,6 +170,16 @@
 				</details>
 			{/each}
 		</div>
+
+		{#if showHeading}
+			<!-- A way out for the reader whose question is not in the list. After the
+			     list on a phone, where it is the natural next line; under the heading in
+			     the left column on desktop (grid placement below). -->
+			<p class="faq__more" use:reveal>
+				Staat je vraag er niet bij?
+				<TextLink href="/contact" label="Neem gerust contact op" size="sm" />
+			</p>
+		{/if}
 	</div>
 </section>
 
@@ -228,6 +239,17 @@
 	.faq__list {
 		display: flex;
 		flex-direction: column;
+	}
+
+	.faq__more {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: var(--space-1) var(--space-2);
+		margin-top: var(--space-8);
+		font-family: var(--font-body);
+		font-size: var(--fs-body);
+		color: var(--color-text-subtle);
 	}
 
 	/* Opening a <details> is, by default, instantaneous: the answer appears in one frame and the
@@ -373,12 +395,31 @@
 			/* 5fr/7fr rather than half and half: a question is a line of text and
 			   wants the room; a two-line heading does not. */
 			grid-template-columns: 5fr 7fr;
+			/* auto 1fr: the list spans both rows, and its extra height must land in the
+			   second row, so the contact line sits right under the heading. */
+			grid-template-rows: auto 1fr;
 			gap: var(--space-12);
 			align-items: start;
 		}
 
 		.faq__header {
+			grid-column: 1;
+			grid-row: 1;
 			margin-bottom: 0;
+		}
+
+		.faq__list {
+			grid-column: 2;
+			grid-row: 1 / span 2;
+		}
+
+		.faq__more {
+			grid-column: 1;
+			grid-row: 2;
+			align-self: start;
+			margin-top: calc(
+				var(--space-6) - var(--space-12)
+			); /* 24px under the heading, not the 48px gap */
 		}
 
 		.faq__eyebrow {
