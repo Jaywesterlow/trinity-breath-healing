@@ -81,8 +81,13 @@ and one style reference so they match:
       sentence.
 
 ### Open questions
-- [ ] **Card titles differ.** Her mock-up says "Kennismaking & intake", her text
-      "1. Kennismaking". Using the text version.
+- [x] **Card titles.** Her message lists them as "Kennismaking & intake", "De
+      behandeling", "Afronding & nazorg"; the numbered texts are the bodies.
+      Used as such in Figma (section "Werkwijze (redesign)").
+- [ ] **Card text on sage fails WCAG AA.** Cream text on her `#939476` is about
+      3.1:1; body text needs 4.5:1, and pa11y gates the build. Either a darker
+      sage behind the text (about `#6b7056` gives 5.1:1) or dark text on the
+      light sage. Her call, shown side by side in Figma if she wants.
 - [ ] **Her mock-up promises an intake form by e-mail** ("Vooraf ontvang je per
       e-mail een intakeformulier"); her pasted text does not, and §13 is not
       built. Using the pasted text until §13 exists.
