@@ -27,11 +27,88 @@ machine can check is checked, and anything it cannot is dated.
 | **Page list / sitemap** | **18 routes** in `src/lib/constants/routes.ts`, **15 published** as of 2026-09-18. Eleven graduated on 2026-09-09: the seven modalities under `/diensten/`, their `/diensten` index, `/behandelingen`, `/werkwijze` and `/contact`. On 2026-09-18 `/faq` merged into `/contact#faq` (301) and `/blog` was dropped. Three are still stubs — `/over-mij`, `/artikelen`, `/reviews` — noindexed and out of the sitemap until they carry something. |
 | **Legal pages + OG image + favicons + Plausible** | **Done and pushed.** |
 | **Booking approval + slot blocking** | **Live.** A requested slot greys out at once; she approves or declines from her inbox; approval sends a calendar invite, a decline reopens the slot. Supabase holds only date, time and status — no name, e-mail or klachten. |
-| **Homepage redesign** | **Recorded below, not started.** Waiting on an approved layout. |
+| **Homepage redesign** | **Moved to Figma 2026-10-23** (file "Trinity Healing", team JW). Feedback from Rowin and Brigitte, the new illustration style and the order of work are in §15. The site follows once a section is approved in Figma. |
 | **Subpage grid** | **Done 2026-09-09.** Every page's breadcrumb and `<h1>` now share a left edge with the footer; the reading measure moved to the children. `tests/integration/page-grid.spec.ts` holds it. |
 | **Page titles** | **Fixed 2026-09-09.** Eleven shipped the brand name twice (76–88 chars, of which Google shows ~60) because `Head.svelte` appended it to a title that already had it. All 20 are now 48–62 with the brand once, in one spelling. |
 
 **Live since 2026-08-24** on `trinitybreathhealing.nl`, with mail wired through Resend. What is left is content, not plumbing.
+
+---
+
+## 15. Feedback round — recorded 2026-10-23, designing in Figma
+
+Comments from Rowin (designer/developer friend) and Brigitte, left in the Figma
+file around 2026-10-18. Redesign work happens in Figma first
+(`figma.com/design/5oO2vWR9U4N3HFSflujbnx`, team JW, where Jay has a Full seat);
+code follows per approved section. Her reference images are in Jay's Downloads:
+`Wat kun je verwachten_.png`, `Gouden levensboom aan de rivier.png`,
+`Warme portretfoto in de tuin.png`.
+
+### New illustration style — every image, one style
+Set by her Werkwijze mock-up: watercolour wash, fine gold lines, small points of
+light, sage-coloured leaves, **on green backgrounds**. The cream tree is the same
+idea but too pale; green is the direction. Thirteen images, all from one prompt
+and one style reference so they match:
+- [ ] Werkwijze ×3 (the style reference)
+- [ ] Hero (the tree by the river, green version)
+- [ ] Behandelingen ×7
+- [ ] Contact ×2 — Rowin: an illustration on the right of each of the two green
+      blocks that open a form
+
+### Copy from Brigitte
+- [ ] **Hero.** Title: "Stress, emoties en ingrijpende ervaringen kunnen je uit
+      balans brengen." Lead: "Bij Trinity Breath & Healing begeleid ik je met
+      ademwerk, lichaamsgerichte en energetische behandelingen om spanning los te
+      laten, patronen te herkennen en weer dichter bij jezelf te komen." The title
+      does not name the modality; the lead does, so it stays directly under it.
+- [ ] **Werkwijze.** Heading "Wat kun je verwachten?", sub "Rustig, persoonlijk
+      en op jouw tempo." Cards:
+  1. Kennismaking — "We beginnen met een persoonlijk gesprek waarin we kijken
+     naar jouw wensen, behoeften en wat je op dit moment bezighoudt."
+  2. De behandeling — "Iedere behandeling wordt zorgvuldig afgestemd op jouw
+     persoonlijke behoeften. Ik werk met lichaamsgerichte technieken, ademwerk en
+     energetische ondersteuning. Waar passend zet ik ook de biotensor in als
+     hulpmiddel voor bewustwording en persoonlijke verdieping. / Zo ontstaat
+     ruimte voor ontspanning, het loslaten van spanning en een diepere verbinding
+     met jezelf."
+  3. Afronding & nazorg — "Na de behandeling nemen we alle tijd om rustig af te
+     ronden. Je krijgt de ruimte om je ervaringen te delen en, wanneer dat nodig
+     is, ontvang je persoonlijke adviezen voor je nazorg."
+- [ ] **Over mij.** Title "Mijn eigen reis bracht mij dichter bij mezelf". Text
+      as she sent it, with four fixes to confirm with her: "inspireerde" →
+      "inspireerden"; "kennen. oude" → "kennen, oude"; "meer naar mezelf te
+      luisteren" → "meer naar mezelf luisteren"; full stop after the last
+      sentence.
+
+### Open questions
+- [ ] **Card titles differ.** Her mock-up says "Kennismaking & intake", her text
+      "1. Kennismaking". Using the text version.
+- [ ] **Her mock-up promises an intake form by e-mail** ("Vooraf ontvang je per
+      e-mail een intakeformulier"); her pasted text does not, and §13 is not
+      built. Using the pasted text until §13 exists.
+- [ ] **Is the portrait really her?** If ChatGPT retouched a real photo, fine.
+      If the face is generated, it cannot go on a health site as the
+      practitioner — she needs a real photo in this style.
+
+### Sizes (Rowin)
+- [x] Hero title and lead bigger — largely done; recheck with the new copy.
+- [ ] The text section under the carousel: description too small.
+
+### Later: render-to-line hero on scroll (Rowin)
+The hero opens on a soft 3D-style render of the tree by the river; scrolling
+plays ~150 frames in which it dissolves into the gold line drawing (an
+Apple-style image sequence). Start and end frames generated, the in-between by a
+video model, played on a canvas against scroll. First frame a plain `<img>` so
+LCP and the crawler HTML are unaffected; frames (~3–8 MB) load after. Check the
+JW library for an image-sequence effect before building. Last in the order —
+after the static style is approved.
+
+### Order
+1. Werkwijze in Figma (copy + three cards; sets the style)
+2. Hero
+3. Over mij (portrait once the question above is answered)
+4. Behandelingen and contact illustrations
+5. Render-to-line transition
 
 ---
 
