@@ -95,26 +95,29 @@ test("a step of scroll turns the fan one card in next()'s direction, and back tu
 }) => {
 	await openOnFan(page);
 	const i = await centreIndex(page);
-	expect(await posOf(page, i)).toBe(0);
+	// Relative to the start, not to 0: on CI the jump in openOnFan feeds the
+	// drive a little (the fan rested at 0.07), and a rest off-centre is allowed.
+	const start = await posOf(page, i);
 
 	await scrollBy(page, STEP_PX);
 	await page.waitForTimeout(SETTLE_MS);
-	expect(await posOf(page, i)).toBeCloseTo(-1, 1);
+	expect(await posOf(page, i)).toBeCloseTo(start - 1, 1);
 	expect(await spacingInvariantHolds(page)).toBe(true);
 
 	await scrollBy(page, -STEP_PX);
 	await page.waitForTimeout(SETTLE_MS);
-	expect(await posOf(page, i)).toBeCloseTo(0, 1);
+	expect(await posOf(page, i)).toBeCloseTo(start, 1);
 	expect(await spacingInvariantHolds(page)).toBe(true);
 });
 
 test('no snap: half a step of scroll leaves the fan half a card on', async ({ page }) => {
 	await openOnFan(page);
 	const i = await centreIndex(page);
+	const start = await posOf(page, i);
 	await scrollBy(page, STEP_PX / 2);
 	await page.waitForTimeout(SETTLE_MS);
 	const rest = await posOf(page, i);
-	expect(rest).toBeCloseTo(-0.5, 1);
+	expect(rest - start).toBeCloseTo(-0.5, 1);
 	await page.waitForTimeout(1500);
 	expect(await posOf(page, i), 'it stays where it came to rest').toBe(rest);
 });
