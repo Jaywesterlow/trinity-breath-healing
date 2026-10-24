@@ -27,7 +27,7 @@ machine can check is checked, and anything it cannot is dated.
 | **Page list / sitemap** | **18 routes** in `src/lib/constants/routes.ts`, **15 published** as of 2026-09-18. Eleven graduated on 2026-09-09: the seven modalities under `/diensten/`, their `/diensten` index, `/behandelingen`, `/werkwijze` and `/contact`. On 2026-09-18 `/faq` merged into `/contact#faq` (301) and `/blog` was dropped. Three are still stubs — `/over-mij`, `/artikelen`, `/reviews` — noindexed and out of the sitemap until they carry something. |
 | **Legal pages + OG image + favicons + Plausible** | **Done and pushed.** |
 | **Booking approval + slot blocking** | **Live.** A requested slot greys out at once; she approves or declines from her inbox; approval sends a calendar invite, a decline reopens the slot. Supabase holds only date, time and status — no name, e-mail or klachten. |
-| **Homepage redesign** | **Moved to Figma 2026-10-23** (file "Trinity Healing", team JW). Feedback from Rowin and Brigitte, the new illustration style and the order of work are in §15. The site follows once a section is approved in Figma. |
+| **Homepage redesign** | **Moved to Figma 2026-10-23** (file "Trinity Healing", team JW). Feedback from Rowin and Brigitte, the new illustration style and the order of work are in §15. The site follows once a section is approved in Figma. **Werkwijze approved 2026-10-24** (full-card images, site green, paper texture); Hero is next. |
 | **Subpage grid** | **Done 2026-09-09.** Every page's breadcrumb and `<h1>` now share a left edge with the footer; the reading measure moved to the children. `tests/integration/page-grid.spec.ts` holds it. |
 | **Page titles** | **Fixed 2026-09-09.** Eleven shipped the brand name twice (76–88 chars, of which Google shows ~60) because `Head.svelte` appended it to a title that already had it. All 20 are now 48–62 with the brand once, in one spelling. |
 
@@ -49,8 +49,35 @@ Set by her Werkwijze mock-up: watercolour wash, fine gold lines, small points of
 light, sage-coloured leaves, **on green backgrounds**. The cream tree is the same
 idea but too pale; green is the direction. Thirteen images, all from one prompt
 and one style reference so they match:
-- [ ] Werkwijze ×3 (the style reference)
-- [ ] Hero (the tree by the river, green version)
+- [x] **Werkwijze ×3 — approved in Figma 2026-10-24** (section "Werkwijze (redesign) —
+      chosen", below the original). Files in `Figma/Werkwijze-redesign/`.
+      - Each image **is** the whole card: 9:16, 1536×2752 (Nano Banana Pro, 2K), texture on
+        top, illustration at the bottom, no shadow, no gradient added in code. In code:
+        `object-fit: cover` anchored to the bottom, the card's solid `#627454` underneath as
+        fallback.
+      - **Card colour stays the site green `#627454`.** Tested against the mock-up's sage
+        darkened to `#686954`; the green won. Nano Banana does not hit a hex (came back
+        10–20% light), so the text area is colour-corrected afterwards to the exact hex,
+        its texture calmed, and no patch lighter than the hex: cream text ≥ 4.56:1 everywhere.
+        `scripts/finalize2.cjs` does this — rerun it on any regenerated card.
+      - Card 2's last line sits just above the glow; anchor that image slightly lower if
+        it feels tight in the browser.
+- [x] **Watercolour paper texture, site-wide — approved 2026-10-24.**
+      `Figma/Werkwijze-redesign/paper-tile.webp` (43 KB): grey only, seamless, 2048 px
+      shown at 1024 css px, laid on the cream with `mix-blend-mode: multiply` at **60%**.
+      Multiply only darkens, so the cream stays cream. Ceiling: above 60% the grey body
+      text (`--brand-muted`, `--color-text-subtle`) drops under 4.5:1 in the darkest
+      blooms, so a stronger setting needs those two darkened too. Checked for lines:
+      wrap seam 0.00, no row or column stands out. Tried and rejected: three stacked
+      patterns (each too faint under the contrast budget) and one large 2400 px mosaic
+      (no headroom to turn it up). Cream areas only, not the green cards or footer.
+- [ ] **Card lighting (code).** Jay wants the light in the Werkwijze cards emphasised —
+      glow, points of light — done in code, not video. Needs precise direction from him
+      before building: previous attempts at "that feeling" without exact instructions
+      missed. Do not start until he describes or references it.
+- [ ] Hero (the tree by the river, green version). **The only place for AI video
+      (Wavespeed)** — decided 2026-10-24 so the rest of the page stays calm; ties in with
+      the render-to-line transition below.
 - [ ] Behandelingen ×7
 - [ ] Contact ×2 — Rowin: an illustration on the right of each of the two green
       blocks that open a form
@@ -84,10 +111,10 @@ and one style reference so they match:
 - [x] **Card titles.** Her message lists them as "Kennismaking & intake", "De
       behandeling", "Afronding & nazorg"; the numbered texts are the bodies.
       Used as such in Figma (section "Werkwijze (redesign)").
-- [ ] **Card text on sage fails WCAG AA.** Cream text on her `#939476` is about
-      3.1:1; body text needs 4.5:1, and pa11y gates the build. Either a darker
-      sage behind the text (about `#6b7056` gives 5.1:1) or dark text on the
-      light sage. Her call, shown side by side in Figma if she wants.
+- [x] **Card text on sage fails WCAG AA — settled 2026-10-24.** Cream on her `#939476`
+      is 2.77:1 (an earlier note here said 3.1:1, and that `#6b7056` gives 5.1:1; it
+      gives 4.58:1). Resolved by keeping the site green `#627454` (4.50:1, image text
+      area ≥ 4.56:1). Swatches: claude.ai/artifact/A6Z31XSqQbrTGuiP2ptapy.
 - [ ] **Her mock-up promises an intake form by e-mail** ("Vooraf ontvang je per
       e-mail een intakeformulier"); her pasted text does not, and §13 is not
       built. Using the pasted text until §13 exists.
@@ -109,7 +136,7 @@ JW library for an image-sequence effect before building. Last in the order —
 after the static style is approved.
 
 ### Order
-1. Werkwijze in Figma (copy + three cards; sets the style)
+1. ~~Werkwijze in Figma (copy + three cards; sets the style)~~ — approved 2026-10-24
 2. Hero
 3. Over mij (portrait once the question above is answered)
 4. Behandelingen and contact illustrations
