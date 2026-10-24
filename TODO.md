@@ -27,7 +27,7 @@ machine can check is checked, and anything it cannot is dated.
 | **Page list / sitemap** | **18 routes** in `src/lib/constants/routes.ts`, **15 published** as of 2026-09-18. Eleven graduated on 2026-09-09: the seven modalities under `/diensten/`, their `/diensten` index, `/behandelingen`, `/werkwijze` and `/contact`. On 2026-09-18 `/faq` merged into `/contact#faq` (301) and `/blog` was dropped. Three are still stubs — `/over-mij`, `/artikelen`, `/reviews` — noindexed and out of the sitemap until they carry something. |
 | **Legal pages + OG image + favicons + Plausible** | **Done and pushed.** |
 | **Booking approval + slot blocking** | **Live.** A requested slot greys out at once; she approves or declines from her inbox; approval sends a calendar invite, a decline reopens the slot. Supabase holds only date, time and status — no name, e-mail or klachten. |
-| **Homepage redesign** | **Moved to Figma 2026-10-23** (file "Trinity Healing", team JW). Feedback from Rowin and Brigitte, the new illustration style and the order of work are in §15. The site follows once a section is approved in Figma. **Werkwijze approved 2026-10-24** (full-card images, site green, paper texture); Hero is next. |
+| **Homepage redesign** | **Moved to Figma 2026-10-23** (file "Trinity Healing", team JW). Feedback from Rowin and Brigitte, the new illustration style and the order of work are in §15. The site follows once a section is approved in Figma. **Werkwijze approved 2026-10-24** (full-card images, site green, paper texture); **Hero approved 2026-10-24** (two overflowing images, watercolour text wash); Over mij is next. |
 | **Subpage grid** | **Done 2026-09-09.** Every page's breadcrumb and `<h1>` now share a left edge with the footer; the reading measure moved to the children. `tests/integration/page-grid.spec.ts` holds it. |
 | **Page titles** | **Fixed 2026-09-09.** Eleven shipped the brand name twice (76–88 chars, of which Google shows ~60) because `Head.svelte` appended it to a title that already had it. All 20 are now 48–62 with the brand once, in one spelling. |
 
@@ -75,9 +75,27 @@ and one style reference so they match:
       glow, points of light — done in code, not video. Needs precise direction from him
       before building: previous attempts at "that feeling" without exact instructions
       missed. Do not start until he describes or references it.
-- [ ] Hero (the tree by the river, green version). **The only place for AI video
-      (Wavespeed)** — decided 2026-10-24 so the rest of the page stays calm; ties in with
-      the render-to-line transition below.
+- [x] **Hero (the tree by the river, green version) — approved 2026-10-24.** Six frames
+      in Figma (node `766:26` onwards: phone, tablet, laptop, desktop, 2× ultrawide).
+      Files in `Figma/Hero-redesign/`.
+      - **Two images, each overflowing on the narrower screen of its range**, so no fade
+        edge ever shows. Portrait 3:4 (`hero-portrait-3x4.webp`) for phone and tablet
+        portrait: cropped at the sides on a phone, exactly full width on a tablet; its
+        bottom runs into the site green (`#637456` vs `#627454`), so the section can be any
+        height with the text below the tree. Landscape 21:9 (`hero-landscape-21x9.webp`)
+        for tablet landscape up to ultrawide: cropped at the sides on 16:9, full width on
+        ultrawide. Ultrawide is not taller, so both landscape sizes share one height.
+      - Gold stays as vibrant as the first version; only the round light points are gone.
+      - **Text wash instead of a radial scrim** (`text-wash.webp`, transparent PNG→webp):
+        a watercolour wash painted on white by Nano Banana, the paper keyed to alpha in
+        code, pigment set to `#2f3a28` at max 55%. It fades out before the painted edge
+        (alpha 0 at the border, no step over 13%). Desktop median contrast under the text
+        3.34 → 4.78; the river glow by the button stays at 3.12. Centred on the text
+        block, ~1150 px wide on desktop; shift it ~80 px left so it clears the canopy.
+        **Not yet placed in the Figma frames** (MCP call limit hit 2026-10-24).
+      - Not checked by eye after the image upload: tablet and both ultrawides.
+      - **The only place for AI video (Wavespeed)** — decided 2026-10-24 so the rest of the
+        page stays calm; ties in with the render-to-line transition below.
 - [ ] Behandelingen ×7
 - [ ] Contact ×2 — Rowin: an illustration on the right of each of the two green
       blocks that open a form
@@ -137,7 +155,7 @@ after the static style is approved.
 
 ### Order
 1. ~~Werkwijze in Figma (copy + three cards; sets the style)~~ — approved 2026-10-24
-2. Hero
+2. ~~Hero~~ — approved 2026-10-24
 3. Over mij (portrait once the question above is answered)
 4. Behandelingen and contact illustrations
 5. Render-to-line transition
