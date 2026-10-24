@@ -27,11 +27,138 @@ machine can check is checked, and anything it cannot is dated.
 | **Page list / sitemap** | **18 routes** in `src/lib/constants/routes.ts`, **15 published** as of 2026-09-18. Eleven graduated on 2026-09-09: the seven modalities under `/diensten/`, their `/diensten` index, `/behandelingen`, `/werkwijze` and `/contact`. On 2026-09-18 `/faq` merged into `/contact#faq` (301) and `/blog` was dropped. Three are still stubs — `/over-mij`, `/artikelen`, `/reviews` — noindexed and out of the sitemap until they carry something. |
 | **Legal pages + OG image + favicons + Plausible** | **Done and pushed.** |
 | **Booking approval + slot blocking** | **Live.** A requested slot greys out at once; she approves or declines from her inbox; approval sends a calendar invite, a decline reopens the slot. Supabase holds only date, time and status — no name, e-mail or klachten. |
-| **Homepage redesign** | **Recorded below, not started.** Waiting on an approved layout. |
+| **Homepage redesign** | **Moved to Figma 2026-10-23** (file "Trinity Healing", team JW). Feedback from Rowin and Brigitte, the new illustration style and the order of work are in §15. The site follows once a section is approved in Figma. **Werkwijze approved 2026-10-24** (full-card images, site green, paper texture); **Hero approved 2026-10-24** (two overflowing images, watercolour text wash); Over mij is next. |
 | **Subpage grid** | **Done 2026-09-09.** Every page's breadcrumb and `<h1>` now share a left edge with the footer; the reading measure moved to the children. `tests/integration/page-grid.spec.ts` holds it. |
 | **Page titles** | **Fixed 2026-09-09.** Eleven shipped the brand name twice (76–88 chars, of which Google shows ~60) because `Head.svelte` appended it to a title that already had it. All 20 are now 48–62 with the brand once, in one spelling. |
 
 **Live since 2026-08-24** on `trinitybreathhealing.nl`, with mail wired through Resend. What is left is content, not plumbing.
+
+---
+
+## 15. Feedback round — recorded 2026-10-23, designing in Figma
+
+Comments from Rowin (designer/developer friend) and Brigitte, left in the Figma
+file around 2026-10-18. Redesign work happens in Figma first
+(`figma.com/design/5oO2vWR9U4N3HFSflujbnx`, team JW, where Jay has a Full seat);
+code follows per approved section. Her reference images are in Jay's Downloads:
+`Wat kun je verwachten_.png`, `Gouden levensboom aan de rivier.png`,
+`Warme portretfoto in de tuin.png`.
+
+### New illustration style — every image, one style
+Set by her Werkwijze mock-up: watercolour wash, fine gold lines, small points of
+light, sage-coloured leaves, **on green backgrounds**. The cream tree is the same
+idea but too pale; green is the direction. Thirteen images, all from one prompt
+and one style reference so they match:
+- [x] **Werkwijze ×3 — approved in Figma 2026-10-24** (section "Werkwijze (redesign) —
+      chosen", below the original). Files in `Figma/Werkwijze-redesign/`.
+      - Each image **is** the whole card: 9:16, 1536×2752 (Nano Banana Pro, 2K), texture on
+        top, illustration at the bottom, no shadow, no gradient added in code. In code:
+        `object-fit: cover` anchored to the bottom, the card's solid `#627454` underneath as
+        fallback.
+      - **Card colour stays the site green `#627454`.** Tested against the mock-up's sage
+        darkened to `#686954`; the green won. Nano Banana does not hit a hex (came back
+        10–20% light), so the text area is colour-corrected afterwards to the exact hex,
+        its texture calmed, and no patch lighter than the hex: cream text ≥ 4.56:1 everywhere.
+        `scripts/finalize2.cjs` does this — rerun it on any regenerated card.
+      - Card 2's last line sits just above the glow; anchor that image slightly lower if
+        it feels tight in the browser.
+- [x] **Watercolour paper texture, site-wide — approved 2026-10-24.**
+      `Figma/Werkwijze-redesign/paper-tile.webp` (43 KB): grey only, seamless, 2048 px
+      shown at 1024 css px, laid on the cream with `mix-blend-mode: multiply` at **60%**.
+      Multiply only darkens, so the cream stays cream. Ceiling: above 60% the grey body
+      text (`--brand-muted`, `--color-text-subtle`) drops under 4.5:1 in the darkest
+      blooms, so a stronger setting needs those two darkened too. Checked for lines:
+      wrap seam 0.00, no row or column stands out. Tried and rejected: three stacked
+      patterns (each too faint under the contrast budget) and one large 2400 px mosaic
+      (no headroom to turn it up). Cream areas only, not the green cards or footer.
+- [ ] **Card lighting (code).** Jay wants the light in the Werkwijze cards emphasised —
+      glow, points of light — done in code, not video. Needs precise direction from him
+      before building: previous attempts at "that feeling" without exact instructions
+      missed. Do not start until he describes or references it.
+- [x] **Hero (the tree by the river, green version) — approved 2026-10-24.** Six frames
+      in Figma (node `766:26` onwards: phone, tablet, laptop, desktop, 2× ultrawide).
+      Files in `Figma/Hero-redesign/`.
+      - **Two images, each overflowing on the narrower screen of its range**, so no fade
+        edge ever shows. Portrait 3:4 (`hero-portrait-3x4.webp`) for phone and tablet
+        portrait: cropped at the sides on a phone, exactly full width on a tablet; its
+        bottom runs into the site green (`#637456` vs `#627454`), so the section can be any
+        height with the text below the tree. Landscape 21:9 (`hero-landscape-21x9.webp`)
+        for tablet landscape up to ultrawide: cropped at the sides on 16:9, full width on
+        ultrawide. Ultrawide is not taller, so both landscape sizes share one height.
+      - Gold stays as vibrant as the first version; only the round light points are gone.
+      - **Text wash instead of a radial scrim** (`text-wash.webp`, transparent PNG→webp):
+        a watercolour wash painted on white by Nano Banana, the paper keyed to alpha in
+        code, pigment set to `#2f3a28` at max 55%. It fades out before the painted edge
+        (alpha 0 at the border, no step over 13%). Desktop median contrast under the text
+        3.34 → 4.78; the river glow by the button stays at 3.12. Centred on the text
+        block, ~1150 px wide on desktop; shift it ~80 px left so it clears the canopy.
+        **Not yet placed in the Figma frames** (MCP call limit hit 2026-10-24).
+      - Not checked by eye after the image upload: tablet and both ultrawides.
+      - **The only place for AI video (Wavespeed)** — decided 2026-10-24 so the rest of the
+        page stays calm; ties in with the render-to-line transition below.
+- [ ] Behandelingen ×7
+- [ ] Contact ×2 — Rowin: an illustration on the right of each of the two green
+      blocks that open a form
+
+### Copy from Brigitte
+- [ ] **Hero.** Title: "Stress, emoties en ingrijpende ervaringen kunnen je uit
+      balans brengen." Lead: "Bij Trinity Breath & Healing begeleid ik je met
+      ademwerk, lichaamsgerichte en energetische behandelingen om spanning los te
+      laten, patronen te herkennen en weer dichter bij jezelf te komen." The title
+      does not name the modality; the lead does, so it stays directly under it.
+- [ ] **Werkwijze.** Heading "Wat kun je verwachten?", sub "Rustig, persoonlijk
+      en op jouw tempo." Cards:
+  1. Kennismaking — "We beginnen met een persoonlijk gesprek waarin we kijken
+     naar jouw wensen, behoeften en wat je op dit moment bezighoudt."
+  2. De behandeling — "Iedere behandeling wordt zorgvuldig afgestemd op jouw
+     persoonlijke behoeften. Ik werk met lichaamsgerichte technieken, ademwerk en
+     energetische ondersteuning. Waar passend zet ik ook de biotensor in als
+     hulpmiddel voor bewustwording en persoonlijke verdieping. / Zo ontstaat
+     ruimte voor ontspanning, het loslaten van spanning en een diepere verbinding
+     met jezelf."
+  3. Afronding & nazorg — "Na de behandeling nemen we alle tijd om rustig af te
+     ronden. Je krijgt de ruimte om je ervaringen te delen en, wanneer dat nodig
+     is, ontvang je persoonlijke adviezen voor je nazorg."
+- [ ] **Over mij.** Title "Mijn eigen reis bracht mij dichter bij mezelf". Text
+      as she sent it, with four fixes to confirm with her: "inspireerde" →
+      "inspireerden"; "kennen. oude" → "kennen, oude"; "meer naar mezelf te
+      luisteren" → "meer naar mezelf luisteren"; full stop after the last
+      sentence.
+
+### Open questions
+- [x] **Card titles.** Her message lists them as "Kennismaking & intake", "De
+      behandeling", "Afronding & nazorg"; the numbered texts are the bodies.
+      Used as such in Figma (section "Werkwijze (redesign)").
+- [x] **Card text on sage fails WCAG AA — settled 2026-10-24.** Cream on her `#939476`
+      is 2.77:1 (an earlier note here said 3.1:1, and that `#6b7056` gives 5.1:1; it
+      gives 4.58:1). Resolved by keeping the site green `#627454` (4.50:1, image text
+      area ≥ 4.56:1). Swatches: claude.ai/artifact/A6Z31XSqQbrTGuiP2ptapy.
+- [ ] **Her mock-up promises an intake form by e-mail** ("Vooraf ontvang je per
+      e-mail een intakeformulier"); her pasted text does not, and §13 is not
+      built. Using the pasted text until §13 exists.
+- [ ] **Is the portrait really her?** If ChatGPT retouched a real photo, fine.
+      If the face is generated, it cannot go on a health site as the
+      practitioner — she needs a real photo in this style.
+
+### Sizes (Rowin)
+- [x] Hero title and lead bigger — largely done; recheck with the new copy.
+- [ ] The text section under the carousel: description too small.
+
+### Later: render-to-line hero on scroll (Rowin)
+The hero opens on a soft 3D-style render of the tree by the river; scrolling
+plays ~150 frames in which it dissolves into the gold line drawing (an
+Apple-style image sequence). Start and end frames generated, the in-between by a
+video model, played on a canvas against scroll. First frame a plain `<img>` so
+LCP and the crawler HTML are unaffected; frames (~3–8 MB) load after. Check the
+JW library for an image-sequence effect before building. Last in the order —
+after the static style is approved.
+
+### Order
+1. ~~Werkwijze in Figma (copy + three cards; sets the style)~~ — approved 2026-10-24
+2. ~~Hero~~ — approved 2026-10-24
+3. Over mij (portrait once the question above is answered)
+4. Behandelingen and contact illustrations
+5. Render-to-line transition
 
 ---
 

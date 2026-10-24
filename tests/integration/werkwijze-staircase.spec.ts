@@ -27,6 +27,11 @@ const VH = 900;
 const BASE = 200;
 const STEP = 306;
 const FADE_SPAN = 0.4;
+/* The lift and fade start when the row's rest top is this far down the viewport (was the
+   centre); the cards sit aligned from the centre until then. Mirrors STAIR_RISE_START. */
+const RISE_START = 0.12;
+/* Scroll from the aligned moment to the fully faded one. */
+const FADE_SCROLL = VH * (0.5 - RISE_START + FADE_SPAN);
 const SETTLE_MS = 800;
 
 /** scrollY at which the section's top sits exactly on the viewport's bottom edge. */
@@ -170,7 +175,7 @@ test.describe('Werkwijze desktop staircase', () => {
 		const aligned = await alignedY(page);
 		await scrollAndSettle(page, entry);
 		await scrollAndSettle(page, aligned);
-		await scrollAndSettle(page, aligned + VH * FADE_SPAN);
+		await scrollAndSettle(page, aligned + FADE_SCROLL);
 
 		for (const opacity of await cardOpacities(page)) expect(opacity).toBeLessThan(0.05);
 
@@ -217,7 +222,7 @@ test.describe('Werkwijze desktop staircase', () => {
 		const entry = await entryY(page);
 		const aligned = await alignedY(page);
 		await scrollAndSettle(page, entry);
-		await scrollAndSettle(page, aligned + VH * FADE_SPAN);
+		await scrollAndSettle(page, aligned + FADE_SCROLL);
 		await scrollAndSettle(page, aligned);
 
 		const alignedTops = await cardTops(page);

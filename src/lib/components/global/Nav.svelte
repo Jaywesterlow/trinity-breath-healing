@@ -240,11 +240,11 @@
 
 	/* Same two-line idea as the desktop nav, minus the hover half: a touch screen
 	   has no hover, so only the current-page line is ever drawn. Sand on forest,
-	   and the same 2px as every other underline on the site. */
+	   and the same --underline-height as every other underline on the site. */
 	.mobile-menu__link {
 		position: relative;
 		font-family: var(--font-display);
-		font-size: 1.5rem;
+		font-size: 1.375rem; /* was 1.5rem; smaller type throughout (2026-10-17) */
 		font-weight: 500;
 		color: var(--color-bg-sand);
 		text-decoration: none;
@@ -272,14 +272,15 @@
 		transform: scaleX(1);
 	}
 
-	/* ─── Desktop ≥ 1024px ─── */
-	@media (min-width: 1024px) {
+	/* ─── Desktop ≥ 1100px (was 1024; the row overflowed there by ~50px) ─── */
+	@media (min-width: 1100px) {
 		.nav {
 			height: var(--nav-height);
 		}
 
 		.nav__inner {
 			height: 100%;
+			width: min(var(--container-max), 100% - 3rem);
 			padding: 0; /* zero — matches footer; max-width + centering alone sets the edge */
 			gap: var(--space-6);
 		}
@@ -372,6 +373,18 @@
 
 		.nav__link--active::after {
 			transition-delay: var(--underline-stage-delay);
+		}
+	}
+
+	/* 1100–1279: six links, the logo and the CTA only just fit, so the links close up
+	   and step down a size. After the desktop block, or its base rules would win. */
+	@media (min-width: 1100px) and (max-width: 1279.98px) {
+		.nav__links {
+			gap: 0.5rem;
+		}
+
+		.nav__link {
+			font-size: 1rem;
 		}
 	}
 </style>

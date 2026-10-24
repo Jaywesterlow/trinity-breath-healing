@@ -100,8 +100,14 @@
 		flex-direction: column;
 		width: 17.625rem; /* 282px — Figma spec */
 		height: 28.688rem; /* 459px — Figma spec, rounded to 3dp */
-		padding: var(--space-4); /* equal on all sides */
-		gap: var(--space-4);
+		/* Spacing redone 2026-10-18 (the owner: "the spacing inside the cards is off").
+		   16px padding sat inside a 25px corner, so the text crowded the curve, and one
+		   16px gap between everything made title, body and art equally far apart. Now:
+		   padding at least the radius (28px), title and body as a tight pair (8px), and a
+		   clear step (24px) from that pair to the art or the button. */
+		--wcard-pad: 1.75rem;
+		padding: var(--wcard-pad);
+		gap: var(--space-2);
 		border-radius: 1.563rem; /* 25px — Figma spec; --radius-lg (16px) is 9px off, too large to round */
 		overflow: hidden;
 	}
@@ -171,6 +177,10 @@
 		flex: 1 1 0%; /* fills whatever vertical space the title+body don't use — never overflows the fixed card height */
 		min-height: 0;
 		object-fit: cover;
+		/* Out to the card's sides and bottom edge, so the drawing belongs to the card
+		   instead of floating in the space left under the text. */
+		width: calc(100% + 2 * var(--wcard-pad));
+		margin: var(--space-4) calc(-1 * var(--wcard-pad)) calc(-1 * var(--wcard-pad));
 	}
 
 	/* Same geometry whether the art is a raster <img> or the inlined, self-drawing <svg>.
@@ -182,7 +192,7 @@
 	.wcard__art,
 	.wcard--outline :global(svg.lt) {
 		position: absolute;
-		top: 1.723rem; /* 27.56px — Figma spec offset, rounded to 3dp */
+		top: 0.723rem; /* 11.56px; Figma has 27.56, raised 16px on 2026-10-18 so the larger text block clears the road */
 		left: -0.125rem; /* -2px — Figma spec */
 		z-index: 0;
 		width: 24.847rem; /* 397.55px — Figma spec; wider than the card, clipped by wcard's overflow:hidden */
@@ -196,5 +206,6 @@
 		position: relative;
 		z-index: 1;
 		width: 100%;
+		margin-top: var(--space-4); /* with the 8px gap, 24px under the body */
 	}
 </style>

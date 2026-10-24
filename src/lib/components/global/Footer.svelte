@@ -77,6 +77,10 @@
 </script>
 
 <footer class="footer">
+	<!-- The lotus from the logo, rising out of the foot of the page: drawn large and
+	     faint behind the footer, cut off by its bottom edge, so the site ends on the
+	     mark the way it begins with it in the nav. Ornament only. -->
+	<div class="footer__lotus" aria-hidden="true"></div>
 	<div class="footer__inner">
 		<!-- Three reveals in the whole footer, since the 2026-09-15 audit: the brand column,
 		     the nav columns as one, and the legal row (which reaches the reader through the
@@ -170,11 +174,32 @@
 
 <style>
 	.footer {
+		position: relative;
+		overflow: hidden; /* the lotus is cut by the footer's bottom edge */
 		background: var(--color-brand-green);
 		color: var(--color-bg-sand);
+		/* First stage of the link underline on green: the nav's grey would vanish here. */
+		--link-underline-idle: color-mix(in srgb, var(--color-bg-sand) 50%, var(--color-brand-green));
+	}
+
+	/* Same mask technique as the proof band: one logo file, any colour. Centred,
+	   two thirds of it above the bottom edge. */
+	.footer__lotus {
+		position: absolute;
+		left: 50%;
+		bottom: 0;
+		width: min(46rem, 120vw);
+		aspect-ratio: 4096 / 3410;
+		transform: translate(-50%, 34%);
+		background: var(--color-accent-gold-soft);
+		opacity: 0.12;
+		-webkit-mask: url('/trinity-logo.svg') center / contain no-repeat;
+		mask: url('/trinity-logo.svg') center / contain no-repeat;
+		pointer-events: none;
 	}
 
 	.footer__inner {
+		position: relative; /* above the lotus */
 		max-width: var(--container-max);
 		margin: 0 auto;
 		padding: var(--space-8) var(--space-6); /* horizontal matches nav/hero below 1024px; zeroed again there since max-width + centering takes over */
