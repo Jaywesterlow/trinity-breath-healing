@@ -3,137 +3,163 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Hero intro prototype</title>
+<title>Hero sequence prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
 <style>
-	:root { --green: #637456; --cream: #faf0e6; }
+	:root { --green: #627454; --cream: #faf0e6; --nav-height: 72px; }
 	* { box-sizing: border-box; }
-	body { margin: 0; background: var(--green); color: var(--cream); font: 14px/1.4 system-ui, sans-serif; }
+	body { margin: 0; background: var(--green); color: var(--cream); font: 16px/1.5 'DM Sans', system-ui, sans-serif; }
 
-	/* Same frame as the lights prototype and Hero.svelte: landscape covers the screen,
-	   portrait sits on top at max(100vw, 58svh) with the paper running on below. */
-	.stage { position: relative; height: 100svh; overflow: hidden; }
-	.frame, .frame > *, .draw-layers > * { position: absolute; inset: 0; width: 100%; height: 100%; }
-	.frame img { object-fit: cover; }
-	.paper { display: none; }
-	@media (max-aspect-ratio: 1/1) {
-		.stage { height: auto; min-height: 100svh; display: flex; flex-direction: column; }
-		.frame { position: relative; inset: auto; left: 50%; width: max(100vw, 58svh); height: auto; aspect-ratio: 1500 / 2009; transform: translateX(-50%); flex-shrink: 0; }
-		.paper { display: block; flex: 1 0 auto; align-self: center; width: max(100vw, 58svh); background: url('paper-p.webp') top center / 100% auto repeat-y; }
+	/* ─── Hero (layout as Hero.svelte) ─── */
+	.hero { position: relative; isolation: isolate; min-height: 100svh; background: var(--green); overflow: hidden; }
+	.frame { position: absolute; z-index: -1; }
+	.frame > * { position: absolute; inset: 0; width: 100%; height: 100%; }
+	.hero__inner { position: relative; max-width: 1240px; margin: 0 auto; }
+	.hero__content { position: relative; isolation: isolate; }
+	.hero__heading { font-weight: 500; line-height: 1.15; text-wrap: balance; margin: 0 0 0.5em; }
+	.hero__body { margin: 0 0 1.8em; }
+	/* Stand-in for ButtonLink (the real one comes with the port). */
+	.hero__cta a { display: inline-flex; align-items: center; gap: 12px; padding: 12px 14px 12px 24px; border-radius: 999px; background: var(--cream); color: #2f3a28; text-decoration: none; font-weight: 500; }
+	.hero__cta a span { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: #8d6346; color: var(--cream); }
+
+	/* The text wash, as Hero.svelte: a painted wash keyed to alpha, centred on the text block. */
+	.hero__content::before { content: ''; position: absolute; z-index: -1; left: 50%; top: 50%; aspect-ratio: 2400 / 1792; background: url('hero-text-wash-1400.webp') center / 100% 100% no-repeat; pointer-events: none; }
+
+	/* Landscape: the image covers the hero, text on the left over it. */
+	@media (min-aspect-ratio: 1/1) {
+		.hero { display: flex; flex-direction: column; justify-content: center; }
+		.frame { inset: 0; }
+		.hero__inner { width: 100%; padding: calc(var(--nav-height) + 40px) 24px var(--nav-height); }
+		.hero__content { width: min(100%, 714px, calc(416px + 8.66vw)); }
+		.hero__content::before { width: 205%; transform: translate(-57%, -50%); }
+		.hero__heading { font-size: clamp(40px, calc(40px + 0.833vw), 68px); }
+		.hero__body { font-size: clamp(16px, calc(16px + 0.208vw), 23px); max-width: 27em; }
 	}
-	.mode-48 .paper, .mode-draw .paper { opacity: 0; }
-	.paper.on { opacity: 1; transition: opacity 1.2s ease; }
+	@media (min-aspect-ratio: 1/1) and (min-width: 1100px) { .hero__inner { width: min(1240px, 100% - 3rem); padding-inline: 0; } }
 
-	/* ─── Draw mode: the painting's own lines draw themselves, then the paint washes in ───
-	   The line layer (lines.cjs: gold and white lines on transparency, over the green)
-	   is gated by a mask of traced centrelines (trace.cjs). Each mask stroke draws itself
-	   exactly as the live site's hero does (main: Hero.svelte, .hero__draw path): pathLength 1,
-	   dasharray 1 1.1, offset 1 → 0, ease-out, per-path --t and --d. */
-	.lines { pointer-events: none; }
-	.lines .mstroke { stroke-dasharray: 1 1.1; stroke-dashoffset: 1; animation: hero-draw var(--d, 0.6s) ease-out var(--t, 0s) forwards; }
+	/* Portrait: the image on top, the text below it. --frame-w/--frame-h and --text-top are set
+	   per phone image (see SCENES). */
+	@media (max-aspect-ratio: 1/1) {
+		.frame { top: 0; left: 50%; width: var(--frame-w); height: var(--frame-h); transform: translateX(-50%); }
+		.hero__inner { padding: var(--text-top) clamp(24px, calc(9.3vw - 12.3px), 64px) clamp(64px, 12vw, 120px); }
+		.hero__content { max-width: 40rem; }
+		.hero__content::before { width: 125%; opacity: 0.7; transform: translate(-50%, -50%); }
+		.hero__heading { font-size: clamp(28px, calc(15.5px + 3.72vw), 46px); max-width: 14em; }
+		.hero__body { font-size: clamp(15px, calc(13.3px + 0.7vw), 19px); max-width: 31em; }
+		/* Phone image = the painting: its paper runs on below it. */
+		.hero.img-painting .paper { position: absolute; z-index: -2; left: 50%; transform: translateX(-50%); top: calc(var(--frame-h) - 1px); bottom: 0; width: var(--frame-w); background: url('paper-p.webp') top center / 100% auto repeat-y; }
+		/* Phone image = the crop of the wide painting: its bottom washes out into the paper. */
+		.hero.img-crop .paper { position: absolute; z-index: -2; inset: 0; background: url('paper-p.webp') top center / 100% auto repeat-y; }
+		.hero.img-crop .frame { -webkit-mask-image: linear-gradient(#000 84%, #0000 100%); mask-image: linear-gradient(#000 84%, #0000 100%); }
+	}
+	@media (min-aspect-ratio: 1/1) { .paper { display: none; } }
+
+	/* ─── 1. Lines draw (the live site's draw-on, main: Hero.svelte .hero__draw path) ─── */
+	.mstroke { stroke-dasharray: 1 1.1; stroke-dashoffset: 1; animation: hero-draw var(--d, 0.6s) ease-out var(--t, 0s) forwards; }
 	@keyframes hero-draw { to { stroke-dashoffset: 0; } }
 
-	/* The wash: Hero.svelte's text-wash reveal (three soft radial masks growing from nearby
-	   centres at different rates), centred on the tree instead of the text block. */
+	/* ─── 2. Paint washes in (Hero.svelte's three-radial wash, centred on the tree) ─── */
 	@property --wash-r { syntax: '<percentage>'; inherits: false; initial-value: 150%; }
-	.paint.washing {
-		mask-image:
+	.paint {
+		--wm:
 			radial-gradient(farthest-side at var(--cx) var(--cy), #000 calc(var(--wash-r) - 40%), #0000 var(--wash-r)),
 			radial-gradient(farthest-side at calc(var(--cx) - 12%) calc(var(--cy) + 10%), #000 calc(var(--wash-r) * 0.85 - 40%), #0000 calc(var(--wash-r) * 0.85)),
 			radial-gradient(farthest-side at calc(var(--cx) + 10%) calc(var(--cy) - 12%), #000 calc(var(--wash-r) * 0.7 - 40%), #0000 calc(var(--wash-r) * 0.7));
-		-webkit-mask-image:
-			radial-gradient(farthest-side at var(--cx) var(--cy), #000 calc(var(--wash-r) - 40%), #0000 var(--wash-r)),
-			radial-gradient(farthest-side at calc(var(--cx) - 12%) calc(var(--cy) + 10%), #000 calc(var(--wash-r) * 0.85 - 40%), #0000 calc(var(--wash-r) * 0.85)),
-			radial-gradient(farthest-side at calc(var(--cx) + 10%) calc(var(--cy) - 12%), #000 calc(var(--wash-r) * 0.7 - 40%), #0000 calc(var(--wash-r) * 0.7));
-		animation: hero-wash var(--wash-d, 1800ms) cubic-bezier(0.22, 1, 0.36, 1) var(--wash-t, 0ms) backwards;
+		-webkit-mask-image: var(--wm); mask-image: var(--wm);
 	}
+	.playing .paint { animation: hero-wash var(--wash-d) cubic-bezier(0.22, 1, 0.36, 1) var(--wash-t) backwards; }
 	@keyframes hero-wash { from { --wash-r: 0%; } }
+	.playing .paper { animation: fade-in 1.4s ease var(--paper-t) backwards; }
 
-	/* ─── 48a / 48b: copied from the JW library (48a-ink-reveal-edge, 48b-ink-reveal-circle) ── */
-	.ink-mask { position: relative; }
-	.ink-mask-img { position: absolute; inset: 0; }
-	.ink-mask-img img, .ink-mask-layer { display: block; width: 100%; height: 100%; }
-	.ink-mask-img img { object-fit: cover; }
-
-	.mode-draw .ink-mask, .mode-48 .draw-layers { display: none; }
+	/* The lights layer is light only (black-backed line response, orbs, streak): screen adds it. */
+	.fx { mix-blend-mode: screen; pointer-events: none; }
+	/* ─── 3. Lights fade in, 4. text wash, 5. text (Hero.svelte's cascade) ─── */
+	.playing .fx { animation: fade-in 1.6s ease var(--lights-t) backwards; }
+	.playing .hero__content::before { animation: fade-in 1.4s ease var(--twash-t) backwards; }
+	.playing .hero__heading, .playing .hero__body, .playing .hero__cta {
+		animation: hero-fade 1300ms cubic-bezier(0.25, 0.46, 0.45, 0.94) backwards, hero-rise 1100ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+	}
+	.playing .hero__heading { animation-delay: var(--text-t); }
+	.playing .hero__body { animation-delay: calc(var(--text-t) + 140ms); }
+	.playing .hero__cta { animation-delay: calc(var(--text-t) + 280ms); }
+	@keyframes fade-in { from { opacity: 0; } }
+	@keyframes hero-fade { from { opacity: 0; } }
+	@keyframes hero-rise { from { transform: translate3d(0, 10px, 0); } }
 
 	@media (prefers-reduced-motion: reduce) {
-		.lines .mstroke { stroke-dashoffset: 0; animation: none; }
-		.paint.washing { animation: none; }
+		.mstroke { stroke-dashoffset: 0; animation: none; }
+		.playing *, .playing *::before { animation: none !important; }
 	}
 
-	/* Panel: same as the lights prototype — drag by the bar, fold with the button. */
-	.panel { position: fixed; right: 16px; bottom: 16px; width: 300px; max-width: calc(100vw - 32px); max-height: calc(100svh - 32px); display: flex; flex-direction: column; background: rgb(20 26 18 / 0.85); border-radius: 12px; backdrop-filter: blur(8px); z-index: 10; }
+	/* Panel (as the lights prototype) */
+	.panel { position: fixed; right: 16px; bottom: 16px; width: 300px; max-width: calc(100vw - 32px); max-height: calc(100svh - 32px); display: flex; flex-direction: column; background: rgb(20 26 18 / 0.88); border-radius: 12px; backdrop-filter: blur(8px); z-index: 10; font: 14px/1.4 system-ui, sans-serif; }
 	.bar { display: flex; align-items: center; gap: 8px; padding: 4px 4px 4px 14px; cursor: grab; touch-action: none; user-select: none; }
 	.bar span { flex: 1; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.6; }
 	.bar button { width: 44px; height: 44px; border: 0; border-radius: 8px; background: rgb(255 255 255 / 0.08); color: var(--cream); font-size: 20px; cursor: pointer; }
 	.body { overflow: auto; padding: 0 16px 14px; }
 	.panel.folded .body { display: none; }
-	.panel h2 { margin: 14px 0 4px; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.7; }
-	.panel label { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; margin: 8px 0; }
-	.panel label small { grid-column: 1 / -1; opacity: 0.6; font-size: 12px; }
-	.panel input[type='range'] { grid-column: 1 / -1; width: 100%; }
-	.panel .modes label { display: flex; gap: 8px; align-items: center; margin: 6px 0; }
-	.panel .modes small { display: block; opacity: 0.6; font-size: 12px; }
-	.panel button.go { width: 100%; margin-top: 10px; padding: 10px; border: 0; border-radius: 6px; background: #8d6346; color: var(--cream); cursor: pointer; }
-	.only-draw, .only-48 { display: none; }
-	.mode-draw .only-draw, .mode-48 .only-48 { display: block; }
+	.panel h2 { margin: 12px 0 4px; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.7; }
+	.panel .opt { display: flex; gap: 8px; align-items: flex-start; margin: 6px 0; }
+	.panel .opt small { display: block; opacity: 0.6; font-size: 12px; }
+	.panel button.go { width: 100%; margin-top: 12px; padding: 10px; border: 0; border-radius: 6px; background: #8d6346; color: var(--cream); cursor: pointer; }
 </style>
 </head>
-<body class="mode-draw">
-<div class="stage">
-	<div class="frame">
-		<!-- Draw mode -->
-		<div class="draw-layers">
-			<svg class="lines" id="lines" aria-hidden="true">
-				<defs><mask id="draw-mask" maskUnits="userSpaceOnUse"><g id="mstrokes" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"></g></mask></defs>
-				<image id="lines-img" preserveAspectRatio="none" mask="url(#draw-mask)" />
-			</svg>
-			<img class="paint" id="paint" alt="" />
-		</div>
-		<!-- 48a / 48b: the library markup. Under: the lines on the green; over: the painting. -->
-		<div class="ink-mask" id="ink">
-			<div class="ink-mask-img"><img id="ink-under" alt="" /></div>
-			<div class="ink-mask-img" aria-hidden="true">
-				<svg class="ink-mask-layer" preserveAspectRatio="none" viewBox="0 0 1000 1000">
-					<defs>
-						<mask maskContentUnits="userSpaceOnUse"><path fill="white" d="M 0 1  Q 500 2 1000 1  L 1000 0  L 0 0  Z"></path></mask>
-						<filter></filter>
-					</defs>
-					<!-- Change from the library (2026-10-27): preserveAspectRatio="xMidYMid slice" on the
-					     image, so it crops like the <img> under it (object-fit: cover) instead of
-					     stretching; the library's plate always had the image's own aspect. -->
-					<image id="ink-over" x="0" y="0" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"></image>
-				</svg>
-			</div>
+<body>
+<section class="hero" id="hero">
+	<div class="frame" id="frame">
+		<svg id="lines" aria-hidden="true">
+			<defs><mask id="draw-mask" maskUnits="userSpaceOnUse"><g id="mstrokes" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"></g></mask></defs>
+			<image id="lines-img" preserveAspectRatio="none" mask="url(#draw-mask)" />
+		</svg>
+		<div class="paint" id="paint"><svg id="base-svg" width="100%" height="100%" aria-hidden="true"><image id="base-img" preserveAspectRatio="none" /></svg></div>
+		<svg class="fx" id="fx" aria-hidden="true">
+			<defs>
+				<radialGradient id="falloff"><stop offset="0" stop-color="#fff" /><stop offset="0.3" stop-color="#fff" stop-opacity="0.55" /><stop offset="0.7" stop-color="#fff" stop-opacity="0.12" /><stop offset="1" stop-color="#fff" stop-opacity="0" /></radialGradient>
+				<radialGradient id="orb"><stop offset="0" stop-color="#ffffff" /><stop offset="0.1" stop-color="#ffffff" /><stop offset="0.18" stop-color="#ffeab4" stop-opacity="0.9" /><stop offset="0.32" stop-color="#f6bd6c" stop-opacity="0.35" /><stop offset="0.6" stop-color="#e59a48" stop-opacity="0.08" /><stop offset="1" stop-color="#d98a3a" stop-opacity="0" /></radialGradient>
+				<radialGradient id="bloom-grad"><stop offset="0" stop-color="#ffcf86" stop-opacity="0.22" /><stop offset="1" stop-color="#ffcf86" stop-opacity="0" /></radialGradient>
+				<radialGradient id="fly"><stop offset="0" stop-color="#fbffe8" /><stop offset="0.18" stop-color="#e9fbb0" /><stop offset="0.45" stop-color="#c8ea7a" stop-opacity="0.3" /><stop offset="1" stop-color="#b5dc60" stop-opacity="0" /></radialGradient>
+				<filter id="line-glow" x="-10%" y="-10%" width="120%" height="120%"><feComponentTransfer><feFuncR type="linear" slope="2.6" /><feFuncG type="linear" slope="2" /><feFuncB type="linear" slope="1.2" /></feComponentTransfer><feGaussianBlur stdDeviation="4" /></filter>
+				<filter id="line-boost"><feComponentTransfer><feFuncR type="linear" slope="1.8" /><feFuncG type="linear" slope="1.5" /><feFuncB type="linear" slope="1" /></feComponentTransfer></filter>
+				<filter id="streak-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur id="streak-blur" stdDeviation="2.5" /></filter>
+				<clipPath id="river-clip" clipPathUnits="userSpaceOnUse"><polygon id="river-poly" /></clipPath>
+				<mask id="light-mask" maskUnits="userSpaceOnUse"><g id="reach-layer"></g></mask>
+			</defs>
+			<g id="response" mask="url(#light-mask)">
+				<image class="lit" preserveAspectRatio="none" filter="url(#line-glow)" />
+				<image class="lit" preserveAspectRatio="none" filter="url(#line-boost)" />
+			</g>
+			<g id="blooms"></g>
+			<g id="orbs"></g>
+			<g id="streak" fill="none" stroke-linecap="round" opacity="0" clip-path="url(#river-clip)">
+				<path class="s-glow" stroke="#ffe2a6" stroke-opacity="0.45" filter="url(#streak-glow)" />
+				<path class="s-tail2" stroke="#ffe8b8" stroke-opacity="0.35" />
+				<path class="s-tail1" stroke="#fff1d0" stroke-opacity="0.7" />
+				<path class="s-head" stroke="#ffffff" />
+			</g>
+			<g id="fly-layer"></g>
+		</svg>
+	</div>
+	<div class="paper"></div>
+	<div class="hero__inner">
+		<div class="hero__content">
+			<h1 class="hero__heading">Stress, emoties en ingrijpende ervaringen kunnen je uit balans brengen.</h1>
+			<p class="hero__body">Bij Trinity Breath &amp; Healing begeleid ik je met ademwerk, lichaamsgerichte en energetische behandelingen om spanning los te laten, patronen te herkennen en weer dichter bij jezelf te komen.</p>
+			<div class="hero__cta"><a href="#">Maak een afspraak <span>→</span></a></div>
 		</div>
 	</div>
-	<div class="paper" id="paper"></div>
-</div>
+</section>
 
 <div class="panel" id="panel">
 	<div class="bar" id="bar"><span>Drag to move</span><button id="fold" title="Fold panel">–</button></div>
 	<div class="body">
-		<h2>Intro style</h2>
-		<div class="modes">
-			<label><input type="radio" name="mode" value="draw" checked /> <span>Lines draw, paint washes in<small>Works on iPhone</small></span></label>
-			<label><input type="radio" name="mode" value="48a" /> <span>48a: ink edge falls<small>Chrome and Edge only; Safari shows the painting at once</small></span></label>
-			<label><input type="radio" name="mode" value="48b" /> <span>48b: ink blot grows<small>Chrome and Edge only; Safari shows the painting at once</small></span></label>
-		</div>
-
-		<div class="only-draw">
-			<h2>Lines</h2>
-			<label>Draw time (s) <output></output><small>From the first line to the last</small><input id="draw" type="range" min="0.8" max="6" step="0.1" value="2.6" /></label>
-			<label>Spread <output></output><small>How much the lines draw one after another (1) or all together (0)</small><input id="spread" type="range" min="0" max="0.9" step="0.05" value="0.65" /></label>
-			<label>Line reveal width <output></output><small>Width of the invisible pen; too thin leaves gaps</small><input id="pen" type="range" min="2" max="16" step="0.5" value="6" /></label>
-			<h2>Paint</h2>
-			<label>Wash time (s) <output></output><input id="wash" type="range" min="0.4" max="5" step="0.1" value="1.8" /></label>
-			<label>Wash starts at <output></output><small>Share of the draw time; 1 = after the last line</small><input id="washat" type="range" min="0" max="1.2" step="0.05" value="0.7" /></label>
-		</div>
-		<div class="only-48">
-			<h2>Ink</h2>
-			<label>Ink time (s) <output></output><input id="inktime" type="range" min="0.8" max="6" step="0.1" value="2.4" /></label>
-			<label>Lines alone first (s) <output></output><small>How long the bare lines show before the ink starts</small><input id="inkwait" type="range" min="0" max="3" step="0.1" value="0.6" /></label>
-		</div>
+		<h2>After the paint</h2>
+		<label class="opt"><input type="radio" name="order" value="lights" checked /><span>A. Lights, then the text<small>Lights → text wash → text</small></span></label>
+		<label class="opt"><input type="radio" name="order" value="text" /><span>B. Text, then the lights<small>Text wash → text → lights</small></span></label>
+		<h2>Phone image</h2>
+		<label class="opt"><input type="radio" name="img" value="painting" checked /><span>The phone painting<small>Big tree; the river stops after the first bend</small></span></label>
+		<label class="opt"><input type="radio" name="img" value="crop" /><span>Crop of the wide painting<small>The whole river; the tree is smaller</small></span></label>
+		<small style="opacity:.6">The phone image only shows on screens taller than wide.</small>
 		<button class="go" id="replay">Play again</button>
 	</div>
 </div>
@@ -141,273 +167,204 @@
 <script src="strokes.js"></script>
 <script>
 	const $ = (id) => document.getElementById(id);
-	const v = (id) => +$(id).value;
 	const NS = 'http://www.w3.org/2000/svg';
+	const el = (tag, attrs, parent) => { const n = document.createElementNS(NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); return parent.appendChild(n); };
+	const rand = (a, b) => a + Math.random() * (b - a);
+	const TAU = Math.PI * 2;
 	const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
 	const PORTRAIT = matchMedia('(max-aspect-ratio: 1/1)');
 
-	// Tree centre (for the wash) as a share of each image; strokes from trace.cjs.
+	// Jay's values from the lights prototype (2026-10-27).
+	const V = { period: 6.5, size: 42, rest: 0.5, bloom: 0.6, drift: 10, driftspeed: 0.6, treedim: 0.85, reach: 30, strength: 2,
+		flylight: 1, flyreach: 60, streaklight: 0.6, streakreach: 70, flies: 12, flysize: 8, flyspeed: 1, every: 3.5, run: 1.2, len: 0.3, width: 1.2, glow: 2 };
+	// Intro timing (s): the drawing, then the paint, then the two steps after it.
+	const T = { draw: 2.6, spread: 0.65, washAt: 0.7, wash: 1.8, step1: 3.2, step2: 4.2 };
+
+	// The wide painting's data (lights prototype), reused by the crop.
+	const WIDE = {
+		img: [2000, 848], base: 'base.webp', lines: 'lines.webp', lit: 'lit-warm.webp', strokes: 'landscape', pen: 6,
+		lights: [[1306, 402], [1405, 418], [1305, 555], [1382, 598]],
+		lanes: [
+			'M1119 665 C1060 671 1020 678 990 684 C930 690 860 697 790 703 C740 708 704 716 676 723 C656 729 656 734 680 737 C705 739 730 746 744 758 C756 768 756 786 740 798 C722 810 690 816 650 821 C610 826 580 832 540 838',
+			'M1119 665 C1060 674 1020 683 990 690 C950 694 915 698 880 704 C820 712 790 730 800 752 C810 775 860 800 960 825 C1000 835 1030 842 1060 848',
+			'M1119 665 C1060 677 1020 689 990 697 C975 699 962 701 950 704 C915 714 896 728 896 744 C897 764 920 782 960 790 C1020 798 1090 808 1150 820 C1190 828 1220 838 1250 848'
+		],
+		river: '1119,665 1100,670.5 1050,674 1000,677 960,680.5 900,682 825,685 750,690 700,698 660,710 635,719 630,722 638,732 662,743 691,749 721,757 737,767 740,775 735,785 722,793 681,802 651,808 601,815 551,823 501,833 451,843 425,851 1420,851 1400,851 1350,838 1250,813 1150,788 1050,768 950,758 918,755 909,745 913,736 928,727 948,717 960,713 1010,704 1035,692 1072,684 1097,672',
+		homes: [{ x: [1530, 1600], y: [215, 270] }, { x: [1400, 1480], y: [610, 650] }, { x: [860, 960], y: [625, 655] }]
+	};
 	const SCENES = {
-		landscape: { w: 2000, h: 848, fit: 'xMidYMid slice', base: 'base.webp', lines: 'lines.webp', linesGreen: 'lines-green.webp', key: 'landscape', cx: '67%', cy: '58%' },
-		portrait: { w: 750, h: 1004.5, fit: 'none', base: 'base-p.webp', lines: 'lines-p.webp', linesGreen: 'lines-green-p.webp', key: 'portrait', cx: '60%', cy: '48%' }
+		landscape: { ...WIDE, vb: [0, 0, 2000, 848], fit: 'xMidYMid slice', u: 1, cx: '67%', cy: '58%' },
+		// The crop: tree and the whole S of the river; the sky above the canopy is left out.
+		crop: { ...WIDE, vb: [570, 160, 1090, 688], fit: 'none', u: 1, cx: '66%', cy: '50%', frameW: '100vw', textTop: 0.97 },
+		painting: {
+			img: [750, 1004.5], vb: [0, 0, 750, 1004.5], fit: 'none', u: 0.7, base: 'base-p.webp', lines: 'lines-p.webp', lit: 'lit-warm-p.webp', strokes: 'portrait', pen: 4.5,
+			cx: '60%', cy: '48%', frameW: 'max(100vw, 58.24svh)', textTop: 0.58,
+			lights: [[393, 330], [477, 340], [408, 468], [452, 505]],
+			lanes: [
+				'M334 526 C322 530 311 533 300 536 C270 541 200 550 130 563 C80 569 42 574 36 582 C32 590 55 587 90 591 C120 594 160 597 195 600',
+				'M334 526 C322 532 311 537 300 541 C265 547 210 554 160 563 C120 570 100 580 115 588 C130 595 170 598 200 600',
+				'M334 526 C322 534 311 541 300 546 C275 551 240 558 222 568 C208 578 200 590 196 604'
+			],
+			river: '334,526 300,530.5 270,534 200,539.5 150,545.5 100,552.5 50,564.5 30,573 19.5,580 26,590.5 50,596.5 90,605.5 130,610 140,622 330,622 325,613.5 275,608.5 237,603.5 216.5,597 219.5,590 237,576.5 274,561.5 276,556.5 292,549 311,540.5 323,530.5',
+			homes: [{ x: [560, 610], y: [205, 245] }, { x: [480, 540], y: [540, 570] }, { x: [150, 230], y: [505, 525] }]
+		}
 	};
-	let S, strokes = [];
+	const SPEEDS = [1.0, 0.77, 0.91, 0.68], PEAKS = [1.0, 0.8, 0.95, 0.75];
+	let S, lights = [], flies = [], streakReach, lightsLive = false;
 
-	/* =======================================================================
-	   InkReveal — copied verbatim from the JW library (48a / 48b, same engine).
-	   ======================================================================= */
-	(function () {
-	'use strict';
-	var VB = 1000;
-	var START_D = 'M 0 1  Q 500 2 1000 1  L 1000 0  L 0 0  Z';
-	var FINAL_D = 'M 0 1000  Q 500 1250 1000 1000  L 1000 0  L 0 0  Z';
-	var PRESET = {
-	  path:   { baseFrequency: '0.045 0.055', numOctaves: 4, seed: 5, scale: 100, blur: 1.8, region: null },
-	  circle: { baseFrequency: '0.028 0.04',  numOctaves: 3, seed: 5, scale: null, blur: 0.55, region: '-25%' }
-	};
-	var SLOPE = 2.2, INTERCEPT = -0.6;
-	var instances = 0;
-	var SVGNS = 'http://www.w3.org/2000/svg';
-	function parse(d) { return (d.match(/-?\d+\.?\d*/g) || []).map(Number); }
-	function scaleY(nums, r) { return nums.map(function (n, i) { return i % 2 === 1 ? n * r : n; }); }
+	const choice = (name) => document.querySelector(`input[name=${name}]:checked`).value;
 
-	class InkReveal {
-	  constructor(root, options) {
-	    options = options || {};
-	    this.root = root;
-	    if (!root) return;
-	    this.svg = root.querySelector('.ink-mask-layer');
-	    this.mask = this.svg && this.svg.querySelector('mask');
-	    this.filter = this.svg && this.svg.querySelector('filter');
-	    this.image = this.svg && this.svg.querySelector('image');
-	    if (!this.svg || !this.mask || !this.filter || !this.image) return;
-	    var d = root.dataset;
-	    this.start = Number(options.start != null ? options.start : d.start != null ? d.start : 35);
-	    this.end = Number(options.end != null ? options.end : d.end != null ? d.end : 55);
-	    this.variant = options.variant || d.variant || 'path';
-	    this.lenis = options.lenis || window.lenis || null;
-	    this.scroller = options.scroller || (this.lenis && this.lenis.options && this.lenis.options.wrapper) || null;
-	    if (this.scroller === window || this.scroller === document.documentElement) this.scroller = null;
-	    var uid = 'ink-reveal-' + ++instances;
-	    this.mask.id = uid + '-mask';
-	    this.filter.id = uid + '-filter';
-	    this.image.setAttribute('mask', 'url(#' + this.mask.id + ')');
-	    this.shape = this.mask.querySelector('path');
-	    if (this.variant === 'circle') {
-	      var circle = document.createElementNS(SVGNS, 'circle');
-	      circle.setAttribute('fill', 'white');
-	      circle.setAttribute('r', '0');
-	      this.mask.replaceChild(circle, this.shape);
-	      this.shape = circle;
-	    }
-	    this.shape.style.filter = 'url(#' + this.filter.id + ')';
-	    // Firefox en Safari renderen deze filterketen niet: bovenlaag plat tonen.
-	    var ua = navigator.userAgent;
-	    this.unsupported = /^((?!chrome|android).)*safari/i.test(ua) || /firefox|fxios/i.test(ua)
-	      || matchMedia('(prefers-reduced-motion: reduce)').matches;
-	    if (this.unsupported) {
-	      this.filter.remove();
-	      this.shape.style.filter = '';
-	      this.image.removeAttribute('mask');
-	      this.image.style.maskImage = 'unset';
-	      return;
-	    }
-	    this.frame = 0;
-	    this.schedule = this.schedule.bind(this);
-	    this.layout();
-	    this.apply(0);
-	    this.schedule();
-	    this.observer = new ResizeObserver(function () { this.layout(); this.schedule(); }.bind(this));
-	    this.observer.observe(root);
-	    addEventListener('resize', this.schedule, { passive: true });
-	    if (this.lenis) this.lenis.on('scroll', this.schedule);
-	    else (this.scroller || window).addEventListener('scroll', this.schedule, { passive: true });
-	  }
-	  scrollTop() {
-	    if (this.lenis) return this.lenis.scroll;
-	    if (this.scroller) return this.scroller.scrollTop;
-	    return window.scrollY;
-	  }
-	  buildFilter(vbHeight) {
-	    var p = PRESET[this.variant] || PRESET.path;
-	    var scale = p.scale != null ? p.scale : 0.1355 * (Math.sqrt(VB * VB + vbHeight * vbHeight) / 2);
-	    this.filter.textContent = '';
-	    if (p.region) {
-	      this.filter.setAttribute('x', p.region); this.filter.setAttribute('y', p.region);
-	      this.filter.setAttribute('width', '150%'); this.filter.setAttribute('height', '150%');
-	    }
-	    var add = function (tag, attrs) {
-	      var n = document.createElementNS(SVGNS, tag);
-	      for (var k in attrs) n.setAttribute(k, attrs[k]);
-	      this.filter.appendChild(n); return n;
-	    }.bind(this);
-	    add('feTurbulence', { type: 'fractalNoise', baseFrequency: p.baseFrequency, numOctaves: p.numOctaves, seed: p.seed, result: 'noise' });
-	    add('feDisplacementMap', { in: 'SourceGraphic', in2: 'noise', scale: scale, xChannelSelector: 'R', yChannelSelector: 'G' });
-	    add('feGaussianBlur', { stdDeviation: p.blur, result: 'blurred' });
-	    var tr = add('feComponentTransfer', { in: 'blurred', result: 'contrast' });
-	    var fn = document.createElementNS(SVGNS, 'feFuncA');
-	    fn.setAttribute('type', 'linear'); fn.setAttribute('slope', SLOPE); fn.setAttribute('intercept', INTERCEPT);
-	    tr.appendChild(fn);
-	  }
-	  measure() {
-	    var rect = this.root.getBoundingClientRect();
-	    this.cachedHeight = rect.height;
-	    this.cachedTop = rect.top + this.scrollTop();
-	    var vh = this.scroller ? this.scroller.clientHeight : window.innerHeight;
-	    this.vh = vh;
-	    this.startPx = (this.start / 100) * vh;
-	    this.endPx = (this.end / 100) * vh;
-	    this.totalTravel = this.startPx - this.endPx + this.cachedHeight;
-	  }
-	  layout() {
-	    var w = this.root.offsetWidth, h = this.root.offsetHeight;
-	    if (!w || !h) return;
-	    var vbHeight = (h / w) * VB;
-	    this.svg.setAttribute('viewBox', '0 0 ' + VB + ' ' + vbHeight);
-	    this.buildFilter(vbHeight);
-	    if (this.variant === 'circle') {
-	      this.shape.setAttribute('cx', VB / 2);
-	      this.shape.setAttribute('cy', vbHeight / 2);
-	      this.startR = 0;
-	      this.endR = Math.sqrt(VB * VB + vbHeight * vbHeight) / 2;
-	    } else {
-	      var ratio = vbHeight / VB;
-	      this.startNums = scaleY(parse(START_D), ratio);
-	      this.endNums = scaleY(parse(FINAL_D), ratio);
-	      this.chunks = START_D.split(/-?\d+\.?\d*/g);
-	    }
-	    this.measure();
-	  }
-	  apply(progress) {
-	    this.progress = progress;
-	    if (this.variant === 'circle') {
-	      this.shape.setAttribute('r', this.startR + (this.endR - this.startR) * progress);
-	      return;
-	    }
-	    var d = '';
-	    for (var i = 0; i < this.startNums.length; i++) {
-	      d += this.chunks[i] + (this.startNums[i] + (this.endNums[i] - this.startNums[i]) * progress);
-	    }
-	    this.shape.setAttribute('d', d + this.chunks[this.startNums.length]);
-	  }
-	  update() {
-	    this.measure();
-	    var top = this.cachedTop - this.scrollTop();
-	    if (top > this.vh || top + this.cachedHeight <= 0) return;
-	    this.apply(Math.max(0, Math.min(1, (this.startPx - top) / this.totalTravel)));
-	  }
-	  schedule() {
-	    if (this.frame) return;
-	    this.frame = requestAnimationFrame(function () { this.frame = 0; this.update(); }.bind(this));
-	  }
-	  destroy() {
-	    if (this.observer) this.observer.disconnect();
-	    removeEventListener('resize', this.schedule);
-	    if (this.lenis && this.lenis.off) this.lenis.off('scroll', this.schedule);
-	    else if (!this.lenis) (this.scroller || window).removeEventListener('scroll', this.schedule);
-	    if (this.frame) cancelAnimationFrame(this.frame);
-	  }
-	}
-	window.InkReveal = InkReveal;
-	})();
-
-	/* Change from the library (2026-10-27, Jay asked for a load intro, not a scroll effect):
-	   progress comes from a clock instead of the scroll position. update() keeps the current
-	   progress (so a resize redraws it) instead of reading the scroll; the engine is untouched. */
-	class TimedInkReveal extends InkReveal {
-		update() { if (this.startNums || this.variant === 'circle') this.apply(this.progress || 0); }
-	}
-
-	// ── Scene ──────────────────────────────────────────────────────────────────────
-	async function buildScene() {
-		S = SCENES[PORTRAIT.matches ? 'portrait' : 'landscape'];
-		const lines = $('lines');
-		lines.setAttribute('viewBox', `0 0 ${S.w} ${S.h}`);
-		lines.setAttribute('preserveAspectRatio', S.fit);
-		const m = $('draw-mask');
-		for (const [k, val] of Object.entries({ x: 0, y: 0, width: S.w, height: S.h })) m.setAttribute(k, val);
-		const li = $('lines-img');
-		li.setAttribute('href', S.lines); li.setAttribute('width', S.w); li.setAttribute('height', S.h);
-		$('paint').src = S.base;
+	function buildScene() {
+		const phoneImg = choice('img');
+		S = SCENES[PORTRAIT.matches ? phoneImg : 'landscape'];
+		const hero = $('hero');
+		hero.classList.toggle('img-painting', PORTRAIT.matches && phoneImg === 'painting');
+		hero.classList.toggle('img-crop', PORTRAIT.matches && phoneImg === 'crop');
+		if (PORTRAIT.matches) {
+			const [, , w, h] = S.vb;
+			hero.style.setProperty('--frame-w', S.frameW);
+			hero.style.setProperty('--frame-h', `calc(${S.frameW} * ${h / w})`);
+			hero.style.setProperty('--text-top', `calc(${S.frameW} * ${(h / w) * S.textTop})`);
+		}
+		const [iw, ih] = S.img;
+		for (const id of ['lines', 'base-svg', 'fx']) { $(id).setAttribute('viewBox', S.vb.join(' ')); $(id).setAttribute('preserveAspectRatio', S.fit); }
+		for (const id of ['draw-mask', 'light-mask']) for (const [k, val] of Object.entries({ x: 0, y: 0, width: iw, height: ih })) $(id).setAttribute(k, val);
+		const setImg = (n, href) => { n.setAttribute('href', href); n.setAttribute('width', iw); n.setAttribute('height', ih); };
+		setImg($('lines-img'), S.lines); setImg($('base-img'), S.base);
+		document.querySelectorAll('.lit').forEach((n) => setImg(n, S.lit));
 		$('paint').style.setProperty('--cx', S.cx); $('paint').style.setProperty('--cy', S.cy);
-		$('ink-under').src = S.linesGreen;
-		$('ink-over').setAttribute('href', S.base);
-		strokes = window.STROKES[S.key];
+		$('river-poly').setAttribute('points', S.river);
+		for (const id of ['reach-layer', 'blooms', 'orbs', 'fly-layer']) $(id).replaceChildren();
+		lights = S.lights.map(([x, y], i) => ({
+			x, y, speed: SPEEDS[i], peak: PEAKS[i], phase: Math.random(),
+			fx: [rand(0.05, 0.09), rand(0.12, 0.19)], fy: [rand(0.05, 0.1), rand(0.13, 0.2)],
+			px: [rand(0, TAU), rand(0, TAU)], py: [rand(0, TAU), rand(0, TAU)], t: rand(0, 30),
+			reach: el('circle', { fill: 'url(#falloff)' }, $('reach-layer')),
+			bloom: el('circle', { fill: 'url(#bloom-grad)' }, $('blooms')),
+			orb: el('circle', { fill: 'url(#orb)' }, $('orbs'))
+		}));
+		streakReach = el('circle', { fill: 'url(#falloff)', opacity: 0 }, $('reach-layer'));
+		flies = [];
+		if (!REDUCED) while (flies.length < V.flies) flies.push(makeFly());
+		const SLOPES = { 'line-boost': [0.9, 0.75, 0.5], 'line-glow': [1.3, 1, 0.6] };
+		for (const [id, base] of Object.entries(SLOPES)) document.querySelectorAll('#' + id + ' feComponentTransfer > *').forEach((f, i) => f.setAttribute('slope', base[i] * V.strength));
+		styleStreak();
 	}
 
-	// ── Draw mode ──────────────────────────────────────────────────────────────────
-	function playDraw() {
-		const D = v('draw'), spread = v('spread');
+	// ── Intro ──────────────────────────────────────────────────────────────────────
+	function play() {
+		const hero = $('hero');
+		hero.classList.remove('playing'); void hero.offsetWidth;
+		cancelStreaks(); lightsLive = false;
+		// 1. lines: mask strokes draw out from the tree's base
+		const strokes = window.STROKES[S.strokes], D = T.draw;
 		const maxDist = Math.max(...strokes.map((s) => s.dist)), maxLen = Math.max(...strokes.map((s) => s.len));
-		const g = $('mstrokes');
-		g.setAttribute('stroke-width', v('pen') * (S.w / 2000) * (S === SCENES.portrait ? 2 : 1));
+		const g = $('mstrokes'); g.setAttribute('stroke-width', S.pen);
 		const frag = document.createDocumentFragment();
 		for (const s of strokes) {
 			const p = document.createElementNS(NS, 'path');
 			p.setAttribute('d', s.d); p.setAttribute('pathLength', '1'); p.setAttribute('class', 'mstroke');
-			// starts by distance from the tree's base, so the drawing grows out from it; longer
-			// lines take longer, within what is left of the draw time
-			const t = (s.dist / maxDist) * spread * D;
-			const d = Math.max(0.25, (D - t) * (0.35 + 0.65 * Math.sqrt(s.len / maxLen)));
+			const t = (s.dist / maxDist) * T.spread * D, d = Math.max(0.25, (D - t) * (0.35 + 0.65 * Math.sqrt(s.len / maxLen)));
 			p.style.setProperty('--t', t.toFixed(3) + 's'); p.style.setProperty('--d', d.toFixed(3) + 's');
 			frag.appendChild(p);
 		}
 		g.replaceChildren(frag);
-		const paint = $('paint');
-		paint.classList.remove('washing'); void paint.offsetWidth;
-		paint.style.setProperty('--wash-d', v('wash') * 1000 + 'ms');
-		paint.style.setProperty('--wash-t', v('washat') * D * 1000 + 'ms');
-		paint.classList.add('washing');
-		paperOn((v('washat') * D + v('wash') * 0.4) * 1000);
+		// 2. paint, then 3–5 in the chosen order
+		const washT = T.washAt * D;
+		const lightsFirst = choice('order') === 'lights';
+		const lightsT = lightsFirst ? T.step1 : T.step2 + 1.0;
+		const twashT = lightsFirst ? T.step2 : T.step1;
+		const set = (k, s) => hero.style.setProperty(k, s + 's');
+		set('--wash-t', washT); set('--wash-d', T.wash);
+		set('--paper-t', washT + T.wash * 0.3); set('--lights-t', lightsT); set('--twash-t', twashT); set('--text-t', twashT + 0.5);
+		hero.classList.add('playing');
+		clearTimeout(play.timer);
+		play.timer = setTimeout(() => { lightsLive = true; schedule(1500); }, (REDUCED ? 0 : lightsT) * 1000);
 	}
 
-	// ── 48a / 48b ──────────────────────────────────────────────────────────────────
-	let ink = null, inkRaf = 0;
-	function resetInk(variant) {
-		// fresh markup each time: the engine replaces the mask path with a circle for 48b
-		const svg = document.querySelector('.ink-mask-layer');
-		svg.querySelector('defs').innerHTML = '<mask maskContentUnits="userSpaceOnUse"><path fill="white" d="M 0 1  Q 500 2 1000 1  L 1000 0  L 0 0  Z"></path></mask><filter></filter>';
-		$('ink-over').removeAttribute('mask'); $('ink-over').style.maskImage = '';
-		if (ink && ink.destroy) ink.destroy();
-		// start/end as in the library files: A 35/55 path, B 40/60 circle (unused by the clock)
-		ink = new TimedInkReveal($('ink'), variant === '48a' ? { start: 35, end: 55, variant: 'path' } : { start: 40, end: 60, variant: 'circle' });
+	// ── Lights (from the lights prototype, values fixed) ──────────────────────────────
+	function drawLights(dt, still) {
+		const u = S.u, size = V.size * u, reach = V.reach * u, drift = still ? 0 : V.drift * u;
+		for (const l of lights) {
+			l.phase = (l.phase + (dt * l.speed) / V.period) % 1;
+			l.t += dt * V.driftspeed;
+			const b = still ? 1 : 0.5 - 0.5 * Math.cos(l.phase * TAU);
+			const k = l.peak * (V.rest + (1 - V.rest) * b);
+			const x = l.x + drift * (0.7 * Math.sin(TAU * l.fx[0] * l.t + l.px[0]) + 0.3 * Math.sin(TAU * l.fx[1] * l.t + l.px[1]));
+			const y = l.y + drift * (0.7 * Math.sin(TAU * l.fy[0] * l.t + l.py[0]) + 0.3 * Math.sin(TAU * l.fy[1] * l.t + l.py[1]));
+			for (const c of [l.orb, l.bloom, l.reach]) { c.setAttribute('cx', x.toFixed(1)); c.setAttribute('cy', y.toFixed(1)); }
+			l.orb.setAttribute('r', size * (0.85 + 0.2 * k)); l.orb.setAttribute('opacity', k);
+			l.bloom.setAttribute('r', size * 2.2); l.bloom.setAttribute('opacity', k * V.bloom);
+			const lk = still ? l.peak : l.peak * (1 - V.treedim * (1 - b));
+			l.reach.setAttribute('r', reach * (0.8 + 0.3 * lk)); l.reach.setAttribute('opacity', lk);
+		}
 	}
-	function play48(variant) {
-		cancelAnimationFrame(inkRaf);
-		resetInk(variant);
-		if (ink.unsupported) { paperOn(0); return; }
-		ink.apply(0);
-		const wait = v('inkwait') * 1000, dur = v('inktime') * 1000, t0 = performance.now() + wait;
-		const tick = (now) => {
-			const p = Math.max(0, Math.min(1, (now - t0) / dur));
-			ink.apply(p);
-			if (p < 1) inkRaf = requestAnimationFrame(tick);
+	function makeFly() {
+		const h = S.homes[flies.length % S.homes.length];
+		return {
+			x: rand(...h.x), y: rand(...h.y), ax: [rand(10, 25), rand(4, 10)], ay: [rand(6, 16), rand(3, 8)],
+			fx: [rand(0.03, 0.08), rand(0.11, 0.2)], fy: [rand(0.04, 0.09), rand(0.13, 0.22)],
+			px: [rand(0, TAU), rand(0, TAU)], py: [rand(0, TAU), rand(0, TAU)], t: rand(0, 20), state: 'off', until: rand(0, 4),
+			reach: el('circle', { fill: 'url(#falloff)', opacity: 0 }, $('reach-layer')),
+			node: el('circle', { fill: 'url(#fly)', opacity: 0 }, $('fly-layer'))
 		};
-		inkRaf = requestAnimationFrame(tick);
-		paperOn(wait + dur * 0.6);
 	}
-
-	let paperTimer;
-	function paperOn(ms) {
-		const p = $('paper'); clearTimeout(paperTimer); p.classList.remove('on');
-		paperTimer = setTimeout(() => p.classList.add('on'), ms);
+	const NEXT = { off: ['in', () => 0.8], in: ['on', () => rand(1.5, 4)], on: ['out', () => 1], out: ['off', () => rand(1.5, 6)] };
+	function drawFlies(dt) {
+		const u = S.u;
+		for (const f of flies) {
+			f.t += dt * V.flyspeed; f.until -= dt;
+			if (f.until <= 0) { const [s, d] = NEXT[f.state]; f.state = s; f.until = d(); }
+			const fade = f.state === 'in' ? 1 - f.until / 0.8 : f.state === 'out' ? f.until : f.state === 'on' ? 1 : 0;
+			const o = lightsLive ? fade * fade * (3 - 2 * fade) : 0;
+			const x = f.x + u * (f.ax[0] * Math.sin(TAU * f.fx[0] * f.t + f.px[0]) + f.ax[1] * Math.sin(TAU * f.fx[1] * f.t + f.px[1]));
+			const y = f.y + u * (f.ay[0] * Math.sin(TAU * f.fy[0] * f.t + f.py[0]) + f.ay[1] * Math.sin(TAU * f.fy[1] * f.t + f.py[1]));
+			for (const c of [f.node, f.reach]) { c.setAttribute('cx', x.toFixed(1)); c.setAttribute('cy', y.toFixed(1)); }
+			f.node.setAttribute('r', V.flysize * u); f.node.setAttribute('opacity', o.toFixed(3));
+			f.reach.setAttribute('r', V.flyreach * u); f.reach.setAttribute('opacity', (o * V.flylight).toFixed(3));
+		}
 	}
-
-	function mode() { return document.querySelector('input[name=mode]:checked').value; }
-	function play() {
-		const m = mode();
-		document.body.className = m === 'draw' ? 'mode-draw' : 'mode-48';
-		if (m === 'draw') { cancelAnimationFrame(inkRaf); playDraw(); } else play48(m);
+	const sg = $('streak'), parts = [...sg.querySelectorAll('path')];
+	const SHARE = { 's-glow': 0.6, 's-tail2': 1, 's-tail1': 0.55, 's-head': 0.18 };
+	const BASE_W = { 's-glow': 7, 's-tail2': 1.2, 's-tail1': 2, 's-head': 2.8 };
+	let anims = [], timer, lastLane = -1, run = null;
+	function styleStreak() {
+		const g = V.glow, u = S.u;
+		for (const p of parts) { const c = p.classList[0]; p.setAttribute('stroke-width', BASE_W[c] * V.width * u * (c === 's-glow' ? g : 1)); }
+		$('streak-blur').setAttribute('stdDeviation', 2.5 * g * u);
+		parts[0].setAttribute('stroke-opacity', Math.min(0.95, 0.45 * Math.sqrt(g)));
 	}
+	function streak() {
+		let lane; do lane = Math.floor(Math.random() * S.lanes.length); while (lane === lastLane);
+		lastLane = lane;
+		anims.forEach((a) => a.cancel());
+		const opts = { duration: V.run * 1000, easing: 'cubic-bezier(0.3, 0, 0.7, 1)', fill: 'forwards' };
+		let L, full;
+		anims = parts.map((p) => {
+			p.setAttribute('d', S.lanes[lane]); L = p.getTotalLength(); full = L * V.len;
+			const dash = full * SHARE[p.classList[0]];
+			p.style.strokeDasharray = `${dash} ${L * 2}`;
+			return p.animate([{ strokeDashoffset: dash }, { strokeDashoffset: dash - L - full }], opts);
+		});
+		const fade = sg.animate([{ opacity: 0 }, { opacity: 1, offset: 0.12 }, { opacity: 1, offset: 0.8 }, { opacity: 0 }], opts);
+		anims.push(fade);
+		run = { path: parts[3], L, full, move: anims[0] };
+		schedule();
+	}
+	function drawStreakLight() {
+		if (!run) return;
+		const p = run.move.effect.getComputedTiming().progress ?? 1;
+		const pt = run.path.getPointAtLength(Math.min(run.L, p * (run.L + run.full)));
+		streakReach.setAttribute('cx', pt.x.toFixed(1)); streakReach.setAttribute('cy', pt.y.toFixed(1));
+		streakReach.setAttribute('r', V.streakreach * S.u);
+		streakReach.setAttribute('opacity', (+getComputedStyle(sg).opacity * V.streaklight).toFixed(3));
+	}
+	function schedule(first) { clearTimeout(timer); if (REDUCED) return; timer = setTimeout(streak, first || V.every * 1000 * (0.5 + Math.random())); }
+	function cancelStreaks() { clearTimeout(timer); anims.forEach((a) => a.cancel()); anims = []; run = null; }
 
 	// ── Panel ──────────────────────────────────────────────────────────────────────
-	for (const input of document.querySelectorAll('.panel input[type=range]')) {
-		const out = input.parentElement.querySelector('output');
-		const show = () => (out.value = input.value);
-		input.addEventListener('input', show); show();
-		input.addEventListener('change', play); // let go of a slider: play again with it
-	}
-	for (const r of document.querySelectorAll('input[name=mode]')) r.addEventListener('change', play);
+	for (const r of document.querySelectorAll('input[name=order]')) r.addEventListener('change', play);
+	for (const r of document.querySelectorAll('input[name=img]')) r.addEventListener('change', () => { buildScene(); play(); });
 	$('replay').onclick = play;
 	$('fold').onclick = () => { const f = $('panel').classList.toggle('folded'); $('fold').textContent = f ? '+' : '–'; };
 	{
@@ -417,8 +374,16 @@
 		bar.addEventListener('pointerup', () => (start = null)); bar.addEventListener('pointercancel', () => (start = null));
 	}
 
-	buildScene().then(play);
-	PORTRAIT.addEventListener('change', () => buildScene().then(play));
+	// ── Run ────────────────────────────────────────────────────────────────────────
+	buildScene(); play();
+	PORTRAIT.addEventListener('change', () => { buildScene(); play(); });
+	let last = performance.now();
+	const frame = (now) => {
+		const dt = Math.min(0.1, (now - last) / 1000); last = now;
+		drawLights(dt, REDUCED); drawFlies(dt); drawStreakLight();
+		requestAnimationFrame(frame);
+	};
+	requestAnimationFrame(frame);
 </script>
 </body>
 </html>
