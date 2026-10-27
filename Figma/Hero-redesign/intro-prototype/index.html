@@ -153,9 +153,6 @@
 <div class="panel" id="panel">
 	<div class="bar" id="bar"><span>Drag to move</span><button id="fold" title="Fold panel">–</button></div>
 	<div class="body">
-		<h2>After the paint</h2>
-		<label class="opt"><input type="radio" name="order" value="lights" checked /><span>A. Lights, then the text<small>Lights → text wash → text</small></span></label>
-		<label class="opt"><input type="radio" name="order" value="text" /><span>B. Text, then the lights<small>Text wash → text → lights</small></span></label>
 		<button class="go" id="replay">Play again</button>
 	</div>
 </div>
@@ -174,7 +171,8 @@
 	const V = { period: 6.5, size: 42, rest: 0.5, bloom: 0.6, drift: 10, driftspeed: 0.6, treedim: 0.85, reach: 30, strength: 2,
 		flylight: 1, flyreach: 60, streaklight: 0.6, streakreach: 70, flies: 12, flysize: 8, flyspeed: 1, every: 3.5, run: 1.2, len: 0.3, width: 1.2, glow: 2 };
 	// Intro timing (s): the drawing, then the paint, then the two steps after it.
-	const T = { draw: 2.6, spread: 0.65, washAt: 0.7, wash: 1.8, step1: 3.2, step2: 4.2 };
+	// Jay (2026-10-27): lights come in almost with the paint, then the text.
+	const T = { draw: 2.6, spread: 0.65, washAt: 0.7, wash: 1.8, lightsAfterPaint: 0.2, textWash: 3.6, text: 4.1 };
 
 	// The wide painting's data (lights prototype), reused by the crop.
 	const WIDE = {
@@ -206,7 +204,6 @@
 	const SPEEDS = [1.0, 0.77, 0.91, 0.68], PEAKS = [1.0, 0.8, 0.95, 0.75];
 	let S, lights = [], flies = [], streakReach, lightsLive = false;
 
-	const choice = (name) => document.querySelector(`input[name=${name}]:checked`).value;
 
 	function buildScene() {
 		S = SCENES[PORTRAIT.matches ? 'painting' : 'landscape'];
@@ -275,12 +272,10 @@
 		g.replaceChildren(frag);
 		// 2. paint, then 3–5 in the chosen order
 		const washT = T.washAt * D;
-		const lightsFirst = choice('order') === 'lights';
-		const lightsT = lightsFirst ? T.step1 : T.step2 + 1.0;
-		const twashT = lightsFirst ? T.step2 : T.step1;
+		const lightsT = washT + T.lightsAfterPaint, twashT = T.textWash;
 		const set = (k, s) => hero.style.setProperty(k, s + 's');
 		set('--wash-t', washT); set('--wash-d', T.wash);
-		set('--paper-t', washT + T.wash * 0.3); set('--lights-t', lightsT); set('--twash-t', twashT); set('--text-t', twashT + 0.5);
+		set('--paper-t', washT + T.wash * 0.3); set('--lights-t', lightsT); set('--twash-t', twashT); set('--text-t', T.text);
 		hero.classList.add('playing');
 		clearTimeout(play.timer);
 		play.timer = setTimeout(() => { lightsLive = true; schedule(1500); }, (REDUCED ? 0 : lightsT) * 1000);
@@ -367,7 +362,6 @@
 	function cancelStreaks() { clearTimeout(timer); anims.forEach((a) => a.cancel()); anims = []; run = null; }
 
 	// ── Panel ──────────────────────────────────────────────────────────────────────
-	for (const r of document.querySelectorAll('input[name=order]')) r.addEventListener('change', play);
 	$('replay').onclick = play;
 	$('fold').onclick = () => { const f = $('panel').classList.toggle('folded'); $('fold').textContent = f ? '+' : '–'; };
 	{
