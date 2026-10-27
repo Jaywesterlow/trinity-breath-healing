@@ -22,7 +22,7 @@
 		driftspeed: 0.6,
 		treedim: 0.85,
 		reach: 30,
-		strength: 2,
+		// strength 2 (the line boost) is baked into the lit images: intro-prototype/bake-lit.cjs
 		flylight: 1,
 		flyreach: 60,
 		streaklight: 0.6,
@@ -38,6 +38,8 @@
 	};
 	/** When the lights come in, from navigation start (ms): paint wash at 1.82s + 0.2s. */
 	const LIGHTS_AT = 2020;
+	/** Judge the device once the intro is over (text in from 4.1s), not during it. */
+	const PROBE_AT = 5600;
 
 	type Range = [number, number];
 	type Scene = {
@@ -110,7 +112,6 @@
 	/** Share of the streak's length each layer covers, back from the head; base widths. */
 	const SHARE = [0.6, 1, 0.55, 0.18];
 	const BASE_W = [7, 1.2, 2, 2.8];
-	const SLOPES = { boost: [0.9, 0.75, 0.5], glow: [1.3, 1, 0.6] };
 	const TAU = Math.PI * 2;
 	const NS = 'http://www.w3.org/2000/svg';
 
@@ -158,6 +159,7 @@
 			t: number;
 			state: 'off' | 'in' | 'on' | 'out';
 			until: number;
+			dark: boolean;
 			reach: Element;
 			node: Element;
 		};
@@ -166,6 +168,7 @@
 		let flies: Fly[] = [];
 		let streakReach: Element;
 		let live = reduced || performance.now() >= LIGHTS_AT;
+		let lite = false; // see goLite
 
 		function build() {
 			S = SCENES[portraitQuery.matches ? 'portrait' : 'landscape'];
@@ -191,27 +194,41 @@
 				p: [rand(0, TAU), rand(0, TAU), rand(0, TAU), rand(0, TAU)] as Four,
 				t: rand(0, 30),
 				reach: el('circle', { fill: 'url(#hero-falloff)' }, reachLayer),
-				bloom: el('circle', { fill: 'url(#hero-bloom)' }, blooms),
+				bloom: el('circle', { fill: 'url(#hero-bloom)', r: V.size * S.u * 2.2 }, blooms),
 				orb: el('circle', { fill: 'url(#hero-orb)' }, orbs)
 			}));
-			streakReach = el('circle', { fill: 'url(#hero-falloff)', opacity: 0 }, reachLayer);
-			flies = reduced
-				? []
-				: Array.from({ length: V.flies }, (_, i) => {
-						const h = S.homes[i % S.homes.length]!;
-						return {
-							x: rand(...h.x),
-							y: rand(...h.y),
-							a: [rand(10, 25), rand(4, 10), rand(6, 16), rand(3, 8)] as Four,
-							f: [rand(0.03, 0.08), rand(0.11, 0.2), rand(0.04, 0.09), rand(0.13, 0.22)] as Four,
-							p: [rand(0, TAU), rand(0, TAU), rand(0, TAU), rand(0, TAU)] as Four,
-							t: rand(0, 20),
-							state: 'off' as const,
-							until: rand(0, 4),
-							reach: el('circle', { fill: 'url(#hero-falloff)', opacity: 0 }, reachLayer),
-							node: el('circle', { fill: 'url(#hero-fly)', opacity: 0 }, flyLayer)
-						};
-					});
+			streakReach = el(
+				'circle',
+				{ fill: 'url(#hero-falloff)', opacity: 0, r: V.streakreach * S.u },
+				reachLayer
+			);
+			flies =
+				reduced || lite
+					? []
+					: Array.from({ length: V.flies }, (_, i) => {
+							const h = S.homes[i % S.homes.length]!;
+							return {
+								x: rand(...h.x),
+								y: rand(...h.y),
+								a: [rand(10, 25), rand(4, 10), rand(6, 16), rand(3, 8)] as Four,
+								f: [rand(0.03, 0.08), rand(0.11, 0.2), rand(0.04, 0.09), rand(0.13, 0.22)] as Four,
+								p: [rand(0, TAU), rand(0, TAU), rand(0, TAU), rand(0, TAU)] as Four,
+								t: rand(0, 20),
+								state: 'off' as const,
+								until: rand(0, 4),
+								dark: false,
+								reach: el(
+									'circle',
+									{ fill: 'url(#hero-falloff)', opacity: 0, r: V.flyreach * S.u },
+									reachLayer
+								),
+								node: el(
+									'circle',
+									{ fill: 'url(#hero-fly)', opacity: 0, r: V.flysize * S.u },
+									flyLayer
+								)
+							};
+						});
 			parts.forEach((p, i) =>
 				p.setAttribute(
 					'stroke-width',
@@ -247,14 +264,13 @@
 					c.setAttribute('cx', x.toFixed(1));
 					c.setAttribute('cy', y.toFixed(1));
 				}
-				l.orb.setAttribute('r', String(size * (0.85 + 0.2 * k)));
-				l.orb.setAttribute('opacity', String(k));
-				l.bloom.setAttribute('r', String(size * 2.2));
-				l.bloom.setAttribute('opacity', String(k * V.bloom));
+				l.orb.setAttribute('r', (size * (0.85 + 0.2 * k)).toFixed(2));
+				l.orb.setAttribute('opacity', k.toFixed(3));
+				l.bloom.setAttribute('opacity', (k * V.bloom).toFixed(3));
 				// the lines follow the breath more steeply than the light, so the tree visibly dims
 				const lk = reduced ? l.peak : l.peak * (1 - V.treedim * (1 - b));
-				l.reach.setAttribute('r', String(reach * (0.8 + 0.3 * lk)));
-				l.reach.setAttribute('opacity', String(lk));
+				l.reach.setAttribute('r', (reach * (0.8 + 0.3 * lk)).toFixed(2));
+				l.reach.setAttribute('opacity', lk.toFixed(3));
 			}
 		}
 
@@ -283,6 +299,9 @@
 								? 1
 								: 0;
 				const o = live ? fade * fade * (3 - 2 * fade) : 0;
+				// a dark fly has nothing to move: touching it would still repaint the layer
+				if (o === 0 && f.dark) continue;
+				f.dark = o === 0;
 				const x =
 					f.x +
 					u *
@@ -297,9 +316,7 @@
 					c.setAttribute('cx', x.toFixed(1));
 					c.setAttribute('cy', y.toFixed(1));
 				}
-				f.node.setAttribute('r', String(V.flysize * u));
 				f.node.setAttribute('opacity', o.toFixed(3));
-				f.reach.setAttribute('r', String(V.flyreach * u));
 				f.reach.setAttribute('opacity', (o * V.flylight).toFixed(3));
 			}
 		}
@@ -348,18 +365,23 @@
 		function drawStreakLight() {
 			if (!run) return;
 			const p = run.move.effect?.getComputedTiming().progress ?? 1;
+			if (run.move.playState === 'finished') {
+				// finished: dark until the next run
+				streakReach.setAttribute('opacity', '0');
+				run = null;
+				return;
+			}
 			const pt = parts[3]!.getPointAtLength(Math.min(run.L, p * (run.L + run.full)));
 			streakReach.setAttribute('cx', pt.x.toFixed(1));
 			streakReach.setAttribute('cy', pt.y.toFixed(1));
-			streakReach.setAttribute('r', String(V.streakreach * S.u));
-			streakReach.setAttribute(
-				'opacity',
-				(+getComputedStyle(streakGroup).opacity * V.streaklight).toFixed(3)
-			);
+			// the group's fade (in by 12%, out from 80%), read from the same eased progress
+			// instead of getComputedStyle, which would force a style pass every frame
+			const fade = p < 0.12 ? p / 0.12 : p > 0.8 ? (1 - p) / 0.2 : 1;
+			streakReach.setAttribute('opacity', (fade * V.streaklight).toFixed(3));
 		}
 		function schedule(first?: number) {
 			clearTimeout(timer);
-			if (!reduced)
+			if (!reduced && !lite)
 				timer = window.setTimeout(streak, first ?? V.every * 1000 * (0.5 + Math.random()));
 		}
 
@@ -369,24 +391,49 @@
 			drawStreakLight();
 		}
 
-		for (const [id, base] of Object.entries(SLOPES))
-			svg
-				.querySelectorAll(`#hero-line-${id} feComponentTransfer > *`)
-				.forEach((f, i) => f.setAttribute('slope', String((base[i] ?? 1) * V.strength)));
 		build();
+
+		// Low-end devices (measured in Chrome at 6x CPU, 3x DPR, 2026-10-27): every frame
+		// repaints the whole layer, so on touch screens the lights draw at 30fps. The breath
+		// and the drift move a pixel or less a frame, so it looks the same; the streaks are
+		// WAAPI and keep the display's rate. If the device still cannot keep up in its first
+		// two seconds after the intro (frames averaging over 25ms), the fireflies and streaks stop and
+		// the breathing lights stay.
+		const step = matchMedia('(pointer: coarse)').matches ? 1000 / 30 - 4 : 0;
+		let probe = 0,
+			probeSum = 0,
+			prev = 0;
+		function goLite() {
+			lite = true;
+			clearTimeout(timer);
+			anims.forEach((a) => a.cancel());
+			run = null;
+			streakReach.setAttribute('opacity', '0');
+			for (const f of flies) {
+				f.node.setAttribute('opacity', '0');
+				f.reach.setAttribute('opacity', '0');
+			}
+			flies = [];
+		}
 
 		// Run only while the hero is on screen and the tab is visible.
 		let raf = 0,
 			last = 0,
 			onScreen = true;
 		const frame = (now: number) => {
+			raf = requestAnimationFrame(frame);
+			if (now > PROBE_AT && !lite && probe < 120) {
+				if (prev) probeSum += now - prev;
+				if (++probe === 120 && probeSum / 119 > 25) goLite();
+			}
+			prev = now;
+			if (now - last < step) return;
 			draw(Math.min(0.1, (now - last) / 1000));
 			last = now;
-			raf = requestAnimationFrame(frame);
 		};
 		const start = () => {
 			if (raf || reduced || !onScreen || document.hidden) return;
-			last = performance.now();
+			last = prev = performance.now();
 			raf = requestAnimationFrame(frame);
 		};
 		const stop = () => {
@@ -457,21 +504,6 @@
 			<stop offset="0.45" stop-color="#c8ea7a" stop-opacity="0.3" />
 			<stop offset="1" stop-color="#b5dc60" stop-opacity="0" />
 		</radialGradient>
-		<filter id="hero-line-glow" x="-10%" y="-10%" width="120%" height="120%">
-			<feComponentTransfer>
-				<feFuncR type="linear" slope="2.6" />
-				<feFuncG type="linear" slope="2" />
-				<feFuncB type="linear" slope="1.2" />
-			</feComponentTransfer>
-			<feGaussianBlur stdDeviation="4" />
-		</filter>
-		<filter id="hero-line-boost">
-			<feComponentTransfer>
-				<feFuncR type="linear" slope="1.8" />
-				<feFuncG type="linear" slope="1.5" />
-				<feFuncB type="linear" slope="1" />
-			</feComponentTransfer>
-		</filter>
 		<filter id="hero-streak-glow" x="-50%" y="-50%" width="200%" height="200%">
 			<feGaussianBlur bind:this={blur} stdDeviation="2.5" />
 		</filter>
@@ -484,10 +516,10 @@
 			<g bind:this={reachLayer}></g>
 		</mask>
 	</defs>
-	<g mask="url(#hero-light-mask)">
-		<image class="lit" preserveAspectRatio="none" filter="url(#hero-line-glow)" />
-		<image class="lit" preserveAspectRatio="none" filter="url(#hero-line-boost)" />
-	</g>
+	<!-- The lit lines carry their boost baked in (intro-prototype/bake-lit.cjs): a filter here
+	     would run over the whole image on every frame. The prototype's blurred glow layer under
+	     it is gone too: this image is opaque, so the glow never showed (0 pixels differ). -->
+	<image class="lit" preserveAspectRatio="none" mask="url(#hero-light-mask)" />
 	<g bind:this={blooms}></g>
 	<g bind:this={orbs}></g>
 	<g
