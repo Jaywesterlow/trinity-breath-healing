@@ -38,20 +38,20 @@
 	}
 	@media (min-aspect-ratio: 1/1) and (min-width: 1100px) { .hero__inner { width: min(1240px, 100% - 3rem); padding-inline: 0; } }
 
-	/* Portrait: the image on top, the text below it. --frame-w/--frame-h and --text-top are set
-	   per phone image (see SCENES). */
+	/* Portrait: the image on top, the text at the bottom of the screen: the button's bottom sits
+	   one side-padding above the screen's edge, so as much of the painting shows as fits. When
+	   the text would reach the river (short phones), the image moves up by that much and loses
+	   sky, never river (--shift, set in layoutPortrait()). */
 	@media (max-aspect-ratio: 1/1) {
-		.frame { top: 0; left: 50%; width: var(--frame-w); height: var(--frame-h); transform: translateX(-50%); }
-		.hero__inner { padding: var(--text-top) clamp(24px, calc(9.3vw - 12.3px), 64px) clamp(64px, 12vw, 120px); }
+		.hero { --side: clamp(24px, calc(9.3vw - 12.3px), 64px); display: flex; flex-direction: column; justify-content: flex-end; }
+		.frame { top: var(--shift, 0px); left: 50%; width: var(--frame-w); height: var(--frame-h); transform: translateX(-50%); }
+		.hero__inner { width: 100%; padding: 0 var(--side) var(--side); }
 		.hero__content { max-width: 40rem; }
 		.hero__content::before { width: 125%; opacity: 0.7; transform: translate(-50%, -50%); }
 		.hero__heading { font-size: clamp(28px, calc(15.5px + 3.72vw), 46px); max-width: 14em; }
 		.hero__body { font-size: clamp(15px, calc(13.3px + 0.7vw), 19px); max-width: 31em; }
-		/* Phone image = the painting: its paper runs on below it. */
-		.hero.img-painting .paper { position: absolute; z-index: -2; left: 50%; transform: translateX(-50%); top: calc(var(--frame-h) - 1px); bottom: 0; width: var(--frame-w); background: url('paper-p.webp') top center / 100% auto repeat-y; }
-		/* Phone image = the crop of the wide painting: its bottom washes out into the paper. */
-		.hero.img-crop .paper { position: absolute; z-index: -2; inset: 0; background: url('paper-p.webp') top center / 100% auto repeat-y; }
-		.hero.img-crop .frame { -webkit-mask-image: linear-gradient(#000 84%, #0000 100%); mask-image: linear-gradient(#000 84%, #0000 100%); }
+		/* The painting's paper runs on below it. */
+		.paper { position: absolute; z-index: -2; left: 50%; transform: translateX(-50%); top: calc(var(--shift, 0px) + var(--frame-h) - 1px); bottom: 0; width: var(--frame-w); background: url('paper-p.webp') top center / 100% auto repeat-y; }
 	}
 	@media (min-aspect-ratio: 1/1) { .paper { display: none; } }
 
@@ -156,10 +156,6 @@
 		<h2>After the paint</h2>
 		<label class="opt"><input type="radio" name="order" value="lights" checked /><span>A. Lights, then the text<small>Lights → text wash → text</small></span></label>
 		<label class="opt"><input type="radio" name="order" value="text" /><span>B. Text, then the lights<small>Text wash → text → lights</small></span></label>
-		<h2>Phone image</h2>
-		<label class="opt"><input type="radio" name="img" value="painting" checked /><span>The phone painting<small>Big tree; the river stops after the first bend</small></span></label>
-		<label class="opt"><input type="radio" name="img" value="crop" /><span>Crop of the wide painting<small>The whole river; the tree is smaller</small></span></label>
-		<small style="opacity:.6">The phone image only shows on screens taller than wide.</small>
 		<button class="go" id="replay">Play again</button>
 	</div>
 </div>
@@ -194,11 +190,9 @@
 	};
 	const SCENES = {
 		landscape: { ...WIDE, vb: [0, 0, 2000, 848], fit: 'xMidYMid slice', u: 1, cx: '67%', cy: '58%' },
-		// The crop: tree and the whole S of the river; the sky above the canopy is left out.
-		crop: { ...WIDE, vb: [570, 160, 1090, 688], fit: 'none', u: 1, cx: '66%', cy: '50%', frameW: '100vw', textTop: 0.97 },
 		painting: {
 			img: [750, 1004.5], vb: [0, 0, 750, 1004.5], fit: 'none', u: 0.7, base: 'base-p.webp', lines: 'lines-p.webp', lit: 'lit-warm-p.webp', strokes: 'portrait', pen: 4.5,
-			cx: '60%', cy: '48%', frameW: 'max(100vw, 58.24svh)', textTop: 0.58,
+			cx: '60%', cy: '48%', frameW: 'max(100vw, 58.24svh)', riverEnd: 0.63, // the river's lowest point, as a share of the image's height
 			lights: [[393, 330], [477, 340], [408, 468], [452, 505]],
 			lanes: [
 				'M334 526 C322 530 311 533 300 536 C270 541 200 550 130 563 C80 569 42 574 36 582 C32 590 55 587 90 591 C120 594 160 597 195 600',
@@ -215,17 +209,14 @@
 	const choice = (name) => document.querySelector(`input[name=${name}]:checked`).value;
 
 	function buildScene() {
-		const phoneImg = choice('img');
-		S = SCENES[PORTRAIT.matches ? phoneImg : 'landscape'];
+		S = SCENES[PORTRAIT.matches ? 'painting' : 'landscape'];
 		const hero = $('hero');
-		hero.classList.toggle('img-painting', PORTRAIT.matches && phoneImg === 'painting');
-		hero.classList.toggle('img-crop', PORTRAIT.matches && phoneImg === 'crop');
 		if (PORTRAIT.matches) {
 			const [, , w, h] = S.vb;
 			hero.style.setProperty('--frame-w', S.frameW);
 			hero.style.setProperty('--frame-h', `calc(${S.frameW} * ${h / w})`);
-			hero.style.setProperty('--text-top', `calc(${S.frameW} * ${(h / w) * S.textTop})`);
 		}
+		layoutPortrait();
 		const [iw, ih] = S.img;
 		for (const id of ['lines', 'base-svg', 'fx']) { $(id).setAttribute('viewBox', S.vb.join(' ')); $(id).setAttribute('preserveAspectRatio', S.fit); }
 		for (const id of ['draw-mask', 'light-mask']) for (const [k, val] of Object.entries({ x: 0, y: 0, width: iw, height: ih })) $(id).setAttribute(k, val);
@@ -250,6 +241,19 @@
 		for (const [id, base] of Object.entries(SLOPES)) document.querySelectorAll('#' + id + ' feComponentTransfer > *').forEach((f, i) => f.setAttribute('slope', base[i] * V.strength));
 		styleStreak();
 	}
+
+	// Portrait: if the text (anchored to the bottom) would cover the river, move the image up
+	// by the difference, so it loses sky instead. 8px of air between river and heading.
+	function layoutPortrait() {
+		const hero = $('hero');
+		if (!PORTRAIT.matches) { hero.style.removeProperty('--shift'); return; }
+		hero.style.setProperty('--shift', '0px');
+		const contentTop = document.querySelector('.hero__content').getBoundingClientRect().top - hero.getBoundingClientRect().top;
+		const riverBottom = $('frame').offsetHeight * S.riverEnd;
+		hero.style.setProperty('--shift', Math.min(0, contentTop - 8 - riverBottom) + 'px');
+	}
+	addEventListener('resize', layoutPortrait);
+	document.fonts && document.fonts.ready.then(layoutPortrait);
 
 	// ── Intro ──────────────────────────────────────────────────────────────────────
 	function play() {
@@ -364,7 +368,6 @@
 
 	// ── Panel ──────────────────────────────────────────────────────────────────────
 	for (const r of document.querySelectorAll('input[name=order]')) r.addEventListener('change', play);
-	for (const r of document.querySelectorAll('input[name=img]')) r.addEventListener('change', () => { buildScene(); play(); });
 	$('replay').onclick = play;
 	$('fold').onclick = () => { const f = $('panel').classList.toggle('folded'); $('fold').textContent = f ? '+' : '–'; };
 	{
