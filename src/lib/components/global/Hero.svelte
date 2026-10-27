@@ -112,7 +112,7 @@
 		--text-wash-at: 3.6s;
 		/* The portrait image's width (see the portrait block). Declared here, not inside that
 		   block, so it always resolves: the dead-variable guard checks var() on every screen. */
-		--img-w: max(100vw, 58.24svh);
+		--img-w: min(max(100vw, 58.24svh), 117.6vw);
 		--img-h: calc(var(--img-w) * 4800 / 3584);
 		--side: clamp(24px, calc(9.3vw - 12.3px), 64px); /* portrait: side and bottom padding */
 	}
@@ -360,7 +360,12 @@
 	   8px of air; the rest hangs below behind the text, which there is calm paper. With room
 	   to spare, the spacer after the frame takes it and the frame stays at the top. Without
 	   it, justify-content: flex-end lets the frame overflow at the top, so a short phone
-	   loses sky, never river, and the text never covers it. */
+	   loses sky, never river, and the text never covers it.
+
+	   Across, the river runs out to 2.6% of the image at the left and the canopy to 86.7% at
+	   the right, so both show when the screen holds 85% of the image's width: hence the cap
+	   of 117.6vw on --img-w (Jay: the whole river, 2026-10-27). The frame's centre sits
+	   between the two, at 44.1%, clamped to the image's edges. */
 	@media (max-aspect-ratio: 1/1) {
 		.hero {
 			display: flex;
@@ -378,10 +383,11 @@
 
 		.hero__frame {
 			flex: none;
-			align-self: center;
+			align-self: flex-start;
 			width: var(--img-w);
 			height: var(--img-h);
 			margin-bottom: calc(8px - var(--img-h) * 0.37);
+			margin-left: clamp(calc(100% - var(--img-w)), calc(50% - var(--img-w) * 0.441), 0px);
 		}
 
 		.hero__spacer {
@@ -452,7 +458,14 @@
 	   The image covers the section: height-bound and cropped at the sides on 16:9, width-
 	   bound on ultrawide. The text block is centred vertically, 20px below centre as in the
 	   frames, and starts at the container's left edge. Sizes follow the frames: 52/19px at
-	   1440, 56/20 at 1920, 62/21 at 2560, 68/23 at 3440. */
+	   1440, 56/20 at 1920, 62/21 at 2560, 68/23 at 3440.
+
+	   The frame is the image's own box, not the section, so the drawing, the picture and the
+	   lights crop as one. Across, its centre is 51.5% (between the river's left end at 21%
+	   and the canopy's right at 81%), so a 4:3 tablet loses equal bits of both and 1.44:1
+	   shows both whole. Down, it hangs from the bottom so the river shows to the edge, but
+	   never higher than 15.3% of the image (just above the canopy): on very wide screens the
+	   tree keeps its crown and the river gives way first. */
 	@media (min-aspect-ratio: 1/1) {
 		.hero {
 			display: flex;
@@ -460,10 +473,20 @@
 			justify-content: center;
 		}
 
-		.hero__stage,
-		.hero__frame {
+		.hero__stage {
 			position: absolute;
 			inset: 0;
+			container-type: size;
+		}
+
+		.hero__frame {
+			--fw: max(100cqw, 100cqh * 6336 / 2688);
+			--fh: calc(var(--fw) * 2688 / 6336);
+			position: absolute;
+			left: clamp(calc(100cqw - var(--fw)), calc(50cqw - var(--fw) * 0.515), 0px);
+			top: max(calc(100cqh - var(--fh)), var(--fh) * -0.153);
+			width: var(--fw);
+			height: var(--fh);
 		}
 
 		.hero__frame :global(.hero__draw--portrait) {
