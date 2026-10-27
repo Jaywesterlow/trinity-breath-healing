@@ -30,7 +30,6 @@
 
 	/* Black-backed light layers: screen adds light and never darkens. */
 	.fx { mix-blend-mode: screen; pointer-events: none; }
-	.reveal { pointer-events: none; }
 
 	/* Panel: drag it by its top bar; the button folds it to just the bar. */
 	.panel {
@@ -58,12 +57,6 @@
 <div class="stage">
 	<div class="frame">
 		<img class="base" id="base" alt="" />
-		<!-- The base above is the painting in dim light (dim.cjs). This layer brings the painting
-		     back as it is: faintly everywhere ("Lines at rest"), fully where light falls. -->
-		<svg class="reveal" id="reveal" aria-hidden="true">
-			<image class="orig" id="rest-img" preserveAspectRatio="none" />
-			<g mask="url(#light-mask)"><image class="orig" preserveAspectRatio="none" /></g>
-		</svg>
 		<svg class="fx" id="fx" aria-hidden="true">
 			<defs>
 				<!-- How a light falls on the lines around it: full at the light, gone at its reach. -->
@@ -106,6 +99,9 @@
 
 				<!-- Everything that lights the gold lines draws its reach here: tree lights,
 				     fireflies, the streak's head. -->
+				<!-- The river between its banks, starting at the tip where it comes out from behind
+				     the mound: the streak is clipped to it. -->
+				<clipPath id="river-clip" clipPathUnits="userSpaceOnUse"><polygon id="river-poly" /></clipPath>
 				<mask id="light-mask" maskUnits="userSpaceOnUse">
 					<g id="reach-layer"></g>
 				</mask>
@@ -121,7 +117,7 @@
 
 			<!-- River streak: a line of light along a traced lane. Stacked dashes make a hot head
 			     with a fading tail; the soft copy underneath is its glow. -->
-			<g id="streak" fill="none" stroke-linecap="round" opacity="0">
+			<g id="streak" fill="none" stroke-linecap="round" opacity="0" clip-path="url(#river-clip)">
 				<path class="s-glow" stroke="#ffe2a6" stroke-opacity="0.45" filter="url(#streak-glow)" />
 				<path class="s-tail2" stroke="#ffe8b8" stroke-opacity="0.35" />
 				<path class="s-tail1" stroke="#fff1d0" stroke-opacity="0.7" />
@@ -148,7 +144,6 @@
 
 		<h2>Gold lines' response</h2>
 		<label>Tree dims at rest <output></output><small>How much darker the lines around a tree light get while it rests (0 = they stay lit, 1 = fully dark)</small><input id="treedim" type="range" min="0" max="1" step="0.05" value="0.85" /></label>
-		<label>Lines at rest <output></output><small>How bright the painted lines are where no light reaches them (1 = as painted)</small><input id="linerest" type="range" min="0" max="1" step="0.05" value="0.3" /></label>
 		<label>Radius <output></output><small>How far from each tree light the gold lines catch its light</small><input id="reach" type="range" min="10" max="300" step="5" value="30" /></label>
 		<label>Brightness <output></output><small>How much brighter the lines get where light falls on them (all light sources)</small><input id="strength" type="range" min="0" max="4" step="0.1" value="2" /></label>
 		<label>From fireflies <output></output><small>How much a firefly lights the lines it passes (0 = not at all)</small><input id="flylight" type="range" min="0" max="1" step="0.05" value="1" /></label>
@@ -193,23 +188,25 @@
 	// inside near the base.
 	const SCENES = {
 		landscape: {
-			w: 2000, h: 848, u: 1, fit: 'xMidYMid slice', base: 'base-dim.webp', orig: 'base.webp', lit: 'lit-warm.webp',
-			lights: [[1306, 402], [1480, 377], [1415, 500], [1305, 555], [1382, 598]],
+			w: 2000, h: 848, u: 1, fit: 'xMidYMid slice', base: 'base.webp', lit: 'lit-warm.webp',
+			lights: [[1306, 402], [1405, 418], [1305, 555], [1382, 598]],
 			lanes: [
-				'M990 684 C930 690 860 697 790 703 C740 708 704 716 676 723 C656 729 656 734 680 737 C705 739 730 746 744 758 C756 768 756 786 740 798 C722 810 690 816 650 821 C610 826 580 832 540 838',
-				'M990 690 C950 694 915 698 880 704 C820 712 790 730 800 752 C810 775 860 800 960 825 C1000 835 1030 842 1060 848',
-				'M990 697 C975 699 962 701 950 704 C915 714 896 728 896 744 C897 764 920 782 960 790 C1020 798 1090 808 1150 820 C1190 828 1220 838 1250 848'
+				'M1119 665 C1060 671 1020 678 990 684 C930 690 860 697 790 703 C740 708 704 716 676 723 C656 729 656 734 680 737 C705 739 730 746 744 758 C756 768 756 786 740 798 C722 810 690 816 650 821 C610 826 580 832 540 838',
+				'M1119 665 C1060 674 1020 683 990 690 C950 694 915 698 880 704 C820 712 790 730 800 752 C810 775 860 800 960 825 C1000 835 1030 842 1060 848',
+				'M1119 665 C1060 677 1020 689 990 697 C975 699 962 701 950 704 C915 714 896 728 896 744 C897 764 920 782 960 790 C1020 798 1090 808 1150 820 C1190 828 1220 838 1250 848'
 			],
+			river: '1119,665 1100,670.5 1050,674 1000,677 960,680.5 900,682 825,685 750,690 700,698 660,710 635,719 630,722 638,732 662,743 691,749 721,757 737,767 740,775 735,785 722,793 681,802 651,808 601,815 551,823 501,833 451,843 425,851 1420,851 1400,851 1350,838 1250,813 1150,788 1050,768 950,758 918,755 909,745 913,736 928,727 948,717 960,713 1010,704 1035,692 1072,684 1097,672',
 			homes: [{ x: [1530, 1600], y: [215, 270] }, { x: [1400, 1480], y: [610, 650] }, { x: [860, 960], y: [625, 655] }]
 		},
 		portrait: {
-			w: 750, h: 1004.5, u: 0.7, fit: 'none', base: 'base-p-dim.webp', orig: 'base-p.webp', lit: 'lit-warm-p.webp',
-			lights: [[393, 330], [513, 320], [482, 422], [408, 468], [452, 505]],
+			w: 750, h: 1004.5, u: 0.7, fit: 'none', base: 'base-p.webp', lit: 'lit-warm-p.webp',
+			lights: [[393, 330], [477, 340], [408, 468], [452, 505]],
 			lanes: [
-				'M300 536 C270 541 200 550 130 563 C80 569 42 574 36 582 C32 590 55 587 90 591 C120 594 160 597 195 600',
-				'M300 541 C265 547 210 554 160 563 C120 570 100 580 115 588 C130 595 170 598 200 600',
-				'M300 546 C275 551 240 558 222 568 C208 578 200 590 196 604'
+				'M334 526 C322 530 311 533 300 536 C270 541 200 550 130 563 C80 569 42 574 36 582 C32 590 55 587 90 591 C120 594 160 597 195 600',
+				'M334 526 C322 532 311 537 300 541 C265 547 210 554 160 563 C120 570 100 580 115 588 C130 595 170 598 200 600',
+				'M334 526 C322 534 311 541 300 546 C275 551 240 558 222 568 C208 578 200 590 196 604'
 			],
+			river: '334,526 300,530.5 270,534 200,539.5 150,545.5 100,552.5 50,564.5 30,573 19.5,580 26,590.5 50,596.5 90,605.5 130,610 140,622 330,622 325,613.5 275,608.5 237,603.5 216.5,597 219.5,590 237,576.5 274,561.5 276,556.5 292,549 311,540.5 323,530.5',
 			homes: [{ x: [560, 610], y: [205, 245] }, { x: [480, 540], y: [540, 570] }, { x: [150, 230], y: [505, 525] }]
 		}
 	};
@@ -224,12 +221,7 @@
 		fx.setAttribute('preserveAspectRatio', S.fit);
 		const m = $('light-mask');
 		for (const [k, val] of Object.entries({ x: 0, y: 0, width: S.w, height: S.h })) m.setAttribute(k, val);
-		const rv = $('reveal');
-		rv.setAttribute('viewBox', `0 0 ${S.w} ${S.h}`);
-		rv.setAttribute('preserveAspectRatio', S.fit);
-		document.querySelectorAll('.orig').forEach((img) => {
-			img.setAttribute('href', S.orig); img.setAttribute('width', S.w); img.setAttribute('height', S.h);
-		});
+		$('river-poly').setAttribute('points', S.river);
 		document.querySelectorAll('.lit').forEach((img) => {
 			img.setAttribute('href', S.lit); img.setAttribute('width', S.w); img.setAttribute('height', S.h);
 		});
@@ -278,7 +270,6 @@
 
 	// Brightness scales how hard the lit lines are pushed (the sharp copy and its halo).
 	const SLOPES = { 'line-boost': [0.9, 0.75, 0.5], 'line-glow': [1.3, 1, 0.6] };
-	function setRest() { $('rest-img').setAttribute('opacity', v('linerest')); }
 	function setStrength() {
 		for (const [id, base] of Object.entries(SLOPES))
 			document.querySelectorAll('#' + id + ' feComponentTransfer > *')
@@ -387,7 +378,6 @@
 		input.addEventListener('input', show); show();
 	}
 	$('strength').addEventListener('input', setStrength);
-	$('linerest').addEventListener('input', setRest);
 	$('flies').addEventListener('input', syncFlies);
 	for (const id of ['glow', 'width']) $(id).addEventListener('input', styleStreak);
 	$('every').addEventListener('change', schedule);
@@ -425,7 +415,6 @@
 	// ── Run ──────────────────────────────────────────────────────────────────────────
 	buildScene();
 	setStrength();
-	setRest();
 	styleStreak();
 	matchMedia('(max-aspect-ratio: 1/1)').addEventListener('change', () => { anims.forEach((a) => a.cancel()); run = null; buildScene(); styleStreak(); });
 	if (reduced) {
