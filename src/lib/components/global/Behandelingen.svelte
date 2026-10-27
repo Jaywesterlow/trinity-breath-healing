@@ -324,6 +324,7 @@
 	const FALLBACK_PX_PER_STEP = 90; // only in effect before the first live measurement lands
 	let pxPerStep = $state(FALLBACK_PX_PER_STEP);
 	let fanEl: HTMLElement | undefined;
+	let sectionEl: HTMLElement | undefined;
 
 	// Reads positions[]/offset (both $state) but is called imperatively from
 	// onMount/resize below, never from inside a Svelte $effect — so it never
@@ -365,9 +366,42 @@
 		if (measured !== null) pxPerStep = measured;
 	}
 
+	// See SCROLL_PX_PER_STEP for the behaviour. Only feeds the 'scroll' phase: a
+	// drag, a coast or a button spring in progress keeps the fan.
+	function onScrollDrive(): void {
+		const y = window.scrollY;
+		const dy = y - scrollLastY;
+		scrollLastY = y;
+		if (!scrollInView || dy === 0 || Math.abs(dy) > SCROLL_MAX_DY) return;
+		if (dragging || document.hidden || prefersReducedMotion()) return;
+		const busy = inGesture && motionRafId !== null && motionPhase !== 'scroll';
+		if (busy) return;
+		if (motionRafId === null || motionPhase !== 'scroll') {
+			cancelMotion();
+			motionPhase = 'scroll';
+			inGesture = true;
+			lastFrameTime = performance.now();
+			motionRafId = requestAnimationFrame(motionTick);
+		}
+		scrollRemaining -= dy / SCROLL_PX_PER_STEP; // down is "Volgende", which lowers offset
+	}
+
 	onMount(() => {
 		remeasurePxPerStep();
 		window.addEventListener('resize', remeasurePxPerStep);
+
+		scrollLastY = window.scrollY;
+		window.addEventListener('scroll', onScrollDrive, { passive: true });
+		const scrollObserver =
+			typeof IntersectionObserver === 'function' && sectionEl
+				? new IntersectionObserver(
+						(entries) => {
+							for (const entry of entries) scrollInView = entry.isIntersecting;
+						},
+						{ threshold: 0 }
+					)
+				: null;
+		if (scrollObserver && sectionEl) scrollObserver.observe(sectionEl);
 
 		// Idle auto-drift's own countdown starts here too, not only after a
 		// first real interaction — a page that loads and is never touched is
@@ -393,6 +427,8 @@
 
 		return () => {
 			window.removeEventListener('resize', remeasurePxPerStep);
+			window.removeEventListener('scroll', onScrollDrive);
+			scrollObserver?.disconnect();
 			document.removeEventListener('visibilitychange', onVisibilityChange);
 			cancelMotion();
 		};
@@ -545,6 +581,34 @@
 	// i.e. drifting is indistinguishable from someone slowly, continuously
 	// pressing "Volgende."
 	const DRIFT_VELOCITY_PER_MS = -1 / (DRIFT_SECONDS_PER_STEP * 1000);
+	// Off since 2026-10-14 (PR #29, carried over 2026-10-18): the owner wants the
+	// fan tied to the page's scroll rather than running on its own. The drift
+	// machinery stays in place behind this flag.
+	const IDLE_DRIFT_ENABLED = false;
+
+	// Scroll drive (2026-10-18). While the section is on screen the page's scroll
+	// turns the fan continuously: every SCROLL_PX_PER_STEP of scroll, down or up,
+	// is one card, down being "Volgende". Not stepped and not snapped, on the
+	// owner's word: PR #29's version turned one whole card per 280px through the
+	// button spring, and that is exactly what was rejected.
+	//
+	// Each scroll event adds its share to scrollRemaining, and every frame the fan
+	// covers the same fraction of what is left (time constant SCROLL_TAU_MS). So
+	// while the page moves the fan moves with it, a beat behind, and when the
+	// scroll stops it brakes quickly and smoothly to a standstill instead of
+	// stopping dead. It rests wherever that lands; Prev/Next still go from the
+	// nearest whole card (driveBy rounds).
+	//
+	// A drag, a coast or a button spring in progress wins over the scroll. A single
+	// scroll event bigger than SCROLL_MAX_DY is a jump (an anchor, a programmatic
+	// scroll), not a gesture, and turns nothing. Reduced motion turns it off.
+	const SCROLL_PX_PER_STEP = 400;
+	const SCROLL_TAU_MS = 100;
+	const SCROLL_MAX_DY = 200;
+	const SCROLL_DONE_EPSILON = 0.0005; // steps; below this the remainder is folded in at once
+	let scrollInView = false;
+	let scrollLastY = 0;
+	let scrollRemaining = 0; // steps still to travel
 
 	const DRAG_SLOP_PX = 4; // past this, the gesture is a drag and not a click
 
@@ -580,7 +644,7 @@
 	// three regimes of one motion, not separate loops — a new pointerdown or
 	// driveMotion cancels whichever is running (see cancelMotion).
 	let motionRafId: number | null = null;
-	let motionPhase: 'coast' | 'latch' | 'drift' = 'coast';
+	let motionPhase: 'coast' | 'latch' | 'drift' | 'scroll' = 'coast';
 	let velocity = 0; // steps per ms, decays toward 0 during coast
 	let lastFrameTime = 0;
 	// setTimeout handle for the idle auto-drift's own countdown (see
@@ -670,6 +734,7 @@
 	// interaction, or any new motion superseding drift itself, has to push
 	// the next idle start back out, not let a stale timer fire mid-gesture.
 	function cancelMotion(): void {
+		scrollRemaining = 0; // whatever takes over, the scroll drive's leftover is void
 		if (motionRafId !== null) {
 			cancelAnimationFrame(motionRafId);
 			motionRafId = null;
@@ -686,6 +751,7 @@
 	// changes mid-session, matching how every other motion entry point in
 	// this file (driveMotion, etc.) checks it live rather than once.
 	function scheduleIdleDrift(): void {
+		if (!IDLE_DRIFT_ENABLED) return;
 		if (idleDriftTimer !== null) clearTimeout(idleDriftTimer);
 		idleDriftTimer = setTimeout(() => {
 			idleDriftTimer = null;
@@ -754,6 +820,25 @@
 		if (motionPhase === 'drift') {
 			offset += DRIFT_VELOCITY_PER_MS * dt;
 			absorbWholeSteps();
+			motionRafId = requestAnimationFrame(motionTick);
+			return;
+		}
+
+		// Scroll drive: close the same fraction of what is left every frame, so the
+		// fan eases to rest once the page stops (see SCROLL_TAU_MS).
+		if (motionPhase === 'scroll') {
+			const step =
+				Math.abs(scrollRemaining) < SCROLL_DONE_EPSILON
+					? scrollRemaining
+					: scrollRemaining * (1 - Math.exp(-dt / SCROLL_TAU_MS));
+			offset += step;
+			scrollRemaining -= step;
+			velocity = dt > 0 ? step / dt : 0;
+			absorbWholeSteps();
+			if (scrollRemaining === 0) {
+				endGesture();
+				return;
+			}
 			motionRafId = requestAnimationFrame(motionTick);
 			return;
 		}
@@ -1954,7 +2039,7 @@
 	}
 </script>
 
-<section class="treatments" aria-label="Behandelingen">
+<section class="treatments" aria-label="Behandelingen" bind:this={sectionEl}>
 	<!-- The header is the section's one reveal. The fan below used to fade as a unit, with
 	     a measured --reveal-inset-* correction for a box far taller than what it draws; at
 	     608px on desktop it was still the tallest fading thing on the page, lit for a whole

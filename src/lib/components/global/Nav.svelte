@@ -20,6 +20,26 @@
 	let hidden = $state(false);
 	let rotation = $state(0);
 
+	// The bar is no longer sand: it is #fff at 1% with a background blur (the "Hero
+	// (scrolling)" frames, 2026-10-24), so when it comes back on a scroll up the page shows
+	// through it, blurred. Two states on the home page:
+	//   - clear: at the very top it sits on the hero image with no blur at all, as in the
+	//     hero frames;
+	//   - overHero: while the hero is still under the bar its type is cream, since the
+	//     usual muted green would vanish into the green image.
+	// scrollY is 0 on the server, so the prerendered home page already has the clear, cream
+	// nav: no flash on load.
+	const onHome = $derived($page.url.pathname === '/');
+	let heroUnderNav = $state(true);
+	$effect(() => {
+		void scrollY;
+		const hero = onHome ? document.querySelector('.hero') : null;
+		const navBottom = hamburgerEl?.closest('.nav')?.getBoundingClientRect().height ?? 88;
+		heroUnderNav = !!hero && hero.getBoundingClientRect().bottom > navBottom;
+	});
+	const overHero = $derived(onHome && heroUnderNav && !menuOpen);
+	const clear = $derived(onHome && scrollY < 8 && !menuOpen);
+
 	$effect(() => {
 		if (scrollY > 80 && scrollY > prevScrollY) {
 			hidden = true;
@@ -53,9 +73,15 @@
 <svelte:window bind:scrollY onkeydown={handleKeydown} />
 
 <header class="header" class:header--hidden={hidden} class:header--open={menuOpen}>
-	<nav class="nav" class:nav--open={menuOpen} aria-label="Site navigatie">
+	<nav
+		class="nav"
+		class:nav--open={menuOpen}
+		class:nav--over-hero={overHero}
+		class:nav--clear={clear}
+		aria-label="Site navigatie"
+	>
 		<div class="nav__inner">
-			<NavLogo inverted={menuOpen} />
+			<NavLogo inverted={menuOpen || overHero} />
 
 			<!-- Desktop nav links — hidden on mobile -->
 			<div class="nav__links" aria-label="Hoofdnavigatie">
@@ -148,8 +174,12 @@
 		transform: translateY(-100%);
 	}
 
+	/* Figma: fill #fff at 1% (a backdrop filter needs a fill to work on), background blur 50.
+	   Figma's blur value is twice the CSS radius, so 50 there is blur(25px) here. */
 	.nav {
-		background: var(--color-bg-sand);
+		background: rgb(255 255 255 / 0.01);
+		-webkit-backdrop-filter: blur(25px);
+		backdrop-filter: blur(25px);
 		position: relative;
 		z-index: 20;
 		transition: background var(--motion-base) var(--ease-out);
@@ -197,6 +227,13 @@
 		transition: transform 350ms var(--ease-out); /* ← tweak ms to change rotation speed */
 	}
 
+	/* ─── At the very top of the home page: on the hero image, unblurred ─── */
+	.nav--clear {
+		background: transparent;
+		-webkit-backdrop-filter: none;
+		backdrop-filter: none;
+	}
+
 	/* ─── Nav open state (mobile) ─── */
 	.nav--open {
 		background: var(--color-brand-green);
@@ -240,11 +277,11 @@
 
 	/* Same two-line idea as the desktop nav, minus the hover half: a touch screen
 	   has no hover, so only the current-page line is ever drawn. Sand on forest,
-	   and the same 2px as every other underline on the site. */
+	   and the same --underline-height as every other underline on the site. */
 	.mobile-menu__link {
 		position: relative;
 		font-family: var(--font-display);
-		font-size: 1.5rem;
+		font-size: 1.375rem; /* was 1.5rem; smaller type throughout (2026-10-17) */
 		font-weight: 500;
 		color: var(--color-bg-sand);
 		text-decoration: none;
@@ -272,14 +309,15 @@
 		transform: scaleX(1);
 	}
 
-	/* ─── Desktop ≥ 1024px ─── */
-	@media (min-width: 1024px) {
+	/* ─── Desktop ≥ 1100px (was 1024; the row overflowed there by ~50px) ─── */
+	@media (min-width: 1100px) {
 		.nav {
 			height: var(--nav-height);
 		}
 
 		.nav__inner {
 			height: 100%;
+			width: min(var(--container-max), 100% - 3rem);
 			padding: 0; /* zero — matches footer; max-width + centering alone sets the edge */
 			gap: var(--space-6);
 		}
@@ -372,6 +410,34 @@
 
 		.nav__link--active::after {
 			transition-delay: var(--underline-stage-delay);
+		}
+
+		/* On the hero the links are cream, and so are both underlines: the idle grey and the
+		   forest would vanish into the green. The idle line is cream at half strength so the
+		   two stages still read as two. */
+		.nav--over-hero .nav__link,
+		.nav--over-hero .nav__link--active {
+			color: var(--color-bg-sand);
+		}
+
+		.nav--over-hero .nav__link::before {
+			background: color-mix(in srgb, var(--color-bg-sand) 50%, transparent);
+		}
+
+		.nav--over-hero .nav__link::after {
+			background: var(--color-bg-sand);
+		}
+	}
+
+	/* 1100–1279: six links, the logo and the CTA only just fit, so the links close up
+	   and step down a size. After the desktop block, or its base rules would win. */
+	@media (min-width: 1100px) and (max-width: 1279.98px) {
+		.nav__links {
+			gap: 0.5rem;
+		}
+
+		.nav__link {
+			font-size: 1rem;
 		}
 	}
 </style>

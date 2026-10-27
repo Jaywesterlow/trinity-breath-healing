@@ -3,21 +3,11 @@
 	import WerkwijzeCard from '$lib/components/ui/WerkwijzeCard.svelte';
 	import { reveal } from '$lib/actions/reveal';
 
-	// Centerline traces of the card art. Regenerate with .planning/quick/20260713-hero-draw-on/trace/.
-	//
-	// Inlined (?raw) rather than referenced by URL, because these draw themselves stroke by
-	// stroke and an <img> cannot animate its own contents. That was the trade when they were
-	// parked as <img>: each file is one compound fill path gated by a <mask> of up to 367
-	// stroked paths, and inlined that mask is live DOM the browser re-rasterises whenever this
-	// card's layer is re-rastered — on the one part of the page that moves during scroll. It
-	// also puts ~129 KB back into the prerendered HTML.
-	//
-	// Re-inlined deliberately: the drawing is the point of the section. On mobile nothing
-	// moves the cards (they stack and scroll with the page), and on desktop only the
-	// staircase transforms them, so the raster cost lands on entry.
-	import verdiepingArt from '$lib/images/card-verdieping-bg.svg?raw';
-	import kennismakingArt from '$lib/images/card-kennismaking.svg?raw';
-	import sessieArt from '$lib/images/card-sessie.svg?raw';
+	// The redesign cards (approved in Figma 2026-10-24, TODO §15): each image is the whole
+	// card, 9:16, on the site green. 408 css px wide on desktop, the full column on a phone.
+	import card1 from '$lib/images/redesign/werkwijze-card1.webp?w=408;816;1224&enhanced';
+	import card2 from '$lib/images/redesign/werkwijze-card2.webp?w=408;816;1224&enhanced';
+	import card3 from '$lib/images/redesign/werkwijze-card3.webp?w=408;816;1224&enhanced';
 
 	let cardsEl: HTMLUListElement | null = $state(null);
 	let rowEl: HTMLDivElement | null = $state(null);
@@ -33,8 +23,8 @@
 	//
 	// The three cards do not sit on one line as the section arrives. At the moment the
 	// section's top reaches the bottom of the viewport all three stand below their rest
-	// position, in a staircase: card 1 200px down, card 2 two thirds of a card (306px)
-	// further, card 3 another 306 — 200 / 506 / 812. Card 1 is down too, deliberately: with
+	// position, in a staircase: card 1 200px down, card 2 two thirds of a card (387px)
+	// further, card 3 another 387 — 200 / 587 / 974. Card 1 is down too, deliberately: with
 	// it already at rest as the section entered, the owner's reading was that it "isn't
 	// animating at all". As the reader scrolls, each card moves up faster than the page and
 	// the lower ones faster still, so they catch up. The offsets are spent over the scroll
@@ -48,7 +38,9 @@
 	// Not a viewport later, as it first shipped: the reader had card 1 in place before the
 	// section was half in.
 	//
-	// Past that point the row does not stop. Over the next 0.4 viewport of scroll all three
+	// Then the row pauses, aligned under the heading, while its top scrolls from the centre
+	// up to STAIR_RISE_START (0.12 of the viewport; ported from PR #29 on 2026-10-18, it was
+	// never merged). Only then, over the next 0.4 viewport of scroll, all three
 	// keep rising faster than the page by the height of the header block (eyebrow + h2), the
 	// gap under it and half a card — measured live each time, 86 + 32 + 229.5 = 348px at
 	// 1440 — so they visibly overtake the heading, which scrolls at the page's own speed
@@ -77,11 +69,18 @@
 	// the cards simply sit aligned on their line as the static layout has them.
 	/** px card 1 starts below its rest at entry; each further card starts STAIR_STEP lower. */
 	const STAIR_BASE = 200;
-	/** px between neighbouring cards' entry offsets: two thirds of a card's 459px height. */
-	const STAIR_STEP = 306;
+	/** px between neighbouring cards' entry offsets: two thirds of a card's height. It was 306
+	 *  for the 459px card; the redesign card is 580px (2026-10-24). */
+	const STAIR_STEP = 387;
 	/** The scroll the lift and the fade take, as a fraction of the viewport height. The lift
 	 *  itself is not a constant: it is the header block, the gap and half a card, measured. */
 	const STAIR_FADE_SPAN = 0.4;
+	/** Where the lift and the fade begin, as the row's rest top in viewport heights from the
+	 *  top. It was the centre (0.5): the cards started leaving the moment they had aligned,
+	 *  which the owner read as "they fade away and float over their title far too quickly"
+	 *  (2026-10-14). Now they stay aligned while the row scrolls up from the centre to this
+	 *  line, and only then lift and fade over STAIR_FADE_SPAN. */
+	const STAIR_RISE_START = 0.12;
 	/** s for the row to close ~95% of the gap to its scroll-given target (three time
 	 *  constants of the exponential lerp in `frame`). */
 	const STAIR_SETTLE_S = 0.25;
@@ -120,7 +119,10 @@
 			const rowTop = row!.getBoundingClientRect().top;
 			const rowOffset = rowTop - sectionTop;
 			const fall = Math.min(Math.max((rowTop - vh / 2) / (vh / 2 + rowOffset), 0), 1);
-			const rise = Math.min(Math.max((vh / 2 - rowTop) / (STAIR_FADE_SPAN * vh), 0), 1);
+			const rise = Math.min(
+				Math.max((STAIR_RISE_START * vh - rowTop) / (STAIR_FADE_SPAN * vh), 0),
+				1
+			);
 			const lift = row!.offsetTop - header!.offsetTop + items[0]!.offsetHeight / 2;
 			for (let i = 0; i < drop.length; i++) targetY[i] = drop[i]! * fall - lift * rise;
 			targetFade = 1 - rise;
@@ -240,11 +242,11 @@
 
 <section class="werkwijze" id="werkwijze" class:werkwijze--stairs={stairs} bind:this={sectionEl}>
 	<div class="werkwijze__inner">
-		<!-- One reveal for the header block: eyebrow and heading arrive and leave as one
-		     line of thought, not as two. -->
+		<!-- One reveal for the header block: heading, rule and line arrive and leave as one
+		     thought. -->
 		<header class="werkwijze__header" use:reveal bind:this={headerEl}>
-			<p class="werkwijze__eyebrow">Werkwijze</p>
-			<h2 class="werkwijze__heading">Rustig, persoonlijk en op jouw tempo.</h2>
+			<h2 class="werkwijze__heading">Wat kun je verwachten?</h2>
+			<p class="werkwijze__sub">Rustig, persoonlijk en op jouw tempo.</p>
 		</header>
 
 		<!-- The row wrapper is the staircase's measuring stick: it never moves, so its rect is
@@ -253,28 +255,23 @@
 			<ul class="werkwijze__cards" class:werkwijze__cards--faded={stairsFaded} bind:this={cardsEl}>
 				<li>
 					<WerkwijzeCard
-						variant="filled"
-						title="Kennismaking"
-						body="Wat loskomt, laten we landen. Stap voor stap groeit er meer rust en ruimte, in je hoofd én je lijf."
-						artSvg={kennismakingArt}
+						title="Kennismaking & intake"
+						body="We beginnen met een persoonlijk gesprek. Samen kijken we naar jouw wensen en behoeften, en naar wat je op dit moment bezighoudt. Je kunt al je vragen stellen, zodat je weet wat je kunt verwachten."
+						image={card1}
 					/>
 				</li>
 				<li>
 					<WerkwijzeCard
-						variant="filled"
-						title="De sessie"
-						body="Met adem en lichaamswerk kom je in contact met wat er onder de oppervlakte leeft."
-						artSvg={sessieArt}
+						title="De behandeling"
+						body="Iedere behandeling stem ik af op wat jij nodig hebt. Ik werk met ademwerk, lichaamsgerichte technieken en energetische ondersteuning, en waar passend met de biotensor. Zo ontstaat ruimte om spanning los te laten en dichter bij jezelf te komen."
+						image={card2}
 					/>
 				</li>
 				<li>
 					<WerkwijzeCard
-						variant="outline"
-						title="Verdieping"
-						body="We beginnen rustig. In een eerste gesprek kijken we samen wat er speelt en wat je nodig hebt."
-						artSvg={verdiepingArt}
-						ctaHref="/contact"
-						ctaLabel="Maak een afspraak"
+						title="Afronding & nazorg"
+						body="Na de behandeling nemen we alle tijd om rustig af te ronden. Je krijgt de ruimte om je ervaringen te delen en, wanneer dat nodig is, ontvang je persoonlijke adviezen voor je nazorg."
+						image={card3}
 					/>
 				</li>
 			</ul>
@@ -289,38 +286,47 @@
 	}
 
 	.werkwijze__inner {
-		max-width: var(--container-max); /* 1200px — same cap as nav/footer/hero, so edges line up */
+		/* No container cap: the card row (1272px) is wider than the 1200px container at 1440,
+		   and sets its own width below. */
 		margin: 0 auto;
 	}
 
+	/* Figma "Werkwijze (redesign) — chosen": centred heading, a short gold rule under it, the
+	   line below that, 36px to the cards. */
 	.werkwijze__header {
-		max-width: 24rem; /* 384px — Figma spec */
-		margin: 0 auto var(--space-8);
+		margin: 0 auto 2.25rem;
 		padding: 0 var(--space-6);
 		text-align: center;
 	}
 
-	.werkwijze__eyebrow {
-		font-family: var(--font-body);
-		font-size: var(--font-size-xl); /* 20px — Figma spec, exact token match */
-		font-weight: var(--font-weight-light);
-		color: var(--brand-muted);
-		margin-bottom: var(--space-2);
-	}
-
 	.werkwijze__heading {
 		font-family: var(--font-display);
-		font-size: var(--fs-h2); /* clamp 28→48px; Figma desktop spec is 40px, within range */
+		font-size: var(--fs-h2);
 		font-weight: var(--font-weight-medium);
 		line-height: var(--line-height-tight);
-		color: var(--color-fg-forest);
+		color: #5d674d; /* Figma heading colour; 5.2:1 on the sand */
+		text-wrap: balance;
+	}
+
+	.werkwijze__heading::after {
+		content: '';
+		display: block;
+		width: 4.5rem; /* 72px */
+		height: 2px;
+		margin: var(--space-4) auto;
+		background: #bb964d; /* Figma gold rule; decorative */
+	}
+
+	.werkwijze__sub {
+		font-family: var(--font-display);
+		font-size: var(--font-size-xl);
+		color: var(--brand-muted);
 	}
 
 	/* Under 1100px (phones and tablets): the cards stack top-down, one under the other,
 	   and the page simply scrolls past them. No pin, no horizontal slider — the owner's
-	   call (2026-09-25): sideways scrolling inside a vertical page was the one place a
-	   reader had to change direction. A tablet gets the same single column; three 282px
-	   cards do not fit a row below 1100 (see desktopMq), and two plus one reads as broken. */
+	   call (2026-09-25). A tablet gets the same single column; three cards do not fit a
+	   row below 1100, and two plus one reads as broken. */
 	.werkwijze__cards {
 		display: flex;
 		flex-direction: column;
@@ -331,19 +337,30 @@
 		padding: 0 var(--space-4);
 	}
 
+	.werkwijze__cards > li {
+		width: min(100%, 25.5rem); /* 408px */
+	}
+
 	/* Desktop: one static row of three, the Figma layout. The staircase (see the script)
 	   only ever moves the cards by transform from this rest position, so this is also
 	   exactly what reduced motion gets. 1100px, not 1024 — see desktopMq in the script. */
 	@media (min-width: 1100px) {
-		.werkwijze__header {
-			max-width: none;
-		}
-
+		/* Three 408px cards and two 24px gaps, the Figma row (1272px). Below ~1320px the cards
+		   narrow together and grow taller (WerkwijzeCard), so the text never runs into the
+		   drawing. */
 		.werkwijze__cards {
 			flex-direction: row;
 			align-items: stretch;
 			justify-content: center;
-			gap: 4.688rem; /* 75px — Figma spec; --space-16 (64px) is 11px off, too large to round */
+			gap: 1.5rem;
+			max-width: calc(3 * 25.5rem + 2 * 1.5rem + 2 * var(--space-6));
+			margin: 0 auto;
+			padding: 0 var(--space-6);
+		}
+
+		.werkwijze__cards > li {
+			flex: 1 1 0;
+			width: auto;
 		}
 
 		/* The staircase's fade, as a registered property so that writing it per frame

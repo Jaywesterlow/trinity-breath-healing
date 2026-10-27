@@ -1,9 +1,12 @@
 <script lang="ts">
 	import '../app.css';
+	import 'lenis/dist/lenis.css';
 	import { Nav, Footer, Head, JsonLd, CursorTooltip } from '$lib/components';
 	import Analytics from '$lib/analytics/Analytics.svelte';
 	import { page } from '$app/stores';
 	import { onNavigate } from '$app/navigation';
+	import { onMount } from 'svelte';
+	import { startSmoothScroll } from '$lib/smooth-scroll';
 	import type { Snippet } from 'svelte';
 	import type { LayoutData } from './$types';
 
@@ -21,6 +24,21 @@
 	// Without this, every route rendered the same layout-default title/description regardless
 	// of the per-page meta each +page.ts already computes from stub-meta.ts.
 	const meta = $derived($page.data.meta ?? data.meta);
+
+	// Smooth wheel scrolling, site-wide (see smooth-scroll.ts). Started after mount and
+	// loaded on demand, so it never sits in the prerendered HTML or the first paint.
+	onMount(() => {
+		let stop: (() => void) | undefined;
+		let cancelled = false;
+		void startSmoothScroll().then((fn) => {
+			if (cancelled) fn?.();
+			else stop = fn;
+		});
+		return () => {
+			cancelled = true;
+			stop?.();
+		};
+	});
 
 	onNavigate((navigation) => {
 		if (!document.startViewTransition) return;

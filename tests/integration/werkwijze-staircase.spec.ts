@@ -4,13 +4,12 @@
  *
  * The three cards arrive as a staircase and leave as one row. With the section's top at
  * the bottom of the viewport all three stand below their rest position — card 1 200px
- * down, card 2 506, card 3 812 — and over the scroll it takes the row's rest top to reach
+ * down, card 2 587, card 3 974 — and over the scroll it takes the row's rest top to reach
  * the middle of the screen (vh / 2 + the row's offset below the section's top: 450 + 214
  * = 664px here) they catch up, so they are aligned the moment the row's top crosses the
  * viewport's centre. Over the next 0.4 viewport all three rise past the page by the
  * header block, the gap under it and half a card (348px at this width) and fade to 0,
- * and once fully faded they are `visibility: hidden` so the link in card 3 is not a
- * keyboard trap. Every step reverses on the way back up, because the whole thing is a
+ * and once fully faded they are `visibility: hidden`, out of the accessibility tree. Every step reverses on the way back up, because the whole thing is a
  * function of the scroll position — damped, which is why each scroll here is followed
  * by a wait: the row takes ~0.25s to settle.
  *
@@ -25,8 +24,13 @@ test.use({ viewport: { width: 1440, height: 900 } });
 
 const VH = 900;
 const BASE = 200;
-const STEP = 306;
+const STEP = 387; /* two thirds of the 580px redesign card (was 306 for 459px) */
 const FADE_SPAN = 0.4;
+/* The lift and fade start when the row's rest top is this far down the viewport (was the
+   centre); the cards sit aligned from the centre until then. Mirrors STAIR_RISE_START. */
+const RISE_START = 0.12;
+/* Scroll from the aligned moment to the fully faded one. */
+const FADE_SCROLL = VH * (0.5 - RISE_START + FADE_SPAN);
 const SETTLE_MS = 800;
 
 /** scrollY at which the section's top sits exactly on the viewport's bottom edge. */
@@ -82,7 +86,7 @@ async function open(page: Page) {
 }
 
 test.describe('Werkwijze desktop staircase', () => {
-	test('at section entry, all three cards sit below rest: 200, 506 and 812px', async ({ page }) => {
+	test('at section entry, all three cards sit below rest: 200, 587 and 974px', async ({ page }) => {
 		await open(page);
 		await scrollAndSettle(page, await entryY(page));
 
@@ -170,7 +174,7 @@ test.describe('Werkwijze desktop staircase', () => {
 		const aligned = await alignedY(page);
 		await scrollAndSettle(page, entry);
 		await scrollAndSettle(page, aligned);
-		await scrollAndSettle(page, aligned + VH * FADE_SPAN);
+		await scrollAndSettle(page, aligned + FADE_SCROLL);
 
 		for (const opacity of await cardOpacities(page)) expect(opacity).toBeLessThan(0.05);
 
@@ -197,19 +201,9 @@ test.describe('Werkwijze desktop staircase', () => {
 			await expect(cards.nth(i)).toHaveCSS('visibility', 'hidden');
 		}
 
-		/* Out of the accessibility tree: the role query that finds the link everywhere else
-		   in this file finds nothing now. The plain CSS locator is for the element itself. */
-		await expect(
-			page.locator('#werkwijze').getByRole('link', { name: 'Maak een afspraak' })
-		).toHaveCount(0);
-		const cta = page.locator('#werkwijze .wcard__cta a');
-		await expect(cta).toHaveCount(1);
-		await expect(cta).toBeHidden();
-		const focusable = await cta.evaluate((el) => {
-			(el as HTMLElement).focus();
-			return document.activeElement === el;
-		});
-		expect(focusable, 'a fully faded card must not take focus').toBe(false);
+		/* Out of the accessibility tree: the card titles a role query finds at rest are gone.
+		   (The redesign cards hold no link since 2026-10-24; the booking link is the hero's.) */
+		await expect(page.locator('#werkwijze').getByRole('heading', { level: 3 })).toHaveCount(0);
 	});
 
 	test('scrolling back to the entry restores the staircase', async ({ page }) => {
@@ -217,7 +211,7 @@ test.describe('Werkwijze desktop staircase', () => {
 		const entry = await entryY(page);
 		const aligned = await alignedY(page);
 		await scrollAndSettle(page, entry);
-		await scrollAndSettle(page, aligned + VH * FADE_SPAN);
+		await scrollAndSettle(page, aligned + FADE_SCROLL);
 		await scrollAndSettle(page, aligned);
 
 		const alignedTops = await cardTops(page);
