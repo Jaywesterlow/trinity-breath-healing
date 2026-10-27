@@ -19,13 +19,13 @@
  * Determinism — every known nondeterminism source in this app is neutralized below,
  * not hidden behind a loose diff threshold:
  *
- * 1. Hero draw-on animation (src/lib/components/global/Hero.svelte, .hero__draw path):
- *    a ~2.9s staggered stroke-dashoffset animation. `page.emulateMedia({ reducedMotion:
- *    'reduce' })` (called in settle() below — see item 5 for why this and not the
- *    context option) makes the browser match `prefers-reduced-motion: reduce`, which
- *    triggers Hero.svelte's own media-query rule setting `stroke-dashoffset: 0` and
- *    `animation: none` — the fully-drawn final state, with no timing dependency.
- *    Confirmed by reading the component's <style> block, not assumed.
+ * 1. Hero intro and lights (src/lib/components/global/Hero.svelte, HeroLights.svelte):
+ *    a ~4.5s CSS intro (lines draw, paint washes in, text arrives) and rAF-driven lights.
+ *    `page.emulateMedia({ reducedMotion: 'reduce' })` (called in settle() below, before
+ *    navigation — see item 5 for why this and not the context option) makes Hero.svelte's
+ *    media-query rules show the finished state with no animation, and HeroLights.svelte
+ *    reads the same query on mount: tree lights drawn once at full strength, at their
+ *    fixed spots, no drift, no fireflies, no streaks — nothing random, nothing moving.
  *
  * 2. AboutStat count-up (src/lib/components/ui/AboutStat.svelte): an rAF-driven number
  *    count-up whose onMount opens with
