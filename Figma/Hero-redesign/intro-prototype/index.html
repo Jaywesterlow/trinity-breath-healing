@@ -1,0 +1,424 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Hero intro prototype</title>
+<style>
+	:root { --green: #637456; --cream: #faf0e6; }
+	* { box-sizing: border-box; }
+	body { margin: 0; background: var(--green); color: var(--cream); font: 14px/1.4 system-ui, sans-serif; }
+
+	/* Same frame as the lights prototype and Hero.svelte: landscape covers the screen,
+	   portrait sits on top at max(100vw, 58svh) with the paper running on below. */
+	.stage { position: relative; height: 100svh; overflow: hidden; }
+	.frame, .frame > *, .draw-layers > * { position: absolute; inset: 0; width: 100%; height: 100%; }
+	.frame img { object-fit: cover; }
+	.paper { display: none; }
+	@media (max-aspect-ratio: 1/1) {
+		.stage { height: auto; min-height: 100svh; display: flex; flex-direction: column; }
+		.frame { position: relative; inset: auto; left: 50%; width: max(100vw, 58svh); height: auto; aspect-ratio: 1500 / 2009; transform: translateX(-50%); flex-shrink: 0; }
+		.paper { display: block; flex: 1 0 auto; align-self: center; width: max(100vw, 58svh); background: url('paper-p.webp') top center / 100% auto repeat-y; }
+	}
+	.mode-48 .paper, .mode-draw .paper { opacity: 0; }
+	.paper.on { opacity: 1; transition: opacity 1.2s ease; }
+
+	/* ─── Draw mode: the painting's own lines draw themselves, then the paint washes in ───
+	   The line layer (lines.cjs: gold and white lines on transparency, over the green)
+	   is gated by a mask of traced centrelines (trace.cjs). Each mask stroke draws itself
+	   exactly as the live site's hero does (main: Hero.svelte, .hero__draw path): pathLength 1,
+	   dasharray 1 1.1, offset 1 → 0, ease-out, per-path --t and --d. */
+	.lines { pointer-events: none; }
+	.lines .mstroke { stroke-dasharray: 1 1.1; stroke-dashoffset: 1; animation: hero-draw var(--d, 0.6s) ease-out var(--t, 0s) forwards; }
+	@keyframes hero-draw { to { stroke-dashoffset: 0; } }
+
+	/* The wash: Hero.svelte's text-wash reveal (three soft radial masks growing from nearby
+	   centres at different rates), centred on the tree instead of the text block. */
+	@property --wash-r { syntax: '<percentage>'; inherits: false; initial-value: 150%; }
+	.paint.washing {
+		mask-image:
+			radial-gradient(farthest-side at var(--cx) var(--cy), #000 calc(var(--wash-r) - 40%), #0000 var(--wash-r)),
+			radial-gradient(farthest-side at calc(var(--cx) - 12%) calc(var(--cy) + 10%), #000 calc(var(--wash-r) * 0.85 - 40%), #0000 calc(var(--wash-r) * 0.85)),
+			radial-gradient(farthest-side at calc(var(--cx) + 10%) calc(var(--cy) - 12%), #000 calc(var(--wash-r) * 0.7 - 40%), #0000 calc(var(--wash-r) * 0.7));
+		-webkit-mask-image:
+			radial-gradient(farthest-side at var(--cx) var(--cy), #000 calc(var(--wash-r) - 40%), #0000 var(--wash-r)),
+			radial-gradient(farthest-side at calc(var(--cx) - 12%) calc(var(--cy) + 10%), #000 calc(var(--wash-r) * 0.85 - 40%), #0000 calc(var(--wash-r) * 0.85)),
+			radial-gradient(farthest-side at calc(var(--cx) + 10%) calc(var(--cy) - 12%), #000 calc(var(--wash-r) * 0.7 - 40%), #0000 calc(var(--wash-r) * 0.7));
+		animation: hero-wash var(--wash-d, 1800ms) cubic-bezier(0.22, 1, 0.36, 1) var(--wash-t, 0ms) backwards;
+	}
+	@keyframes hero-wash { from { --wash-r: 0%; } }
+
+	/* ─── 48a / 48b: copied from the JW library (48a-ink-reveal-edge, 48b-ink-reveal-circle) ── */
+	.ink-mask { position: relative; }
+	.ink-mask-img { position: absolute; inset: 0; }
+	.ink-mask-img img, .ink-mask-layer { display: block; width: 100%; height: 100%; }
+	.ink-mask-img img { object-fit: cover; }
+
+	.mode-draw .ink-mask, .mode-48 .draw-layers { display: none; }
+
+	@media (prefers-reduced-motion: reduce) {
+		.lines .mstroke { stroke-dashoffset: 0; animation: none; }
+		.paint.washing { animation: none; }
+	}
+
+	/* Panel: same as the lights prototype — drag by the bar, fold with the button. */
+	.panel { position: fixed; right: 16px; bottom: 16px; width: 300px; max-width: calc(100vw - 32px); max-height: calc(100svh - 32px); display: flex; flex-direction: column; background: rgb(20 26 18 / 0.85); border-radius: 12px; backdrop-filter: blur(8px); z-index: 10; }
+	.bar { display: flex; align-items: center; gap: 8px; padding: 4px 4px 4px 14px; cursor: grab; touch-action: none; user-select: none; }
+	.bar span { flex: 1; font-size: 12px; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.6; }
+	.bar button { width: 44px; height: 44px; border: 0; border-radius: 8px; background: rgb(255 255 255 / 0.08); color: var(--cream); font-size: 20px; cursor: pointer; }
+	.body { overflow: auto; padding: 0 16px 14px; }
+	.panel.folded .body { display: none; }
+	.panel h2 { margin: 14px 0 4px; font-size: 13px; letter-spacing: 0.04em; text-transform: uppercase; opacity: 0.7; }
+	.panel label { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; margin: 8px 0; }
+	.panel label small { grid-column: 1 / -1; opacity: 0.6; font-size: 12px; }
+	.panel input[type='range'] { grid-column: 1 / -1; width: 100%; }
+	.panel .modes label { display: flex; gap: 8px; align-items: center; margin: 6px 0; }
+	.panel .modes small { display: block; opacity: 0.6; font-size: 12px; }
+	.panel button.go { width: 100%; margin-top: 10px; padding: 10px; border: 0; border-radius: 6px; background: #8d6346; color: var(--cream); cursor: pointer; }
+	.only-draw, .only-48 { display: none; }
+	.mode-draw .only-draw, .mode-48 .only-48 { display: block; }
+</style>
+</head>
+<body class="mode-draw">
+<div class="stage">
+	<div class="frame">
+		<!-- Draw mode -->
+		<div class="draw-layers">
+			<svg class="lines" id="lines" aria-hidden="true">
+				<defs><mask id="draw-mask" maskUnits="userSpaceOnUse"><g id="mstrokes" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round"></g></mask></defs>
+				<image id="lines-img" preserveAspectRatio="none" mask="url(#draw-mask)" />
+			</svg>
+			<img class="paint" id="paint" alt="" />
+		</div>
+		<!-- 48a / 48b: the library markup. Under: the lines on the green; over: the painting. -->
+		<div class="ink-mask" id="ink">
+			<div class="ink-mask-img"><img id="ink-under" alt="" /></div>
+			<div class="ink-mask-img" aria-hidden="true">
+				<svg class="ink-mask-layer" preserveAspectRatio="none" viewBox="0 0 1000 1000">
+					<defs>
+						<mask maskContentUnits="userSpaceOnUse"><path fill="white" d="M 0 1  Q 500 2 1000 1  L 1000 0  L 0 0  Z"></path></mask>
+						<filter></filter>
+					</defs>
+					<!-- Change from the library (2026-10-27): preserveAspectRatio="xMidYMid slice" on the
+					     image, so it crops like the <img> under it (object-fit: cover) instead of
+					     stretching; the library's plate always had the image's own aspect. -->
+					<image id="ink-over" x="0" y="0" width="100%" height="100%" preserveAspectRatio="xMidYMid slice"></image>
+				</svg>
+			</div>
+		</div>
+	</div>
+	<div class="paper" id="paper"></div>
+</div>
+
+<div class="panel" id="panel">
+	<div class="bar" id="bar"><span>Drag to move</span><button id="fold" title="Fold panel">–</button></div>
+	<div class="body">
+		<h2>Intro style</h2>
+		<div class="modes">
+			<label><input type="radio" name="mode" value="draw" checked /> <span>Lines draw, paint washes in<small>Works on iPhone</small></span></label>
+			<label><input type="radio" name="mode" value="48a" /> <span>48a: ink edge falls<small>Chrome and Edge only; Safari shows the painting at once</small></span></label>
+			<label><input type="radio" name="mode" value="48b" /> <span>48b: ink blot grows<small>Chrome and Edge only; Safari shows the painting at once</small></span></label>
+		</div>
+
+		<div class="only-draw">
+			<h2>Lines</h2>
+			<label>Draw time (s) <output></output><small>From the first line to the last</small><input id="draw" type="range" min="0.8" max="6" step="0.1" value="2.6" /></label>
+			<label>Spread <output></output><small>How much the lines draw one after another (1) or all together (0)</small><input id="spread" type="range" min="0" max="0.9" step="0.05" value="0.65" /></label>
+			<label>Line reveal width <output></output><small>Width of the invisible pen; too thin leaves gaps</small><input id="pen" type="range" min="2" max="16" step="0.5" value="6" /></label>
+			<h2>Paint</h2>
+			<label>Wash time (s) <output></output><input id="wash" type="range" min="0.4" max="5" step="0.1" value="1.8" /></label>
+			<label>Wash starts at <output></output><small>Share of the draw time; 1 = after the last line</small><input id="washat" type="range" min="0" max="1.2" step="0.05" value="0.7" /></label>
+		</div>
+		<div class="only-48">
+			<h2>Ink</h2>
+			<label>Ink time (s) <output></output><input id="inktime" type="range" min="0.8" max="6" step="0.1" value="2.4" /></label>
+			<label>Lines alone first (s) <output></output><small>How long the bare lines show before the ink starts</small><input id="inkwait" type="range" min="0" max="3" step="0.1" value="0.6" /></label>
+		</div>
+		<button class="go" id="replay">Play again</button>
+	</div>
+</div>
+
+<script src="strokes.js"></script>
+<script>
+	const $ = (id) => document.getElementById(id);
+	const v = (id) => +$(id).value;
+	const NS = 'http://www.w3.org/2000/svg';
+	const REDUCED = matchMedia('(prefers-reduced-motion: reduce)').matches;
+	const PORTRAIT = matchMedia('(max-aspect-ratio: 1/1)');
+
+	// Tree centre (for the wash) as a share of each image; strokes from trace.cjs.
+	const SCENES = {
+		landscape: { w: 2000, h: 848, fit: 'xMidYMid slice', base: 'base.webp', lines: 'lines.webp', linesGreen: 'lines-green.webp', key: 'landscape', cx: '67%', cy: '58%' },
+		portrait: { w: 750, h: 1004.5, fit: 'none', base: 'base-p.webp', lines: 'lines-p.webp', linesGreen: 'lines-green-p.webp', key: 'portrait', cx: '60%', cy: '48%' }
+	};
+	let S, strokes = [];
+
+	/* =======================================================================
+	   InkReveal — copied verbatim from the JW library (48a / 48b, same engine).
+	   ======================================================================= */
+	(function () {
+	'use strict';
+	var VB = 1000;
+	var START_D = 'M 0 1  Q 500 2 1000 1  L 1000 0  L 0 0  Z';
+	var FINAL_D = 'M 0 1000  Q 500 1250 1000 1000  L 1000 0  L 0 0  Z';
+	var PRESET = {
+	  path:   { baseFrequency: '0.045 0.055', numOctaves: 4, seed: 5, scale: 100, blur: 1.8, region: null },
+	  circle: { baseFrequency: '0.028 0.04',  numOctaves: 3, seed: 5, scale: null, blur: 0.55, region: '-25%' }
+	};
+	var SLOPE = 2.2, INTERCEPT = -0.6;
+	var instances = 0;
+	var SVGNS = 'http://www.w3.org/2000/svg';
+	function parse(d) { return (d.match(/-?\d+\.?\d*/g) || []).map(Number); }
+	function scaleY(nums, r) { return nums.map(function (n, i) { return i % 2 === 1 ? n * r : n; }); }
+
+	class InkReveal {
+	  constructor(root, options) {
+	    options = options || {};
+	    this.root = root;
+	    if (!root) return;
+	    this.svg = root.querySelector('.ink-mask-layer');
+	    this.mask = this.svg && this.svg.querySelector('mask');
+	    this.filter = this.svg && this.svg.querySelector('filter');
+	    this.image = this.svg && this.svg.querySelector('image');
+	    if (!this.svg || !this.mask || !this.filter || !this.image) return;
+	    var d = root.dataset;
+	    this.start = Number(options.start != null ? options.start : d.start != null ? d.start : 35);
+	    this.end = Number(options.end != null ? options.end : d.end != null ? d.end : 55);
+	    this.variant = options.variant || d.variant || 'path';
+	    this.lenis = options.lenis || window.lenis || null;
+	    this.scroller = options.scroller || (this.lenis && this.lenis.options && this.lenis.options.wrapper) || null;
+	    if (this.scroller === window || this.scroller === document.documentElement) this.scroller = null;
+	    var uid = 'ink-reveal-' + ++instances;
+	    this.mask.id = uid + '-mask';
+	    this.filter.id = uid + '-filter';
+	    this.image.setAttribute('mask', 'url(#' + this.mask.id + ')');
+	    this.shape = this.mask.querySelector('path');
+	    if (this.variant === 'circle') {
+	      var circle = document.createElementNS(SVGNS, 'circle');
+	      circle.setAttribute('fill', 'white');
+	      circle.setAttribute('r', '0');
+	      this.mask.replaceChild(circle, this.shape);
+	      this.shape = circle;
+	    }
+	    this.shape.style.filter = 'url(#' + this.filter.id + ')';
+	    // Firefox en Safari renderen deze filterketen niet: bovenlaag plat tonen.
+	    var ua = navigator.userAgent;
+	    this.unsupported = /^((?!chrome|android).)*safari/i.test(ua) || /firefox|fxios/i.test(ua)
+	      || matchMedia('(prefers-reduced-motion: reduce)').matches;
+	    if (this.unsupported) {
+	      this.filter.remove();
+	      this.shape.style.filter = '';
+	      this.image.removeAttribute('mask');
+	      this.image.style.maskImage = 'unset';
+	      return;
+	    }
+	    this.frame = 0;
+	    this.schedule = this.schedule.bind(this);
+	    this.layout();
+	    this.apply(0);
+	    this.schedule();
+	    this.observer = new ResizeObserver(function () { this.layout(); this.schedule(); }.bind(this));
+	    this.observer.observe(root);
+	    addEventListener('resize', this.schedule, { passive: true });
+	    if (this.lenis) this.lenis.on('scroll', this.schedule);
+	    else (this.scroller || window).addEventListener('scroll', this.schedule, { passive: true });
+	  }
+	  scrollTop() {
+	    if (this.lenis) return this.lenis.scroll;
+	    if (this.scroller) return this.scroller.scrollTop;
+	    return window.scrollY;
+	  }
+	  buildFilter(vbHeight) {
+	    var p = PRESET[this.variant] || PRESET.path;
+	    var scale = p.scale != null ? p.scale : 0.1355 * (Math.sqrt(VB * VB + vbHeight * vbHeight) / 2);
+	    this.filter.textContent = '';
+	    if (p.region) {
+	      this.filter.setAttribute('x', p.region); this.filter.setAttribute('y', p.region);
+	      this.filter.setAttribute('width', '150%'); this.filter.setAttribute('height', '150%');
+	    }
+	    var add = function (tag, attrs) {
+	      var n = document.createElementNS(SVGNS, tag);
+	      for (var k in attrs) n.setAttribute(k, attrs[k]);
+	      this.filter.appendChild(n); return n;
+	    }.bind(this);
+	    add('feTurbulence', { type: 'fractalNoise', baseFrequency: p.baseFrequency, numOctaves: p.numOctaves, seed: p.seed, result: 'noise' });
+	    add('feDisplacementMap', { in: 'SourceGraphic', in2: 'noise', scale: scale, xChannelSelector: 'R', yChannelSelector: 'G' });
+	    add('feGaussianBlur', { stdDeviation: p.blur, result: 'blurred' });
+	    var tr = add('feComponentTransfer', { in: 'blurred', result: 'contrast' });
+	    var fn = document.createElementNS(SVGNS, 'feFuncA');
+	    fn.setAttribute('type', 'linear'); fn.setAttribute('slope', SLOPE); fn.setAttribute('intercept', INTERCEPT);
+	    tr.appendChild(fn);
+	  }
+	  measure() {
+	    var rect = this.root.getBoundingClientRect();
+	    this.cachedHeight = rect.height;
+	    this.cachedTop = rect.top + this.scrollTop();
+	    var vh = this.scroller ? this.scroller.clientHeight : window.innerHeight;
+	    this.vh = vh;
+	    this.startPx = (this.start / 100) * vh;
+	    this.endPx = (this.end / 100) * vh;
+	    this.totalTravel = this.startPx - this.endPx + this.cachedHeight;
+	  }
+	  layout() {
+	    var w = this.root.offsetWidth, h = this.root.offsetHeight;
+	    if (!w || !h) return;
+	    var vbHeight = (h / w) * VB;
+	    this.svg.setAttribute('viewBox', '0 0 ' + VB + ' ' + vbHeight);
+	    this.buildFilter(vbHeight);
+	    if (this.variant === 'circle') {
+	      this.shape.setAttribute('cx', VB / 2);
+	      this.shape.setAttribute('cy', vbHeight / 2);
+	      this.startR = 0;
+	      this.endR = Math.sqrt(VB * VB + vbHeight * vbHeight) / 2;
+	    } else {
+	      var ratio = vbHeight / VB;
+	      this.startNums = scaleY(parse(START_D), ratio);
+	      this.endNums = scaleY(parse(FINAL_D), ratio);
+	      this.chunks = START_D.split(/-?\d+\.?\d*/g);
+	    }
+	    this.measure();
+	  }
+	  apply(progress) {
+	    this.progress = progress;
+	    if (this.variant === 'circle') {
+	      this.shape.setAttribute('r', this.startR + (this.endR - this.startR) * progress);
+	      return;
+	    }
+	    var d = '';
+	    for (var i = 0; i < this.startNums.length; i++) {
+	      d += this.chunks[i] + (this.startNums[i] + (this.endNums[i] - this.startNums[i]) * progress);
+	    }
+	    this.shape.setAttribute('d', d + this.chunks[this.startNums.length]);
+	  }
+	  update() {
+	    this.measure();
+	    var top = this.cachedTop - this.scrollTop();
+	    if (top > this.vh || top + this.cachedHeight <= 0) return;
+	    this.apply(Math.max(0, Math.min(1, (this.startPx - top) / this.totalTravel)));
+	  }
+	  schedule() {
+	    if (this.frame) return;
+	    this.frame = requestAnimationFrame(function () { this.frame = 0; this.update(); }.bind(this));
+	  }
+	  destroy() {
+	    if (this.observer) this.observer.disconnect();
+	    removeEventListener('resize', this.schedule);
+	    if (this.lenis && this.lenis.off) this.lenis.off('scroll', this.schedule);
+	    else if (!this.lenis) (this.scroller || window).removeEventListener('scroll', this.schedule);
+	    if (this.frame) cancelAnimationFrame(this.frame);
+	  }
+	}
+	window.InkReveal = InkReveal;
+	})();
+
+	/* Change from the library (2026-10-27, Jay asked for a load intro, not a scroll effect):
+	   progress comes from a clock instead of the scroll position. update() keeps the current
+	   progress (so a resize redraws it) instead of reading the scroll; the engine is untouched. */
+	class TimedInkReveal extends InkReveal {
+		update() { if (this.startNums || this.variant === 'circle') this.apply(this.progress || 0); }
+	}
+
+	// ── Scene ──────────────────────────────────────────────────────────────────────
+	async function buildScene() {
+		S = SCENES[PORTRAIT.matches ? 'portrait' : 'landscape'];
+		const lines = $('lines');
+		lines.setAttribute('viewBox', `0 0 ${S.w} ${S.h}`);
+		lines.setAttribute('preserveAspectRatio', S.fit);
+		const m = $('draw-mask');
+		for (const [k, val] of Object.entries({ x: 0, y: 0, width: S.w, height: S.h })) m.setAttribute(k, val);
+		const li = $('lines-img');
+		li.setAttribute('href', S.lines); li.setAttribute('width', S.w); li.setAttribute('height', S.h);
+		$('paint').src = S.base;
+		$('paint').style.setProperty('--cx', S.cx); $('paint').style.setProperty('--cy', S.cy);
+		$('ink-under').src = S.linesGreen;
+		$('ink-over').setAttribute('href', S.base);
+		strokes = window.STROKES[S.key];
+	}
+
+	// ── Draw mode ──────────────────────────────────────────────────────────────────
+	function playDraw() {
+		const D = v('draw'), spread = v('spread');
+		const maxDist = Math.max(...strokes.map((s) => s.dist)), maxLen = Math.max(...strokes.map((s) => s.len));
+		const g = $('mstrokes');
+		g.setAttribute('stroke-width', v('pen') * (S.w / 2000) * (S === SCENES.portrait ? 2 : 1));
+		const frag = document.createDocumentFragment();
+		for (const s of strokes) {
+			const p = document.createElementNS(NS, 'path');
+			p.setAttribute('d', s.d); p.setAttribute('pathLength', '1'); p.setAttribute('class', 'mstroke');
+			// starts by distance from the tree's base, so the drawing grows out from it; longer
+			// lines take longer, within what is left of the draw time
+			const t = (s.dist / maxDist) * spread * D;
+			const d = Math.max(0.25, (D - t) * (0.35 + 0.65 * Math.sqrt(s.len / maxLen)));
+			p.style.setProperty('--t', t.toFixed(3) + 's'); p.style.setProperty('--d', d.toFixed(3) + 's');
+			frag.appendChild(p);
+		}
+		g.replaceChildren(frag);
+		const paint = $('paint');
+		paint.classList.remove('washing'); void paint.offsetWidth;
+		paint.style.setProperty('--wash-d', v('wash') * 1000 + 'ms');
+		paint.style.setProperty('--wash-t', v('washat') * D * 1000 + 'ms');
+		paint.classList.add('washing');
+		paperOn((v('washat') * D + v('wash') * 0.4) * 1000);
+	}
+
+	// ── 48a / 48b ──────────────────────────────────────────────────────────────────
+	let ink = null, inkRaf = 0;
+	function resetInk(variant) {
+		// fresh markup each time: the engine replaces the mask path with a circle for 48b
+		const svg = document.querySelector('.ink-mask-layer');
+		svg.querySelector('defs').innerHTML = '<mask maskContentUnits="userSpaceOnUse"><path fill="white" d="M 0 1  Q 500 2 1000 1  L 1000 0  L 0 0  Z"></path></mask><filter></filter>';
+		$('ink-over').removeAttribute('mask'); $('ink-over').style.maskImage = '';
+		if (ink && ink.destroy) ink.destroy();
+		// start/end as in the library files: A 35/55 path, B 40/60 circle (unused by the clock)
+		ink = new TimedInkReveal($('ink'), variant === '48a' ? { start: 35, end: 55, variant: 'path' } : { start: 40, end: 60, variant: 'circle' });
+	}
+	function play48(variant) {
+		cancelAnimationFrame(inkRaf);
+		resetInk(variant);
+		if (ink.unsupported) { paperOn(0); return; }
+		ink.apply(0);
+		const wait = v('inkwait') * 1000, dur = v('inktime') * 1000, t0 = performance.now() + wait;
+		const tick = (now) => {
+			const p = Math.max(0, Math.min(1, (now - t0) / dur));
+			ink.apply(p);
+			if (p < 1) inkRaf = requestAnimationFrame(tick);
+		};
+		inkRaf = requestAnimationFrame(tick);
+		paperOn(wait + dur * 0.6);
+	}
+
+	let paperTimer;
+	function paperOn(ms) {
+		const p = $('paper'); clearTimeout(paperTimer); p.classList.remove('on');
+		paperTimer = setTimeout(() => p.classList.add('on'), ms);
+	}
+
+	function mode() { return document.querySelector('input[name=mode]:checked').value; }
+	function play() {
+		const m = mode();
+		document.body.className = m === 'draw' ? 'mode-draw' : 'mode-48';
+		if (m === 'draw') { cancelAnimationFrame(inkRaf); playDraw(); } else play48(m);
+	}
+
+	// ── Panel ──────────────────────────────────────────────────────────────────────
+	for (const input of document.querySelectorAll('.panel input[type=range]')) {
+		const out = input.parentElement.querySelector('output');
+		const show = () => (out.value = input.value);
+		input.addEventListener('input', show); show();
+		input.addEventListener('change', play); // let go of a slider: play again with it
+	}
+	for (const r of document.querySelectorAll('input[name=mode]')) r.addEventListener('change', play);
+	$('replay').onclick = play;
+	$('fold').onclick = () => { const f = $('panel').classList.toggle('folded'); $('fold').textContent = f ? '+' : '–'; };
+	{
+		const panel = $('panel'), bar = $('bar'); let start;
+		bar.addEventListener('pointerdown', (e) => { if (e.target.closest('button')) return; const r = panel.getBoundingClientRect(); start = { x: e.clientX - r.left, y: e.clientY - r.top }; bar.setPointerCapture(e.pointerId); });
+		bar.addEventListener('pointermove', (e) => { if (!start) return; const r = panel.getBoundingClientRect(); Object.assign(panel.style, { left: Math.min(innerWidth - r.width, Math.max(0, e.clientX - start.x)) + 'px', top: Math.min(innerHeight - 52, Math.max(0, e.clientY - start.y)) + 'px', right: 'auto', bottom: 'auto' }); });
+		bar.addEventListener('pointerup', () => (start = null)); bar.addEventListener('pointercancel', () => (start = null));
+	}
+
+	buildScene().then(play);
+	PORTRAIT.addEventListener('change', () => buildScene().then(play));
+</script>
+</body>
+</html>
