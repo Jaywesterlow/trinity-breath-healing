@@ -1,211 +1,94 @@
 <script lang="ts">
-	import ButtonLink from '$lib/components/ui/interactions/ButtonLink.svelte';
-	import DrawOn from '$lib/components/ui/DrawOn.svelte';
+	import type { Picture } from 'vite-imagetools';
 	import { reveal } from '$lib/actions/reveal';
 
 	let {
-		variant,
 		title,
 		body,
-		imgSrc,
-		imgWidth,
-		imgHeight,
-		artSvg,
-		ctaHref,
-		ctaLabel
+		image
 	}: {
-		variant: 'filled' | 'outline';
 		title: string;
 		body: string;
-		imgSrc?: string;
-		/** Intrinsic pixel dimensions of `imgSrc`. Present so the box is reserved before the
-		 *  image arrives — the CSS below fixes the rendered size either way, so these never
-		 *  change the layout, they only stop it from being unknown for a frame. Both are
-		 *  required together; one alone would hand the UA a bogus aspect ratio. */
-		imgWidth?: number;
-		imgHeight?: number;
-		/** Raw inline SVG for the card art — draws itself on scroll-in. Outline: backdrop art
-		 *  bleeding behind the text. Filled: the `.wcard__img` slot. `imgSrc` stays as a fallback
-		 *  for art that hasn't been traced yet (or never will be, e.g. raster-only assets). */
-		artSvg?: string;
-		ctaHref?: string;
-		ctaLabel?: string;
+		/** The whole card's image (approved in Figma 2026-10-24): 9:16, texture on top,
+		 *  illustration at the bottom, on the site green. Covers the card, anchored to the
+		 *  bottom, so a taller card shows more of the calm top and never loses the drawing. */
+		image: Picture;
 	} = $props();
 </script>
 
-<article
-	class="wcard"
-	class:wcard--filled={variant === 'filled'}
-	class:wcard--outline={variant === 'outline'}
->
-	{#if variant === 'outline'}
-		{#if artSvg}
-			<!-- Draws itself. The art is deliberately NOT faded in: a fade would cross-dissolve
-			     the very strokes that are meant to appear one at a time. -->
-			<DrawOn svg={artSvg} class="wcard__art-draw" />
-		{:else if imgSrc}
-			<img
-				src={imgSrc}
-				alt=""
-				aria-hidden="true"
-				class="wcard__art"
-				width={imgWidth}
-				height={imgHeight}
-				decoding="async"
-			/>
-		{/if}
-	{/if}
+<article class="wcard">
+	<!-- Decorative: the title and body say what the step is. Lazy: the section is well below
+	     the fold, and the browser's lazy margin starts the fetch long before the staircase
+	     brings the cards into view. -->
+	<picture class="wcard__media">
+		{#each Object.entries(image.sources) as [format, srcset] (format)}
+			<source type="image/{format}" {srcset} sizes="(min-width: 1100px) 408px, 100vw" />
+		{/each}
+		<img
+			src={image.img.src}
+			width={image.img.w}
+			height={image.img.h}
+			alt=""
+			loading="lazy"
+			decoding="async"
+		/>
+	</picture>
 
-	<!-- Text fades; the art draws. Cards 2 and 3 sit horizontally outside the viewport until
-	     the pan brings them in, and the observer only fires on intersection — so each card's
-	     text arrives as that card does, rather than all three firing when the section opens.
-	     `exit: false` because the way out belongs to the row, not to these lines: Werkwijze
-	     fades whole cards, art included — one after the other on mobile, and as one row that
-	     rises past the heading on desktop (the staircase). Left here as well, they would fade
-	     a second time inside a card that is already fading. Nothing in this file writes
-	     `opacity` on the card itself; the <li> around it is the one element that fades. -->
+	<!-- `exit: false` because the way out belongs to the row, not to these lines: Werkwijze
+	     fades whole cards (the staircase on desktop). Nothing in this file writes `opacity`
+	     on the card itself; the <li> around it is the one element that fades. -->
 	<h3 class="wcard__title" use:reveal={{ exit: false }}>{title}</h3>
 	<p class="wcard__body" use:reveal={{ exit: false }}>{body}</p>
-
-	{#if variant === 'filled'}
-		{#if artSvg}
-			<!-- Draws itself; see the outline variant above. -->
-			<DrawOn svg={artSvg} class="wcard__img-draw" />
-		{:else if imgSrc}
-			<img
-				src={imgSrc}
-				alt=""
-				aria-hidden="true"
-				class="wcard__img"
-				width={imgWidth}
-				height={imgHeight}
-				decoding="async"
-			/>
-		{/if}
-	{/if}
-
-	{#if ctaHref && ctaLabel}
-		<div class="wcard__cta" use:reveal={{ exit: false }}>
-			<ButtonLink href={ctaHref} label={ctaLabel} block />
-		</div>
-	{/if}
 </article>
 
 <style>
+	/* Figma "Werkwijze (redesign) — chosen": 408×580, radius 24, 36px padding, title
+	   Cormorant 32/1.15, body DM Sans 16/26, 16px between them. The image is the card; the
+	   site green under it is the fallback while it loads. The illustration takes the lower
+	   ~330px, so that much is kept clear under the text (padding-bottom), and the card grows
+	   rather than letting a longer text run into the drawing on a narrower card. */
 	.wcard {
 		position: relative;
-		flex-shrink: 0;
+		isolation: isolate;
 		box-sizing: border-box;
 		display: flex;
 		flex-direction: column;
-		width: 17.625rem; /* 282px — Figma spec */
-		height: 28.688rem; /* 459px — Figma spec, rounded to 3dp */
-		/* Spacing redone 2026-10-18 (the owner: "the spacing inside the cards is off").
-		   16px padding sat inside a 25px corner, so the text crowded the curve, and one
-		   16px gap between everything made title, body and art equally far apart. Now:
-		   padding at least the radius (28px), title and body as a tight pair (8px), and a
-		   clear step (24px) from that pair to the art or the button. */
-		--wcard-pad: 1.75rem;
-		padding: var(--wcard-pad);
-		gap: var(--space-2);
-		border-radius: 1.563rem; /* 25px — Figma spec; --radius-lg (16px) is 9px off, too large to round */
+		gap: var(--space-4);
+		width: 100%;
+		height: 100%;
+		min-height: 36.25rem; /* 580px */
+		padding: 2.25rem 2.25rem 20.5rem; /* 36px; 328px for the illustration */
+		border-radius: 1.5rem; /* 24px */
 		overflow: hidden;
-	}
-
-	.wcard--filled {
 		background: var(--color-brand-green);
 		color: var(--color-bg-sand);
-		align-items: flex-start;
-		text-align: left;
-		justify-content: flex-start; /* text pinned to top; image fills the remainder */
 	}
 
-	.wcard--outline {
-		background: var(--color-bg-sand);
-		color: var(--color-fg-forest);
-		align-items: flex-start;
-		justify-content: flex-end; /* art bleeds the top; text+CTA sit in the lower half, per Figma */
-		border: 2px solid var(--brand-muted);
+	.wcard__media {
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+	}
+
+	.wcard__media img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		max-width: none;
+		object-fit: cover;
+		object-position: bottom;
 	}
 
 	.wcard__title {
-		position: relative;
-		z-index: 1;
-		width: 100%;
 		font-family: var(--font-display);
-		font-size: var(--font-size-2xl); /* clamp 24→32px; Figma spec is fixed 24px */
+		font-size: 2rem; /* 32px */
 		font-weight: var(--font-weight-medium);
-		line-height: var(--line-height-tight);
+		line-height: 1.15;
 	}
 
 	.wcard__body {
-		position: relative;
-		z-index: 1;
-		width: 100%;
 		font-family: var(--font-body);
-		font-size: var(--fs-body); /* clamp 15→17px; Figma spec is fixed 16px */
-		font-weight: var(--font-weight-light);
-		line-height: var(--line-height-normal);
-	}
-
-	.wcard--filled .wcard__body {
-		color: var(--color-bg-sand);
-	}
-
-	.wcard--outline .wcard__body {
-		color: var(--color-text-subtle);
-	}
-
-	/* Same geometry whether the art is a raster <img> (fallback) or the inlined, self-drawing
-	   <svg> (DrawOn is display:contents, so it takes the <img>'s place in this flex layout).
-	   object-fit has no effect on an inline SVG; its equivalent, preserveAspectRatio="slice", is
-	   expected to be baked into the generated file, same as the outline variant's art. :global()
-	   because {@html} content gets no scoping class. Targeted via .wcard--filled (a real class
-	   binding on <article>, always present in this component's own template), not via the class
-	   prop passed down to <DrawOn> — that prop only becomes a class name inside DrawOn's own
-	   markup, a different component, so selecting on it here would be an always-unused selector
-	   as far as svelte-check's static analysis of this file can tell. Same precedent as the
-	   outline variant's .wcard--outline :global(svg.lt) below. */
-	/* `.drawon--layers` is the wrapper DrawOn uses when the art ships as stacked layers: it takes
-	   the slot the single <svg> would have, and the layers position against it. Same geometry
-	   either way. */
-	.wcard__img,
-	.wcard--filled :global(svg.lt),
-	.wcard--filled :global(.drawon--layers) {
-		display: block;
-		width: 100%;
-		flex: 1 1 0%; /* fills whatever vertical space the title+body don't use — never overflows the fixed card height */
-		min-height: 0;
-		object-fit: cover;
-		/* Out to the card's sides and bottom edge, so the drawing belongs to the card
-		   instead of floating in the space left under the text. */
-		width: calc(100% + 2 * var(--wcard-pad));
-		margin: var(--space-4) calc(-1 * var(--wcard-pad)) calc(-1 * var(--wcard-pad));
-	}
-
-	/* Same geometry whether the art is a raster <img> or the inlined, self-drawing <svg>.
-	   object-fit has no effect on an inline SVG — its equivalent, preserveAspectRatio="slice",
-	   is baked into the generated file. :global() because {@html} content gets no scoping
-	   class; the scoped .wcard parent keeps it contained. Scoped to --outline only: the filled
-	   variant's inline svg (.wcard__img-draw above) needs normal flex-flow sizing, not this
-	   absolute-position backdrop treatment. */
-	.wcard__art,
-	.wcard--outline :global(svg.lt) {
-		position: absolute;
-		top: 0.723rem; /* 11.56px; Figma has 27.56, raised 16px on 2026-10-18 so the larger text block clears the road */
-		left: -0.125rem; /* -2px — Figma spec */
-		z-index: 0;
-		width: 24.847rem; /* 397.55px — Figma spec; wider than the card, clipped by wcard's overflow:hidden */
-		max-width: none; /* global.css caps all <img> at max-width:100% — this art intentionally bleeds past the card edge */
-		height: 13.553rem; /* 216.85px — Figma spec, rounded to 3dp */
-		object-fit: cover;
-		pointer-events: none;
-	}
-
-	.wcard__cta {
-		position: relative;
-		z-index: 1;
-		width: 100%;
-		margin-top: var(--space-4); /* with the 8px gap, 24px under the body */
+		font-size: 1rem; /* 16px */
+		line-height: 1.625; /* 26px */
 	}
 </style>

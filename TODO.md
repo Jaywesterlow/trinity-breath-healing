@@ -27,7 +27,7 @@ machine can check is checked, and anything it cannot is dated.
 | **Page list / sitemap** | **18 routes** in `src/lib/constants/routes.ts`, **15 published** as of 2026-09-18. Eleven graduated on 2026-09-09: the seven modalities under `/diensten/`, their `/diensten` index, `/behandelingen`, `/werkwijze` and `/contact`. On 2026-09-18 `/faq` merged into `/contact#faq` (301) and `/blog` was dropped. Three are still stubs — `/over-mij`, `/artikelen`, `/reviews` — noindexed and out of the sitemap until they carry something. |
 | **Legal pages + OG image + favicons + Plausible** | **Done and pushed.** |
 | **Booking approval + slot blocking** | **Live.** A requested slot greys out at once; she approves or declines from her inbox; approval sends a calendar invite, a decline reopens the slot. Supabase holds only date, time and status — no name, e-mail or klachten. |
-| **Homepage redesign** | **Moved to Figma 2026-10-23** (file "Trinity Healing", team JW). Feedback from Rowin and Brigitte, the new illustration style and the order of work are in §15. The site follows once a section is approved in Figma. **Werkwijze approved 2026-10-24** (full-card images, site green, paper texture); **Hero approved 2026-10-24** (two overflowing images, watercolour text wash); Over mij is next. |
+| **Homepage redesign** | **Moved to Figma 2026-10-23** (file "Trinity Healing", team JW). Feedback from Rowin and Brigitte, the new illustration style and the order of work are in §15. The site follows once a section is approved in Figma. **Werkwijze approved 2026-10-24** (full-card images, site green, paper texture); **Hero approved 2026-10-24** (two overflowing images, watercolour text wash). **Both built in code 2026-10-24, plus nav blur and the Frame 49 button — uncommitted, waiting for Jay's OK** (see "Built in code" in §15). Next: Jay's verdict on the Behandelingen images, then Over mij. |
 | **Subpage grid** | **Done 2026-09-09.** Every page's breadcrumb and `<h1>` now share a left edge with the footer; the reading measure moved to the children. `tests/integration/page-grid.spec.ts` holds it. |
 | **Page titles** | **Fixed 2026-09-09.** Eleven shipped the brand name twice (76–88 chars, of which Google shows ~60) because `Head.svelte` appended it to a title that already had it. All 20 are now 48–62 with the brand once, in one spelling. |
 
@@ -96,9 +96,50 @@ and one style reference so they match:
       - Not checked by eye after the image upload: tablet and both ultrawides.
       - **The only place for AI video (Wavespeed)** — decided 2026-10-24 so the rest of the
         page stays calm; ties in with the render-to-line transition below.
-- [ ] Behandelingen ×7
+      - **Idea, not decided (Jay, 2026-10-26): two videos instead of code lights.** His
+        reasoning: lights animated in code can't make the painted gold lines respond, so the
+        light would be baked into the video. Weighed against a layered-image approach
+        (code drives the timing, the images carry the light): see the reply that day.
+        1. **Intro, plays once:** everything paints itself in: the watercolour
+           background, the gold lines, the lighter paint at the top of the tree (that
+           is not foliage; the tree has no leaves). Its last frame **is** the
+           first frame of video 2.
+        2. **Loop:** the lights breathe, brighter then softer, and the gold lines'
+           vibrancy follows that naturally. Every so often a quick light streak runs down
+           the river. Last frame = first frame exactly, with no cut and no speed-up or
+           slow-down to force the match; the motion stays natural all the way through.
+        - Open: more motion (wind in the grass or tree, flowing water) or keep it to
+          the above? Jay is unsure.
+- [ ] **Behandelingen ×7 — round 1 generated 2026-10-24, waiting for Jay's verdict.**
+      Files in `Figma/Behandelingen-redesign/round1/` (overview: `beh-sheet.png`, script
+      `beh-gen.cjs`: Werkwijze card 1 as style reference, the current line drawing as
+      subject). Not on the site yet. Redo in round 2: Spinal Touch (too faint), BRTT
+      (figure small and squashed), the snail shell (visible edge on the glow). Run
+      `scripts/finalize2.cjs` on the chosen ones before they go in.
 - [ ] Contact ×2 — Rowin: an illustration on the right of each of the two green
       blocks that open a form
+
+### Built in code — 2026-10-24, uncommitted
+On branch `claude/proof-lotus-nav-scroll-261018`. **Ask Jay before committing/pushing.**
+- **Hero** (`Hero.svelte`): the two images with art direction by aspect ratio (portrait
+  below 1:1, landscape above), the text wash under the text, Brigitte's copy, image eager
+  + `fetchpriority=high`. Old `hero-illustration.svg` deleted.
+- **Werkwijze** (`Werkwijze.svelte`, `WerkwijzeCard.svelte`): full-card images, Figma
+  copy, heading + gold rule + sub, no CTA; staircase step now 387 (2/3 of the card). Old
+  card SVGs deleted.
+- **Nav** (`Nav.svelte`): still hides on scroll down. On the way back up it is glass:
+  `#fff` at 1% + `backdrop-filter: blur(25px)` (= Figma blur 50). Clear at the very top
+  of home; cream type while the hero is under it.
+- **Button** (`ButtonLink.svelte`): every link button with an arrow now has the Frame 49
+  shape: 44 px pill, DM Sans 16 px, 32 px cream disc with a gold arrow inside. Hover
+  inverts.
+- **Button colour** (`app.css` `--color-cta: #8d6346`): the lightest tan that keeps cream
+  text at AA (4.66:1). Figma's `#b68a6b` is only 2.69:1. All buttons use it.
+- Checks run: svelte-check clean, touched specs pass, a11y 0 violations, visual baselines
+  for home (desktop/mobile) and contact desktop updated. The full gate still has to run
+  once before the push.
+- Still to do: paper texture on the cream sections (approved, not built); text wash not
+  placed in the Figma frames.
 
 ### Copy from Brigitte
 - [ ] **Hero.** Title: "Stress, emoties en ingrijpende ervaringen kunnen je uit
@@ -155,10 +196,11 @@ after the static style is approved.
 
 ### Order
 1. ~~Werkwijze in Figma (copy + three cards; sets the style)~~ — approved 2026-10-24
-2. ~~Hero~~ — approved 2026-10-24
-3. Over mij (portrait once the question above is answered)
-4. Behandelingen and contact illustrations
-5. Render-to-line transition
+2. ~~Hero~~ — approved 2026-10-24, built in code (uncommitted)
+3. Behandelingen images: Jay's verdict on round 1, then round 2 and into the site
+4. Over mij (portrait once the question above is answered)
+5. Contact illustrations
+6. Render-to-line transition
 
 ---
 

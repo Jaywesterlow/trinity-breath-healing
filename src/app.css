@@ -24,6 +24,10 @@
 	   card bodies). Darkened along its own hue until it clears AA on both grounds
 	   it actually sits on: 4.98:1 on --color-bg-sand, 4.55:1 on --color-card-warm. */
 	--color-text-subtle: #656962; /* neutral stone gray — body text on light bg */
+	/* Every button's fill (the button rule below). The owner's Figma tan is #b68a6b, which
+	   gives cream text 2.7:1; this is that same hue taken down to the lightest step that
+	   clears AA with margin: 4.66:1 on cream (owner's choice, 2026-10-24). */
+	--color-cta: #8d6346;
 	--brand-border: #7c5e49; /* dark cream, darkened for WCAG AA — dividers, input borders, CTA chrome (was #b68a6b, 2.73:1; now 5.25:1 on --color-bg-sand) */
 	--color-accent-gold-soft: #c7a27a; /* Figma-sourced — Over mij mobile CTA/link accents on dark overlay */
 	/* Forest taken down 20% so it can carry *text* on gold-soft. Plain
@@ -687,7 +691,7 @@ h6 {
    naming them again. */
 .btn-host,
 .btn-pill {
-	--btn-fill: var(--brand-border);
+	--btn-fill: var(--color-cta);
 	--btn-ink: var(--color-bg-sand);
 }
 
