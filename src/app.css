@@ -156,12 +156,33 @@
 	--color-bg-sand-25: color-mix(in srgb, var(--color-bg-sand) 25%, transparent);
 	--color-fg-forest-92: color-mix(in srgb, var(--color-fg-forest) 92%, transparent);
 
-	/* Every green surface (cards, modals, footer) is painted with the Werkwijze cards'
-	   watercolour: the calm top of werkwijze-card1, 1200px, 3.4KB. Its average is the brand
-	   green within 3/255, so sand on it keeps the 4.5:1 the flat green had; the flat green
-	   stays underneath as the fallback while it loads. Use as `background: var(--paint-green)`. */
-	--paint-green: url('$lib/images/redesign/green-wash.webp') center / cover no-repeat
+	/* Every green surface (cards, modals, footer) is painted with the Werkwijze cards' watercolour,
+	   and no two neighbours share one (owner, 2026-10-28): ten variants, the calm tops of the
+	   three werkwijze-card images, plain, mirrored and flipped (1200px, ~3.5KB each). Each one's
+	   average is the brand green within 3/255, so sand on it keeps the 4.5:1 of the flat green,
+	   which stays underneath while the image loads. Pick one with paintGreen() ($lib/paint.ts);
+	   --paint-green is the default. */
+	--paint-green-1: url('$lib/images/redesign/green-wash-1.webp') center / cover no-repeat
 		var(--color-brand-green);
+	--paint-green-2: url('$lib/images/redesign/green-wash-2.webp') center / cover no-repeat
+		var(--color-brand-green);
+	--paint-green-3: url('$lib/images/redesign/green-wash-3.webp') center / cover no-repeat
+		var(--color-brand-green);
+	--paint-green-4: url('$lib/images/redesign/green-wash-4.webp') center / cover no-repeat
+		var(--color-brand-green);
+	--paint-green-5: url('$lib/images/redesign/green-wash-5.webp') center / cover no-repeat
+		var(--color-brand-green);
+	--paint-green-6: url('$lib/images/redesign/green-wash-6.webp') center / cover no-repeat
+		var(--color-brand-green);
+	--paint-green-7: url('$lib/images/redesign/green-wash-7.webp') center / cover no-repeat
+		var(--color-brand-green);
+	--paint-green-8: url('$lib/images/redesign/green-wash-8.webp') center / cover no-repeat
+		var(--color-brand-green);
+	--paint-green-9: url('$lib/images/redesign/green-wash-9.webp') center / cover no-repeat
+		var(--color-brand-green);
+	--paint-green-10: url('$lib/images/redesign/green-wash-10.webp') center / cover no-repeat
+		var(--color-brand-green);
+	--paint-green: var(--paint-green-1);
 
 	/* --- Spacing scale (base: 0.25rem / 4px) --- */
 	--space-1: 0.25rem;

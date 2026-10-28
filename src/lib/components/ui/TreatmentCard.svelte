@@ -66,6 +66,8 @@
 		 * of the accessibility tree and the tab order so each service is
 		 * announced and reachable exactly once. */
 		duplicate?: boolean;
+		/** Which watercolour green (paintGreen() in $lib/paint.ts); the modal uses the same. */
+		paint?: string;
 	}
 
 	let {
@@ -79,7 +81,8 @@
 		magnetic: isMagnetic = false,
 		dragging = false,
 		onCardClick,
-		duplicate = false
+		duplicate = false,
+		paint
 	}: Props = $props();
 </script>
 
@@ -98,6 +101,7 @@
 	onclick={onCardClick}
 	data-tooltip="Lees meer over {label}"
 	data-tooltip-icon="page"
+	style:--paint={paint}
 	use:magnetic={{ enabled: isMagnetic, dragging }}
 >
 	<div class="tcard__icon-wrap">
@@ -174,7 +178,7 @@
 		aspect-ratio: 282 / 459;
 		padding: var(--space-3); /* consistent on all 4 sides */
 		border-radius: var(--radius-lg);
-		background: var(--paint-green);
+		background: var(--paint, var(--paint-green));
 		color: var(--color-bg-sand);
 		text-decoration: none;
 		cursor: pointer;

@@ -5,6 +5,7 @@
 	import TreatmentCard from '$lib/components/ui/TreatmentCard.svelte';
 	import ServiceModal from '$lib/components/ui/ServiceModal.svelte';
 	import { SERVICE_ART } from '$lib/constants/service-art';
+	import { paintGreen } from '$lib/paint';
 	import BehandelingenNote from './BehandelingenNote.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 
@@ -36,8 +37,9 @@
 	// Seven real services, one card each (260810-mdl) — no "Meer diensten" nav
 	// card any more; a "more services" card inside a carousel that already
 	// shows every service was nonsense.
-	const SERVICE_ITEMS = BRAND.services.map((s) => ({
+	const SERVICE_ITEMS = BRAND.services.map((s, i) => ({
 		key: s.slug,
+		paint: paintGreen(i),
 		label: s.name,
 		icon: ICONS[s.slug] ?? null,
 		art: SERVICE_ART[s.slug] ?? null,
@@ -1397,8 +1399,9 @@
 	// One entry per SERVICE (not per slot/duplicate), in BRAND.services'
 	// own fixed order — this is what ServiceModal's Prev/Next index into,
 	// independent of where the fan has rotated any given copy to.
-	const MODAL_SERVICES = BRAND.services.map((s) => ({
+	const MODAL_SERVICES = BRAND.services.map((s, i) => ({
 		slug: s.slug,
+		paint: paintGreen(i),
 		name: s.name,
 		intro: s.intro,
 		helpsWith: s.helpsWith,
@@ -2084,6 +2087,7 @@
 						description={item.teaser}
 						magnetic={isVisibleSlot(positions[i]!)}
 						duplicate={item.duplicate}
+						paint={item.paint}
 						onCardClick={(e) => onCardClick(e, i)}
 						{dragging}
 					/>

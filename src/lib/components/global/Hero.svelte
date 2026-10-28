@@ -34,17 +34,65 @@
 	import linesLandscape from '$lib/images/redesign/hero-lines-landscape.webp?url';
 	import linesPortrait from '$lib/images/redesign/hero-lines-portrait.webp?url';
 
+	// From static/, at a fixed URL the CSS below shares: a ?url import gets re-encoded by the
+	// image plugin into a second file (.heif) that the CSS never loads.
+	const washAvif = '/images/hero-text-wash-1400.avif';
+
 	const PORTRAIT = '(max-aspect-ratio: 1/1)';
-	const drawLandscape = drawLandscapeSvg.replace('%LINES%', linesLandscape);
-	const drawPortrait = drawPortraitSvg.replace('%LINES%', linesPortrait);
+	const LANDSCAPE = '(min-aspect-ratio: 1001/1000)';
+	// Only the screen's own line layer is downloaded (2026-10-28): with the href in the HTML,
+	// the browser fetched both, 106KB of it for a drawing that stays display: none. The
+	// <link media> preloads below fetch the right one while the HTML parses, and the href is
+	// set on hydration, by then a cache hit. The strokes themselves still draw from CSS alone.
+	const drawLandscape = drawLandscapeSvg.replace('href="%LINES%"', 'data-lines="landscape"');
+	const drawPortrait = drawPortraitSvg.replace('href="%LINES%"', 'data-lines="portrait"');
+	const LINES = { landscape: linesLandscape, portrait: linesPortrait };
+
+	let frame: HTMLElement;
+	$effect(() => {
+		const mq = matchMedia(PORTRAIT);
+		const attach = () => {
+			const which = mq.matches ? 'portrait' : 'landscape';
+			frame.querySelector(`image[data-lines="${which}"]`)?.setAttribute('href', LINES[which]);
+		};
+		attach();
+		mq.addEventListener('change', attach);
+		return () => mq.removeEventListener('change', attach);
+	});
 </script>
+
+<svelte:head>
+	<link rel="preload" as="image" href={linesLandscape} media={LANDSCAPE} />
+	<link rel="preload" as="image" href={linesPortrait} media={PORTRAIT} />
+	<!-- The LCP element (Lighthouse, 2026-10-28) is the painting on a phone and the text wash
+	     on a wide screen. Both sit late (the painting after the inlined drawings, the wash in
+	     CSS), so each is preloaded, high priority, only on the screens where it is the LCP.
+	     The wash is 16KB as AVIF (max 3/255 from the 177KB original). -->
+	<link
+		rel="preload"
+		as="image"
+		type="image/avif"
+		imagesrcset={portrait.sources.avif}
+		imagesizes="max(100vw, 58vh)"
+		media={PORTRAIT}
+		fetchpriority="high"
+	/>
+	<link
+		rel="preload"
+		as="image"
+		href={washAvif}
+		type="image/avif"
+		media={LANDSCAPE}
+		fetchpriority="high"
+	/>
+</svelte:head>
 
 <section class="hero">
 	<!-- The stage holds the picture. On portrait screens it takes whatever height the text
 	     leaves, and the picture hangs from its top; when the text needs more room, the picture
 	     slides up and loses sky, never river (see the portrait block). -->
 	<div class="hero__stage">
-		<div class="hero__frame">
+		<div class="hero__frame" bind:this={frame}>
 			<!-- eslint-disable-next-line svelte/no-at-html-tags -- build-time asset, not user input -->
 			{@html drawLandscape}
 			<!-- eslint-disable-next-line svelte/no-at-html-tags -- build-time asset, not user input -->
@@ -336,6 +384,10 @@
 		top: 50%;
 		aspect-ratio: 2400 / 1792;
 		background: url('../../images/redesign/hero-text-wash-1400.webp') center / 100% 100% no-repeat;
+		background-image: image-set(
+			url('/images/hero-text-wash-1400.avif') type('image/avif'),
+			url('../../images/redesign/hero-text-wash-1400.webp') type('image/webp')
+		);
 		pointer-events: none;
 	}
 

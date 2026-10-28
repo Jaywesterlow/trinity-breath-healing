@@ -176,7 +176,7 @@
 	.footer {
 		position: relative;
 		overflow: hidden; /* the lotus is cut by the footer's bottom edge */
-		background: var(--paint-green);
+		background: var(--paint-green-10); /* its own; the cards use 1-9 ($lib/paint.ts) */
 		color: var(--color-bg-sand);
 		/* First stage of the link underline on green: the nav's grey would vanish here. */
 		--link-underline-idle: color-mix(in srgb, var(--color-bg-sand) 50%, var(--color-brand-green));

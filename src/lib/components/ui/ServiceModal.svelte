@@ -46,6 +46,8 @@
 		icon: string | null;
 		art?: ServiceArt;
 		number?: number;
+		/** The service card's watercolour green, so the card grows into the same paint. */
+		paint?: string;
 	}
 
 	interface Props {
@@ -118,6 +120,7 @@
 
 <dialog
 	class="service-modal"
+	style:--paint={services[activeIndex]?.paint}
 	bind:this={dialogRef}
 	aria-labelledby={`service-modal-title-${services[activeIndex]?.slug ?? ''}`}
 	oncancel={onCancel}
@@ -294,7 +297,7 @@
 		   height only, so "the dialog appears matched exactly to the card's
 		   rect, same background, same border radius" holds automatically at
 		   every frame, not just the first one. */
-		background: var(--paint-green);
+		background: var(--paint, var(--paint-green));
 		color: var(--color-bg-sand);
 		border-radius: var(--radius-lg);
 		overflow: hidden;

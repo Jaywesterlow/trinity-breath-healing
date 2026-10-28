@@ -2,6 +2,7 @@
 	import ContactForm from '$lib/components/ui/contact/ContactForm.svelte';
 	import DatePlanner from '$lib/components/ui/contact/DatePlanner.svelte';
 	import SocialIcon from '$lib/components/ui/SocialIcon.svelte';
+	import { paintGreen } from '$lib/paint';
 	/* Instagram, WhatsApp, e-mail — the same list the footer renders, built once
 	   in constants/socials.ts. */
 	import { SOCIAL_LINKS } from '$lib/constants/socials';
@@ -107,6 +108,7 @@
 				<button
 					type="button"
 					class="route"
+					style:--paint={paintGreen(7)}
 					use:magnetic={{
 						enabled: over === null || over === 'meeting',
 						dragging: false,
@@ -132,6 +134,7 @@
 				<button
 					type="button"
 					class="route"
+					style:--paint={paintGreen(8)}
 					use:magnetic={{
 						enabled: over === null || over === 'form',
 						dragging: false,
@@ -364,7 +367,7 @@
 		padding: var(--space-6);
 		border: none;
 		border-radius: 1.125rem; /* 18px */
-		background: var(--paint-green);
+		background: var(--paint, var(--paint-green)); /* one per card: paintGreen() */
 		color: var(--color-bg-sand);
 		cursor: pointer;
 		/* The carousel's magnet, composed the same way TreatmentCard composes it:
