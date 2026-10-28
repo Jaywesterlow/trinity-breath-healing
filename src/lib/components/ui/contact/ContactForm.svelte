@@ -487,8 +487,10 @@
 		   the palette works here, forest on gold-soft is 3.98:1 and on the brighter
 		   gold 4.34:1, both under the 4.5:1 this label needs. --brand-border carries
 		   sand at 5.25:1, which is why the rule is built on it. */
-		font-family: var(--font-display);
-		font-size: var(--font-size-xl); /* 20px */
+		font-family: var(
+			--font-body
+		); /* every button label: DM Sans 16, as the arrow buttons (owner, 2026-10-28) */
+		font-size: 1rem;
 		font-weight: 400;
 		line-height: 1;
 		cursor: pointer;

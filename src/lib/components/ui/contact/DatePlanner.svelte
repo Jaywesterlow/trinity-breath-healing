@@ -1394,8 +1394,10 @@
 		height: var(--space-10);
 		padding: 0 1.875rem; /* 30px */
 		border-radius: var(--radius-full);
-		font-family: var(--font-display);
-		font-size: var(--font-size-xl); /* 20px */
+		font-family: var(
+			--font-body
+		); /* every button label: DM Sans 16, as the arrow buttons (owner, 2026-10-28) */
+		font-size: 1rem;
 		font-weight: 400;
 		line-height: 1;
 		cursor: pointer;

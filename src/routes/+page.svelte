@@ -13,12 +13,16 @@
 </script>
 
 <Hero />
-<Proof />
-<Werkwijze />
-<OverMij />
-<Behandelingen />
-<Contact />
-<Faq />
+<!-- The hero stays put and the rest of the page scrolls up over it (owner, 2026-10-28):
+     the hero is sticky (Hero.svelte), this sheet sits above it on the sand ground. -->
+<div class="over-hero">
+	<Proof />
+	<Werkwijze />
+	<OverMij />
+	<Behandelingen />
+	<Contact />
+	<Faq />
+</div>
 
 <!--
 	SEO-09 / BLOCKER-3: Visible dateModified element.
@@ -29,3 +33,11 @@
 {#if data.meta.dateModified}
 	<time datetime={data.meta.dateModified} class="visually-hidden">{data.meta.dateModified}</time>
 {/if}
+
+<style>
+	.over-hero {
+		position: relative;
+		z-index: 1;
+		background: var(--color-bg-sand);
+	}
+</style>

@@ -278,8 +278,11 @@
 	   runs to the top of the screen and the nav sits on it, transparent at the top of the
 	   home page (Nav.svelte). The site green is the fallback while the image loads, and
 	   the colour the portrait image runs into. */
+	/* Sticky: the hero holds still and the page (.over-hero in +page.svelte) scrolls up over
+	   it (owner, 2026-10-28). It is never taller than the screen it pins to. */
 	.hero {
-		position: relative;
+		position: sticky;
+		top: 0;
 		isolation: isolate;
 		margin-top: calc(-1 * var(--nav-height));
 		min-height: 100svh;

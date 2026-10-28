@@ -132,8 +132,10 @@
 		height: var(--space-10);
 		padding: 0 var(--space-6);
 		border-radius: var(--radius-full);
-		font-family: var(--font-display);
-		font-size: var(--btn-label-size, var(--font-size-xl)); /* overridable per context */
+		font-family: var(
+			--font-body
+		); /* every button label: DM Sans 16, as the arrow buttons (owner, 2026-10-28) */
+		font-size: 1rem;
 		font-weight: 400;
 		line-height: 1;
 		/* Fill, edge, ink and the hover swap are .btn-pill's — see app.css. */
@@ -152,10 +154,10 @@
 
 	/* Straight down, against the label's roll upward. Positioning, clipping and
 	   the swap itself come from .arrow-swap in app.css. */
-	/* A cream disc with a gold arrow inside the pill, per Frame 49. On hover and focus the
-	   pill inverts (the button rule: sand fill, tan label), and the disc goes the other way,
-	   tan with a sand arrow, so it never vanishes into the pill. The arrow's gold (#c7a27a)
-	   is decorative: the label already says where the link goes. */
+	/* A cream disc inside the pill, its arrow the pill's own brown (owner, 2026-10-28; Frame
+	   49 had gold). On hover and focus the pill inverts (the button rule: sand fill, brown
+	   label), and the disc goes the other way, brown with a sand arrow, so it never vanishes
+	   into the pill. */
 	.btn-link__circle {
 		--swap-x: 0px;
 		--swap-y: var(--arrow-roll);
@@ -163,7 +165,7 @@
 		height: 2rem;
 		border-radius: 50%;
 		background: var(--btn-ink);
-		color: var(--color-accent-gold-soft);
+		color: var(--btn-fill);
 		flex-shrink: 0;
 		transition:
 			background-color var(--motion-arrow) var(--ease-arrow),
@@ -190,13 +192,13 @@
 
 	.btn-pill--secondary.btn-link:focus-visible .btn-link__circle {
 		background: var(--btn-ink);
-		color: var(--color-accent-gold-soft);
+		color: var(--btn-fill);
 	}
 
 	@media (hover: hover) and (pointer: fine) {
 		.btn-pill--secondary.btn-link:hover .btn-link__circle {
 			background: var(--btn-ink);
-			color: var(--color-accent-gold-soft);
+			color: var(--btn-fill);
 		}
 	}
 

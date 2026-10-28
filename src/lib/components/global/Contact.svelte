@@ -274,7 +274,7 @@
 
 	.contact__eyebrow {
 		font-family: var(--font-body);
-		font-size: 1rem; /* 16px */
+		font-size: var(--font-size-xl); /* the other sections' eyebrow (owner, 2026-10-28: one scale) */
 		font-weight: var(--font-weight-light);
 		line-height: 1.3125;
 		color: var(--brand-muted);
@@ -283,7 +283,7 @@
 
 	.contact__heading {
 		font-family: var(--font-display);
-		font-size: 1.75rem; /* 28px, was 32 */
+		font-size: var(--fs-h2); /* the other sections' H2 (owner, 2026-10-28: one scale) */
 		font-weight: var(--font-weight-medium);
 		line-height: 1.21875;
 		color: var(--color-fg-forest);
@@ -364,7 +364,7 @@
 		padding: var(--space-6);
 		border: none;
 		border-radius: 1.125rem; /* 18px */
-		background: var(--color-brand-green);
+		background: var(--paint-green);
 		color: var(--color-bg-sand);
 		cursor: pointer;
 		/* The carousel's magnet, composed the same way TreatmentCard composes it:
@@ -404,8 +404,10 @@
 		margin-top: var(--space-2);
 		padding: 0 var(--space-6);
 		border-radius: var(--radius-full);
-		font-family: var(--font-display);
-		font-size: var(--font-size-xl); /* 20px */
+		font-family: var(
+			--font-body
+		); /* every button label: DM Sans 16, as the arrow buttons (owner, 2026-10-28) */
+		font-size: 1rem;
 		line-height: 1;
 		white-space: nowrap;
 		/* Fill, edge, ink and the hover swap are .btn-pill's — see app.css. */
@@ -591,12 +593,10 @@
 		}
 
 		.contact__eyebrow {
-			font-size: 1.25rem; /* 20px */
 			line-height: 1.3;
 		}
 
 		.contact__heading {
-			font-size: 2.5rem; /* 40px, was 48 */
 			line-height: 1.2;
 		}
 

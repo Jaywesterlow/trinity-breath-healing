@@ -440,12 +440,30 @@
 			cancelAnimationFrame(raf);
 			raf = 0;
 		};
-		const io = new IntersectionObserver(([e]) => {
-			onScreen = !!e?.isIntersecting;
+		// The hero is sticky and the page scrolls over it, so "intersecting" stays true while
+		// it is buried. Hidden = the svg is out of view, or the sheet after the hero (the
+		// next sibling of .hero) has reached the top 1% of the screen.
+		let inView = true,
+			covered = false;
+		const update = () => {
+			onScreen = inView && !covered;
 			if (onScreen) start();
 			else stop();
+		};
+		const io = new IntersectionObserver(([e]) => {
+			inView = !!e?.isIntersecting;
+			update();
 		});
 		io.observe(svg);
+		const sheet = svg.closest('.hero')?.nextElementSibling;
+		const coverIo = new IntersectionObserver(
+			([e]) => {
+				covered = !!e?.isIntersecting;
+				update();
+			},
+			{ rootMargin: '0px 0px -99% 0px' }
+		);
+		if (sheet) coverIo.observe(sheet);
 		const onVisibility = () => (document.hidden ? stop() : start());
 		document.addEventListener('visibilitychange', onVisibility);
 		const goLive = window.setTimeout(
@@ -466,6 +484,7 @@
 		return () => {
 			stop();
 			io.disconnect();
+			coverIo.disconnect();
 			clearTimeout(timer);
 			clearTimeout(goLive);
 			anims.forEach((a) => a.cancel());

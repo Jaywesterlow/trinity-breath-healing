@@ -156,6 +156,13 @@
 	--color-bg-sand-25: color-mix(in srgb, var(--color-bg-sand) 25%, transparent);
 	--color-fg-forest-92: color-mix(in srgb, var(--color-fg-forest) 92%, transparent);
 
+	/* Every green surface (cards, modals, footer) is painted with the Werkwijze cards'
+	   watercolour: the calm top of werkwijze-card1, 1200px, 3.4KB. Its average is the brand
+	   green within 3/255, so sand on it keeps the 4.5:1 the flat green had; the flat green
+	   stays underneath as the fallback while it loads. Use as `background: var(--paint-green)`. */
+	--paint-green: url('$lib/images/redesign/green-wash.webp') center / cover no-repeat
+		var(--color-brand-green);
+
 	/* --- Spacing scale (base: 0.25rem / 4px) --- */
 	--space-1: 0.25rem;
 	--space-2: 0.5rem;
@@ -824,7 +831,6 @@ a.btn-link .btn-link__label {
 	padding: 0 1.25rem; /* 20px, was 24 */
 }
 
-a.btn-link .btn-link__circle {
-	width: 2.25rem;
-	height: 2.25rem;
-}
+/* The arrow circle is not sized here any more: it is Frame 49's 32px disc (ButtonLink),
+   6px from the pill's edge on all three sides. This rule made it 36px, 4px from the top
+   and bottom but 6px from the right (owner, 2026-10-28). */

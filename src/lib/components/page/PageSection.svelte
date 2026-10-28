@@ -49,10 +49,10 @@
 	.psec__eyebrow {
 		margin: 0 0 var(--space-2);
 		font-family: var(--font-body);
-		font-size: var(--fs-label);
-		font-weight: var(--font-weight-medium);
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
+		/* The home page's eyebrow (Faq, OverMij, Behandelingen): 18px light, sentence case
+		   (owner, 2026-10-28: subpages line up with the home page). Was 12px caps. */
+		font-size: var(--font-size-xl);
+		font-weight: var(--font-weight-light);
 		color: var(--brand-muted);
 	}
 

@@ -35,7 +35,11 @@
 		void scrollY;
 		const hero = onHome ? document.querySelector('.hero') : null;
 		const navBottom = hamburgerEl?.closest('.nav')?.getBoundingClientRect().height ?? 88;
-		heroUnderNav = !!hero && hero.getBoundingClientRect().bottom > navBottom;
+		// The hero is sticky and the page scrolls over it (+page.svelte), so its own bottom
+		// never moves: what ends "over the hero" is the covering content reaching the bar.
+		const edge = (hero?.nextElementSibling ?? hero)?.getBoundingClientRect();
+		heroUnderNav =
+			!!hero && !!edge && (hero.nextElementSibling ? edge.top : edge.bottom) > navBottom;
 	});
 	const overHero = $derived(onHome && heroUnderNav && !menuOpen);
 	const clear = $derived(onHome && scrollY < 8 && !menuOpen);

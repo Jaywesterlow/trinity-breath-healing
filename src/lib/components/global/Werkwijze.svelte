@@ -242,7 +242,7 @@
 
 <section class="werkwijze" id="werkwijze" class:werkwijze--stairs={stairs} bind:this={sectionEl}>
 	<div class="werkwijze__inner">
-		<!-- One reveal for the header block: heading, rule and line arrive and leave as one
+		<!-- One reveal for the header block: heading and line arrive and leave as one
 		     thought. -->
 		<header class="werkwijze__header" use:reveal bind:this={headerEl}>
 			<h2 class="werkwijze__heading">Wat kun je verwachten?</h2>
@@ -304,20 +304,15 @@
 		font-size: var(--fs-h2);
 		font-weight: var(--font-weight-medium);
 		line-height: var(--line-height-tight);
-		color: #5d674d; /* Figma heading colour; 5.2:1 on the sand */
+		color: var(
+			--color-fg-forest
+		); /* every section H2 is forest (owner, 2026-10-28; Figma had #5d674d) */
 		text-wrap: balance;
 	}
 
-	.werkwijze__heading::after {
-		content: '';
-		display: block;
-		width: 4.5rem; /* 72px */
-		height: 2px;
-		margin: var(--space-4) auto;
-		background: #bb964d; /* Figma gold rule; decorative */
-	}
-
+	/* Figma's gold rule between heading and line removed (owner, 2026-10-28). */
 	.werkwijze__sub {
+		margin-top: var(--space-3);
 		font-family: var(--font-display);
 		font-size: var(--font-size-xl);
 		color: var(--brand-muted);

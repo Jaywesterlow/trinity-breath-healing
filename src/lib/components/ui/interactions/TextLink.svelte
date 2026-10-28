@@ -137,6 +137,19 @@
 		font-weight: 400;
 	}
 
+	/* The arrow scales with the 16px label, not the 24px one (owner, 2026-10-28: it
+	   looked oversized next to the FAQ's line). */
+	.text-link--sm .text-link__arrows,
+	.text-link--sm .text-link__arrow {
+		width: 1rem;
+		height: 1rem;
+	}
+
+	.text-link--sm .text-link__arrows {
+		--swap-x: calc(var(--arrow-travel) * 0.7);
+		--swap-y: calc(var(--arrow-travel) * 0.7);
+	}
+
 	.text-link--muted {
 		color: var(--brand-muted);
 	}
