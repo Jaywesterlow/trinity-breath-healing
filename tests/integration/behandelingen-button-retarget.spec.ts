@@ -42,6 +42,10 @@ test('a second Next press mid-flight extends the same motion instead of stalling
 	page
 }) => {
 	await page.goto('/');
+	// The fan drifts by itself while on screen (2026-10-28); pressed before it is in
+	// view, the pause button keeps it on whole cards for these tests. A DOM click, so
+	// nothing scrolls.
+	await page.locator('.treatments__pause').evaluate((el: HTMLElement) => el.click());
 	await page.locator('.treatments__fan').scrollIntoViewIfNeeded();
 
 	// The item centred (--pos === 0) before anything moves. DOM order

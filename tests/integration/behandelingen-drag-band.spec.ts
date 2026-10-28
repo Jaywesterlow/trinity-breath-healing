@@ -39,6 +39,10 @@ test.describe('desktop', () => {
 
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/');
+		// The fan drifts by itself while on screen (2026-10-28); pressed before it is in
+		// view, the pause button keeps it on whole cards for these tests. A DOM click, so
+		// nothing scrolls.
+		await page.locator('.treatments__pause').evaluate((el: HTMLElement) => el.click());
 		await page.locator('.treatments__fan').scrollIntoViewIfNeeded();
 	});
 
@@ -201,6 +205,10 @@ test.describe('mobile', () => {
 
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/');
+		// The fan drifts by itself while on screen (2026-10-28); pressed before it is in
+		// view, the pause button keeps it on whole cards for these tests. A DOM click, so
+		// nothing scrolls.
+		await page.locator('.treatments__pause').evaluate((el: HTMLElement) => el.click());
 		await page.locator('.treatments__fan').scrollIntoViewIfNeeded();
 	});
 

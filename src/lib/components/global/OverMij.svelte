@@ -1,14 +1,37 @@
 <script lang="ts">
 	import ButtonLink from '$lib/components/ui/interactions/ButtonLink.svelte';
-	import DrawOn from '$lib/components/ui/DrawOn.svelte';
+	import DriftingLeaves from '$lib/components/ui/DriftingLeaves.svelte';
 	import { reveal } from '$lib/actions/reveal';
+	import { BRAND } from '$lib/constants/brand';
+	import { onMount } from 'svelte';
 
-	// Centerline trace of the portrait line art, inlined so its strokes can draw
-	// themselves when the section scrolls into view. Regenerate with the tracer in
-	// .planning/quick/20260713-hero-draw-on/trace/ if the artwork changes.
-	// The second portrait (about-portrait-2.svg) is no longer shown here; the file
-	// stays under $lib/images for the day it is wanted again.
-	import portrait from '$lib/images/about-portrait-1.svg?raw';
+	// Her photo since 2026-10-28, in place of the line-art portrait (about-portrait-1.svg,
+	// kept under $lib/images). The photo is real on purpose (trust, E-E-A-T); what ties it
+	// to the painted site is baked into the file: a ragged watercolour edge in its alpha,
+	// fading into the sand, and a slightly warmer grade. The gold line round it is drawn
+	// below. Source: "Warme portretfoto in de tuin.png", masked by the script in
+	// .planning/quick/261028-amc-about-motion-contact/.
+	import photo from '$lib/images/about-portrait-photo.webp?w=320;480;640;960;1122&enhanced';
+
+	// The gold line draws itself once the portrait is on screen. Armed from JS, so
+	// without JS (and for crawlers, and with reduced motion) it is simply there.
+	let ringEl: SVGSVGElement | undefined = $state();
+	onMount(() => {
+		const el = ringEl;
+		if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+		if (el.getBoundingClientRect().top < innerHeight) return; // already in view: leave it drawn
+		el.classList.add('about__ring--armed');
+		const io = new IntersectionObserver(
+			([entry]) => {
+				if (!entry?.isIntersecting) return;
+				el.classList.add('about__ring--drawn');
+				io.disconnect();
+			},
+			{ threshold: 0.35 }
+		);
+		io.observe(el);
+		return () => io.disconnect();
+	});
 
 	/* Shared with /over-mij, which shows the same introduction. One constant, so
 	   editing her words in one place cannot leave the other version behind. */
@@ -25,17 +48,39 @@
      ≥1100 rules); below that they simply stack in this order, everything centred on
      one axis (2026-09-17). -->
 <section class="about" id="over-mij">
+	<DriftingLeaves />
 	<div class="about__inner">
 		<header class="about__header" use:reveal>
 			<p class="about__eyebrow">Over mij</p>
 			<h2 class="about__heading">Vanuit eigen ervaring weet ik wat jij doormaakt.</h2>
 		</header>
 
-		<!-- No reveal: the portrait draws its own strokes on entry (DrawOn), which is
-		     an entrance of its own, and at 532px on desktop it is well over the third
-		     of the viewport the 2026-09-15 audit set as the ceiling for a fading box. -->
+		<!-- No reveal: the gold line draws itself on entry, which is an entrance of its
+		     own, and at ~590px on desktop the portrait is well over the third of the
+		     viewport the 2026-09-15 audit set as the ceiling for a fading box. -->
 		<div class="about__portrait">
-			<DrawOn svg={portrait} />
+			<enhanced:img
+				class="about__photo"
+				src={photo}
+				alt={`Portret van ${BRAND.practitionerFullName}`}
+				sizes="(min-width: 1100px) 34rem, 17.5rem"
+				loading="lazy"
+				decoding="async"
+			/>
+			<!-- A loose hand-drawn arc in the hero's gold, open at the top left like the
+			     circle in the Werkwijze cards. Same box as the photo (1122x1402). -->
+			<svg
+				class="about__ring"
+				viewBox="0 0 1122 1402"
+				preserveAspectRatio="none"
+				aria-hidden="true"
+				bind:this={ringEl}
+			>
+				<path
+					pathLength="1"
+					d="M728 50C744 62 795 94 827 118C859 142 891 167 920 197C948 227 976 261 998 299C1020 337 1037 381 1052 424C1067 468 1078 513 1089 559C1099 605 1110 653 1114 701C1118 749 1119 801 1112 849C1105 897 1089 945 1070 988C1052 1031 1026 1070 1002 1107C978 1144 952 1179 923 1210C895 1242 865 1273 832 1296C800 1319 763 1336 727 1348C691 1360 653 1363 616 1367C579 1371 543 1374 505 1373C468 1372 428 1373 391 1363C354 1353 315 1337 282 1313C248 1290 218 1256 190 1222C163 1188 139 1150 116 1110C94 1071 72 1030 56 986C40 942 28 869 22 846"
+				/>
+			</svg>
 		</div>
 
 		<!-- Body and button fade as one block, separate from the header above because on
@@ -77,10 +122,13 @@
 
 <style>
 	.about {
+		position: relative; /* the leaves layer fills the section */
 		background: var(--color-bg-sand);
 	}
 
 	.about__inner {
+		position: relative;
+		z-index: 1; /* above the leaves */
 		max-width: var(--container-max); /* same cap as nav/footer/hero/werkwijze */
 		margin: 0 auto;
 		padding: var(--section-pad) var(--space-6);
@@ -118,28 +166,45 @@
 	}
 
 	/* --- Portrait --- */
-	/* Drawn straight onto the sand: no card, no fill, no border, no shadow. The SVG
-	   paints one masked path with fill="#FFFBF5" baked in for the green card it used
-	   to sit on; the rule below inks it forest instead. */
+	/* The photo fades into the sand through its own alpha: no card, border or shadow. */
 	.about__portrait {
+		position: relative;
 		max-width: 17.5rem; /* ~280px on a phone; the grid column sets it on desktop */
 		margin: 0 auto var(--space-8);
 	}
 
-	/* DrawOn is display:contents, so the <svg> is the box. :global() because {@html}
-	   content carries no scoping class; it stays contained by the scoped parent. The
-	   width/height attributes give it the artwork's own ratio, so the baked-in
-	   preserveAspectRatio="slice" has nothing to crop. */
-	.about__portrait :global(svg.lt) {
+	.about__photo {
 		display: block;
 		width: 100%;
 		height: auto;
 	}
 
-	/* The painted path is the svg's one direct child; the mask strokes DrawOn animates
-	   live inside <defs> and are untouched by this. */
-	.about__portrait :global(svg.lt > path) {
-		fill: var(--color-fg-forest);
+	.about__ring {
+		position: absolute;
+		inset: -4% -5%; /* a little outside the photo, so the line rings it rather than cutting in */
+		width: 110%;
+		height: 108%;
+		overflow: visible;
+		pointer-events: none;
+	}
+
+	.about__ring path {
+		fill: none;
+		stroke: var(--color-accent-gold);
+		stroke-width: 1.5px;
+		vector-effect: non-scaling-stroke;
+		stroke-linecap: round;
+		opacity: 0.85;
+	}
+
+	:global(.about__ring--armed) path {
+		stroke-dasharray: 1;
+		stroke-dashoffset: 1;
+	}
+
+	:global(.about__ring--drawn) path {
+		stroke-dashoffset: 0;
+		transition: stroke-dashoffset 2.4s cubic-bezier(0.45, 0, 0.2, 1) 0.2s;
 	}
 
 	/* --- Body + button --- */

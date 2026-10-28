@@ -368,14 +368,24 @@
 		if (measured !== null) pxPerStep = measured;
 	}
 
-	// See SCROLL_PX_PER_STEP for the behaviour. Only feeds the 'scroll' phase: a
-	// drag, a coast or a button spring in progress keeps the fan.
+	// See SCROLL_PX_PER_STEP for the behaviour. Feeds the drift (see DRIFT_SCROLL)
+	// or, with the drift off, the 'scroll' phase: a drag, a coast or a button
+	// spring in progress keeps the fan.
 	function onScrollDrive(): void {
 		const y = window.scrollY;
 		const dy = y - scrollLastY;
 		scrollLastY = y;
 		if (!scrollInView || dy === 0 || Math.abs(dy) > SCROLL_MAX_DY) return;
 		if (dragging || document.hidden || prefersReducedMotion()) return;
+		if (IDLE_DRIFT_ENABLED) {
+			if (motionPhase === 'drift' && motionRafId !== null) {
+				scrollRemaining -= dy / SCROLL_PX_PER_STEP;
+			} else if (motionRafId === null && driftAllowed()) {
+				beginDrift();
+				scrollRemaining -= dy / SCROLL_PX_PER_STEP;
+			}
+			return;
+		}
 		const busy = inGesture && motionRafId !== null && motionPhase !== 'scroll';
 		if (busy) return;
 		if (motionRafId === null || motionPhase !== 'scroll') {
@@ -399,6 +409,11 @@
 				? new IntersectionObserver(
 						(entries) => {
 							for (const entry of entries) scrollInView = entry.isIntersecting;
+							// The drift runs only while the fan can be seen: it starts the
+							// moment the section comes on screen and stops when it leaves.
+							if (!IDLE_DRIFT_ENABLED) return;
+							if (scrollInView && motionRafId === null && driftAllowed()) beginDrift();
+							else if (!scrollInView && motionPhase === 'drift') cancelMotion();
 						},
 						{ threshold: 0 }
 					)
@@ -583,10 +598,69 @@
 	// i.e. drifting is indistinguishable from someone slowly, continuously
 	// pressing "Volgende."
 	const DRIFT_VELOCITY_PER_MS = -1 / (DRIFT_SECONDS_PER_STEP * 1000);
-	// Off since 2026-10-14 (PR #29, carried over 2026-10-18): the owner wants the
-	// fan tied to the page's scroll rather than running on its own. The drift
-	// machinery stays in place behind this flag.
-	const IDLE_DRIFT_ENABLED = false;
+	// Back on since 2026-10-28, now joined to the scroll (owner: "the cards have a
+	// slow scroll to the left. Whenever the user scrolls down, it accelerates more
+	// to the left, and whenever the user is scrolling up, it decelerates"). While
+	// the section is on screen the fan drifts at DRIFT_VELOCITY_PER_MS; scroll
+	// adds to that the same way the scroll drive below always did (one card per
+	// SCROLL_PX_PER_STEP, eased over SCROLL_TAU_MS), but the sum never runs
+	// backwards: scrolling up slows the drift down to a standstill, it does not
+	// reverse it. Library effect 42 (the speed-on-scroll marquee) was looked at
+	// and not used: it speeds up in both scroll directions and is a flat band,
+	// and this fan already had both halves.
+	//
+	// It holds while the pointer is over the cards (see cursorInBand), while
+	// anything in the carousel has keyboard focus, and for good once the pause
+	// button is pressed (WCAG 2.2.2: anything that moves by itself for more than
+	// five seconds needs a way to stop it). Reduced motion keeps it off.
+	const IDLE_DRIFT_ENABLED = true;
+	let driftPausedByUser = $state(false);
+	let focusInCarousel = false;
+
+	function driftAllowed(): boolean {
+		return (
+			IDLE_DRIFT_ENABLED &&
+			scrollInView &&
+			!driftPausedByUser &&
+			!cursorInBand &&
+			!focusInCarousel &&
+			!dragging &&
+			!modalAnimating &&
+			!document.hidden &&
+			!prefersReducedMotion()
+		);
+	}
+
+	// Stops the drift where it is (it rests there, as the scroll drive always did)
+	// without touching any other motion.
+	function holdDrift(): void {
+		if (motionPhase !== 'drift' || motionRafId === null) return;
+		cancelMotion();
+		inGesture = false;
+		velocity = 0;
+	}
+
+	function toggleDriftPause(): void {
+		driftPausedByUser = !driftPausedByUser;
+		if (driftPausedByUser) holdDrift();
+		else if (motionRafId === null && driftAllowed()) beginDrift();
+	}
+
+	// Keyboard focus only: a mouse click focuses its button too, and the pause
+	// button itself has to be able to restart the drift it sits next to.
+	function onCarouselFocusIn(e: FocusEvent): void {
+		const el = e.target as HTMLElement;
+		if (el.classList.contains('treatments__pause') || !el.matches(':focus-visible')) return;
+		focusInCarousel = true;
+		holdDrift();
+	}
+
+	function onCarouselFocusOut(e: FocusEvent): void {
+		const to = e.relatedTarget as Node | null;
+		if (to && (e.currentTarget as HTMLElement).contains(to)) return;
+		focusInCarousel = false;
+		scheduleIdleDrift();
+	}
 
 	// Scroll drive (2026-10-18). While the section is on screen the page's scroll
 	// turns the fan continuously: every SCROLL_PX_PER_STEP of scroll, down or up,
@@ -757,7 +831,7 @@
 		if (idleDriftTimer !== null) clearTimeout(idleDriftTimer);
 		idleDriftTimer = setTimeout(() => {
 			idleDriftTimer = null;
-			if (!prefersReducedMotion()) beginDrift();
+			if (motionRafId === null && driftAllowed()) beginDrift();
 		}, IDLE_DRIFT_DELAY_MS);
 	}
 
@@ -820,7 +894,16 @@
 		lastFrameTime = now;
 
 		if (motionPhase === 'drift') {
-			offset += DRIFT_VELOCITY_PER_MS * dt;
+			// The scroll's share eases in exactly as in the 'scroll' phase below; the
+			// sum is clamped at zero so scrolling up brakes the drift, never reverses it.
+			const fromScroll =
+				Math.abs(scrollRemaining) < SCROLL_DONE_EPSILON
+					? scrollRemaining
+					: scrollRemaining * (1 - Math.exp(-dt / SCROLL_TAU_MS));
+			scrollRemaining -= fromScroll;
+			const step = Math.min(0, DRIFT_VELOCITY_PER_MS * dt + fromScroll);
+			offset += step;
+			velocity = dt > 0 ? step / dt : 0;
 			absorbWholeSteps();
 			motionRafId = requestAnimationFrame(motionTick);
 			return;
@@ -1127,7 +1210,11 @@
 			hoverRafId = null;
 			if (!fanEl) return;
 			const band = getCardBandY(fanEl);
+			const wasInBand = cursorInBand;
 			cursorInBand = band !== null && pendingHoverY >= band.top && pendingHoverY <= band.bottom;
+			// The drift holds under the pointer, so a card can be read and clicked.
+			if (cursorInBand) holdDrift();
+			else if (wasInBand) scheduleIdleDrift();
 		});
 	}
 
@@ -1137,6 +1224,7 @@
 			hoverRafId = null;
 		}
 		cursorInBand = false;
+		scheduleIdleDrift();
 	}
 
 	function getCardBandY(fanEl: HTMLElement): { top: number; bottom: number } | null {
@@ -2056,7 +2144,11 @@
 		</h2>
 	</header>
 
-	<div class="treatments__carousel-wrap">
+	<div
+		class="treatments__carousel-wrap"
+		onfocusin={onCarouselFocusIn}
+		onfocusout={onCarouselFocusOut}
+	>
 		<div
 			class="treatments__fan"
 			class:treatments__fan--grabbable={cursorInBand}
@@ -2146,6 +2238,26 @@
 					</li>
 				{/each}
 			</ul>
+
+			<!-- Stops and restarts the drift (see IDLE_DRIFT_ENABLED). Sits after the dots,
+			     on every width: the arrows are desktop-only, the drift is not. -->
+			<button
+				type="button"
+				class="treatments__pause"
+				aria-pressed={driftPausedByUser}
+				aria-label={driftPausedByUser ? 'Beweging hervatten' : 'Beweging pauzeren'}
+				data-tooltip={driftPausedByUser ? 'Afspelen' : 'Pauzeren'}
+				onclick={toggleDriftPause}
+			>
+				<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
+					{#if driftPausedByUser}
+						<path d="M3 1.5v9l7.5-4.5z" fill="currentColor" />
+					{:else}
+						<rect x="2.5" y="1.5" width="2.25" height="9" rx="0.75" fill="currentColor" />
+						<rect x="7.25" y="1.5" width="2.25" height="9" rx="0.75" fill="currentColor" />
+					{/if}
+				</svg>
+			</button>
 
 			<button
 				type="button"
@@ -2541,6 +2653,36 @@
 	.treatments__dot {
 		display: grid;
 		place-items: center;
+	}
+
+	/* The pause toggle: a 24px target like the dots, its icon in the dots' forest
+	   ink, so it reads as part of the same row rather than a third arrow. */
+	.treatments__pause {
+		display: grid;
+		place-items: center;
+		width: 1.5rem;
+		height: 1.5rem;
+		margin-left: var(--space-1);
+		padding: 0;
+		border: none;
+		border-radius: var(--radius-full);
+		background: transparent;
+		color: var(--color-fg-forest);
+		opacity: 0.7;
+		cursor: pointer;
+		transition: opacity var(--motion-arrow) var(--ease-arrow);
+	}
+
+	.treatments__pause:focus-visible {
+		opacity: 1;
+		outline: 2px solid var(--brand-border);
+		outline-offset: 2px;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.treatments__pause:hover {
+			opacity: 1;
+		}
 	}
 
 	/* The button is the 24x24 the WCAG 2.2 target-size minimum asks for; the dot
