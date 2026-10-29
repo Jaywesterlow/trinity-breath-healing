@@ -48,7 +48,13 @@
 				<ul class="klacht__services">
 					{#each klacht.services as slug (slug)}
 						<li>
-							<a class="chip" href="/diensten/{slug}">{nameOf(slug)}</a>
+							<a
+								class="chip btn-pill btn-host text-roll roll-host"
+								href="/diensten/{slug}"
+								data-label={nameOf(slug)}
+							>
+								<span class="text-roll__face">{nameOf(slug)}</span>
+							</a>
 						</li>
 					{/each}
 				</ul>
@@ -120,44 +126,24 @@
 		gap: var(--space-2);
 	}
 
-	/* Small gold tags with a soft glow (owner, 2026-10-29). The ring and the glow are
-	   the hero's gold; the words stay sand, because gold text on this green is 2.4:1
-	   and sand is 4.6:1. 28px tall, over the 24px target minimum. */
+	/* Small tags in the site's button (2026-10-29, owner: brown "like the original
+	   call-to-action colors" with the buttons' hover, not gold, no glow): .btn-pill
+	   brings the brown fill and the swap, .text-roll the rolling label, both from
+	   app.css. Only the size is the tag's own. 28px tall, over the 24px target minimum. */
 	.chip {
 		display: inline-flex;
-		align-items: center;
+		align-items: stretch;
 		min-height: 1.75rem;
 		padding: 0 var(--space-3);
-		border: 1px solid color-mix(in srgb, var(--color-accent-gold) 85%, transparent);
 		border-radius: var(--radius-full);
-		background: color-mix(in srgb, var(--color-accent-gold) 10%, transparent);
-		box-shadow:
-			0 0 10px color-mix(in srgb, var(--color-accent-gold) 35%, transparent),
-			inset 0 0 6px color-mix(in srgb, var(--color-accent-gold) 20%, transparent);
 		font-family: var(--font-body);
 		font-size: 0.8125rem; /* 13px */
-		letter-spacing: 0.01em;
-		color: var(--color-bg-sand);
 		text-decoration: none;
-		transition:
-			background-color var(--motion-hover) var(--ease-hover),
-			box-shadow var(--motion-hover) var(--ease-hover),
-			color var(--motion-hover) var(--ease-hover);
-	}
-
-	@media (hover: hover) and (pointer: fine) {
-		.chip:hover {
-			background: var(--color-accent-gold);
-			box-shadow: 0 0 16px color-mix(in srgb, var(--color-accent-gold) 60%, transparent);
-			color: var(--color-fg-forest-deep);
-		}
 	}
 
 	.chip:focus-visible {
 		outline: 2px solid var(--color-bg-sand);
 		outline-offset: 2px;
-		background: var(--color-accent-gold);
-		color: var(--color-fg-forest-deep);
 	}
 
 	.klachten__alt {

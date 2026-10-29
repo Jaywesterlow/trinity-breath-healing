@@ -3,7 +3,6 @@
 	import SocialIcon from '$lib/components/ui/SocialIcon.svelte';
 	import FooterNavColumn from '$lib/components/ui/FooterNavColumn.svelte';
 	import TextLink from '$lib/components/ui/interactions/TextLink.svelte';
-	import { reveal } from '$lib/actions/reveal';
 	import { BRAND } from '$lib/constants/brand';
 	import type { Attachment } from 'svelte/attachments';
 	/* Instagram, WhatsApp, e-mail — the same row the hero renders, built once
@@ -98,13 +97,13 @@
 	     mark the way it begins with it in the nav. Ornament only. -->
 	<div class="footer__lotus" aria-hidden="true"></div>
 	<div class="footer__inner">
-		<!-- Three reveals in the whole footer, since the 2026-09-15 audit: the brand column,
-		     the nav columns as one, and the legal row (which reaches the reader through the
-		     last-screenful fallback in reveal.ts). The social icons are icons alone and do
-		     not fade by themselves. -->
+		<!-- No scroll reveals in the footer since 2026-10-29: the curtain (see .footer--curtain)
+		     is its entrance, and pinned to the bottom of the screen the legal row never rose
+		     past the reveal's trigger line, so it stayed invisible (owner: "I don't see
+		     anything under the line in the footer"). -->
 		<div class="footer__main">
 			<!-- Brand: logo + contact -->
-			<ul class="footer__brand" use:reveal>
+			<ul class="footer__brand">
 				<li><NavLogo inverted={true} footer={true} /></li>
 				<li>
 					<address class="footer__contact">
@@ -167,7 +166,7 @@
 			</nav>
 
 			<!-- Nav columns — order: 2 on desktop, after social on mobile -->
-			<nav class="footer__nav" aria-label="Footer navigatie" use:reveal>
+			<nav class="footer__nav" aria-label="Footer navigatie">
 				{#each NAV_COLUMNS as col (col.heading)}
 					<FooterNavColumn heading={col.heading} links={[...col.links]} />
 				{/each}
@@ -176,7 +175,7 @@
 
 		<hr class="footer__divider" />
 
-		<div class="footer__bottom" use:reveal>
+		<div class="footer__bottom">
 			<nav class="footer__legal" aria-label="Juridische links">
 				<a class="link-underline" href="/privacyverklaring">Privacyverklaring</a>
 				<a class="link-underline" href="/algemene-voorwaarden">Algemene voorwaarden</a>
