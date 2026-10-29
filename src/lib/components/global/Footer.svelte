@@ -5,6 +5,7 @@
 	import TextLink from '$lib/components/ui/interactions/TextLink.svelte';
 	import { reveal } from '$lib/actions/reveal';
 	import { BRAND } from '$lib/constants/brand';
+	import type { Attachment } from 'svelte/attachments';
 	/* Instagram, WhatsApp, e-mail — the same row the hero renders, built once
 	   in constants/socials.ts. Both used to assemble it separately, which is
 	   how they both came to link two accounts that never existed. */
@@ -74,9 +75,24 @@
 			]
 		}
 	] as const;
+
+	/* Turns the curtain on (see .footer--curtain) only while the whole footer fits
+	   on the screen, checked again whenever either changes size. Without JS the
+	   footer simply scrolls in, as it always did. */
+	const curtain: Attachment<HTMLElement> = (el) => {
+		const fit = () => el.classList.toggle('footer--curtain', el.offsetHeight <= window.innerHeight);
+		fit();
+		const ro = new ResizeObserver(fit);
+		ro.observe(el);
+		window.addEventListener('resize', fit, { passive: true });
+		return () => {
+			ro.disconnect();
+			window.removeEventListener('resize', fit);
+		};
+	};
 </script>
 
-<footer class="footer">
+<footer class="footer" {@attach curtain}>
 	<!-- The lotus from the logo, rising out of the foot of the page: drawn large and
 	     faint behind the footer, cut off by its bottom edge, so the site ends on the
 	     mark the way it begins with it in the nav. Ornament only. -->
@@ -173,6 +189,16 @@
 </footer>
 
 <style>
+	/* The hero's curtain, the other way round (owner, 2026-10-29): the footer holds
+	   still at the bottom of the screen and the page (.page-content, z-index 1, in
+	   +layout.svelte) slides up off it. Only when the whole footer fits on the screen:
+	   a footer taller than the screen would hold its top half hidden under the page. */
+	.footer:global(.footer--curtain) {
+		position: sticky;
+		bottom: 0;
+		z-index: 0;
+	}
+
 	.footer {
 		position: relative;
 		overflow: hidden; /* the lotus is cut by the footer's bottom edge */

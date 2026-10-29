@@ -19,6 +19,7 @@
 	import DrawOn from '$lib/components/ui/DrawOn.svelte';
 	import { PageShell, PageHead, PageSection, CtaBand, ServiceCard } from '$lib/components/page';
 	import { reveal } from '$lib/actions/reveal';
+	import { paintGreen } from '$lib/paint';
 	// The same portrait the landing page draws, see OverMij.svelte.
 	import portrait from '$lib/images/about-portrait-1.svg?raw';
 	import { BRAND } from '$lib/constants/brand';
@@ -34,7 +35,7 @@
 <Breadcrumbs items={data.crumbs} />
 
 <PageShell>
-	<PageHead lead={ABOUT_INTRO}>
+	<PageHead eyebrow="Over mij" lead={ABOUT_INTRO}>
 		Vanuit eigen ervaring weet ik wat jij doormaakt.
 		{#snippet visual()}
 			<div class="about-page__portrait">
@@ -43,7 +44,7 @@
 		{/snippet}
 	</PageHead>
 
-	<PageSection id="verhaal" title="Hoe ik hier terechtkwam">
+	<PageSection id="verhaal" eyebrow="Mijn verhaal" title="Hoe ik hier terechtkwam">
 		<p class="about-page__body" use:reveal>
 			<Todo>
 				Haar verhaal: wat er gebeurde waardoor ze zelf vastliep, en wat haar op dit werk bracht.
@@ -52,7 +53,7 @@
 		</p>
 	</PageSection>
 
-	<PageSection id="werk" title="Hoe ik werk">
+	<PageSection id="werk" eyebrow="In de sessie" title="Hoe ik werk">
 		<p class="about-page__body" use:reveal>
 			Er is tijdens een sessie geen moeten en geen tempo dat gehaald moet worden. Jouw lichaam
 			bepaalt wat er die dag mogelijk is, en ik volg dat in plaats van er iets doorheen te duwen.
@@ -65,7 +66,7 @@
 		</p>
 	</PageSection>
 
-	<PageSection id="opleiding" title="Opleiding en achtergrond">
+	<PageSection id="opleiding" eyebrow="Achtergrond" title="Opleiding en achtergrond">
 		<p class="about-page__body" use:reveal>
 			Sinds 2024 volg ik onafgebroken opleidingen en verdiepingen. Niet één cursus en klaar — elk
 			jaar komt er werk bij, een deel herhaal ik bewust, en sommige trajecten lopen nog. Het Soul
@@ -104,16 +105,17 @@
 		</p>
 	</PageSection>
 
-	<PageSection id="doe" title="Wat ik doe" wide>
+	<PageSection id="doe" eyebrow="Behandelingen" title="Wat ik doe" wide>
 		<p class="about-page__body about-page__body--intro" use:reveal>
 			In de praktijk werk ik met {BRAND.services.length} vormen van ademwerk, lichaamswerk en energetisch
 			werk. Welke vorm het beste past, hangt af van wat er bij jou speelt — dat kijken we samen tijdens
 			de kennismaking.
 		</p>
 		<ul class="about-page__services">
-			{#each BRAND.services as service (service.slug)}
+			{#each BRAND.services as service, i (service.slug)}
 				<li use:reveal>
 					<ServiceCard
+						paint={paintGreen(i)}
 						href="/diensten/{service.slug}"
 						name={service.name}
 						teaser={service.teaser}
@@ -123,7 +125,7 @@
 		</ul>
 	</PageSection>
 
-	<PageSection id="waar" title="Waar ik werk">
+	<PageSection id="waar" eyebrow="Praktijk" title="Waar ik werk">
 		<p class="about-page__body" use:reveal>
 			{BRAND.practice.locationNote}
 			{BRAND.practice.homeVisitNote}
@@ -131,7 +133,7 @@
 		</p>
 	</PageSection>
 
-	<PageSection id="belangrijk" title="Belangrijk om te weten">
+	<PageSection id="belangrijk" eyebrow="Goed om te weten" title="Belangrijk om te weten">
 		<div class="about-page__note" use:reveal>
 			<p>{BRAND.disclaimer}</p>
 			<p>

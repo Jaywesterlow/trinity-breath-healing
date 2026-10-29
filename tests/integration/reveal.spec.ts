@@ -38,7 +38,9 @@ test.describe('reveal: prerendered HTML (no JS)', () => {
 		// The reveal action is a Svelte action — it never runs on the server, so nothing in the
 		// prerendered output should carry the hidden starting state. A stray `opacity: 0` here
 		// would mean below-the-fold content is invisible to any crawler that doesn't run JS.
-		expect(html).not.toMatch(/opacity:\s*0[^.]/);
+		// Inline style attributes only: since the CSS is inlined into the page (ed8492e) the
+		// stylesheet's own keyframes ("0%{opacity:0}") are in this file too, legitimately.
+		expect(html).not.toMatch(/style="[^"]*opacity:\s*0[^.]/);
 	});
 });
 

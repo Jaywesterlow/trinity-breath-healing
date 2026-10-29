@@ -158,6 +158,12 @@ async function settle(page: Page, route: string): Promise<void> {
 	await page.waitForTimeout(150);
 	await page.evaluate(() => window.scrollTo(0, 0));
 	await page.waitForTimeout(150);
+	// The footer's curtain (position: sticky, under the page) is pinned to the viewport,
+	// which a full-page capture does not move: it would shoot the footer hidden behind the
+	// page and leave its own place blank. Off for the capture; the footer then sits where
+	// it ends up anyway at the bottom of the scroll. A style, not removing the class: the
+	// footer re-checks on resize, and the full-page capture resizes.
+	await page.addStyleTag({ content: 'footer.footer { position: relative !important; }' });
 }
 
 test.use({ deviceScaleFactor: 1 });

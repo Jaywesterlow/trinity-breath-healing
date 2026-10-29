@@ -38,8 +38,8 @@
 	};
 	/** When the lights come in, from navigation start (ms): paint wash at 1.82s + 0.2s. */
 	const LIGHTS_AT = 2020;
-	/** Judge the device once the intro is over (text in from 4.1s), not during it. */
-	const PROBE_AT = 5600;
+	/** Judge the device once the intro is over (text in from 2.9s, settled by ~4.3s), not during it. */
+	const PROBE_AT = 4400;
 
 	type Range = [number, number];
 	type Scene = {

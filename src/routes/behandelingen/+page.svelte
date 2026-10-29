@@ -17,6 +17,7 @@
 	import { BRAND } from '$lib/constants/brand';
 	import { KLACHTEN } from '$lib/content/klachten';
 	import { reveal } from '$lib/actions/reveal';
+	import { paintGreen } from '$lib/paint';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -28,17 +29,20 @@
 
 <PageShell>
 	<PageHead
-		lead="De meeste mensen komen niet binnen met de naam van een behandeling, maar met een klacht. Hieronder staat waar mensen mee komen en welke behandelingen daarbij horen. Je hoeft zelf niet te kiezen."
+		eyebrow="Behandelingen"
+		lead="Je komt meestal niet met de naam van een behandeling, maar met een klacht. Zoek wat herkenbaar is; kiezen hoeft niet."
 	>
 		Waar kom je mee?
 	</PageHead>
 
-	<!-- Seven complaints as a grid of blocks, two across on a laptop and three on
-	     a wide screen; each keeps its own reveal and its anchor id, which other
-	     pages link to. -->
+	<!-- Seven complaints as green watercolour cards (2026-10-29, owner: the cards get
+	     the home page's painted green, the treatments become small gold tags), two
+	     across on a tablet and three on a laptop; each keeps its anchor id, which other
+	     pages link to. No reveal: a card is a third of the screen or more, over the
+	     limit for a fading block (reveal-audit.spec.ts). -->
 	<ul class="klachten">
-		{#each KLACHTEN as klacht (klacht.id)}
-			<li class="klacht" id={klacht.id} use:reveal>
+		{#each KLACHTEN as klacht, i (klacht.id)}
+			<li class="klacht" id={klacht.id} style:--paint={paintGreen(i + 2)}>
 				<h2 class="klacht__title">{klacht.title}</h2>
 				<p class="klacht__body">{klacht.body}</p>
 				<ul class="klacht__services">
@@ -53,7 +57,7 @@
 	</ul>
 
 	<p class="klachten__alt" use:reveal>
-		Liever eerst lezen wat elke behandeling precies is?
+		Liever per behandeling lezen?
 		<a class="link-underline" href="/diensten">Bekijk alle diensten op naam</a>.
 	</p>
 
@@ -74,14 +78,16 @@
 		padding: 0;
 		display: grid;
 		grid-template-columns: 1fr;
-		gap: var(--space-8) var(--space-10);
+		gap: var(--space-5);
 	}
 
 	.klacht {
 		display: flex;
 		flex-direction: column;
-		padding-top: var(--space-5);
-		border-top: 1px solid color-mix(in srgb, var(--brand-border) 28%, transparent);
+		padding: var(--space-8) var(--space-6) var(--space-6);
+		border-radius: 1.125rem; /* the home page's green cards */
+		background: var(--paint, var(--paint-green));
+		color: var(--color-bg-sand);
 		scroll-margin-top: calc(var(--nav-height) + var(--space-6));
 	}
 
@@ -91,7 +97,7 @@
 		font-size: var(--fs-h3);
 		font-weight: var(--font-weight-medium);
 		line-height: var(--line-height-tight);
-		color: var(--color-fg-forest);
+		color: var(--color-bg-sand);
 		text-wrap: balance;
 	}
 
@@ -101,57 +107,67 @@
 		font-family: var(--font-body);
 		font-size: var(--fs-body);
 		font-weight: var(--font-weight-light);
-		line-height: var(--line-height-loose);
-		color: var(--color-text-subtle);
+		line-height: var(--line-height-normal);
+		color: var(--color-bg-sand);
 	}
 
 	.klacht__services {
 		list-style: none;
-		margin: var(--space-5) 0 0;
+		margin: var(--space-6) 0 0;
 		padding: 0;
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--space-2);
 	}
 
+	/* Small gold tags with a soft glow (owner, 2026-10-29). The ring and the glow are
+	   the hero's gold; the words stay sand, because gold text on this green is 2.4:1
+	   and sand is 4.6:1. 28px tall, over the 24px target minimum. */
 	.chip {
 		display: inline-flex;
 		align-items: center;
-		min-height: 2.25rem; /* 36px — comfortably over the 24px target minimum */
-		padding: 0 var(--space-4);
-		border: 1px solid color-mix(in srgb, var(--brand-border) 40%, transparent);
+		min-height: 1.75rem;
+		padding: 0 var(--space-3);
+		border: 1px solid color-mix(in srgb, var(--color-accent-gold) 85%, transparent);
 		border-radius: var(--radius-full);
+		background: color-mix(in srgb, var(--color-accent-gold) 10%, transparent);
+		box-shadow:
+			0 0 10px color-mix(in srgb, var(--color-accent-gold) 35%, transparent),
+			inset 0 0 6px color-mix(in srgb, var(--color-accent-gold) 20%, transparent);
 		font-family: var(--font-body);
-		font-size: var(--fs-body-sm);
-		color: var(--brand-border);
+		font-size: 0.8125rem; /* 13px */
+		letter-spacing: 0.01em;
+		color: var(--color-bg-sand);
 		text-decoration: none;
 		transition:
 			background-color var(--motion-hover) var(--ease-hover),
-			border-color var(--motion-hover) var(--ease-hover),
+			box-shadow var(--motion-hover) var(--ease-hover),
 			color var(--motion-hover) var(--ease-hover);
 	}
 
 	@media (hover: hover) and (pointer: fine) {
 		.chip:hover {
-			background: var(--brand-border);
-			border-color: var(--brand-border);
-			color: var(--color-bg-sand);
+			background: var(--color-accent-gold);
+			box-shadow: 0 0 16px color-mix(in srgb, var(--color-accent-gold) 60%, transparent);
+			color: var(--color-fg-forest-deep);
 		}
 	}
 
 	.chip:focus-visible {
-		background: var(--brand-border);
-		border-color: var(--brand-border);
-		color: var(--color-bg-sand);
+		outline: 2px solid var(--color-bg-sand);
+		outline-offset: 2px;
+		background: var(--color-accent-gold);
+		color: var(--color-fg-forest-deep);
 	}
 
 	.klachten__alt {
-		margin: var(--block-gap) 0 var(--space-8);
+		margin: var(--block-gap) auto var(--space-8);
 		max-width: 60ch;
 		font-family: var(--font-body);
 		font-size: var(--fs-body);
 		line-height: var(--line-height-loose);
 		color: var(--color-text-subtle);
+		text-align: center;
 	}
 
 	@media (min-width: 700px) {
@@ -160,9 +176,14 @@
 		}
 	}
 
-	@media (min-width: 1536px) {
+	@media (min-width: 1100px) {
 		.klachten {
 			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+
+		/* A card alone on the last row sits in the middle, not under the first. */
+		.klacht:last-child:nth-child(3n + 1) {
+			grid-column: 2;
 		}
 	}
 </style>

@@ -91,7 +91,12 @@
 <CursorTooltip />
 
 <style>
+	/* Above the footer, with the sand of its own, so it slides up off the footer the
+	   way the home page slides over the hero (owner, 2026-10-29). See .footer. */
 	.page-content {
+		position: relative;
+		z-index: 1;
 		padding-top: var(--nav-height);
+		background: var(--color-bg-sand);
 	}
 </style>

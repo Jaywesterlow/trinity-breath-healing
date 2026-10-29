@@ -16,6 +16,7 @@
 	import { PageShell, PageHead, CtaBand, ServiceCard } from '$lib/components/page';
 	import { BRAND } from '$lib/constants/brand';
 	import { reveal } from '$lib/actions/reveal';
+	import { paintGreen } from '$lib/paint';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -25,16 +26,22 @@
 
 <PageShell>
 	<PageHead
-		lead="Zeven behandelingen, elk met een eigen ingang. De ene werkt via de adem, de andere via aanraking of energie. Welke bij jou past hoeft je niet zelf uit te zoeken."
+		eyebrow="Diensten"
+		lead="Zeven behandelingen: via de adem, via aanraking of via energie. Welke bij jou past, zoeken we samen uit."
 	>
 		Alle behandelingen
 	</PageHead>
 
 	<!-- Each card keeps its own reveal: the grid is taller than a third of any screen. -->
 	<ul class="index__grid">
-		{#each BRAND.services as service (service.slug)}
+		{#each BRAND.services as service, i (service.slug)}
 			<li use:reveal>
-				<ServiceCard href="/diensten/{service.slug}" name={service.name} teaser={service.teaser} />
+				<ServiceCard
+					href="/diensten/{service.slug}"
+					name={service.name}
+					teaser={service.teaser}
+					paint={paintGreen(i)}
+				/>
 			</li>
 		{/each}
 	</ul>

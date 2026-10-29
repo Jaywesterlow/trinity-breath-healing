@@ -23,6 +23,7 @@
 	import { SERVICE_ART } from '$lib/constants/service-art';
 	import { BRAND } from '$lib/constants/brand';
 	import { reveal } from '$lib/actions/reveal';
+	import { paintGreen } from '$lib/paint';
 
 	let { slug, crumbs }: { slug: string; crumbs: { name: string; path: string }[] } = $props();
 
@@ -55,11 +56,11 @@
 		{/snippet}
 	</PageHead>
 
-	<PageSection id="wat" title="Wat het is">
+	<PageSection id="wat" eyebrow="In het kort" title="Wat het is">
 		<p class="service__body" use:reveal>{service.intro}</p>
 	</PageSection>
 
-	<PageSection id="helpt" title="Waar het bij kan helpen">
+	<PageSection id="helpt" eyebrow="Voor wie" title="Waar het bij kan helpen">
 		<ul class="service__list">
 			{#each service.helpsWith as item (item)}
 				<li class="service__item" use:reveal>
@@ -79,7 +80,7 @@
 		</ul>
 	</PageSection>
 
-	<PageSection id="sessie" title="Hoe een sessie verloopt">
+	<PageSection id="sessie" eyebrow="De sessie" title="Hoe een sessie verloopt">
 		<p class="service__body" use:reveal>
 			We beginnen met een gesprek over waar je op dit moment tegenaan loopt. Daarna werk ik met
 			{service.name}, afgestemd op wat jij nodig hebt. Je hoeft niets te presteren en niets te
@@ -97,11 +98,16 @@
 		note={BRAND.disclaimer}
 	/>
 
-	<PageSection id="andere" title="Andere behandelingen" wide>
+	<PageSection id="andere" eyebrow="Meer" title="Andere behandelingen" wide>
 		<ul class="service__others">
 			{#each others as other (other.slug)}
 				<li use:reveal>
-					<ServiceCard href="/diensten/{other.slug}" name={other.name} teaser={other.teaser} />
+					<ServiceCard
+						href="/diensten/{other.slug}"
+						name={other.name}
+						teaser={other.teaser}
+						paint={paintGreen(BRAND.services.findIndex((s) => s.slug === other.slug))}
+					/>
 				</li>
 			{/each}
 		</ul>

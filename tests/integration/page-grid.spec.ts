@@ -13,6 +13,10 @@
  * of the page box rather than to the box itself, which is what lets the heading
  * stay on the grid while the paragraphs stay readable.
  *
+ * Since 2026-10-29 a subpage's opening (PageHead) is centred on the owner's request,
+ * so there the <h1> is held to the page box's centre line instead of its left edge.
+ * The breadcrumb and the footer keep the shared left edge everywhere.
+ *
  * Routes are derived from ALL_ROUTES, so a new page is covered the day it is added
  * rather than the day someone remembers to list it here.
  */
@@ -25,7 +29,9 @@ const left = (sel: string) =>
 	          return e ? Math.round(e.getBoundingClientRect().left) : null; })()`;
 
 for (const route of ALL_ROUTES) {
-	test(`${route.path} — crumb, h1 and footer share a left edge`, async ({ page }) => {
+	test(`${route.path} — crumb and footer share a left edge, the h1 sits on the grid`, async ({
+		page
+	}) => {
 		await page.setViewportSize({ width: 1440, height: 900 });
 		await page.goto(route.path, { waitUntil: 'networkidle' });
 
@@ -36,7 +42,19 @@ for (const route of ALL_ROUTES) {
 		expect(h1, `${route.path} has no <h1>`).not.toBeNull();
 		expect(footer, `${route.path} has no footer`).not.toBeNull();
 
-		expect(h1, `<h1> is off the grid on ${route.path}`).toBe(footer);
+		const centred = await page.evaluate(() => {
+			const h = document.querySelector('.phead h1');
+			const box = document.querySelector('.page');
+			if (!h || !box) return null;
+			const a = h.getBoundingClientRect();
+			const b = box.getBoundingClientRect();
+			return Math.abs(a.left + a.width / 2 - (b.left + b.width / 2));
+		});
+		if (centred !== null) {
+			expect(centred, `centred <h1> is off the centre line on ${route.path}`).toBeLessThan(2);
+		} else {
+			expect(h1, `<h1> is off the grid on ${route.path}`).toBe(footer);
+		}
 		if (crumb !== null) {
 			expect(crumb, `breadcrumb is off the grid on ${route.path}`).toBe(footer);
 		}

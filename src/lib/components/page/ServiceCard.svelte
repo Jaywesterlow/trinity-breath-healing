@@ -4,16 +4,25 @@
 	 * arrow circle from the treatment card in the corner. The whole card is
 	 * the link; the arrow runs the shared swap when the card is hovered, the
 	 * same gesture as the carousel card and the modal's controls.
+	 *
+	 * On a green watercolour since 2026-10-29 (owner: cards get "a green
+	 * background with that water paint touch"), like the home page's cards. Pass
+	 * paintGreen() of the service's place in BRAND.services, so neighbours differ
+	 * and a service always gets the same wash as its carousel card.
 	 */
+	import { paintGreen } from '$lib/paint';
+
 	interface Props {
 		href: string;
 		name: string;
 		teaser: string;
+		/** Which of the ten washes; see $lib/paint.ts. */
+		paint?: string;
 	}
-	let { href, name, teaser }: Props = $props();
+	let { href, name, teaser, paint = paintGreen(0) }: Props = $props();
 </script>
 
-<a class="scard roll-host" {href}>
+<a class="scard roll-host" {href} style:--paint={paint}>
 	<span class="scard__name">{name}</span>
 	<span class="scard__teaser">{teaser}</span>
 	<span class="scard__arrow arrow-swap" aria-hidden="true">
@@ -51,23 +60,20 @@
 		height: 100%;
 		padding: var(--space-6);
 		padding-bottom: calc(var(--space-6) + 2.625rem + var(--space-4));
-		border: 1px solid color-mix(in srgb, var(--brand-border) 30%, transparent);
-		border-radius: var(--radius-lg);
+		border-radius: 1.125rem; /* the home page's green cards */
+		background: var(--paint, var(--paint-green));
 		text-decoration: none;
-		transition:
-			background-color var(--motion-hover) var(--ease-hover),
-			border-color var(--motion-hover) var(--ease-hover);
+		transition: transform var(--motion-hover) var(--ease-hover);
 	}
 
 	.scard:focus-visible {
-		background: color-mix(in srgb, var(--brand-border) 7%, transparent);
-		border-color: var(--brand-border);
+		outline: 2px solid var(--color-accent-gold);
+		outline-offset: 3px;
 	}
 
 	@media (hover: hover) and (pointer: fine) {
 		.scard:hover {
-			background: color-mix(in srgb, var(--brand-border) 7%, transparent);
-			border-color: var(--brand-border);
+			transform: translateY(-3px);
 		}
 	}
 
@@ -76,7 +82,7 @@
 		font-size: var(--fs-h3);
 		font-weight: var(--font-weight-medium);
 		line-height: var(--line-height-tight);
-		color: var(--color-fg-forest);
+		color: var(--color-bg-sand);
 	}
 
 	.scard__teaser {
@@ -84,13 +90,11 @@
 		font-size: var(--fs-body);
 		font-weight: var(--font-weight-light);
 		line-height: var(--line-height-normal);
-		color: var(--color-text-subtle);
+		color: var(--color-bg-sand);
 	}
 
 	/* The treatment card's arrow circle (TreatmentCard.svelte, .tcard__arrow):
-	   same size, same ring, same halo and fill on hover. Sand here is the
-	   page's own background, so the fill is the brand border colour with the
-	   glyph turning sand — the ButtonLink's circle does the same. */
+	   same size, same ring, same halo and fill on hover, in sand on the green. */
 	.scard__arrow {
 		position: absolute;
 		right: var(--space-6);
@@ -98,11 +102,11 @@
 		width: 2.625rem;
 		height: 2.625rem;
 		border-radius: var(--radius-full);
-		border: 1px solid var(--brand-border);
-		color: var(--brand-border);
+		border: 1px solid var(--color-bg-sand);
+		color: var(--color-bg-sand);
 		--swap-x: var(--arrow-travel);
 		--swap-y: calc(-1 * var(--arrow-travel));
-		box-shadow: 0 0 0 0 color-mix(in srgb, var(--brand-border) 0%, transparent);
+		box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-bg-sand) 0%, transparent);
 		transition:
 			background-color var(--motion-arrow) var(--ease-arrow),
 			color var(--motion-arrow) var(--ease-arrow),
@@ -110,16 +114,16 @@
 	}
 
 	.scard:focus-visible .scard__arrow {
-		box-shadow: 0 0 0 6px color-mix(in srgb, var(--brand-border) 22%, transparent);
-		background: var(--brand-border);
-		color: var(--color-bg-sand);
+		box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-bg-sand) 22%, transparent);
+		background: var(--color-bg-sand);
+		color: var(--color-fg-forest);
 	}
 
 	@media (hover: hover) and (pointer: fine) {
 		.scard:hover .scard__arrow {
-			box-shadow: 0 0 0 6px color-mix(in srgb, var(--brand-border) 22%, transparent);
-			background: var(--brand-border);
-			color: var(--color-bg-sand);
+			box-shadow: 0 0 0 6px color-mix(in srgb, var(--color-bg-sand) 22%, transparent);
+			background: var(--color-bg-sand);
+			color: var(--color-fg-forest);
 		}
 	}
 </style>

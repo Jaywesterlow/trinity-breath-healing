@@ -193,7 +193,7 @@
 				width="180"
 				height="180"
 				decoding="async"
-				style:opacity={leaf.opacity}
+				style:--leaf-alpha={leaf.opacity}
 				style:animation-duration="{leaf.tumble}s"
 				style:animation-delay="{leaf.tumbleDelay}s"
 			/>
@@ -222,6 +222,9 @@
 		display: block;
 		width: 100%;
 		height: 100%;
+		/* Through a variable, not an inline opacity: inline opacity is how the reveal
+		   audit finds scroll-revealed elements (tests/integration/reveal-audit.spec.ts). */
+		opacity: var(--leaf-alpha, 0.7);
 		animation: leaf-tumble linear infinite;
 	}
 

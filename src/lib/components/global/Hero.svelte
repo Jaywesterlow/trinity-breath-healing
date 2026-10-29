@@ -152,12 +152,15 @@
 	   back in. `backwards` applies the start state during the delay, from frame zero.
 
 	   It comes last in the intro (Jay, 2026-10-27): lines draw (0–2.6s), the paint washes in
-	   from 1.82s with the lights 0.2s behind it (HeroLights), the text wash at 3.6s, the
-	   text at 4.1s. */
+	   from 1.82s with the lights 0.2s behind it (HeroLights), the text wash at 2.4s, the
+	   text at 2.9s. The wash was at 3.6s and the text at 4.1s until 2026-10-29: the paint's
+	   expo curve has it mostly in by ~2.6s, so that left a second of nothing before the
+	   words (owner: "too long of a pause"), and held the heading, the page's largest
+	   text, invisible for over four seconds. Now the wash starts while the paint settles. */
 	.hero {
-		--hero-in-start: 4.1s;
+		--hero-in-start: 2.9s;
 		--paint-at: 1.82s;
-		--text-wash-at: 3.6s;
+		--text-wash-at: 2.4s;
 		/* The portrait image's width (see the portrait block). Declared here, not inside that
 		   block, so it always resolves: the dead-variable guard checks var() on every screen. */
 		--img-w: min(max(100vw, 58.24svh), 117.6vw);
@@ -189,7 +192,7 @@
 
 	/* The wash paints itself in: three soft radial masks that grow from slightly different
 	   centres at different rates, so it spreads like pigment on wet paper, not as a circle.
-	   It starts once the painting is in (--text-wash-at), half a second before the text.
+	   It starts as the painting settles (--text-wash-at), half a second before the text.
 	   The resting value (150%) leaves the mask fully open, so without motion it is just there. */
 	@property --wash-r {
 		syntax: '<percentage>';

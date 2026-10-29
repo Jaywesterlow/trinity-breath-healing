@@ -43,7 +43,9 @@
 		flex-direction: column;
 		gap: var(--space-6);
 		padding-block: var(--block-gap);
-		border-top: 1px solid color-mix(in srgb, var(--brand-border) 28%, transparent);
+		/* No rule between sections since 2026-10-29: the home page separates its
+		   sections with space and a small-over-big title, not lines, and the
+		   owner wanted the subpages less rigid. */
 	}
 
 	.psec__eyebrow {
