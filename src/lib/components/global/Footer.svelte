@@ -81,6 +81,7 @@
 	const curtain: Attachment<HTMLElement> = (el) => {
 		const fit = () => el.classList.toggle('footer--curtain', el.offsetHeight <= window.innerHeight);
 		fit();
+		if (typeof ResizeObserver === 'undefined') return; // jsdom in the unit tests
 		const ro = new ResizeObserver(fit);
 		ro.observe(el);
 		window.addEventListener('resize', fit, { passive: true });
