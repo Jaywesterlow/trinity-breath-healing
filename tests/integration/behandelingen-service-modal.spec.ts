@@ -21,6 +21,16 @@ const CARD = 'a.tcard';
 const MODAL = 'dialog.service-modal';
 const ACTIVE_TITLE = '.service-modal__panel:not([hidden]) .service-modal__title';
 
+/** One press of the modal's Next/Prev, then wait for the swap to land: the title has
+ *  changed, plus a beat for the swap to finish. A fixed wait (700ms) was not enough on a
+ *  loaded CI runner, and a press that lands mid-swap is ignored by design. */
+async function press(page: Page, dir: 'next' | 'prev'): Promise<void> {
+	const before = await activeTitle(page);
+	await page.locator(`.service-modal__nav--${dir}`).click();
+	await expect.poll(() => activeTitle(page), { timeout: 5000 }).not.toBe(before);
+	await page.waitForTimeout(500);
+}
+
 async function positions(page: Page): Promise<number[]> {
 	return page.$$eval('.treatments__pivot', (els) =>
 		els.map((el) => Number(getComputedStyle(el).getPropertyValue('--pos')))
@@ -84,15 +94,11 @@ test.describe('desktop', () => {
 		await page.waitForTimeout(1500);
 		expect(await activeTitle(page)).toBe('Mahatma Healing');
 
-		await page.locator('.service-modal__nav--next').click();
-		await page.waitForTimeout(700);
+		await press(page, 'next');
 		expect(await activeTitle(page)).toBe('Goldhealing');
 
 		// 6 more presses — 7 total, one full lap of 7 services — wraps back to Mahatma Healing.
-		for (let i = 0; i < 6; i++) {
-			await page.locator('.service-modal__nav--next').click();
-			await page.waitForTimeout(700);
-		}
+		for (let i = 0; i < 6; i++) await press(page, 'next');
 		expect(await activeTitle(page)).toBe('Mahatma Healing');
 	});
 
@@ -102,16 +108,12 @@ test.describe('desktop', () => {
 		await page.waitForTimeout(1500);
 		expect(await activeTitle(page)).toBe('Mahatma Healing');
 
-		await page.locator('.service-modal__nav--prev').click();
-		// 1200, not 700: on a loaded CI runner the swap was still running at 700ms, and the
-		// Next press below landed mid-swap and was ignored.
-		await page.waitForTimeout(1200);
+		await press(page, 'prev');
 		// Mahatma Healing is index 0 in BRAND.services — Prev wraps to the last, index 6.
 		const lastTitle = await activeTitle(page);
 		expect(lastTitle).not.toBe('Mahatma Healing');
 
-		await page.locator('.service-modal__nav--next').click();
-		await page.waitForTimeout(1200);
+		await press(page, 'next');
 		expect(await activeTitle(page)).toBe('Mahatma Healing');
 	});
 
