@@ -733,9 +733,16 @@ h6 {
 		border-color var(--motion-arrow) var(--ease-arrow);
 }
 
+/* The outlined tier blurs whatever passes behind it (owner, 2026-10-29): a drifting
+   leaf in the About section can cross "Lees meer over mij", and through a clear
+   button it sat right under the label. Blurred, it stays a soft shape behind the
+   words instead of vanishing or fighting them. No tint, so the button keeps its
+   see-through look. */
 .btn-pill--secondary {
 	background: transparent;
 	color: var(--btn-fill);
+	-webkit-backdrop-filter: blur(8px);
+	backdrop-filter: blur(8px);
 }
 
 .btn-host:not(:disabled):focus-visible .btn-pill,
