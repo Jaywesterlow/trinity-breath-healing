@@ -103,13 +103,15 @@ test.describe('desktop', () => {
 		expect(await activeTitle(page)).toBe('Mahatma Healing');
 
 		await page.locator('.service-modal__nav--prev').click();
-		await page.waitForTimeout(700);
+		// 1200, not 700: on a loaded CI runner the swap was still running at 700ms, and the
+		// Next press below landed mid-swap and was ignored.
+		await page.waitForTimeout(1200);
 		// Mahatma Healing is index 0 in BRAND.services — Prev wraps to the last, index 6.
 		const lastTitle = await activeTitle(page);
 		expect(lastTitle).not.toBe('Mahatma Healing');
 
 		await page.locator('.service-modal__nav--next').click();
-		await page.waitForTimeout(700);
+		await page.waitForTimeout(1200);
 		expect(await activeTitle(page)).toBe('Mahatma Healing');
 	});
 

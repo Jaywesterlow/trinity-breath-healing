@@ -151,9 +151,11 @@ test.describe('Werkwijze desktop staircase', () => {
 			const cards = document.querySelector('.werkwijze__cards') as HTMLElement;
 			const next = document.querySelector('#werkwijze + *') as HTMLElement;
 			const firstTop = Math.min(
-				...[...next.querySelectorAll('h1, h2, h3, p, img, svg')].map(
-					(el) => el.getBoundingClientRect().top
-				)
+				...[...next.querySelectorAll('h1, h2, h3, p, img, svg')]
+					// Decoration is not content: the drifting leaves (aria-hidden) sit anywhere
+					// in the section, including its very top edge.
+					.filter((el) => !el.closest('[aria-hidden="true"]'))
+					.map((el) => el.getBoundingClientRect().top)
 			);
 			const probe = document.createElement('div');
 			probe.style.paddingTop = 'var(--section-pad)';

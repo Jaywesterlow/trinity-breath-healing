@@ -100,8 +100,10 @@ test.describe('FAQ disclosure transition', () => {
 		await summary.click();
 
 		// Mid-collapse the element must still be open and marked closing — that is what keeps
-		// the panel rendered, and therefore what makes the collapse visible at all.
-		await page.waitForTimeout(150);
+		// the panel rendered, and therefore what makes the collapse visible at all. 60ms, not
+		// 150: since 2026-10-29 the close (300ms) moves from its first frame, so at 150ms
+		// it is already most of the way shut.
+		await page.waitForTimeout(60);
 		await expect(el).toHaveAttribute('data-closing', '');
 		const mid = (await el.boundingBox())!.height;
 		expect(mid, 'panel should be partway shut, not already gone').toBeGreaterThan(80);
