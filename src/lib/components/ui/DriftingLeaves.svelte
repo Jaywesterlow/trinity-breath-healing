@@ -4,6 +4,10 @@
 	import leaf2 from '$lib/images/leaves/leaf-2.webp';
 	import leaf3 from '$lib/images/leaves/leaf-3.webp';
 	import leaf4 from '$lib/images/leaves/leaf-4.webp';
+	import leaf5 from '$lib/images/leaves/leaf-5.webp';
+	import leaf6 from '$lib/images/leaves/leaf-6.webp';
+	import leaf7 from '$lib/images/leaves/leaf-7.webp';
+	import leaf8 from '$lib/images/leaves/leaf-8.webp';
 
 	/**
 	 * Leaves drifting from left to right behind a section (owner, 2026-10-28: "leaves
@@ -21,19 +25,21 @@
 	 * width (one per LEAF_SPACING_PX), so an ultra-wide screen gets more leaves, not
 	 * more images.
 	 *
-	 * Scroll: down speeds them up, up slows them (never backwards), the same rule as
+	 * Scroll in either direction speeds them up (owner, 2026-10-29), the same rule as
 	 * the services fan. Nothing renders on the server, nothing runs off screen, and
 	 * reduced motion shows no leaves at all.
 	 *
-	 * The four leaf images are placeholders drawn in code until the painted set comes in.
+	 * Eight autumn leaves (2026-10-29, owner: orange-ish, mixed, some still green,
+	 * yellow, dark orange, red): maple, sweet gum, oak and beech, drawn in code by
+	 * .planning/quick/261029-apl-autumn-paint-leaves/autumn-leaves.cjs.
 	 */
 
-	const IMAGES = [leaf1, leaf2, leaf3, leaf4];
+	const IMAGES = [leaf1, leaf2, leaf3, leaf4, leaf5, leaf6, leaf7, leaf8];
 	const LEAF_SPACING_PX = 180;
 	const MIN_LEAVES = 5;
 	const MAX_LEAVES = 24;
 	const BASE_SPEED_PX_S = [28, 62]; // range, scaled by size below: big leaves are nearer, so faster
-	const SCROLL_BOOST_PER_PX = 0.012; // 400px of scroll down ≈ five times the speed, briefly
+	const SCROLL_BOOST_PER_PX = 0.012; // 400px of scroll ≈ five times the speed, briefly
 	const SCROLL_DECAY_MS = 450;
 	const MIN_FACTOR = 0.12;
 	const MAX_FACTOR = 6;
@@ -142,7 +148,7 @@
 			const dy = y - lastScrollY;
 			lastScrollY = y;
 			if (Math.abs(dy) > 200) return; // a jump (anchor, programmatic), not a gesture
-			boost += dy * SCROLL_BOOST_PER_PX;
+			boost += Math.abs(dy) * SCROLL_BOOST_PER_PX; // either direction speeds them up (owner, 2026-10-29)
 		}
 
 		build();
@@ -177,8 +183,8 @@
 				class:leaves__img--reverse={leaf.reverse}
 				src={leaf.src}
 				alt=""
-				width="160"
-				height="160"
+				width="180"
+				height="180"
 				decoding="async"
 				style:opacity={leaf.opacity}
 				style:animation-duration="{leaf.tumble}s"

@@ -379,10 +379,10 @@
 		if (dragging || document.hidden || prefersReducedMotion()) return;
 		if (IDLE_DRIFT_ENABLED) {
 			if (motionPhase === 'drift' && motionRafId !== null) {
-				scrollRemaining -= dy / SCROLL_PX_PER_STEP;
+				scrollRemaining -= Math.abs(dy) / SCROLL_PX_PER_STEP; // either way speeds it up (owner, 2026-10-29)
 			} else if (motionRafId === null && driftAllowed()) {
 				beginDrift();
-				scrollRemaining -= dy / SCROLL_PX_PER_STEP;
+				scrollRemaining -= Math.abs(dy) / SCROLL_PX_PER_STEP;
 			}
 			return;
 		}
@@ -593,7 +593,7 @@
 	// cancelMotion() before starting a fresh latch — already supersedes it
 	// for free, with no special-casing added at those call sites.
 	const IDLE_DRIFT_DELAY_MS = 2000; // 4000 / 2 — owner request, "halve the pause duration"
-	const DRIFT_SECONDS_PER_STEP = 6.4; // 8 / 1.25 — owner request, "speed up by 1.25"
+	const DRIFT_SECONDS_PER_STEP = 12.8; // half the 6.4 of 2026-10-28: owner, 2026-10-29, "twice as slow"
 	// Negative: matches next()'s own driveBy(-1) direction (see driveBy),
 	// i.e. drifting is indistinguishable from someone slowly, continuously
 	// pressing "Volgende."
@@ -603,17 +603,23 @@
 	// to the left, and whenever the user is scrolling up, it decelerates"). While
 	// the section is on screen the fan drifts at DRIFT_VELOCITY_PER_MS; scroll
 	// adds to that the same way the scroll drive below always did (one card per
-	// SCROLL_PX_PER_STEP, eased over SCROLL_TAU_MS), but the sum never runs
-	// backwards: scrolling up slows the drift down to a standstill, it does not
-	// reverse it. Library effect 42 (the speed-on-scroll marquee) was looked at
+	// SCROLL_PX_PER_STEP, eased over SCROLL_TAU_MS). Since 2026-10-29 a scroll in
+	// either direction speeds it up (owner: "scrolling up ... accelerates it just
+	// like scrolling down"), and the idle drift is half as fast. Library effect 42 (the speed-on-scroll marquee) was looked at
 	// and not used: it speeds up in both scroll directions and is a flat band,
 	// and this fan already had both halves.
 	//
-	// It holds while the pointer is over the cards (see cursorInBand), while
-	// anything in the carousel has keyboard focus, and for good once the pause
-	// button is pressed (WCAG 2.2.2: anything that moves by itself for more than
-	// five seconds needs a way to stop it). Reduced motion keeps it off.
+	// With the pointer over the cards (see cursorInBand) it slows to half speed
+	// rather than stopping, and eases back up once the pointer leaves (owner,
+	// 2026-10-29: going from motion to a full stop "is kind of jarring"). It holds
+	// while anything in the carousel has keyboard focus, and for good once the
+	// pause button is pressed (WCAG 2.2.2: anything that moves by itself for more
+	// than five seconds needs a way to stop it). Reduced motion keeps it off.
 	const IDLE_DRIFT_ENABLED = true;
+	const HOVER_DRIFT_FACTOR = 0.5;
+	const HOVER_SLOW_TAU_MS = 500;
+	const HOVER_RESUME_TAU_MS = 1500;
+	let driftSpeed = 1; // eased towards HOVER_DRIFT_FACTOR under the pointer, 1 otherwise
 	let driftPausedByUser = $state(false);
 	let focusInCarousel = false;
 
@@ -622,7 +628,6 @@
 			IDLE_DRIFT_ENABLED &&
 			scrollInView &&
 			!driftPausedByUser &&
-			!cursorInBand &&
 			!focusInCarousel &&
 			!dragging &&
 			!modalAnimating &&
@@ -895,13 +900,18 @@
 
 		if (motionPhase === 'drift') {
 			// The scroll's share eases in exactly as in the 'scroll' phase below; the
-			// sum is clamped at zero so scrolling up brakes the drift, never reverses it.
+			// sum is clamped at zero so it never runs backwards.
 			const fromScroll =
 				Math.abs(scrollRemaining) < SCROLL_DONE_EPSILON
 					? scrollRemaining
 					: scrollRemaining * (1 - Math.exp(-dt / SCROLL_TAU_MS));
 			scrollRemaining -= fromScroll;
-			const step = Math.min(0, DRIFT_VELOCITY_PER_MS * dt + fromScroll);
+			// Under the pointer the drift eases down to HOVER_DRIFT_FACTOR and, once
+			// the pointer leaves, eases back up: no hard stop, no hard start.
+			const target = cursorInBand ? HOVER_DRIFT_FACTOR : 1;
+			const tau = target < driftSpeed ? HOVER_SLOW_TAU_MS : HOVER_RESUME_TAU_MS;
+			driftSpeed += (target - driftSpeed) * (1 - Math.exp(-dt / tau));
+			const step = Math.min(0, DRIFT_VELOCITY_PER_MS * driftSpeed * dt + fromScroll);
 			offset += step;
 			velocity = dt > 0 ? step / dt : 0;
 			absorbWholeSteps();
@@ -1210,11 +1220,8 @@
 			hoverRafId = null;
 			if (!fanEl) return;
 			const band = getCardBandY(fanEl);
-			const wasInBand = cursorInBand;
+			// The drift reads this every frame and eases to half speed under it.
 			cursorInBand = band !== null && pendingHoverY >= band.top && pendingHoverY <= band.bottom;
-			// The drift holds under the pointer, so a card can be read and clicked.
-			if (cursorInBand) holdDrift();
-			else if (wasInBand) scheduleIdleDrift();
 		});
 	}
 

@@ -8,29 +8,60 @@
 	// Her photo since 2026-10-28, in place of the line-art portrait (about-portrait-1.svg,
 	// kept under $lib/images). The photo is real on purpose (trust, E-E-A-T); what ties it
 	// to the painted site is baked into the file: a ragged watercolour edge in its alpha,
-	// fading into the sand, and a slightly warmer grade. The gold line round it is drawn
-	// below. Source: "Warme portretfoto in de tuin.png", masked by the script in
-	// .planning/quick/261028-amc-about-motion-contact/.
+	// fading into the sand, and a slightly warmer grade. Source: "Warme portretfoto in
+	// de tuin.png", masked by the script in .planning/quick/261028-amc-about-motion-contact/.
+	// The gold line that ringed it went on 2026-10-29 (owner: the ragged sides are
+	// "already enough").
 	import photo from '$lib/images/about-portrait-photo.webp?w=320;480;640;960;1122&enhanced';
 
-	// The gold line draws itself once the portrait is on screen. Armed from JS, so
-	// without JS (and for crawlers, and with reduced motion) it is simply there.
-	let ringEl: SVGSVGElement | undefined = $state();
+	// The photo paints itself in once it is on screen (owner, 2026-10-29: "a painting
+	// effect, a lot of ease-out"). A mask of horizontal brush strokes (three panels:
+	// painted, the wet edge, empty; .planning/quick/261029-apl-autumn-paint-leaves/
+	// paint-mask.cjs) slides across the photo, so the strokes sweep it in from the
+	// left. Library 48a (the ink edge) was read and not used: it is scrubbed by
+	// scroll and its edge filter does not render in Safari or Firefox, and this has
+	// to work on every screen. A CSS mask image does.
+	//
+	// Armed from JS and only once the mask has loaded, so without JS, for crawlers,
+	// with reduced motion, or with the photo already on screen, it is simply there.
+	// The mask is dropped when the stroke is done.
+	import paintMask from '$lib/images/about-paint-mask.webp';
+
+	let portraitEl: HTMLDivElement | undefined = $state();
 	onMount(() => {
-		const el = ringEl;
+		const el = portraitEl;
 		if (!el || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-		if (el.getBoundingClientRect().top < innerHeight) return; // already in view: leave it drawn
-		el.classList.add('about__ring--armed');
-		const io = new IntersectionObserver(
-			([entry]) => {
-				if (!entry?.isIntersecting) return;
-				el.classList.add('about__ring--drawn');
-				io.disconnect();
-			},
-			{ threshold: 0.35 }
-		);
-		io.observe(el);
-		return () => io.disconnect();
+		if (el.getBoundingClientRect().top < innerHeight) return;
+		let io: IntersectionObserver | undefined;
+		let cancelled = false;
+		const mask = new Image();
+		mask.src = paintMask;
+		mask
+			.decode()
+			.then(() => {
+				if (cancelled || el.getBoundingClientRect().top < innerHeight) return;
+				el.style.setProperty('--paint-mask', `url(${paintMask})`);
+				el.classList.add('about__portrait--armed');
+				io = new IntersectionObserver(
+					([entry]) => {
+						if (!entry?.isIntersecting) return;
+						io?.disconnect();
+						el.classList.add('about__portrait--painted');
+						el.addEventListener(
+							'transitionend',
+							() => el.classList.remove('about__portrait--armed', 'about__portrait--painted'),
+							{ once: true }
+						);
+					},
+					{ threshold: 0.3 }
+				);
+				io.observe(el);
+			})
+			.catch(() => {}); // no mask, no effect: the photo just stays as it is
+		return () => {
+			cancelled = true;
+			io?.disconnect();
+		};
 	});
 
 	/* Shared with /over-mij, which shows the same introduction. One constant, so
@@ -55,10 +86,10 @@
 			<h2 class="about__heading">Vanuit eigen ervaring weet ik wat jij doormaakt.</h2>
 		</header>
 
-		<!-- No reveal: the gold line draws itself on entry, which is an entrance of its
+		<!-- No reveal: the photo paints itself in on entry, which is an entrance of its
 		     own, and at ~590px on desktop the portrait is well over the third of the
 		     viewport the 2026-09-15 audit set as the ceiling for a fading box. -->
-		<div class="about__portrait">
+		<div class="about__portrait" bind:this={portraitEl}>
 			<enhanced:img
 				class="about__photo"
 				src={photo}
@@ -67,20 +98,6 @@
 				loading="lazy"
 				decoding="async"
 			/>
-			<!-- A loose hand-drawn arc in the hero's gold, open at the top left like the
-			     circle in the Werkwijze cards. Same box as the photo (1122x1402). -->
-			<svg
-				class="about__ring"
-				viewBox="0 0 1122 1402"
-				preserveAspectRatio="none"
-				aria-hidden="true"
-				bind:this={ringEl}
-			>
-				<path
-					pathLength="1"
-					d="M728 50C744 62 795 94 827 118C859 142 891 167 920 197C948 227 976 261 998 299C1020 337 1037 381 1052 424C1067 468 1078 513 1089 559C1099 605 1110 653 1114 701C1118 749 1119 801 1112 849C1105 897 1089 945 1070 988C1052 1031 1026 1070 1002 1107C978 1144 952 1179 923 1210C895 1242 865 1273 832 1296C800 1319 763 1336 727 1348C691 1360 653 1363 616 1367C579 1371 543 1374 505 1373C468 1372 428 1373 391 1363C354 1353 315 1337 282 1313C248 1290 218 1256 190 1222C163 1188 139 1150 116 1110C94 1071 72 1030 56 986C40 942 28 869 22 846"
-				/>
-			</svg>
 		</div>
 
 		<!-- Body and button fade as one block, separate from the header above because on
@@ -179,32 +196,26 @@
 		height: auto;
 	}
 
-	.about__ring {
-		position: absolute;
-		inset: -4% -5%; /* a little outside the photo, so the line rings it rather than cutting in */
-		width: 110%;
-		height: 108%;
-		overflow: visible;
-		pointer-events: none;
+	/* Paint-in: the mask is three panels wide, so at 100% the empty panel covers the
+	   photo and at 0% the painted one does; the strokes of the middle panel pass over
+	   it in between. Long and soft at the end: an expo ease-out. */
+	.about__portrait:global(.about__portrait--armed) {
+		-webkit-mask-image: var(--paint-mask);
+		mask-image: var(--paint-mask);
+		-webkit-mask-size: 300% 100%;
+		mask-size: 300% 100%;
+		-webkit-mask-repeat: no-repeat;
+		mask-repeat: no-repeat;
+		-webkit-mask-position: 100% 0;
+		mask-position: 100% 0;
 	}
 
-	.about__ring path {
-		fill: none;
-		stroke: var(--color-accent-gold);
-		stroke-width: 1.5px;
-		vector-effect: non-scaling-stroke;
-		stroke-linecap: round;
-		opacity: 0.85;
-	}
-
-	:global(.about__ring--armed) path {
-		stroke-dasharray: 1;
-		stroke-dashoffset: 1;
-	}
-
-	:global(.about__ring--drawn) path {
-		stroke-dashoffset: 0;
-		transition: stroke-dashoffset 2.4s cubic-bezier(0.45, 0, 0.2, 1) 0.2s;
+	.about__portrait:global(.about__portrait--painted) {
+		-webkit-mask-position: 0 0;
+		mask-position: 0 0;
+		transition:
+			-webkit-mask-position 3.2s cubic-bezier(0.16, 1, 0.3, 1) 0.1s,
+			mask-position 3.2s cubic-bezier(0.16, 1, 0.3, 1) 0.1s;
 	}
 
 	/* --- Body + button --- */
