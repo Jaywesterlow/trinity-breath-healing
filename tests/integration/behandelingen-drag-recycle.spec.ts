@@ -38,10 +38,9 @@ test('a long continuous drag spanning more than `count` cards keeps offset bound
 	page
 }) => {
 	await page.goto('/');
-	// The fan drifts by itself while on screen (2026-10-28); pressed before it is in
-	// view, the pause button keeps it on whole cards for these tests. A DOM click, so
-	// nothing scrolls.
-	await page.locator('.treatments__pause').evaluate((el: HTMLElement) => el.click());
+	// The fan drifts by itself while on screen (2026-10-28); data-drift="off", set before
+	// it is in view, keeps it on whole cards for these tests.
+	await page.evaluate(() => (document.documentElement.dataset.drift = 'off'));
 	await page.locator('.treatments__fan').scrollIntoViewIfNeeded();
 
 	const count = await page.locator('.treatments__pivot').count();

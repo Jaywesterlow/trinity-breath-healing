@@ -612,22 +612,26 @@
 	// With the pointer over the cards (see cursorInBand) it slows to half speed
 	// rather than stopping, and eases back up once the pointer leaves (owner,
 	// 2026-10-29: going from motion to a full stop "is kind of jarring"). It holds
-	// while anything in the carousel has keyboard focus, and for good once the
-	// pause button is pressed (WCAG 2.2.2: anything that moves by itself for more
-	// than five seconds needs a way to stop it). Reduced motion keeps it off.
+	// while anything in the carousel has keyboard focus, and reduced motion keeps it
+	// off. The pause button that sat after the dots was removed on 2026-10-29 at the
+	// owner's request, knowingly: WCAG 2.2.2 asks for a way to stop anything that
+	// moves by itself for more than five seconds, and with hover only slowing it,
+	// keyboard focus and reduced motion are now the only ways to stop it.
+	//
+	// <html data-drift="off"> holds it too. That is for the integration specs only,
+	// which need a still fan to measure; nothing on the site sets it.
 	const IDLE_DRIFT_ENABLED = true;
 	const HOVER_DRIFT_FACTOR = 0.5;
 	const HOVER_SLOW_TAU_MS = 500;
 	const HOVER_RESUME_TAU_MS = 1500;
 	let driftSpeed = 1; // eased towards HOVER_DRIFT_FACTOR under the pointer, 1 otherwise
-	let driftPausedByUser = $state(false);
 	let focusInCarousel = false;
 
 	function driftAllowed(): boolean {
 		return (
 			IDLE_DRIFT_ENABLED &&
 			scrollInView &&
-			!driftPausedByUser &&
+			document.documentElement.dataset.drift !== 'off' &&
 			!focusInCarousel &&
 			!dragging &&
 			!modalAnimating &&
@@ -645,17 +649,10 @@
 		velocity = 0;
 	}
 
-	function toggleDriftPause(): void {
-		driftPausedByUser = !driftPausedByUser;
-		if (driftPausedByUser) holdDrift();
-		else if (motionRafId === null && driftAllowed()) beginDrift();
-	}
-
-	// Keyboard focus only: a mouse click focuses its button too, and the pause
-	// button itself has to be able to restart the drift it sits next to.
+	// Keyboard focus only: a mouse click focuses its button too.
 	function onCarouselFocusIn(e: FocusEvent): void {
 		const el = e.target as HTMLElement;
-		if (el.classList.contains('treatments__pause') || !el.matches(':focus-visible')) return;
+		if (!el.matches(':focus-visible')) return;
 		focusInCarousel = true;
 		holdDrift();
 	}
@@ -2246,26 +2243,6 @@
 				{/each}
 			</ul>
 
-			<!-- Stops and restarts the drift (see IDLE_DRIFT_ENABLED). Sits after the dots,
-			     on every width: the arrows are desktop-only, the drift is not. -->
-			<button
-				type="button"
-				class="treatments__pause"
-				aria-pressed={driftPausedByUser}
-				aria-label={driftPausedByUser ? 'Beweging hervatten' : 'Beweging pauzeren'}
-				data-tooltip={driftPausedByUser ? 'Afspelen' : 'Pauzeren'}
-				onclick={toggleDriftPause}
-			>
-				<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true">
-					{#if driftPausedByUser}
-						<path d="M3 1.5v9l7.5-4.5z" fill="currentColor" />
-					{:else}
-						<rect x="2.5" y="1.5" width="2.25" height="9" rx="0.75" fill="currentColor" />
-						<rect x="7.25" y="1.5" width="2.25" height="9" rx="0.75" fill="currentColor" />
-					{/if}
-				</svg>
-			</button>
-
 			<button
 				type="button"
 				class="treatments__nav treatments__nav--next arrow-swap roll-host"
@@ -2660,36 +2637,6 @@
 	.treatments__dot {
 		display: grid;
 		place-items: center;
-	}
-
-	/* The pause toggle: a 24px target like the dots, its icon in the dots' forest
-	   ink, so it reads as part of the same row rather than a third arrow. */
-	.treatments__pause {
-		display: grid;
-		place-items: center;
-		width: 1.5rem;
-		height: 1.5rem;
-		margin-left: var(--space-1);
-		padding: 0;
-		border: none;
-		border-radius: var(--radius-full);
-		background: transparent;
-		color: var(--color-fg-forest);
-		opacity: 0.7;
-		cursor: pointer;
-		transition: opacity var(--motion-arrow) var(--ease-arrow);
-	}
-
-	.treatments__pause:focus-visible {
-		opacity: 1;
-		outline: 2px solid var(--brand-border);
-		outline-offset: 2px;
-	}
-
-	@media (hover: hover) and (pointer: fine) {
-		.treatments__pause:hover {
-			opacity: 1;
-		}
 	}
 
 	/* The button is the 24x24 the WCAG 2.2 target-size minimum asks for; the dot

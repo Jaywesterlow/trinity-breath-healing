@@ -5,8 +5,8 @@
  *
  * Covers: (i) it drifts in next()'s direction with nothing touched; (ii) a scroll
  * down adds about a card per SCROLL_PX_PER_STEP on top of the drift; (iii) a
- * scroll up speeds it up too, never backwards; (iv) it holds under the pointer and
- * on the pause button, and the button restarts it; (v) the spacing invariant
+ *  scroll up speeds it up too, never backwards; (iv) it slows to half under the pointer and
+ * eases back up once it leaves; (v) the spacing invariant
  * holds; (vi) reduced motion keeps it still, scroll included.
  *
  * Travel is summed frame by frame on one pivot's --pos (unwrapped across the
@@ -124,9 +124,7 @@ test('a scroll up speeds it up the same way, never backwards', async ({ page }) 
 	expect(back).toBe(0);
 });
 
-test('it slows to half under the pointer, and the pause button stops and restarts it', async ({
-	page
-}) => {
+test('it slows to half under the pointer and eases back up after', async ({ page }) => {
 	await openOnFan(page);
 	const card = page.locator('.treatments__pivot').nth(await centreIndex(page));
 	const box = (await card.boundingBox())!;
@@ -137,16 +135,12 @@ test('it slows to half under the pointer, and the pause button stops and restart
 	expect(slow, 'still moving under the pointer').toBeLessThan(-2 / DRIFT_S / 4);
 	expect(slow, 'at about half speed').toBeGreaterThan((-2 / DRIFT_S) * 0.7);
 
+	// Off the cards it keeps moving straight away and eases back up to full speed.
 	await page.mouse.move(2, 2);
-	await page.locator('.treatments__pause').click();
-	await page.mouse.move(2, 2);
-	await expect(page.locator('.treatments__pause')).toHaveAttribute('aria-pressed', 'true');
-	await page.waitForTimeout(2500); // longer than the idle restart, which must not fire
-	expect((await travel(page, 1000)).sum, 'paused').toBe(0);
-
-	await page.locator('.treatments__pause').click();
-	await page.mouse.move(2, 2);
-	expect((await travel(page, 1000)).sum, 'running again').toBeLessThan(0);
+	expect((await travel(page, 500)).sum, 'moving at once after the pointer leaves').toBeLessThan(0);
+	await page.waitForTimeout(4000); // HOVER_RESUME_TAU_MS 1500, well over twice
+	const full = (await travel(page, 2000)).sum;
+	expect(full, 'back to about full speed').toBeLessThan((-2 / DRIFT_S) * 0.75);
 });
 
 test('prefers-reduced-motion: reduce → nothing moves, scroll included', async ({ page }) => {

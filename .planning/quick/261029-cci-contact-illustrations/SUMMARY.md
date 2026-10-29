@@ -23,3 +23,11 @@ date: 2026-10-29
 ## Checks
 svelte-check 0 errors; eslint and prettier clean; service-modal and contact-section specs pass;
 visual baselines updated for desktop only (mobile unchanged).
+
+## Follow-up (same day)
+- Glow and lines matched to the Werkwijze cards (`werkwijze-match.cjs`): the line art is
+  pulled to a crisp brown-gold inside the glow, and the glow lifted to Werkwijze's peak
+  (~123 luminance above the green). A dimmed version was tried first and rejected.
+- Pause button removed from the carousel controls (owner). Noted in code: WCAG 2.2.2 now
+  rests on keyboard focus and reduced motion only. Specs hold the fan with
+  `<html data-drift="off">` instead.
