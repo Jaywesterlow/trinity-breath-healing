@@ -193,10 +193,15 @@
 		   the movement into the first ~100ms, which reads as a snap however long the transition
 		   nominally lasts. A disclosure wants the opposite — motion spread across the middle, so
 		   the panel is visibly on its way. Opening is given longer than closing: opening is the
-		   part worth watching, closing just needs to not vanish. */
-		--faq-open: 480ms;
-		--faq-close: 380ms;
-		--faq-ease: cubic-bezier(0.4, 0, 0.2, 1);
+		   part worth watching, closing just needs to not vanish.
+
+		   2026-10-29, owner: "a little bit of lag when I try to open or close". Measured,
+		   the frames are fine; the lag was the curve. cubic-bezier(0.4, 0, 0.2, 1) starts
+		   slowly, so for the first ~80ms after a click almost nothing moved. This one moves
+		   from the first frame and still lands softly, and both durations are shorter. */
+		--faq-open: 400ms;
+		--faq-close: 300ms;
+		--faq-ease: cubic-bezier(0.25, 0.8, 0.3, 1);
 	}
 
 	/* The gutter is added to the max-width rather than taken out of it, so the
@@ -305,12 +310,12 @@
 			content-visibility var(--faq-close) allow-discrete;
 	}
 
-	/* Opening state. The fade waits out the first third of the slide, so the answer arrives into
-	   space already made for it rather than appearing against a closed edge. */
+	/* Opening state. The fade starts a beat after the slide, so the answer arrives into space
+	   already being made for it. The beat was 160ms until 2026-10-29, which read as lag. */
 	.faq__item[open]::details-content {
 		opacity: 1;
 		transition:
-			opacity 320ms ease 160ms,
+			opacity 260ms ease 60ms,
 			content-visibility var(--faq-open) allow-discrete;
 	}
 

@@ -152,7 +152,14 @@
 		}
 
 		build();
-		const io = new IntersectionObserver(([entry]) => (entry?.isIntersecting ? start() : stop()));
+		// Off screen the JS loop stops and the CSS tumble is paused too: it kept 24
+		// 3D-turning layers running behind the rest of the page.
+		const io = new IntersectionObserver(([entry]) => {
+			const on = !!entry?.isIntersecting;
+			el.classList.toggle('leaves--off', !on);
+			if (on) start();
+			else stop();
+		});
 		io.observe(el);
 		const ro = new ResizeObserver(() => {
 			if (Math.abs(el.clientWidth - width) > 40) build();
@@ -216,6 +223,10 @@
 		width: 100%;
 		height: 100%;
 		animation: leaf-tumble linear infinite;
+	}
+
+	.leaves:global(.leaves--off) .leaves__img {
+		animation-play-state: paused;
 	}
 
 	.leaves__img--reverse {
