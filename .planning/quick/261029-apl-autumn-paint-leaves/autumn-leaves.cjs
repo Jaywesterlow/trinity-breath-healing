@@ -1,12 +1,12 @@
 // Autumn leaves for DriftingLeaves, drawn in code (2026-10-29).
 // Usage: node autumn-leaves.cjs <out dir> <contact sheet png>
-// Shapes after common Dutch street and wood trees: maple (five pointed lobes),
-// sweet gum (star), oak (rounded lobes), beech (oval, wavy edge). Colours run from
-// green still in the base through yellow, orange and rust to red, as they fall.
+// All one shape since 2026-10-29 (owner: the red maple of the reference photo, not
+// star, oak or beech). Colours run from green still in it through yellow, orange
+// and rust to red, as they fall.
 const sharp = require('P:/AI/trinity-breath-healing/node_modules/sharp');
 const [out, sheet] = process.argv.slice(2);
 const S = 240; // canvas; leaf points up, stem at the bottom centre
-const C = { x: 120, y: 150 }; // where the veins meet
+const C = { x: 120, y: 142 }; // where the veins meet
 
 // Outline as a polar function round C. lobes: [angle deg (0 = up), length, width deg, sharpness]
 function polar(lobes, base, teeth, toothAmp, seed) {
@@ -25,86 +25,70 @@ function polar(lobes, base, teeth, toothAmp, seed) {
 	return 'M' + pts.map((p) => p.map((n) => n.toFixed(1)).join(' ')).join('L') + 'Z';
 }
 
-// Pinnate outline (oak, beech): width along the midrib from base (y=200) to tip (y=30).
-function pinnate(widthAt, wave, waves) {
-	const left = [];
-	const right = [];
-	for (let i = 0; i <= 120; i++) {
-		const t = i / 120;
-		const y = 200 - t * 170;
-		const w = widthAt(t) * (1 + wave * Math.sin(t * Math.PI * waves));
-		left.push([120 - w, y]);
-		right.push([120 + w, y]);
+// Red maple, after the owner's reference photo (2026-10-29): three broad lobes and
+// two small ones at the base, shallow notches between them, each lobe with a
+// pointed tip and a pair of side points, and a coarse saw-toothed edge.
+// v varies the proportions a little from leaf to leaf.
+const maple = (v, s) => {
+	const lobes = [];
+	const main = [
+		[0 + v * 3, 100 - v * 4],
+		[-62 - v * 4, 90 + v * 3],
+		[62 + v * 2, 90 - v * 2],
+		[-132, 40 + v * 3],
+		[132, 40 - v * 2]
+	];
+	for (const [deg, len] of main) {
+		lobes.push([deg, len, 46, 1.0]); // the broad body of the lobe
+		lobes.push([deg - 15, len * 0.88, 11, 1.3]); // a side point either side of the tip
+		lobes.push([deg + 15, len * 0.88, 11, 1.3]);
+		lobes.push([deg, len * 1.04, 12, 1.6]); // the tip itself
 	}
-	const pts = [...right, ...left.reverse()];
-	return 'M' + pts.map((p) => p.map((n) => n.toFixed(1)).join(' ')).join('L') + 'Z';
-}
-
-const maple = (s) =>
-	polar(
-		[
-			[0, 100, 40, 1.3],
-			[-58, 88, 36, 1.3],
-			[58, 88, 36, 1.3],
-			[-118, 54, 30, 1.2],
-			[118, 54, 30, 1.2]
-		],
-		22,
-		46,
-		0.12,
-		s
-	);
-const gum = (s) =>
-	polar(
-		[
-			[0, 104, 26, 1.6],
-			[-72, 96, 26, 1.6],
-			[72, 96, 26, 1.6],
-			[-140, 80, 24, 1.6],
-			[140, 80, 24, 1.6]
-		],
-		20,
-		60,
-		0.06,
-		s
-	);
-const oak = () =>
-	pinnate((t) => (12 + 52 * Math.sin(Math.PI * Math.pow(t, 0.8))) * (t > 0.92 ? (1 - t) / 0.08 : 1), 0.42, 9);
-const beech = () =>
-	pinnate((t) => 50 * Math.pow(Math.sin(Math.PI * Math.pow(t, 0.75)), 0.9), 0.05, 14);
-
-// Veins: palmate from C to the lobe tips, or a midrib with side veins.
-const palmVeins = (angles, lens) =>
-	angles
-		.map((deg, i) => {
-			const a = (deg * Math.PI) / 180;
-			return `M${C.x} ${C.y}L${(C.x + lens[i] * 0.85 * Math.sin(a)).toFixed(1)} ${(C.y - lens[i] * 0.85 * Math.cos(a)).toFixed(1)}`;
-		})
-		.join('');
-const pinVeins = (n, reach) => {
-	let d = 'M120 200L120 34';
-	for (let i = 1; i <= n; i++) {
-		const y = 200 - (i / (n + 1)) * 160;
-		const w = reach * Math.sin(Math.PI * (i / (n + 1)));
-		d += `M120 ${y}L${120 - w} ${y - w * 0.55}M120 ${y}L${120 + w} ${y - w * 0.55}`;
-	}
-	return d;
+	return { outline: polar(lobes, 34, 72, 0.08, s), main };
 };
 
-// [outline, veins, base colour, edge colour, blotch colour, vein colour, seed, stem y]
-const leaves = [
-	[maple(0.1), palmVeins([0, -58, 58, -118, 118], [100, 88, 88, 54, 54]), '#d8382a', '#8e1d18', '#e86a2a', '#f2b48a', 3, C.y],
-	[maple(0.6), palmVeins([0, -58, 58, -118, 118], [100, 88, 88, 54, 54]), '#ee8a24', '#b4461a', '#f6c445', '#fbe0a8', 7, C.y],
-	[maple(0.3), palmVeins([0, -58, 58, -118, 118], [100, 88, 88, 54, 54]), '#e2bc3a', '#c27a20', '#9aa13e', '#f5e7a6', 11, C.y],
-	[gum(0.2), palmVeins([0, -72, 72, -140, 140], [104, 96, 96, 80, 80]), '#b52a26', '#5e1418', '#d8562a', '#e7a088', 17, C.y],
-	[oak(), pinVeins(6, 42), '#b85e22', '#6e3214', '#d48a34', '#e8b47e', 23, 200],
-	[oak(), pinVeins(6, 42), '#e39a2a', '#a75a1c', '#8f9a3c', '#f6d49a', 29, 200],
-	[beech(), pinVeins(8, 40), '#c47a2c', '#7c4318', '#e0a640', '#f0cb92', 31, 200],
-	[beech(), pinVeins(8, 40), '#d6b23a', '#8a8a2c', '#7f9a3e', '#f2e6a6', 37, 200]
+const palmVeins = (main) =>
+	main
+		.map(([deg, len]) => {
+			const a = (deg * Math.PI) / 180;
+			const x = (C.x + len * 0.9 * Math.sin(a)).toFixed(1);
+			const y = (C.y - len * 0.9 * Math.cos(a)).toFixed(1);
+			// two side veins off each main vein, towards the side points
+			let d = `M${C.x} ${C.y}L${x} ${y}`;
+			for (const [t, off] of [
+				[0.45, -30],
+				[0.45, 30],
+				[0.7, -24],
+				[0.7, 24]
+			]) {
+				const bx = C.x + len * t * Math.sin(a);
+				const by = C.y - len * t * Math.cos(a);
+				const b2 = ((deg + off) * Math.PI) / 180;
+				d += `M${bx.toFixed(1)} ${by.toFixed(1)}L${(bx + len * 0.28 * Math.sin(b2)).toFixed(1)} ${(by - len * 0.28 * Math.cos(b2)).toFixed(1)}`;
+			}
+			return d;
+		})
+		.join('');
+
+// [variation, base colour, edge colour, blotch colour, colour along the veins, seed]
+// From still green, through yellow and orange, to deep red.
+const palettes = [
+	[0.0, '#d8392a', '#9a1f18', '#f07a2a', '#d8c24a', 3],
+	[0.6, '#e4572a', '#a3301a', '#f2a03a', '#cfc04a', 7],
+	[-0.5, '#ee8a24', '#b4461a', '#f6c445', '#e8d070', 11],
+	[0.9, '#c9601e', '#7e3214', '#e08a2e', '#c8a43a', 17],
+	[-0.9, '#e6c03a', '#c48a22', '#f2d860', '#a8b048', 23],
+	[0.3, '#c9c240', '#8e8a2c', '#8fa040', '#e8dc80', 29],
+	[-0.3, '#c8362a', '#7a1a16', '#8a9a3e', '#b8b84a', 31],
+	[0.7, '#a8301f', '#5e1612', '#c8582a', '#c89a3a', 37]
 ];
+const leaves = palettes.map(([v, base, edge, blot, glow, seed]) => {
+	const { outline, main } = maple(v, (seed % 10) / 10);
+	return [outline, palmVeins(main), base, edge, blot, glow, seed, C.y];
+});
 
 (async () => {
-	for (const [i, [outline, veins, base, edge, blot, vein, seed, stemY]] of leaves.entries()) {
+	for (const [i, [outline, veins, base, edge, blot, glow, seed, stemY]] of leaves.entries()) {
 		const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${S}" height="${S}" viewBox="0 0 ${S} ${S}">
 <defs>
 <radialGradient id="g" cx="50%" cy="58%" r="62%"><stop offset="0" stop-color="${base}"/><stop offset="0.7" stop-color="${base}"/><stop offset="1" stop-color="${edge}"/></radialGradient>
@@ -119,18 +103,21 @@ const leaves = [
 <feComposite in="SourceGraphic" in2="ma" operator="in"/>
 <feGaussianBlur stdDeviation="2"/>
 </filter>
+<filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="4"/></filter>
 <filter id="grain" color-interpolation-filters="sRGB">
 <feTurbulence type="fractalNoise" baseFrequency="0.6" numOctaves="2" seed="${seed + 2}"/>
 <feColorMatrix type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.5 -0.15"/>
 <feComposite in2="SourceGraphic" operator="in"/>
 </filter>
 </defs>
-<path d="M120 ${stemY}L${120 + (seed % 2 ? 6 : -6)} 232" stroke="${edge}" stroke-width="3.2" stroke-linecap="round" fill="none"/>
+<path d="M120 ${stemY}L${120 + (seed % 2 ? 5 : -5)} 214" stroke="${edge}" stroke-width="3.2" stroke-linecap="round" fill="none"/>
 <g filter="url(#w)">
 <g clip-path="url(#c)">
 <rect width="${S}" height="${S}" fill="url(#g)"/>
 <rect width="${S}" height="${S}" fill="${blot}" opacity="0.75" filter="url(#b)"/>
-<path d="${veins}" stroke="${vein}" stroke-width="2" stroke-opacity="0.75" stroke-linecap="round" fill="none"/>
+<path d="${veins}" stroke="${glow}" stroke-width="12" stroke-opacity="0.55" stroke-linecap="round" fill="none" filter="url(#soft)"/>
+<path d="${veins}" stroke="${glow}" stroke-width="1.8" stroke-opacity="0.9" stroke-linecap="round" fill="none"/>
+${[0, 1, 2, 3, 4].map((k) => `<circle cx="${70 + ((seed * (k + 3) * 37) % 100)}" cy="${70 + ((seed * (k + 5) * 23) % 90)}" r="${1.4 + (k % 3) * 0.6}" fill="#3a1408" opacity="0.6"/>`).join('')}
 <path d="${outline}" fill="none" stroke="${edge}" stroke-width="7" stroke-opacity="0.45"/>
 <rect width="${S}" height="${S}" fill="#2a1408" filter="url(#grain)" opacity="0.35"/>
 </g>
