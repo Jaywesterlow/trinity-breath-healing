@@ -135,6 +135,13 @@ export function magnetic(node: HTMLElement, options: MagneticOptions) {
 		if (rafId !== null) return;
 		rafId = requestAnimationFrame(() => {
 			rafId = null;
+			// No pull while a modal is open over the page (owner, 2026-10-29: the cards
+			// still leaned to the cursor behind an open modal). A modal <dialog> is
+			// open whenever one carries [open]; the card eases home as on any release.
+			if (document.querySelector('dialog[open]')) {
+				releaseTo('0px', '0px');
+				return;
+			}
 			const rect = node.getBoundingClientRect();
 			const centreX = rect.left + rect.width / 2;
 			const centreY = rect.top + rect.height / 2;

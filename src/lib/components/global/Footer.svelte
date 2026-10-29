@@ -3,8 +3,8 @@
 	import SocialIcon from '$lib/components/ui/SocialIcon.svelte';
 	import FooterNavColumn from '$lib/components/ui/FooterNavColumn.svelte';
 	import TextLink from '$lib/components/ui/interactions/TextLink.svelte';
-	import { reveal } from '$lib/actions/reveal';
 	import { BRAND } from '$lib/constants/brand';
+	import type { Attachment } from 'svelte/attachments';
 	/* Instagram, WhatsApp, e-mail — the same row the hero renders, built once
 	   in constants/socials.ts. Both used to assemble it separately, which is
 	   how they both came to link two accounts that never existed. */
@@ -74,17 +74,37 @@
 			]
 		}
 	] as const;
+
+	/* Turns the curtain on (see .footer--curtain) only while the whole footer fits
+	   on the screen, checked again whenever either changes size. Without JS the
+	   footer simply scrolls in, as it always did. */
+	const curtain: Attachment<HTMLElement> = (el) => {
+		const fit = () => el.classList.toggle('footer--curtain', el.offsetHeight <= window.innerHeight);
+		fit();
+		if (typeof ResizeObserver === 'undefined') return; // jsdom in the unit tests
+		const ro = new ResizeObserver(fit);
+		ro.observe(el);
+		window.addEventListener('resize', fit, { passive: true });
+		return () => {
+			ro.disconnect();
+			window.removeEventListener('resize', fit);
+		};
+	};
 </script>
 
-<footer class="footer">
+<footer class="footer" {@attach curtain}>
+	<!-- The lotus from the logo, rising out of the foot of the page: drawn large and
+	     faint behind the footer, cut off by its bottom edge, so the site ends on the
+	     mark the way it begins with it in the nav. Ornament only. -->
+	<div class="footer__lotus" aria-hidden="true"></div>
 	<div class="footer__inner">
-		<!-- Three reveals in the whole footer, since the 2026-09-15 audit: the brand column,
-		     the nav columns as one, and the legal row (which reaches the reader through the
-		     last-screenful fallback in reveal.ts). The social icons are icons alone and do
-		     not fade by themselves. -->
+		<!-- No scroll reveals in the footer since 2026-10-29: the curtain (see .footer--curtain)
+		     is its entrance, and pinned to the bottom of the screen the legal row never rose
+		     past the reveal's trigger line, so it stayed invisible (owner: "I don't see
+		     anything under the line in the footer"). -->
 		<div class="footer__main">
 			<!-- Brand: logo + contact -->
-			<ul class="footer__brand" use:reveal>
+			<ul class="footer__brand">
 				<li><NavLogo inverted={true} footer={true} /></li>
 				<li>
 					<address class="footer__contact">
@@ -147,7 +167,7 @@
 			</nav>
 
 			<!-- Nav columns — order: 2 on desktop, after social on mobile -->
-			<nav class="footer__nav" aria-label="Footer navigatie" use:reveal>
+			<nav class="footer__nav" aria-label="Footer navigatie">
 				{#each NAV_COLUMNS as col (col.heading)}
 					<FooterNavColumn heading={col.heading} links={[...col.links]} />
 				{/each}
@@ -156,7 +176,7 @@
 
 		<hr class="footer__divider" />
 
-		<div class="footer__bottom" use:reveal>
+		<div class="footer__bottom">
 			<nav class="footer__legal" aria-label="Juridische links">
 				<a class="link-underline" href="/privacyverklaring">Privacyverklaring</a>
 				<a class="link-underline" href="/algemene-voorwaarden">Algemene voorwaarden</a>
@@ -169,12 +189,43 @@
 </footer>
 
 <style>
+	/* The hero's curtain, the other way round (owner, 2026-10-29): the footer holds
+	   still at the bottom of the screen and the page (.page-content, z-index 1, in
+	   +layout.svelte) slides up off it. Only when the whole footer fits on the screen:
+	   a footer taller than the screen would hold its top half hidden under the page. */
+	.footer:global(.footer--curtain) {
+		position: sticky;
+		bottom: 0;
+		z-index: 0;
+	}
+
 	.footer {
-		background: var(--color-brand-green);
+		position: relative;
+		overflow: hidden; /* the lotus is cut by the footer's bottom edge */
+		background: var(--paint-green-10); /* its own; the cards use 1-9 ($lib/paint.ts) */
 		color: var(--color-bg-sand);
+		/* First stage of the link underline on green: the nav's grey would vanish here. */
+		--link-underline-idle: color-mix(in srgb, var(--color-bg-sand) 50%, var(--color-brand-green));
+	}
+
+	/* Same mask technique as the proof band: one logo file, any colour. Centred,
+	   two thirds of it above the bottom edge. */
+	.footer__lotus {
+		position: absolute;
+		left: 50%;
+		bottom: 0;
+		width: min(46rem, 120vw);
+		aspect-ratio: 4096 / 3410;
+		transform: translate(-50%, 34%);
+		background: var(--color-accent-gold-soft);
+		opacity: 0.12;
+		-webkit-mask: url('/trinity-logo.svg') center / contain no-repeat;
+		mask: url('/trinity-logo.svg') center / contain no-repeat;
+		pointer-events: none;
 	}
 
 	.footer__inner {
+		position: relative; /* above the lotus */
 		max-width: var(--container-max);
 		margin: 0 auto;
 		padding: var(--space-8) var(--space-6); /* horizontal matches nav/hero below 1024px; zeroed again there since max-width + centering takes over */

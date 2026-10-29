@@ -61,7 +61,8 @@
 
 <PageShell>
 	<PageHead
-		lead="Van het eerste bericht tot de dagen na een behandeling. Geen verrassingen, want dat is nou net wat niet helpt als je al gespannen binnenkomt."
+		eyebrow="Werkwijze"
+		lead="Van het eerste bericht tot de dagen erna. Geen verrassingen, want die helpen niet als je al gespannen binnenkomt."
 	>
 		Zo verloopt een sessie
 	</PageHead>
@@ -79,7 +80,7 @@
 		{/each}
 	</ol>
 
-	<PageSection id="praktisch" title="Praktisch">
+	<PageSection id="praktisch" eyebrow="Goed om te weten" title="Praktisch">
 		<dl class="facts">
 			{#each FACTS as fact (fact.label)}
 				<div class="facts__row" use:reveal>

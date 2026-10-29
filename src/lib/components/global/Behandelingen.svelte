@@ -5,6 +5,7 @@
 	import TreatmentCard from '$lib/components/ui/TreatmentCard.svelte';
 	import ServiceModal from '$lib/components/ui/ServiceModal.svelte';
 	import { SERVICE_ART } from '$lib/constants/service-art';
+	import { paintGreen } from '$lib/paint';
 	import BehandelingenNote from './BehandelingenNote.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 
@@ -36,8 +37,9 @@
 	// Seven real services, one card each (260810-mdl) — no "Meer diensten" nav
 	// card any more; a "more services" card inside a carousel that already
 	// shows every service was nonsense.
-	const SERVICE_ITEMS = BRAND.services.map((s) => ({
+	const SERVICE_ITEMS = BRAND.services.map((s, i) => ({
 		key: s.slug,
+		paint: paintGreen(i),
 		label: s.name,
 		icon: ICONS[s.slug] ?? null,
 		art: SERVICE_ART[s.slug] ?? null,
@@ -324,6 +326,7 @@
 	const FALLBACK_PX_PER_STEP = 90; // only in effect before the first live measurement lands
 	let pxPerStep = $state(FALLBACK_PX_PER_STEP);
 	let fanEl: HTMLElement | undefined;
+	let sectionEl: HTMLElement | undefined;
 
 	// Reads positions[]/offset (both $state) but is called imperatively from
 	// onMount/resize below, never from inside a Svelte $effect — so it never
@@ -365,9 +368,57 @@
 		if (measured !== null) pxPerStep = measured;
 	}
 
+	// See SCROLL_PX_PER_STEP for the behaviour. Feeds the drift (see DRIFT_SCROLL)
+	// or, with the drift off, the 'scroll' phase: a drag, a coast or a button
+	// spring in progress keeps the fan.
+	function onScrollDrive(): void {
+		const y = window.scrollY;
+		const dy = y - scrollLastY;
+		scrollLastY = y;
+		if (!scrollInView || dy === 0 || Math.abs(dy) > SCROLL_MAX_DY) return;
+		if (dragging || document.hidden || prefersReducedMotion()) return;
+		if (IDLE_DRIFT_ENABLED) {
+			if (motionPhase === 'drift' && motionRafId !== null) {
+				scrollRemaining -= Math.abs(dy) / SCROLL_PX_PER_STEP; // either way speeds it up (owner, 2026-10-29)
+			} else if (motionRafId === null && driftAllowed()) {
+				beginDrift();
+				scrollRemaining -= Math.abs(dy) / SCROLL_PX_PER_STEP;
+			}
+			return;
+		}
+		const busy = inGesture && motionRafId !== null && motionPhase !== 'scroll';
+		if (busy) return;
+		if (motionRafId === null || motionPhase !== 'scroll') {
+			cancelMotion();
+			motionPhase = 'scroll';
+			inGesture = true;
+			lastFrameTime = performance.now();
+			motionRafId = requestAnimationFrame(motionTick);
+		}
+		scrollRemaining -= dy / SCROLL_PX_PER_STEP; // down is "Volgende", which lowers offset
+	}
+
 	onMount(() => {
 		remeasurePxPerStep();
 		window.addEventListener('resize', remeasurePxPerStep);
+
+		scrollLastY = window.scrollY;
+		window.addEventListener('scroll', onScrollDrive, { passive: true });
+		const scrollObserver =
+			typeof IntersectionObserver === 'function' && sectionEl
+				? new IntersectionObserver(
+						(entries) => {
+							for (const entry of entries) scrollInView = entry.isIntersecting;
+							// The drift runs only while the fan can be seen: it starts the
+							// moment the section comes on screen and stops when it leaves.
+							if (!IDLE_DRIFT_ENABLED) return;
+							if (scrollInView && motionRafId === null && driftAllowed()) beginDrift();
+							else if (!scrollInView && motionPhase === 'drift') cancelMotion();
+						},
+						{ threshold: 0 }
+					)
+				: null;
+		if (scrollObserver && sectionEl) scrollObserver.observe(sectionEl);
 
 		// Idle auto-drift's own countdown starts here too, not only after a
 		// first real interaction — a page that loads and is never touched is
@@ -393,6 +444,8 @@
 
 		return () => {
 			window.removeEventListener('resize', remeasurePxPerStep);
+			window.removeEventListener('scroll', onScrollDrive);
+			scrollObserver?.disconnect();
 			document.removeEventListener('visibilitychange', onVisibilityChange);
 			cancelMotion();
 		};
@@ -540,11 +593,100 @@
 	// cancelMotion() before starting a fresh latch — already supersedes it
 	// for free, with no special-casing added at those call sites.
 	const IDLE_DRIFT_DELAY_MS = 2000; // 4000 / 2 — owner request, "halve the pause duration"
-	const DRIFT_SECONDS_PER_STEP = 6.4; // 8 / 1.25 — owner request, "speed up by 1.25"
+	const DRIFT_SECONDS_PER_STEP = 12.8; // half the 6.4 of 2026-10-28: owner, 2026-10-29, "twice as slow"
 	// Negative: matches next()'s own driveBy(-1) direction (see driveBy),
 	// i.e. drifting is indistinguishable from someone slowly, continuously
 	// pressing "Volgende."
 	const DRIFT_VELOCITY_PER_MS = -1 / (DRIFT_SECONDS_PER_STEP * 1000);
+	// Back on since 2026-10-28, now joined to the scroll (owner: "the cards have a
+	// slow scroll to the left. Whenever the user scrolls down, it accelerates more
+	// to the left, and whenever the user is scrolling up, it decelerates"). While
+	// the section is on screen the fan drifts at DRIFT_VELOCITY_PER_MS; scroll
+	// adds to that the same way the scroll drive below always did (one card per
+	// SCROLL_PX_PER_STEP, eased over SCROLL_TAU_MS). Since 2026-10-29 a scroll in
+	// either direction speeds it up (owner: "scrolling up ... accelerates it just
+	// like scrolling down"), and the idle drift is half as fast. Library effect 42 (the speed-on-scroll marquee) was looked at
+	// and not used: it speeds up in both scroll directions and is a flat band,
+	// and this fan already had both halves.
+	//
+	// With the pointer over the cards (see cursorInBand) it slows to half speed
+	// rather than stopping, and eases back up once the pointer leaves (owner,
+	// 2026-10-29: going from motion to a full stop "is kind of jarring"). It holds
+	// while anything in the carousel has keyboard focus, and reduced motion keeps it
+	// off. The pause button that sat after the dots was removed on 2026-10-29 at the
+	// owner's request, knowingly: WCAG 2.2.2 asks for a way to stop anything that
+	// moves by itself for more than five seconds, and with hover only slowing it,
+	// keyboard focus and reduced motion are now the only ways to stop it.
+	//
+	// <html data-drift="off"> holds it too. That is for the integration specs only,
+	// which need a still fan to measure; nothing on the site sets it.
+	const IDLE_DRIFT_ENABLED = true;
+	const HOVER_DRIFT_FACTOR = 0.5;
+	const HOVER_SLOW_TAU_MS = 500;
+	const HOVER_RESUME_TAU_MS = 1500;
+	let driftSpeed = 1; // eased towards HOVER_DRIFT_FACTOR under the pointer, 1 otherwise
+	let focusInCarousel = false;
+
+	function driftAllowed(): boolean {
+		return (
+			IDLE_DRIFT_ENABLED &&
+			scrollInView &&
+			document.documentElement.dataset.drift !== 'off' &&
+			!focusInCarousel &&
+			!dragging &&
+			!modalAnimating &&
+			!document.hidden &&
+			!prefersReducedMotion()
+		);
+	}
+
+	// Stops the drift where it is (it rests there, as the scroll drive always did)
+	// without touching any other motion.
+	function holdDrift(): void {
+		if (motionPhase !== 'drift' || motionRafId === null) return;
+		cancelMotion();
+		inGesture = false;
+		velocity = 0;
+	}
+
+	// Keyboard focus only: a mouse click focuses its button too.
+	function onCarouselFocusIn(e: FocusEvent): void {
+		const el = e.target as HTMLElement;
+		if (!el.matches(':focus-visible')) return;
+		focusInCarousel = true;
+		holdDrift();
+	}
+
+	function onCarouselFocusOut(e: FocusEvent): void {
+		const to = e.relatedTarget as Node | null;
+		if (to && (e.currentTarget as HTMLElement).contains(to)) return;
+		focusInCarousel = false;
+		scheduleIdleDrift();
+	}
+
+	// Scroll drive (2026-10-18). While the section is on screen the page's scroll
+	// turns the fan continuously: every SCROLL_PX_PER_STEP of scroll, down or up,
+	// is one card, down being "Volgende". Not stepped and not snapped, on the
+	// owner's word: PR #29's version turned one whole card per 280px through the
+	// button spring, and that is exactly what was rejected.
+	//
+	// Each scroll event adds its share to scrollRemaining, and every frame the fan
+	// covers the same fraction of what is left (time constant SCROLL_TAU_MS). So
+	// while the page moves the fan moves with it, a beat behind, and when the
+	// scroll stops it brakes quickly and smoothly to a standstill instead of
+	// stopping dead. It rests wherever that lands; Prev/Next still go from the
+	// nearest whole card (driveBy rounds).
+	//
+	// A drag, a coast or a button spring in progress wins over the scroll. A single
+	// scroll event bigger than SCROLL_MAX_DY is a jump (an anchor, a programmatic
+	// scroll), not a gesture, and turns nothing. Reduced motion turns it off.
+	const SCROLL_PX_PER_STEP = 400;
+	const SCROLL_TAU_MS = 100;
+	const SCROLL_MAX_DY = 200;
+	const SCROLL_DONE_EPSILON = 0.0005; // steps; below this the remainder is folded in at once
+	let scrollInView = false;
+	let scrollLastY = 0;
+	let scrollRemaining = 0; // steps still to travel
 
 	const DRAG_SLOP_PX = 4; // past this, the gesture is a drag and not a click
 
@@ -580,7 +722,7 @@
 	// three regimes of one motion, not separate loops — a new pointerdown or
 	// driveMotion cancels whichever is running (see cancelMotion).
 	let motionRafId: number | null = null;
-	let motionPhase: 'coast' | 'latch' | 'drift' = 'coast';
+	let motionPhase: 'coast' | 'latch' | 'drift' | 'scroll' = 'coast';
 	let velocity = 0; // steps per ms, decays toward 0 during coast
 	let lastFrameTime = 0;
 	// setTimeout handle for the idle auto-drift's own countdown (see
@@ -670,6 +812,7 @@
 	// interaction, or any new motion superseding drift itself, has to push
 	// the next idle start back out, not let a stale timer fire mid-gesture.
 	function cancelMotion(): void {
+		scrollRemaining = 0; // whatever takes over, the scroll drive's leftover is void
 		if (motionRafId !== null) {
 			cancelAnimationFrame(motionRafId);
 			motionRafId = null;
@@ -686,10 +829,11 @@
 	// changes mid-session, matching how every other motion entry point in
 	// this file (driveMotion, etc.) checks it live rather than once.
 	function scheduleIdleDrift(): void {
+		if (!IDLE_DRIFT_ENABLED) return;
 		if (idleDriftTimer !== null) clearTimeout(idleDriftTimer);
 		idleDriftTimer = setTimeout(() => {
 			idleDriftTimer = null;
-			if (!prefersReducedMotion()) beginDrift();
+			if (motionRafId === null && driftAllowed()) beginDrift();
 		}, IDLE_DRIFT_DELAY_MS);
 	}
 
@@ -752,8 +896,41 @@
 		lastFrameTime = now;
 
 		if (motionPhase === 'drift') {
-			offset += DRIFT_VELOCITY_PER_MS * dt;
+			// The scroll's share eases in exactly as in the 'scroll' phase below; the
+			// sum is clamped at zero so it never runs backwards.
+			const fromScroll =
+				Math.abs(scrollRemaining) < SCROLL_DONE_EPSILON
+					? scrollRemaining
+					: scrollRemaining * (1 - Math.exp(-dt / SCROLL_TAU_MS));
+			scrollRemaining -= fromScroll;
+			// Under the pointer the drift eases down to HOVER_DRIFT_FACTOR and, once
+			// the pointer leaves, eases back up: no hard stop, no hard start.
+			const target = cursorInBand ? HOVER_DRIFT_FACTOR : 1;
+			const tau = target < driftSpeed ? HOVER_SLOW_TAU_MS : HOVER_RESUME_TAU_MS;
+			driftSpeed += (target - driftSpeed) * (1 - Math.exp(-dt / tau));
+			const step = Math.min(0, DRIFT_VELOCITY_PER_MS * driftSpeed * dt + fromScroll);
+			offset += step;
+			velocity = dt > 0 ? step / dt : 0;
 			absorbWholeSteps();
+			motionRafId = requestAnimationFrame(motionTick);
+			return;
+		}
+
+		// Scroll drive: close the same fraction of what is left every frame, so the
+		// fan eases to rest once the page stops (see SCROLL_TAU_MS).
+		if (motionPhase === 'scroll') {
+			const step =
+				Math.abs(scrollRemaining) < SCROLL_DONE_EPSILON
+					? scrollRemaining
+					: scrollRemaining * (1 - Math.exp(-dt / SCROLL_TAU_MS));
+			offset += step;
+			scrollRemaining -= step;
+			velocity = dt > 0 ? step / dt : 0;
+			absorbWholeSteps();
+			if (scrollRemaining === 0) {
+				endGesture();
+				return;
+			}
 			motionRafId = requestAnimationFrame(motionTick);
 			return;
 		}
@@ -1040,6 +1217,7 @@
 			hoverRafId = null;
 			if (!fanEl) return;
 			const band = getCardBandY(fanEl);
+			// The drift reads this every frame and eases to half speed under it.
 			cursorInBand = band !== null && pendingHoverY >= band.top && pendingHoverY <= band.bottom;
 		});
 	}
@@ -1050,6 +1228,7 @@
 			hoverRafId = null;
 		}
 		cursorInBand = false;
+		scheduleIdleDrift();
 	}
 
 	function getCardBandY(fanEl: HTMLElement): { top: number; bottom: number } | null {
@@ -1312,8 +1491,9 @@
 	// One entry per SERVICE (not per slot/duplicate), in BRAND.services'
 	// own fixed order — this is what ServiceModal's Prev/Next index into,
 	// independent of where the fan has rotated any given copy to.
-	const MODAL_SERVICES = BRAND.services.map((s) => ({
+	const MODAL_SERVICES = BRAND.services.map((s, i) => ({
 		slug: s.slug,
+		paint: paintGreen(i),
 		name: s.name,
 		intro: s.intro,
 		helpsWith: s.helpsWith,
@@ -1954,7 +2134,7 @@
 	}
 </script>
 
-<section class="treatments" aria-label="Behandelingen">
+<section class="treatments" aria-label="Behandelingen" bind:this={sectionEl}>
 	<!-- The header is the section's one reveal. The fan below used to fade as a unit, with
 	     a measured --reveal-inset-* correction for a box far taller than what it draws; at
 	     608px on desktop it was still the tallest fading thing on the page, lit for a whole
@@ -1968,7 +2148,11 @@
 		</h2>
 	</header>
 
-	<div class="treatments__carousel-wrap">
+	<div
+		class="treatments__carousel-wrap"
+		onfocusin={onCarouselFocusIn}
+		onfocusout={onCarouselFocusOut}
+	>
 		<div
 			class="treatments__fan"
 			class:treatments__fan--grabbable={cursorInBand}
@@ -1999,6 +2183,7 @@
 						description={item.teaser}
 						magnetic={isVisibleSlot(positions[i]!)}
 						duplicate={item.duplicate}
+						paint={item.paint}
 						onCardClick={(e) => onCardClick(e, i)}
 						{dragging}
 					/>

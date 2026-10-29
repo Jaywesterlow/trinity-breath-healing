@@ -2,6 +2,7 @@
 	import ContactForm from '$lib/components/ui/contact/ContactForm.svelte';
 	import DatePlanner from '$lib/components/ui/contact/DatePlanner.svelte';
 	import SocialIcon from '$lib/components/ui/SocialIcon.svelte';
+	import { paintGreen } from '$lib/paint';
 	/* Instagram, WhatsApp, e-mail — the same list the footer renders, built once
 	   in constants/socials.ts. */
 	import { SOCIAL_LINKS } from '$lib/constants/socials';
@@ -9,6 +10,13 @@
 	   the two cards pull toward the cursor exactly the way a treatment card does. */
 	import { magnetic } from '$lib/actions/magnetic';
 	import { reveal } from '$lib/actions/reveal';
+	/* One illustration per card (2026-10-29), in the hero and Werkwijze style: gold
+	   line art on a sage wash, generated with Gemini's image model (Nano Banana) in
+	   Figma, file "Trinity contact card illustrations". The subject sits on the right;
+	   the left of each image fades out into the card's own paint, so the text keeps
+	   the plain green it had. */
+	import artMeeting from '$lib/images/redesign/contact-meeting.webp?w=480;960;1584&enhanced';
+	import artForm from '$lib/images/redesign/contact-form.webp?w=480;960;1584&enhanced';
 
 	/* null is the rest state: neither route chosen, both cards on offer. Picking
 	   one replaces the pair with that panel, and the switch link above it goes
@@ -107,6 +115,7 @@
 				<button
 					type="button"
 					class="route"
+					style:--paint={paintGreen(7)}
 					use:magnetic={{
 						enabled: over === null || over === 'meeting',
 						dragging: false,
@@ -118,6 +127,14 @@
 					onclick={() => choose('meeting')}
 					use:reveal={{ distance: 0 }}
 				>
+					<enhanced:img
+						class="route__art"
+						src={artMeeting}
+						alt=""
+						sizes="(min-width: 1100px) 40rem, 100vw"
+						loading="lazy"
+						decoding="async"
+					/>
 					<span class="route__title">Plan een kennismaking</span>
 					<span class="route__body"
 						>Kies zelf een moment. Dertig minuten, online, vrijblijvend.</span
@@ -132,6 +149,7 @@
 				<button
 					type="button"
 					class="route"
+					style:--paint={paintGreen(8)}
 					use:magnetic={{
 						enabled: over === null || over === 'form',
 						dragging: false,
@@ -143,6 +161,14 @@
 					onclick={() => choose('form')}
 					use:reveal={{ distance: 0 }}
 				>
+					<enhanced:img
+						class="route__art"
+						src={artForm}
+						alt=""
+						sizes="(min-width: 1100px) 40rem, 100vw"
+						loading="lazy"
+						decoding="async"
+					/>
 					<span class="route__title">Stuur een bericht</span>
 					<span class="route__body">
 						Liever eerst een vraag stellen? Mailen en appen kan de hele dag.
@@ -274,7 +300,7 @@
 
 	.contact__eyebrow {
 		font-family: var(--font-body);
-		font-size: 1rem; /* 16px */
+		font-size: var(--font-size-xl); /* the other sections' eyebrow (owner, 2026-10-28: one scale) */
 		font-weight: var(--font-weight-light);
 		line-height: 1.3125;
 		color: var(--brand-muted);
@@ -283,7 +309,7 @@
 
 	.contact__heading {
 		font-family: var(--font-display);
-		font-size: 2rem; /* 32px */
+		font-size: var(--fs-h2); /* the other sections' H2 (owner, 2026-10-28: one scale) */
 		font-weight: var(--font-weight-medium);
 		line-height: 1.21875;
 		color: var(--color-fg-forest);
@@ -364,7 +390,7 @@
 		padding: var(--space-6);
 		border: none;
 		border-radius: 1.125rem; /* 18px */
-		background: var(--color-brand-green);
+		background: var(--paint, var(--paint-green)); /* one per card: paintGreen() */
 		color: var(--color-bg-sand);
 		cursor: pointer;
 		/* The carousel's magnet, composed the same way TreatmentCard composes it:
@@ -380,9 +406,53 @@
 		outline-offset: 2px;
 	}
 
+	/* The illustration fills the card from the right at the card's full height, and
+	   fades out to the left into the card's paint. Everything else in the card sits
+	   above it. Wide screens only (see the 1280px rule below): on phones the text is centred,
+	   right over the glow, where the light text cannot be read. */
+	.route {
+		position: relative;
+		overflow: hidden;
+		isolation: isolate;
+	}
+
+	/* enhanced:img wraps the image in a <picture>: that wrapper is what is placed,
+	   out of the flow so it adds no gap to the card's column, and hidden until 1280px. */
+	.route :global(picture) {
+		display: none;
+		position: absolute;
+		inset: 0 0 0 auto;
+		z-index: -1;
+		height: 100%;
+		pointer-events: none;
+	}
+
+	.route :global(.route__art) {
+		display: block;
+		height: 100%;
+		width: auto;
+		max-width: none;
+		-webkit-mask-image: linear-gradient(to right, transparent 0, #000 45%);
+		mask-image: linear-gradient(to right, transparent 0, #000 45%);
+	}
+
+	/* From 1280px the card is wide enough for the words and the illustration side by
+	   side; below that (1024px cards are ~510px) the text would run into its glow. */
+	@media (min-width: 1280px) {
+		.route :global(picture) {
+			display: block;
+		}
+
+		/* The words stop short of the illustration on the right. */
+		.route__title,
+		.route__body {
+			max-width: 23rem;
+		}
+	}
+
 	.route__title {
 		font-family: var(--font-display);
-		font-size: 1.5rem; /* 24px */
+		font-size: 1.25rem; /* 20px, was 24 */
 		font-weight: var(--font-weight-medium);
 		line-height: var(--line-height-tight);
 	}
@@ -404,8 +474,10 @@
 		margin-top: var(--space-2);
 		padding: 0 var(--space-6);
 		border-radius: var(--radius-full);
-		font-family: var(--font-display);
-		font-size: var(--font-size-xl); /* 20px */
+		font-family: var(
+			--font-body
+		); /* every button label: DM Sans 16, as the arrow buttons (owner, 2026-10-28) */
+		font-size: 1rem;
 		line-height: 1;
 		white-space: nowrap;
 		/* Fill, edge, ink and the hover swap are .btn-pill's — see app.css. */
@@ -591,12 +663,10 @@
 		}
 
 		.contact__eyebrow {
-			font-size: 1.25rem; /* 20px */
 			line-height: 1.3;
 		}
 
 		.contact__heading {
-			font-size: 3rem; /* 48px */
 			line-height: 1.2;
 		}
 
@@ -638,7 +708,7 @@
 		}
 
 		.route__title {
-			font-size: 1.6875rem; /* 27px */
+			font-size: 1.4375rem; /* 23px, was 27 */
 		}
 
 		.route__body {

@@ -6,6 +6,12 @@ import { resolve } from 'path';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
+	build: {
+		// The green watercolours stay files (2026-10-28): inlined as data they would ride in
+		// every page's HTML (the CSS is inlined, svelte.config.js), ~47KB before first paint,
+		// for cards far below the fold. As files they load when a card is drawn, and cache.
+		assetsInlineLimit: (file) => (file.includes('green-wash-') ? false : undefined)
+	},
 	plugins: [
 		enhancedImages(), // PRF-01: AVIF/WebP + responsive srcset + dimensions — MUST come BEFORE sveltekit()
 		tailwindcss(), // Slice 1: Tailwind v4 — must precede sveltekit()

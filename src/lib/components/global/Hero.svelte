@@ -1,80 +1,143 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import ButtonLink from '$lib/components/ui/interactions/ButtonLink.svelte';
 	import { reveal } from '$lib/actions/reveal';
 
-	// The hero illustration is a centerline trace of the original line art, inlined as SVG so
-	// its strokes can draw themselves on load (stroke-dashoffset, see .hero__draw below).
-	// Inlined via ?raw + {@html} rather than <img>: an external SVG can't be reached by this
-	// component's CSS, and inlining also drops the 790 KB PNG request off the LCP path.
-	// Regenerate with .planning/quick/20260713-hero-draw-on/trace/ if the artwork changes.
-	import heroSvg from '$lib/images/hero-illustration.svg?raw';
+	// The redesign hero (approved in Figma 2026-10-24, TODO §15): the tree by the river on
+	// the site green, as two images that each overflow on the narrower screen of their range,
+	// so a fade edge never shows.
+	//
+	//   - Portrait 3:4 for portrait screens (phone, tablet held upright). Wider than a phone,
+	//     so the sides crop; exactly full width on a tablet. Its lower part runs into the site
+	//     green, which is where the text sits, under the tree.
+	//   - Landscape 21:9 for everything wider than tall (tablet on its side, laptop, desktop,
+	//     ultrawide). Cropped at the sides on 16:9, full width on ultrawide. Ultrawide is not
+	//     taller, so one height serves both.
+	//
+	// The switch is the screen's shape, not its width: the layout depends on whether the
+	// image sits above the text or behind it, and that is a question of aspect ratio. The
+	// same query is used by the <source> below and by the layout CSS.
+	//
+	// Widths by hand: the landscape image is drawn at max(100vw, 21/9 × 100vh), the portrait
+	// one at max(100vw, 58vh) (see .hero__media), and the sets cover those at 1x–2x.
+	import landscape from '$lib/images/redesign/hero-landscape-21x9.webp?w=1440;2120;2880;3840;4800&enhanced';
+	import portrait from '$lib/images/redesign/hero-portrait-3x4.webp?w=600;900;1200;1600;2400&enhanced';
+	import HeroLights from './HeroLights.svelte';
 
-	let sectionEl: HTMLElement | null = $state(null);
-	let leftEl: HTMLDivElement | null = $state(null);
+	// The intro (approved in the prototype, Figma/Hero-redesign/intro-prototype, 2026-10-27):
+	// the painting's own lines draw themselves out from the tree's base, the paint washes in
+	// from the tree, the lights come in with it, then the text. The drawing is a mask of traced
+	// centrelines over the painting's line layer, inlined so it runs from the HTML with CSS
+	// only, before hydration (as the line-art hero on main did). Regenerate both SVGs with
+	// Figma/Hero-redesign/intro-prototype/{lines,trace,emit-draw}.cjs if the painting changes.
+	import drawLandscapeSvg from '$lib/images/redesign/hero-draw-landscape.svg?raw';
+	import drawPortraitSvg from '$lib/images/redesign/hero-draw-portrait.svg?raw';
+	import linesLandscape from '$lib/images/redesign/hero-lines-landscape.webp?url';
+	import linesPortrait from '$lib/images/redesign/hero-lines-portrait.webp?url';
 
-	// The desktop hero image must never grow taller than the content column beside it
-	// (heading + body + CTA). CSS percentage-height on a replaced
-	// element (img) nested this deep in grid+flex doesn't resolve as a definite value —
-	// confirmed empirically, it falls back to matching the viewport width outright and
-	// crops the image (the same failure mode documented on .hero__img below for a
-	// different combo). A ResizeObserver measures .hero__left's real rendered height
-	// and writes it as a plain px custom property, which var() substitutes into a
-	// genuinely definite length — sidestepping the percentage-resolution issue entirely.
-	onMount(() => {
-		if (!leftEl || !sectionEl) return;
+	// From static/, at a fixed URL the CSS below shares: a ?url import gets re-encoded by the
+	// image plugin into a second file (.heif) that the CSS never loads.
+	const washAvif = '/images/hero-text-wash-1400.avif';
 
-		const ro = new ResizeObserver((entries) => {
-			const height = entries[0]?.contentRect.height;
-			if (height && sectionEl) {
-				sectionEl.style.setProperty('--hero-content-height', `${height}px`);
-			}
-		});
-		ro.observe(leftEl);
+	const PORTRAIT = '(max-aspect-ratio: 1/1)';
+	const LANDSCAPE = '(min-aspect-ratio: 1001/1000)';
+	// Only the screen's own line layer is downloaded (2026-10-28): with the href in the HTML,
+	// the browser fetched both, 106KB of it for a drawing that stays display: none. The
+	// <link media> preloads below fetch the right one while the HTML parses, and the href is
+	// set on hydration, by then a cache hit. The strokes themselves still draw from CSS alone.
+	const drawLandscape = drawLandscapeSvg.replace('href="%LINES%"', 'data-lines="landscape"');
+	const drawPortrait = drawPortraitSvg.replace('href="%LINES%"', 'data-lines="portrait"');
+	const LINES = { landscape: linesLandscape, portrait: linesPortrait };
 
-		return () => ro.disconnect();
+	let frame: HTMLElement;
+	$effect(() => {
+		const mq = matchMedia(PORTRAIT);
+		const attach = () => {
+			const which = mq.matches ? 'portrait' : 'landscape';
+			frame.querySelector(`image[data-lines="${which}"]`)?.setAttribute('href', LINES[which]);
+		};
+		attach();
+		mq.addEventListener('change', attach);
+		return () => mq.removeEventListener('change', attach);
 	});
 </script>
 
-<section class="hero" bind:this={sectionEl}>
-	<div class="hero__inner">
-		<!-- Image column: top on mobile (DOM order), right on desktop (order:2) -->
-		<div class="hero__image-col">
-			<!-- Wrapper stands in for the <picture> that <enhanced:img> used to emit: a
-			     full-width block box. It keeps this flex item's width constant across the
-			     ResizeObserver's height write, so only height shifts (as before) — without it
-			     the SVG becomes the flex item itself and its width shifts too, tripling CLS. -->
-			<div class="hero__img-wrap">
-				<!-- eslint-disable-next-line svelte/no-at-html-tags -- build-time asset, not user input -->
-				{@html heroSvg}
-			</div>
-		</div>
+<svelte:head>
+	<link rel="preload" as="image" href={linesLandscape} media={LANDSCAPE} />
+	<link rel="preload" as="image" href={linesPortrait} media={PORTRAIT} />
+	<!-- The LCP element (Lighthouse, 2026-10-28) is the painting on a phone and the text wash
+	     on a wide screen. Both sit late (the painting after the inlined drawings, the wash in
+	     CSS), so each is preloaded, high priority, only on the screens where it is the LCP.
+	     The wash is 16KB as AVIF (max 3/255 from the 177KB original). -->
+	<link
+		rel="preload"
+		as="image"
+		type="image/avif"
+		imagesrcset={portrait.sources.avif}
+		imagesizes="max(100vw, 58vh)"
+		media={PORTRAIT}
+		fetchpriority="high"
+	/>
+	<link
+		rel="preload"
+		as="image"
+		href={washAvif}
+		type="image/avif"
+		media={LANDSCAPE}
+		fetchpriority="high"
+	/>
+</svelte:head>
 
-		<!-- Content column: below image on mobile (DOM order), left on desktop (order:1).
-		     Two exit fades, not one and not three. The whole column is 365px, over a third
-		     of either viewport, so faded as one block the heading would sit well above the
-		     screen while the button kept it lit; the heading therefore answers the band on
-		     its own bottom edge, and the body and the button leave together, since a button
-		     never fades alone. `entrance: false` on both: the arrival is the pure-CSS cascade
-		     below and nothing else, so all they ask the action for is the way out. The
-		     wrapper is a plain block — the spacing is the children's own margins, which
-		     collapse through it. The drawing above is deliberately not wrapped: it neither
-		     fades in nor fades out. -->
-		<div class="hero__left" bind:this={leftEl}>
-			<div class="hero__content">
-				<h1 class="hero__heading" use:reveal={{ entrance: false }}>
-					Rust in je hoofd.<br />
-					Ontspanning in je lichaam.
-				</h1>
-				<div class="hero__text" use:reveal={{ entrance: false }}>
-					<p class="hero__body">
-						Ik weet hoe het voelt om vast te lopen, fysiek, mentaal en emotioneel. Via
-						lichaamsgerichte therapie, ademwerk en energetische behandelingen help ik jou terug naar
-						rust, herstel en jezelf.
-					</p>
-					<div class="hero__cta">
-						<ButtonLink href="/contact" label="Maak een afspraak" />
-					</div>
+<section class="hero">
+	<!-- The stage holds the picture. On portrait screens it takes whatever height the text
+	     leaves, and the picture hangs from its top; when the text needs more room, the picture
+	     slides up and loses sky, never river (see the portrait block). -->
+	<div class="hero__stage">
+		<div class="hero__frame" bind:this={frame}>
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -- build-time asset, not user input -->
+			{@html drawLandscape}
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -- build-time asset, not user input -->
+			{@html drawPortrait}
+			<!-- Decorative: the heading and the lead carry the meaning, so the image is alt="".
+			     Eager and high priority: it is the largest thing on the first screen. -->
+			<picture class="hero__media">
+				{#each Object.entries(portrait.sources) as [format, srcset] (format)}
+					<source media={PORTRAIT} type="image/{format}" {srcset} sizes="max(100vw, 58vh)" />
+				{/each}
+				{#each Object.entries(landscape.sources) as [format, srcset] (format)}
+					<source type="image/{format}" {srcset} sizes="max(100vw, 236vh)" />
+				{/each}
+				<img
+					class="hero__img"
+					src={landscape.img.src}
+					width={landscape.img.w}
+					height={landscape.img.h}
+					alt=""
+					loading="eager"
+					fetchpriority="high"
+					decoding="async"
+				/>
+			</picture>
+			<HeroLights />
+		</div>
+		<div class="hero__spacer"></div>
+	</div>
+
+	<div class="hero__inner">
+		<!-- Two exit fades, not one and not three: the heading answers the band on its own bottom
+		     edge, and the body and the button leave together, since a button never fades alone.
+		     `entrance: false` on both: the arrival is the pure-CSS cascade below. -->
+		<div class="hero__content">
+			<h1 class="hero__heading" use:reveal={{ entrance: false }}>
+				Stress, emoties en ingrijpende ervaringen kunnen je uit balans brengen.
+			</h1>
+			<div class="hero__text" use:reveal={{ entrance: false }}>
+				<p class="hero__body">
+					Bij Trinity Breath &amp; Healing begeleid ik je met ademwerk, lichaamsgerichte en
+					energetische behandelingen om spanning los te laten, patronen te herkennen en weer dichter
+					bij jezelf te komen.
+				</p>
+				<div class="hero__cta">
+					<ButtonLink href="/contact" label="Maak een afspraak" />
 				</div>
 			</div>
 		</div>
@@ -83,64 +146,31 @@
 
 <style>
 	/* ─── Entrance cascade ──────────────────────────────────────────────────────────
-	   The hero arrives a piece at a time, top to bottom, rather than all at once.
+	   The text arrives a piece at a time, top to bottom. Pure CSS rather than the
+	   scroll-reveal used further down: the hero is painted long before hydration on a
+	   phone, so arming a hidden state from JavaScript would show it, blank it and fade it
+	   back in. `backwards` applies the start state during the delay, from frame zero.
 
-	   Pure CSS, and deliberately not the scroll-reveal pattern used further down the page.
-	   That one arms the hidden state from JavaScript so the server-rendered HTML always shows
-	   finished content — safe for a section nobody has scrolled to yet, but wrong here: the
-	   hero is painted long before hydration on a phone, so arming it after the fact would show
-	   the hero, blank it, and fade it back in. A CSS animation is in force from the very first
-	   frame, needs no JavaScript at all, and cannot flash.
-
-	   `backwards` is what does that: it applies the keyframe's starting state during the delay,
-	   so an element with a 410ms delay is hidden from frame zero rather than visible until its
-	   turn comes.
-
-	   Ordered by where things sit on screen, not by DOM order — the two columns swap sides at
-	   1100px. The illustration is left out on purpose: its draw-on stroke animation is already
-	   its entrance, and fading it in on top of that would be two entrances for one element.
-
-	   The whole cascade waits for the illustration to finish drawing itself, so the two
-	   entrances read as one sequence rather than talking over each other.
-
-	   KNOWN COST, accepted deliberately: the heading is the LCP element, and an element at
-	   opacity 0 does not count as painted, so this delay lands directly on Largest Contentful
-	   Paint. It was 1ms before this wait was added. The project's budget is LCP < 2.5s, and
-	   the wait alone is 2.86s — so LCP is over budget by roughly the length of the draw. The
-	   fix, if that budget starts to bite, is to shorten the draw rather than to unpick the
-	   sequencing: the trace's stagger is generated, and regenerating it with a shorter total
-	   pulls this number down with it. */
+	   It comes last in the intro (Jay, 2026-10-27): lines draw (0–2.6s), the paint washes in
+	   from 1.82s with the lights 0.2s behind it (HeroLights), the text wash at 2.4s, the
+	   text at 2.9s. The wash was at 3.6s and the text at 4.1s until 2026-10-29: the paint's
+	   expo curve has it mostly in by ~2.6s, so that left a second of nothing before the
+	   words (owner: "too long of a pause"), and held the heading, the page's largest
+	   text, invisible for over four seconds. Now the wash starts while the paint settles. */
 	.hero {
-		/* Longest --t + --d baked into hero-illustration.svg, i.e. the frame the last stroke
-		   finishes. Regenerating the trace changes this — the generator's stagger and duration
-		   are what set it, so re-measure rather than assuming it held. */
-		--hero-draw-total: 2.86s;
-
-		/* The text starts arriving at the drawing's halfway point, not its end. Waiting for the
-		   full draw put the heading's first visible frame at 2.86s, and since the heading is the
-		   LCP element and an element at opacity 0 does not count as painted, that landed whole on
-		   Largest Contentful Paint — against a 2.5s budget.
-
-		   Halving it halves the cost almost exactly, because LCP is marked when opacity leaves 0
-		   (the end of this delay), not when the fade completes. The sequencing survives: the
-		   drawing is still visibly going when the text begins, so the two still read in order
-		   rather than together. Expressed as a fraction of the total so that regenerating the
-		   trace moves both in step. */
-		--hero-in-start: calc(var(--hero-draw-total) / 2);
+		--hero-in-start: 2.9s;
+		--paint-at: 1.82s;
+		--text-wash-at: 2.4s;
+		/* The portrait image's width (see the portrait block). Declared here, not inside that
+		   block, so it always resolves: the dead-variable guard checks var() on every screen. */
+		--img-w: min(max(100vw, 58.24svh), 117.6vw);
+		--img-h: calc(var(--img-w) * 4800 / 3584);
+		--side: clamp(24px, calc(9.3vw - 12.3px), 64px); /* portrait: side and bottom padding */
 	}
 
 	@media (prefers-reduced-motion: no-preference) {
-		/* Two animations, not one, because the fade and the movement want opposite curves.
-		   Running both off a single 620ms expo keyframe made this read as a fly-in: an expo
-		   ease-out is ~80% done in its first quarter, so the element arrived almost at once and
-		   the movement — not the fade — was the thing you noticed.
-
-		   The fade is now the long, dominant half: 1300ms on a gentle curve, so it is visibly
-		   still fading most of the way through. The movement is the short, subordinate half:
-		   10px rather than 16, on a hard expo ease-out that settles early and gets out of the
-		   way. What is left is a slow fade with a hint of rise under it.
-
-		   A single animation-delay value applies to both entries in the list. */
+		/* Two animations, because the fade and the movement want opposite curves: a long
+		   gentle fade, and a short 10px rise on a hard expo ease-out that settles early. */
 		.hero__heading,
 		.hero__body,
 		.hero__cta {
@@ -160,6 +190,128 @@
 		}
 	}
 
+	/* The wash paints itself in: three soft radial masks that grow from slightly different
+	   centres at different rates, so it spreads like pigment on wet paper, not as a circle.
+	   It starts as the painting settles (--text-wash-at), half a second before the text.
+	   The resting value (150%) leaves the mask fully open, so without motion it is just there. */
+	@property --wash-r {
+		syntax: '<percentage>';
+		inherits: false;
+		initial-value: 150%;
+	}
+
+	.hero__content::before {
+		mask-image:
+			radial-gradient(
+				farthest-side at 50% 50%,
+				#000 calc(var(--wash-r) - 40%),
+				#0000 var(--wash-r)
+			),
+			radial-gradient(
+				farthest-side at 32% 58%,
+				#000 calc(var(--wash-r) * 0.85 - 40%),
+				#0000 calc(var(--wash-r) * 0.85)
+			),
+			radial-gradient(
+				farthest-side at 66% 42%,
+				#000 calc(var(--wash-r) * 0.7 - 40%),
+				#0000 calc(var(--wash-r) * 0.7)
+			);
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.hero__content::before {
+			animation: hero-wash 1800ms cubic-bezier(0.22, 1, 0.36, 1) var(--text-wash-at) backwards;
+		}
+	}
+
+	@keyframes hero-wash {
+		from {
+			--wash-r: 0%;
+		}
+	}
+
+	/* ─── Intro 1: the lines draw themselves ───
+	   Each mask stroke carries pathLength="1", so one dash covers it whatever its length, and
+	   offsetting 1 → 0 draws it end to end; --t and --d are baked into the SVG (emit-draw.cjs),
+	   starting nearest the tree's base. Gap 1.1, not 1: WebKit's rounding when it scales the
+	   pattern back from pathLength="1" otherwise leaves a dot (see main's DrawOn.svelte). The
+	   drawing sits under the picture, which covers it once the paint is in. */
+	.hero__frame :global(.hero__draw) {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+	}
+
+	.hero__frame :global(.hero__draw path) {
+		stroke-dasharray: 1 1.1;
+		stroke-dashoffset: 1;
+		animation: hero-draw var(--d, 0.6s) ease-out var(--t, 0s) forwards;
+	}
+
+	@keyframes hero-draw {
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
+
+	/* ─── Intro 2: the paint washes in from the tree ───
+	   The text wash's three-radial mask, on the picture, centred on the tree. Its own property
+	   so the two washes never share a value. At rest (150%) the picture is simply there. */
+	@property --paint-r {
+		syntax: '<percentage>';
+		inherits: false;
+		initial-value: 150%;
+	}
+
+	.hero__media {
+		--paint-mask:
+			radial-gradient(
+				farthest-side at var(--cx) var(--cy),
+				#000 calc(var(--paint-r) - 40%),
+				#0000 var(--paint-r)
+			),
+			radial-gradient(
+				farthest-side at calc(var(--cx) - 12%) calc(var(--cy) + 10%),
+				#000 calc(var(--paint-r) * 0.85 - 40%),
+				#0000 calc(var(--paint-r) * 0.85)
+			),
+			radial-gradient(
+				farthest-side at calc(var(--cx) + 10%) calc(var(--cy) - 12%),
+				#000 calc(var(--paint-r) * 0.7 - 40%),
+				#0000 calc(var(--paint-r) * 0.7)
+			);
+		-webkit-mask-image: var(--paint-mask);
+		mask-image: var(--paint-mask);
+	}
+
+	@media (prefers-reduced-motion: no-preference) {
+		.hero__media {
+			animation: hero-paint 1800ms cubic-bezier(0.22, 1, 0.36, 1) var(--paint-at) backwards;
+		}
+	}
+
+	@keyframes hero-paper {
+		from {
+			opacity: 0;
+		}
+	}
+
+	@keyframes hero-paint {
+		from {
+			--paint-r: 0%;
+		}
+	}
+
+	/* Reduced motion: the finished picture, no drawing, no wash. */
+	@media (prefers-reduced-motion: reduce) {
+		.hero__frame :global(.hero__draw path) {
+			stroke-dashoffset: 0;
+			animation: none;
+		}
+	}
+
 	@keyframes hero-fade {
 		from {
 			opacity: 0;
@@ -172,291 +324,275 @@
 		}
 	}
 
-	/* ─── Section ─── */
+	/* ─── Section ───
+	   Starts under the fixed nav (the layout pads <main> by --nav-height), so the image
+	   runs to the top of the screen and the nav sits on it, transparent at the top of the
+	   home page (Nav.svelte). The site green is the fallback while the image loads, and
+	   the colour the portrait image runs into. */
+	/* Sticky: the hero holds still and the page (.over-hero in +page.svelte) scrolls up over
+	   it (owner, 2026-10-28). It is never taller than the screen it pins to. */
 	.hero {
-		background: var(--color-bg-sand);
-		overflow: hidden; /* clips mobile image bleed */
+		position: sticky;
+		top: 0;
+		isolation: isolate;
+		margin-top: calc(-1 * var(--nav-height));
+		min-height: 100svh;
+		background: var(--color-brand-green);
+		color: var(--color-bg-sand);
+		overflow: hidden;
+	}
+
+	.hero__stage {
+		z-index: -1;
+	}
+
+	.hero__frame {
+		position: relative;
+	}
+
+	/* The drawing, the picture and the lights all cover the frame exactly. */
+	.hero__media {
+		position: absolute;
+		inset: 0;
+	}
+
+	.hero__img {
+		display: block;
+		width: 100%;
+		height: 100%;
+		max-width: none;
 	}
 
 	.hero__inner {
-		display: flex;
-		flex-direction: column;
-		max-width: var(--container-max); /* same cap as nav/footer, so content edges line up */
+		max-width: var(
+			--container-max
+		); /* same cap as nav/footer, so the text lines up with the logo */
 		margin: 0 auto;
 	}
 
-	/* ─── Image column — mobile: top via DOM order ─── */
-	.hero__image-col {
-		/* Hero's mobile content is fixed-height (image is width-bound, not vh-bound), so on
-		   tall viewports the next section starts creeping into view below the fold. Content
-		   height also varies by viewport WIDTH (heading/body text wraps to a different number
-		   of lines at different widths, non-monotonically) — 808px is calibrated to the
-		   worst case in the ≤389px bucket (~340-375px, where text wraps tallest). The ≥390px
-		   bucket below uses a later threshold since its content is naturally shorter, keeping
-		   the added margin closer to the minimum actually needed at those widths. Verified via
-		   a full width x height scan (320-430 x 667-1300) to leave zero peek in either bucket. */
-		margin-top: calc(var(--space-6) + max(0px, 100vh - 808px));
-		width: 100%;
-		overflow: hidden; /* clip the symmetric bleed to the viewport edges */
-		position: relative;
-	}
-
-	/* ≥390px: heading/body text wraps to fewer lines here, so content is naturally shorter —
-	   a later threshold keeps the added margin closer to the minimum actually needed. */
-	@media (min-width: 390px) and (max-width: 767px) {
-		.hero__image-col {
-			margin-top: calc(var(--space-6) + max(0px, 100vh - 861px));
-		}
-	}
-
-	/* Tablets (768px up to the 1100px desktop breakpoint) get this same stacked layout, since
-	   2026-09-17 — the owner's rule is that every tablet renders as mobile, and the two-column
-	   hero used to start at 768px. The fold-fill margin above is calibrated to a phone, where
-	   the drawing is width-bound at ~333px and the whole hero is a fixed ~808px; on a tablet
-	   the drawing is 640-875px tall by itself (it is still width-bound, and the width is 768
-	   to 1024), so the content already reaches the fold and the formula would only add
-	   empty sand — 582px of it on an iPad Pro 12.9 in portrait. Plain --space-6 instead. */
-	@media (min-width: 768px) and (max-width: 1099.98px) {
-		.hero__image-col {
-			margin-top: var(--space-6);
-		}
-
-		/* A phone never needs a measure on the intro; a tablet does, or the paragraph runs
-		   the full 976px of an iPad Pro at ~120 characters a line. 40rem is ~85. */
-		.hero__body {
-			max-width: 40rem;
-		}
-	}
-
-	/* The illustration is injected via {@html}, so Svelte's scoping classes never land on it —
-	   :global() under the (scoped) parent reaches it without leaking outside the hero.
-	   Every sizing rule below is carried over unchanged from the <img> this replaced, with one
-	   addition: an inline <svg> is NOT a replaced element the way <img> is — `width: auto`
-	   resolves to "fill the container" rather than "follow the intrinsic aspect ratio", which
-	   letterboxed the art inside a too-wide box on desktop (measured 1.093 vs the true 1.171).
-	   An explicit aspect-ratio restores the <img> behaviour the surrounding CSS was tuned for. */
-	.hero__img-wrap {
-		display: block;
-		width: 100%;
-	}
-
-	.hero__image-col :global(.hero__img) {
-		display: block;
-		position: relative;
-		left: 50%;
-		transform: translateX(-50%); /* symmetric bleed — centres the image whatever its width */
-		aspect-ratio: 2015 / 1721; /* the artwork's intrinsic ratio — see note above */
-		width: auto; /* auto width keeps aspect locked — never crops, never stretches */
-		height: auto;
-		/* Was 130%. That ceiling was never actually reachable before: <enhanced:img> served a
-		   downscaled raster (intrinsic 389px at this breakpoint), so `width: auto` landed well
-		   under the cap and the art sat inside the column. The SVG's intrinsic width is the
-		   artwork's full 2015px, which WOULD hit 130% and bleed off both edges — a size change
-		   nobody asked for. 100% reproduces the shipped rendering exactly (390x333 at 390px). */
-		max-width: 100%;
-		max-height: max(
-			220px,
-			calc(100vh - 24rem)
-		); /* full-bleed on tall phones; shrinks (never below 220px) on short screens, in step with the heading */
-		color: #211f1d; /* the original artwork's ink colour; strokes are currentColor */
-	}
-
-	/* ─── Draw-on: the strokes paint themselves on load ─────────────────────────────
-	   Each <path> carries pathLength="1", so one dash covers the whole path whatever its
-	   real length, and offsetting 1 → 0 draws it end to end. Per-path --t (delay) and
-	   --d (duration) are baked into the SVG, staggered ridges → tree → river → waterfall.
-	   Composited on the GPU; no JS, no layout, no scroll coupling. */
-	.hero__image-col :global(.hero__draw path) {
-		/* Gap 1.1, not 1 — see DrawOn.svelte for the full reasoning. `stroke-dasharray: 1`
-		   parks the gap exactly over the path with no margin, and WebKit's rounding when it
-		   scales the pattern back from pathLength="1" leaves a sub-pixel dash that a round
-		   linecap paints as a full-width dot. The wider gap keeps the path clear until the
-		   offset animates; at offset 0 the dash covers it exactly, as before. */
-		stroke-dasharray: 1 1.1;
-		stroke-dashoffset: 1;
-		animation: hero-draw var(--d, 0.6s) ease-out var(--t, 0s) forwards;
-	}
-
-	@keyframes hero-draw {
-		to {
-			stroke-dashoffset: 0;
-		}
-	}
-
-	/* Reduced motion: show the finished drawing immediately, never animate. */
-	@media (prefers-reduced-motion: reduce) {
-		.hero__image-col :global(.hero__draw path) {
-			stroke-dashoffset: 0;
-			animation: none;
-		}
-	}
-
-	/* ─── Content ─── */
 	.hero__content {
-		padding: var(--space-4) var(--space-6) var(--space-16); /* bottom space so the section doesn't butt the next one */
-		--btn-label-size: var(--font-size-sm); /* 14px on mobile, Figma spec */
+		position: relative;
+		isolation: isolate;
+	}
+
+	/* The watercolour wash under the text, instead of a radial scrim: a wash painted on white,
+	   its paper keyed to alpha (Figma/Hero-redesign/scripts/wash-process.cjs), pigment
+	   #2f3a28 at up to 55%. It has faded to nothing before its edge, so no edge shows.
+	   Sized from the text block, centred on it. */
+	.hero__content::before {
+		content: '';
+		position: absolute;
+		z-index: -1;
+		left: 50%;
+		top: 50%;
+		aspect-ratio: 2400 / 1792;
+		background: url('../../images/redesign/hero-text-wash-1400.webp') center / 100% 100% no-repeat;
+		background-image: image-set(
+			url('/images/hero-text-wash-1400.avif') type('image/avif'),
+			url('../../images/redesign/hero-text-wash-1400.webp') type('image/webp')
+		);
+		pointer-events: none;
 	}
 
 	.hero__heading {
-		font-family: var(--font-display);
-		font-size: min(
-			var(--fs-title),
-			4.8vh
-		); /* mobile: token size, but shrinks with the image on short screens */
+		font-family: var(--font-body); /* DM Sans Medium, per the Figma frames */
 		font-weight: var(--font-weight-medium);
-		color: var(--color-fg-forest);
-		line-height: var(--line-height-tight);
-		margin-bottom: var(--space-4);
+		line-height: 1.15;
+		text-wrap: balance;
 	}
 
 	.hero__body {
 		font-family: var(--font-body);
-		/* Never under 15px: the fluid clamp alone bottoms out at 12px on a phone, too
-		   small for body copy. Desktop is unchanged (the clamp is 16px by 1440). */
-		font-size: max(15px, var(--fs-body-xs));
-		line-height: var(--line-height-loose);
-		color: var(--color-text-subtle);
-		margin-bottom: var(--space-4);
+		line-height: 1.5;
 	}
 
-	/* ─── Desktop (≥ 1100px) — two-column, image beside text ───
-	   1100px, not 768 and not 1024. It was 768, which handed every iPad in portrait (768,
-	   810, 820, 834) the two-column hero, and 1024 would still hand it to an iPad Pro 12.9
-	   in portrait, where the fold rule below stretched the hero to 1266px with the text
-	   at the top and the drawing on the bottom edge, 460px of sand between them. The
-	   owner's rule (2026-09-17) is that every tablet renders as mobile; 1100 is the first
-	   width that is a laptop and not a portrait tablet. Werkwijze's pin uses the same
-	   number, so a tablet gets the stacked hero and the pinned track together. */
-	@media (min-width: 1100px) {
-		.hero__inner {
-			display: grid;
-			grid-template-columns: 44% 1fr; /* content keeps its reserved 44% share; image gets the rest */
-			/* The fold rule. The hero used to be a fixed 764px (100px nav + 48px padding +
-			   616px drawing), which the owner measured on his three screens: 6px above the
-			   fold on the 1600x770 laptop, and a 196px band of empty sand under it on
-			   1920x960, 316px on 2560x1080. The hero is now at least the viewport minus the
-			   nav, and the drawing sits on its bottom edge (align-self on the image column
-			   below), so the river at the foot of the illustration meets the fold on every
-			   screen rather than only on the one it happened to fit. svh, not vh: on a
-			   browser with a collapsing toolbar the small viewport is the one that is always
-			   there. */
-			min-height: calc(100svh - var(--nav-height));
-			/* The height both columns agree on. A constant expression, deliberately: the
-			   content column and the illustration each read it, and neither is measured
-			   from the other, so there is no loop to feed. 38.5rem is what .hero__left
-			   measured before the service cards were removed; the 42vw term keeps it under
-			   the image track's own width on narrow desktops.
+	/* ─── Portrait screens: tree above, text at the bottom ───
+	   The image is as wide as the screen or 58svh (78% of the height at its 3:4 ratio),
+	   whichever is more, so on a phone it overflows at the sides and on a tablet it is full
+	   width. The text sits at the bottom of the screen: the button's bottom is one side
+	   padding above the edge (Jay, 2026-10-27), so as much of the painting shows as fits.
+	   Sizes from the Figma frames: 30/16px at 390, 46/19px at 820.
 
-			   The drawing grows with its column, and stops. --site-scale (app.css) is the
-			   container's growth as a plain number, so the first term is the drawing's
-			   height at 1200px times that growth: 616px on the 1600px laptop as before,
-			   710 at 1920. The third term is a ceiling on its WIDTH, written as the height
-			   that width works out to at the artwork's own ratio (the height is what the
-			   drawing is sized from, see .hero__img below; a max-width on the svg itself
-			   would cap the box and leave the art letterboxed inside it, lifted off the
-			   hero's bottom edge). The owner's verdict on the uncapped version was that the
-			   1106px drawing on his 2560px ultrawide was a little too big; 950 is the size
-			   he asked for there, and it is the only screen of his three the cap touches:
-			   721 / 831 / 950 wide on 1600 / 1920 / 2560. */
-			--hero-img-max-w: 950px;
-			--hero-col-h: min(
-				calc(38.5rem * var(--site-scale)),
-				42vw,
-				calc(var(--hero-img-max-w) * 1721 / 2015)
-			);
-			/* align-items: start (not the grid default, stretch) is load-bearing: .hero__left
-			   must report its own intrinsic content height to the ResizeObserver in the
-			   script block, unaffected by the row's track height. Stretch would make it
-			   match the row instead — which the image's height also feeds — a circular
-			   dependency that compounds every frame into runaway values (confirmed
-			   empirically: heights spiralled into the thousands of px). */
-			align-items: start;
-			position: relative; /* anchor for the absolutely-positioned social icons */
+	   No script for the fit: the stage is a flex column that takes the height the text
+	   leaves. The frame counts only down to the river's lowest point (63% of the image) plus
+	   8px of air; the rest hangs below behind the text, which there is calm paper. With room
+	   to spare, the spacer after the frame takes it and the frame stays at the top. Without
+	   it, justify-content: flex-end lets the frame overflow at the top, so a short phone
+	   loses sky, never river, and the text never covers it.
+
+	   Across, the river runs out to 2.6% of the image at the left and the canopy to 86.7% at
+	   the right, so both show when the screen holds 85% of the image's width: hence the cap
+	   of 117.6vw on --img-w (Jay: the whole river, 2026-10-27). The frame's centre sits
+	   between the two, at 44.1%, clamped to the image's edges. */
+	@media (max-aspect-ratio: 1/1) {
+		.hero {
+			display: flex;
+			flex-direction: column;
 		}
 
-		/* Content column. With the service cards gone this is much shorter than the
-		   illustration beside it, so it holds --hero-col-h and centres its content in
-		   that space rather than hanging from the top with a gap underneath.
-		   min-height is a constant, not the image's height — the ResizeObserver reads
-		   this column and the image is sized from what it reads, so measuring the image
-		   here would close a loop. */
-		.hero__left {
-			grid-column: 1;
-			grid-row: 1;
+		.hero__stage {
 			position: relative;
-			z-index: 1; /* content always paints above the artwork — no absolute positioning needed */
-			min-width: 0;
-			min-height: var(--hero-col-h);
+			flex: 1 1 0;
+			min-height: 0;
+			display: flex;
+			flex-direction: column;
+			justify-content: flex-end;
+		}
+
+		.hero__frame {
+			flex: none;
+			align-self: flex-start;
+			width: var(--img-w);
+			height: var(--img-h);
+			margin-bottom: calc(8px - var(--img-h) * 0.37);
+			margin-left: clamp(calc(100% - var(--img-w)), calc(50% - var(--img-w) * 0.441), 0px);
+		}
+
+		.hero__spacer {
+			flex: 1 0 0;
+		}
+
+		/* The painting's paper runs on below it, so its texture never stops at a flat-green
+		   edge (its own bottom band, mirrored: intro-prototype/paper.cjs). */
+		.hero__frame::after {
+			content: '';
+			position: absolute;
+			top: calc(100% - 1px);
+			left: 0;
+			width: 100%;
+			height: 100svh;
+			background: url('../../images/redesign/hero-paper-portrait.webp') top center / 100% auto
+				repeat-y;
+		}
+
+		/* It belongs to the paint, so it arrives with it, not before the lines are drawn. */
+		@media (prefers-reduced-motion: no-preference) {
+			.hero__frame::after {
+				animation: hero-paper 1.4s ease calc(var(--paint-at) + 0.5s) backwards;
+			}
+		}
+
+		.hero__frame :global(.hero__draw--landscape) {
+			display: none;
+		}
+
+		.hero__media {
+			--cx: 60%;
+			--cy: 48%;
+		}
+
+		.hero__inner {
+			width: 100%;
+			padding: 0 var(--side) var(--side);
+		}
+
+		.hero__content {
+			max-width: 40rem;
+		}
+
+		/* Smaller and lighter than on landscape: here the text sits on the calm green under the
+		   river, which already holds 4.4:1, so the wash only has to lift it, and at full size
+		   it read as a dark cloud under the button. */
+		.hero__content::before {
+			width: 125%;
+			opacity: 0.7;
+			transform: translate(-50%, -50%);
+		}
+
+		.hero__heading {
+			font-size: clamp(28px, calc(15.5px + 3.72vw), 46px);
+			max-width: 14em;
+			margin-bottom: 0.5em;
+		}
+
+		.hero__body {
+			font-size: clamp(15px, calc(13.3px + 0.7vw), 19px);
+			max-width: 31em;
+			margin-bottom: 1.8em;
+		}
+	}
+
+	/* ─── Landscape screens: text on the left, over the image ───
+	   The image covers the section: height-bound and cropped at the sides on 16:9, width-
+	   bound on ultrawide. The text block is centred vertically, 20px below centre as in the
+	   frames, and starts at the container's left edge. Sizes follow the frames: 52/19px at
+	   1440, 56/20 at 1920, 62/21 at 2560, 68/23 at 3440.
+
+	   The frame is the image's own box, not the section, so the drawing, the picture and the
+	   lights crop as one. Across, its centre is 51.5% (between the river's left end at 21%
+	   and the canopy's right at 81%), so a 4:3 tablet loses equal bits of both and 1.44:1
+	   shows both whole. Down, it hangs from the bottom so the river shows to the edge, but
+	   never higher than 15.3% of the image (just above the canopy): on very wide screens the
+	   tree keeps its crown and the river gives way first. */
+	@media (min-aspect-ratio: 1/1) {
+		.hero {
 			display: flex;
 			flex-direction: column;
 			justify-content: center;
 		}
 
-		.hero__content {
-			padding: 0 var(--space-10) 0 0; /* vertical space now comes from centring in --hero-col-h */
-			--btn-label-size: var(--font-size-xl); /* 20px on desktop */
+		.hero__stage {
+			position: absolute;
+			inset: 0;
+			container-type: size;
 		}
 
-		/* The type does NOT grow with the screen. One build scaled the title, the body,
-		   their measures and the two buttons by --site-scale, and the owner's verdict on
-		   his 2560px ultrawide was "too big, revert": 48px in a 1840px container reads as
-		   a title, 74px reads as a poster. So the hero keeps its 1200-container sizes at
-		   every width and only the drawing beside it grows (see --hero-col-h). The smaller
-		   --fs-title-sm the 768-1023 range used to get is gone with that range. */
+		.hero__frame {
+			--fw: max(100cqw, 100cqh * 6336 / 2688);
+			--fh: calc(var(--fw) * 2688 / 6336);
+			position: absolute;
+			left: clamp(calc(100cqw - var(--fw)), calc(50cqw - var(--fw) * 0.515), 0px);
+			top: max(calc(100cqh - var(--fh)), var(--fh) * -0.153);
+			width: var(--fw);
+			height: var(--fh);
+		}
+
+		.hero__frame :global(.hero__draw--portrait) {
+			display: none;
+		}
+
+		.hero__media {
+			--cx: 67%;
+			--cy: 58%;
+		}
+
+		.hero__img {
+			object-fit: cover;
+		}
+
+		.hero__inner {
+			width: 100%;
+			padding: calc(var(--nav-height) + 40px) var(--space-6) var(--nav-height);
+		}
+
+		.hero__content {
+			width: min(100%, 714px, calc(416px + 8.66vw)); /* the title's width: 10.4em at its size */
+		}
+
+		/* Shifted left of centre, so it clears the tree's canopy. */
+		.hero__content::before {
+			width: 205%;
+			transform: translate(-57%, -50%);
+		}
+
 		.hero__heading {
-			font-size: var(--fs-title); /* 36→48 */
-			max-width: 25rem;
-			margin-bottom: var(--space-4);
+			font-size: clamp(40px, calc(40px + 0.833vw), 68px);
+			margin-bottom: 0.5em;
 		}
 
 		.hero__body {
-			max-width: 27.5rem;
-			margin-bottom: var(--space-6);
+			font-size: clamp(16px, calc(16px + 0.208vw), 23px);
+			max-width: 27em;
+			margin-bottom: 1.8em;
 		}
+	}
 
-		/* Image column sits in the right grid track (col 2), which spans exactly from the content's
-		   right edge to the screen's right edge. The illustration is centred within it — i.e. at the
-		   midpoint between the hero content and the right edge of the screen. */
-		.hero__image-col {
-			grid-column: 2; /* right track only — no longer spans/overlaps the content column */
-			grid-row: 1;
-			min-width: 0;
-			margin-top: 0;
-			/* Anchored to the hero's bottom edge, and only this column: .hero__left keeps
-			   the top alignment the ResizeObserver depends on (align-items: start on the
-			   grid above), so the text column's intrinsic height is still what it reports. */
-			align-self: end;
-			display: flex;
-			align-items: flex-start;
-			justify-content: center; /* centre the illustration in the right zone (content-right ↔ screen-right) */
-			padding-top: var(--space-12);
-			overflow: hidden; /* clip only if the art is wider than the track — never a horizontal scrollbar */
-		}
-
-		.hero__image-col :global(.hero__img) {
-			left: auto;
-			transform: none; /* reset the mobile bleed-centring; desktop positions via the grid column */
-			width: auto;
-			/* Definite height, not auto+max-height/percentage: confirmed empirically (twice,
-			   with two different approaches) that this replaced element's sizing inside
-			   nested grid+flex falls back to matching the viewport width outright instead
-			   of the aspect-ratio + height-clamped size, badly cropping the image. A
-			   genuinely definite length sidesteps it. --hero-content-height is a plain px
-			   value written by a ResizeObserver in the script block, measuring
-			   .hero__left's real rendered height (heading + body + CTA) — so the
-			   image is capped at exactly the content column's height and never grows past
-			   it. The var() fallback only matters for the brief pre-hydration paint,
-			   before the observer has measured anything. */
-			/* Floor at --hero-col-h, so dropping the service cards does not shrink the
-			   drawing: that column measured 615px with the cards and 445px without them,
-			   and the image is sized from it. Same constant the content column holds, so
-			   the two end up the same height. */
-			height: max(
-				var(--hero-content-height, min(calc(100vh - var(--nav-height)), 1000px, 55vw)),
-				var(--hero-col-h)
-			);
-			max-width: none; /* width follows aspect */
-			max-height: none; /* cancels the mobile-base max-height, which otherwise keeps cascading through */
+	/* From 1100px the nav's row is min(container, 100% - 3rem) with no padding; the text
+	   takes the same box, so its left edge is the logo's. */
+	@media (min-aspect-ratio: 1/1) and (min-width: 1100px) {
+		.hero__inner {
+			width: min(var(--container-max), 100% - 3rem);
+			padding-inline: 0;
 		}
 	}
 </style>

@@ -10,6 +10,11 @@ const config = {
 		runes: true
 	},
 	kit: {
+		// Every stylesheet goes into the HTML instead of a separate request (2026-10-28):
+		// on a phone over 4G the four blocking CSS files held the first paint back about
+		// 1.5s (Lighthouse). Same CSS, same order, so nothing looks different; the CSP
+		// below already allows inline styles. 160KB covers all of them (the largest is 74KB raw).
+		inlineStyleThreshold: 160 * 1024,
 		adapter: adapter({
 			runtime: 'nodejs22.x', // Vercel discontinued nodejs20.x in October 2026; every deploy on it fails
 			// regions: ['fra1'] applies to Vercel Functions only; static prerender ships globally via Vercel CDN

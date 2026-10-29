@@ -46,6 +46,8 @@
 		icon: string | null;
 		art?: ServiceArt;
 		number?: number;
+		/** The service card's watercolour green, so the card grows into the same paint. */
+		paint?: string;
 	}
 
 	interface Props {
@@ -118,6 +120,7 @@
 
 <dialog
 	class="service-modal"
+	style:--paint={services[activeIndex]?.paint}
 	bind:this={dialogRef}
 	aria-labelledby={`service-modal-title-${services[activeIndex]?.slug ?? ''}`}
 	oncancel={onCancel}
@@ -294,7 +297,7 @@
 		   height only, so "the dialog appears matched exactly to the card's
 		   rect, same background, same border radius" holds automatically at
 		   every frame, not just the first one. */
-		background: var(--color-brand-green);
+		background: var(--paint, var(--paint-green));
 		color: var(--color-bg-sand);
 		border-radius: var(--radius-lg);
 		overflow: hidden;
@@ -654,7 +657,7 @@
 	   green on a wide screen. Two grounds inside it: the left 42% stays the
 	   card's green and carries the drawing, the right 58% is the page's sand
 	   and carries the words in forest ink, with the site's own brown button.
-	   The dialog's background stays plain green on purpose: the open
+	   The dialog's background stays the card's painted green on purpose: the open
 	   animation grows the card into this box (Behandelingen.svelte reads the
 	   target from getBoundingClientRect, so the new size needs no JS), and the
 	   sand arrives with the content fade, as a pseudo-element on the content

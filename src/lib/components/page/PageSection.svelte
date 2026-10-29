@@ -43,16 +43,18 @@
 		flex-direction: column;
 		gap: var(--space-6);
 		padding-block: var(--block-gap);
-		border-top: 1px solid color-mix(in srgb, var(--brand-border) 28%, transparent);
+		/* No rule between sections since 2026-10-29: the home page separates its
+		   sections with space and a small-over-big title, not lines, and the
+		   owner wanted the subpages less rigid. */
 	}
 
 	.psec__eyebrow {
 		margin: 0 0 var(--space-2);
 		font-family: var(--font-body);
-		font-size: var(--fs-label);
-		font-weight: var(--font-weight-medium);
-		letter-spacing: 0.06em;
-		text-transform: uppercase;
+		/* The home page's eyebrow (Faq, OverMij, Behandelingen): 18px light, sentence case
+		   (owner, 2026-10-28: subpages line up with the home page). Was 12px caps. */
+		font-size: var(--font-size-xl);
+		font-weight: var(--font-weight-light);
 		color: var(--brand-muted);
 	}
 

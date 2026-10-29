@@ -77,13 +77,13 @@ for (const vp of VIEWPORTS) {
 			});
 		});
 
-		test('every card CTA is reachable by keyboard', async ({ page }) => {
+		test('the three steps read in order as h3s', async ({ page }) => {
 			await page.goto('/');
-			const cta = page.locator('#werkwijze a', { hasText: 'Maak een afspraak' });
-			await expect(cta).toBeVisible();
-			await cta.focus();
-			await expect(cta).toBeFocused();
-			await expect(cta).toBeInViewport();
+			await expect(page.locator('#werkwijze').getByRole('heading', { level: 3 })).toHaveText([
+				'Kennismaking & intake',
+				'De behandeling',
+				'Afronding & nazorg'
+			]);
 		});
 	});
 }

@@ -17,6 +17,7 @@
 	import { BRAND } from '$lib/constants/brand';
 	import { KLACHTEN } from '$lib/content/klachten';
 	import { reveal } from '$lib/actions/reveal';
+	import { paintGreen } from '$lib/paint';
 	import type { PageData } from './$types';
 
 	let { data }: { data: PageData } = $props();
@@ -28,23 +29,32 @@
 
 <PageShell>
 	<PageHead
-		lead="De meeste mensen komen niet binnen met de naam van een behandeling, maar met een klacht. Hieronder staat waar mensen mee komen en welke behandelingen daarbij horen. Je hoeft zelf niet te kiezen."
+		eyebrow="Behandelingen"
+		lead="Je komt meestal niet met de naam van een behandeling, maar met een klacht. Zoek wat herkenbaar is; kiezen hoeft niet."
 	>
 		Waar kom je mee?
 	</PageHead>
 
-	<!-- Seven complaints as a grid of blocks, two across on a laptop and three on
-	     a wide screen; each keeps its own reveal and its anchor id, which other
-	     pages link to. -->
+	<!-- Seven complaints as green watercolour cards (2026-10-29, owner: the cards get
+	     the home page's painted green, the treatments become small gold tags), two
+	     across on a tablet and three on a laptop; each keeps its anchor id, which other
+	     pages link to. No reveal: a card is a third of the screen or more, over the
+	     limit for a fading block (reveal-audit.spec.ts). -->
 	<ul class="klachten">
-		{#each KLACHTEN as klacht (klacht.id)}
-			<li class="klacht" id={klacht.id} use:reveal>
+		{#each KLACHTEN as klacht, i (klacht.id)}
+			<li class="klacht" id={klacht.id} style:--paint={paintGreen(i + 2)}>
 				<h2 class="klacht__title">{klacht.title}</h2>
 				<p class="klacht__body">{klacht.body}</p>
 				<ul class="klacht__services">
 					{#each klacht.services as slug (slug)}
 						<li>
-							<a class="chip" href="/diensten/{slug}">{nameOf(slug)}</a>
+							<a
+								class="chip btn-pill btn-host text-roll roll-host"
+								href="/diensten/{slug}"
+								data-label={nameOf(slug)}
+							>
+								<span class="text-roll__face">{nameOf(slug)}</span>
+							</a>
 						</li>
 					{/each}
 				</ul>
@@ -53,7 +63,7 @@
 	</ul>
 
 	<p class="klachten__alt" use:reveal>
-		Liever eerst lezen wat elke behandeling precies is?
+		Liever per behandeling lezen?
 		<a class="link-underline" href="/diensten">Bekijk alle diensten op naam</a>.
 	</p>
 
@@ -74,14 +84,16 @@
 		padding: 0;
 		display: grid;
 		grid-template-columns: 1fr;
-		gap: var(--space-8) var(--space-10);
+		gap: var(--space-5);
 	}
 
 	.klacht {
 		display: flex;
 		flex-direction: column;
-		padding-top: var(--space-5);
-		border-top: 1px solid color-mix(in srgb, var(--brand-border) 28%, transparent);
+		padding: var(--space-8) var(--space-6) var(--space-6);
+		border-radius: 1.125rem; /* the home page's green cards */
+		background: var(--paint, var(--paint-green));
+		color: var(--color-bg-sand);
 		scroll-margin-top: calc(var(--nav-height) + var(--space-6));
 	}
 
@@ -91,7 +103,7 @@
 		font-size: var(--fs-h3);
 		font-weight: var(--font-weight-medium);
 		line-height: var(--line-height-tight);
-		color: var(--color-fg-forest);
+		color: var(--color-bg-sand);
 		text-wrap: balance;
 	}
 
@@ -101,57 +113,47 @@
 		font-family: var(--font-body);
 		font-size: var(--fs-body);
 		font-weight: var(--font-weight-light);
-		line-height: var(--line-height-loose);
-		color: var(--color-text-subtle);
+		line-height: var(--line-height-normal);
+		color: var(--color-bg-sand);
 	}
 
 	.klacht__services {
 		list-style: none;
-		margin: var(--space-5) 0 0;
+		margin: var(--space-6) 0 0;
 		padding: 0;
 		display: flex;
 		flex-wrap: wrap;
 		gap: var(--space-2);
 	}
 
+	/* Small tags in the site's button (2026-10-29, owner: brown "like the original
+	   call-to-action colors" with the buttons' hover, not gold, no glow): .btn-pill
+	   brings the brown fill and the swap, .text-roll the rolling label, both from
+	   app.css. Only the size is the tag's own. 28px tall, over the 24px target minimum. */
 	.chip {
 		display: inline-flex;
-		align-items: center;
-		min-height: 2.25rem; /* 36px — comfortably over the 24px target minimum */
-		padding: 0 var(--space-4);
-		border: 1px solid color-mix(in srgb, var(--brand-border) 40%, transparent);
+		align-items: stretch;
+		min-height: 1.75rem;
+		padding: 0 var(--space-3);
 		border-radius: var(--radius-full);
 		font-family: var(--font-body);
-		font-size: var(--fs-body-sm);
-		color: var(--brand-border);
+		font-size: 0.8125rem; /* 13px */
 		text-decoration: none;
-		transition:
-			background-color var(--motion-hover) var(--ease-hover),
-			border-color var(--motion-hover) var(--ease-hover),
-			color var(--motion-hover) var(--ease-hover);
-	}
-
-	@media (hover: hover) and (pointer: fine) {
-		.chip:hover {
-			background: var(--brand-border);
-			border-color: var(--brand-border);
-			color: var(--color-bg-sand);
-		}
 	}
 
 	.chip:focus-visible {
-		background: var(--brand-border);
-		border-color: var(--brand-border);
-		color: var(--color-bg-sand);
+		outline: 2px solid var(--color-bg-sand);
+		outline-offset: 2px;
 	}
 
 	.klachten__alt {
-		margin: var(--block-gap) 0 var(--space-8);
+		margin: var(--block-gap) auto var(--space-8);
 		max-width: 60ch;
 		font-family: var(--font-body);
 		font-size: var(--fs-body);
 		line-height: var(--line-height-loose);
 		color: var(--color-text-subtle);
+		text-align: center;
 	}
 
 	@media (min-width: 700px) {
@@ -160,9 +162,14 @@
 		}
 	}
 
-	@media (min-width: 1536px) {
+	@media (min-width: 1100px) {
 		.klachten {
 			grid-template-columns: repeat(3, minmax(0, 1fr));
+		}
+
+		/* A card alone on the last row sits in the middle, not under the first. */
+		.klacht:last-child:nth-child(3n + 1) {
+			grid-column: 2;
 		}
 	}
 </style>

@@ -59,6 +59,9 @@ test.describe('desktop', () => {
 
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/');
+		// The fan drifts by itself while on screen (2026-10-28); data-drift="off", set before
+		// it is in view, keeps it on whole cards for these tests.
+		await page.evaluate(() => (document.documentElement.dataset.drift = 'off'));
 		await page.locator('.treatments__fan').scrollIntoViewIfNeeded();
 	});
 
@@ -150,6 +153,9 @@ test.describe('mobile', () => {
 
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/');
+		// The fan drifts by itself while on screen (2026-10-28); data-drift="off", set before
+		// it is in view, keeps it on whole cards for these tests.
+		await page.evaluate(() => (document.documentElement.dataset.drift = 'off'));
 		await page.locator('.treatments__fan').scrollIntoViewIfNeeded();
 	});
 

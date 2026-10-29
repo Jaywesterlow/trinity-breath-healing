@@ -19,13 +19,13 @@
  * Determinism — every known nondeterminism source in this app is neutralized below,
  * not hidden behind a loose diff threshold:
  *
- * 1. Hero draw-on animation (src/lib/components/global/Hero.svelte, .hero__draw path):
- *    a ~2.9s staggered stroke-dashoffset animation. `page.emulateMedia({ reducedMotion:
- *    'reduce' })` (called in settle() below — see item 5 for why this and not the
- *    context option) makes the browser match `prefers-reduced-motion: reduce`, which
- *    triggers Hero.svelte's own media-query rule setting `stroke-dashoffset: 0` and
- *    `animation: none` — the fully-drawn final state, with no timing dependency.
- *    Confirmed by reading the component's <style> block, not assumed.
+ * 1. Hero intro and lights (src/lib/components/global/Hero.svelte, HeroLights.svelte):
+ *    a ~4.5s CSS intro (lines draw, paint washes in, text arrives) and rAF-driven lights.
+ *    `page.emulateMedia({ reducedMotion: 'reduce' })` (called in settle() below, before
+ *    navigation — see item 5 for why this and not the context option) makes Hero.svelte's
+ *    media-query rules show the finished state with no animation, and HeroLights.svelte
+ *    reads the same query on mount: tree lights drawn once at full strength, at their
+ *    fixed spots, no drift, no fireflies, no streaks — nothing random, nothing moving.
  *
  * 2. AboutStat count-up (src/lib/components/ui/AboutStat.svelte): an rAF-driven number
  *    count-up whose onMount opens with
@@ -158,6 +158,12 @@ async function settle(page: Page, route: string): Promise<void> {
 	await page.waitForTimeout(150);
 	await page.evaluate(() => window.scrollTo(0, 0));
 	await page.waitForTimeout(150);
+	// The footer's curtain (position: sticky, under the page) is pinned to the viewport,
+	// which a full-page capture does not move: it would shoot the footer hidden behind the
+	// page and leave its own place blank. Off for the capture; the footer then sits where
+	// it ends up anyway at the bottom of the scroll. A style, not removing the class: the
+	// footer re-checks on resize, and the full-page capture resizes.
+	await page.addStyleTag({ content: 'footer.footer { position: relative !important; }' });
 }
 
 test.use({ deviceScaleFactor: 1 });

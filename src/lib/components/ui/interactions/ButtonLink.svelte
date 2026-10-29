@@ -30,18 +30,24 @@
 	}: Props = $props();
 </script>
 
+<!-- With the arrow, the whole link is the pill and the circle sits inside it (Figma
+     "Hero (scrolling)", Frame 49, 2026-10-24), so .btn-pill goes on the <a>. Without
+     it, the label span is the pill, as before. -->
 <a
 	{href}
 	{onclick}
 	class="btn-link roll-host btn-host"
 	class:btn-link--arrow={withArrow}
 	class:btn-link--block={block}
+	class:btn-pill={withArrow}
+	class:btn-pill--secondary={withArrow && variant === 'secondary'}
 >
 	<!-- data-label feeds the second copy of the word, which .text-roll draws as a
 	     pseudo-element rather than a second node — see app.css. -->
 	<span
-		class="btn-link__label btn-pill text-roll"
-		class:btn-pill--secondary={variant === 'secondary'}
+		class="btn-link__label text-roll"
+		class:btn-pill={!withArrow}
+		class:btn-pill--secondary={!withArrow && variant === 'secondary'}
 		data-label={label}
 	>
 		<span class="text-roll__face">{label}</span>
@@ -91,8 +97,14 @@
 		gap: var(--space-2);
 	}
 
+	/* Frame 49, measured from the 4x export: 44px tall, the label 16px DM Sans starting 16px
+	   in, 10px to a 32px circle that sits 6px from the pill's edge. The 2px edge is the
+	   button rule's, inside the 44 (border-box). */
 	.btn-link--arrow {
-		gap: 0;
+		box-sizing: border-box;
+		gap: 0.625rem;
+		height: 2.75rem;
+		padding: 0 0.25rem 0 0.875rem; /* + the 2px edge: 16px and 6px */
 	}
 
 	/* The card version: the row fills the card's content box and the label eats
@@ -108,6 +120,10 @@
 		min-width: 0;
 	}
 
+	.btn-link--block.btn-link--arrow .btn-link__label {
+		justify-content: flex-start;
+	}
+
 	/* Clipping, nowrap and the second copy of the word come from .text-roll. */
 	.btn-link__label {
 		display: inline-flex;
@@ -116,33 +132,39 @@
 		height: var(--space-10);
 		padding: 0 var(--space-6);
 		border-radius: var(--radius-full);
-		font-family: var(--font-display);
-		font-size: var(--btn-label-size, var(--font-size-xl)); /* overridable per context */
+		font-family: var(
+			--font-body
+		); /* every button label: DM Sans 16, as the arrow buttons (owner, 2026-10-28) */
+		font-size: 1rem;
 		font-weight: 400;
 		line-height: 1;
 		/* Fill, edge, ink and the hover swap are .btn-pill's — see app.css. */
 	}
 
+	/* Inside the pill the label is only the clipping box for the roll: as tall as the pill,
+	   so the word rolls right out of it, with no fill or padding of its own. */
 	.btn-link--arrow .btn-link__label {
-		margin-right: -2px; /* slight overlap with circle, per Figma */
+		align-self: stretch;
+		height: auto;
+		padding: 0;
+		border-radius: 0;
+		font-family: var(--font-body);
+		font-size: 1rem;
 	}
 
 	/* Straight down, against the label's roll upward. Positioning, clipping and
 	   the swap itself come from .arrow-swap in app.css. */
-	/* The circle is built from the pill's own two colours, which is what makes the
-	   arrow a modifier rather than a variant. It fills with whatever the LABEL
-	   currently is: an empty brown ring while the label is sand on brown, and a
-	   filled brown disc with a sand arrow once the pill has inverted and the label
-	   has gone brown. Filling it with the pill's own fill instead would be
-	   invisible — that fill is sand on hover, and so is the page. */
+	/* A cream disc inside the pill, its arrow the pill's own brown (owner, 2026-10-28; Frame
+	   49 had gold). On hover and focus the pill inverts (the button rule: sand fill, brown
+	   label), and the disc goes the other way, brown with a sand arrow, so it never vanishes
+	   into the pill. */
 	.btn-link__circle {
 		--swap-x: 0px;
 		--swap-y: var(--arrow-roll);
-		width: var(--space-10);
-		height: var(--space-10);
+		width: 2rem;
+		height: 2rem;
 		border-radius: 50%;
-		border: 2px solid var(--btn-fill);
-		background: transparent;
+		background: var(--btn-ink);
 		color: var(--btn-fill);
 		flex-shrink: 0;
 		transition:
@@ -159,6 +181,24 @@
 		.btn-link:hover .btn-link__circle {
 			background: var(--btn-fill);
 			color: var(--btn-ink);
+		}
+	}
+
+	/* Secondary is the same two colours in the opposite order, so its disc starts tan. */
+	.btn-pill--secondary .btn-link__circle {
+		background: var(--btn-fill);
+		color: var(--btn-ink);
+	}
+
+	.btn-pill--secondary.btn-link:focus-visible .btn-link__circle {
+		background: var(--btn-ink);
+		color: var(--btn-fill);
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.btn-pill--secondary.btn-link:hover .btn-link__circle {
+			background: var(--btn-ink);
+			color: var(--btn-fill);
 		}
 	}
 

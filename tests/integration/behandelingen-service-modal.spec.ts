@@ -21,6 +21,16 @@ const CARD = 'a.tcard';
 const MODAL = 'dialog.service-modal';
 const ACTIVE_TITLE = '.service-modal__panel:not([hidden]) .service-modal__title';
 
+/** One press of the modal's Next/Prev, then wait for the swap to land: the title has
+ *  changed, plus a beat for the swap to finish. A fixed wait (700ms) was not enough on a
+ *  loaded CI runner, and a press that lands mid-swap is ignored by design. */
+async function press(page: Page, dir: 'next' | 'prev'): Promise<void> {
+	const before = await activeTitle(page);
+	await page.locator(`.service-modal__nav--${dir}`).click();
+	await expect.poll(() => activeTitle(page), { timeout: 5000 }).not.toBe(before);
+	await page.waitForTimeout(500);
+}
+
 async function positions(page: Page): Promise<number[]> {
 	return page.$$eval('.treatments__pivot', (els) =>
 		els.map((el) => Number(getComputedStyle(el).getPropertyValue('--pos')))
@@ -54,6 +64,9 @@ test.describe('desktop', () => {
 
 	test.beforeEach(async ({ page }) => {
 		await page.goto('/');
+		// The fan drifts by itself while on screen (2026-10-28); data-drift="off", set before
+		// it is in view, keeps it on whole cards for these tests.
+		await page.evaluate(() => (document.documentElement.dataset.drift = 'off'));
 		await page.locator('.treatments__fan').scrollIntoViewIfNeeded();
 	});
 
@@ -81,15 +94,11 @@ test.describe('desktop', () => {
 		await page.waitForTimeout(1500);
 		expect(await activeTitle(page)).toBe('Mahatma Healing');
 
-		await page.locator('.service-modal__nav--next').click();
-		await page.waitForTimeout(700);
+		await press(page, 'next');
 		expect(await activeTitle(page)).toBe('Goldhealing');
 
 		// 6 more presses — 7 total, one full lap of 7 services — wraps back to Mahatma Healing.
-		for (let i = 0; i < 6; i++) {
-			await page.locator('.service-modal__nav--next').click();
-			await page.waitForTimeout(700);
-		}
+		for (let i = 0; i < 6; i++) await press(page, 'next');
 		expect(await activeTitle(page)).toBe('Mahatma Healing');
 	});
 
@@ -99,14 +108,12 @@ test.describe('desktop', () => {
 		await page.waitForTimeout(1500);
 		expect(await activeTitle(page)).toBe('Mahatma Healing');
 
-		await page.locator('.service-modal__nav--prev').click();
-		await page.waitForTimeout(700);
+		await press(page, 'prev');
 		// Mahatma Healing is index 0 in BRAND.services — Prev wraps to the last, index 6.
 		const lastTitle = await activeTitle(page);
 		expect(lastTitle).not.toBe('Mahatma Healing');
 
-		await page.locator('.service-modal__nav--next').click();
-		await page.waitForTimeout(700);
+		await press(page, 'next');
 		expect(await activeTitle(page)).toBe('Mahatma Healing');
 	});
 
@@ -216,6 +223,9 @@ test.describe('desktop', () => {
 
 		test('open and close are instant, no growth, no fade', async ({ page }) => {
 			await page.goto('/');
+			// The fan drifts by itself while on screen (2026-10-28); data-drift="off", set before
+			// it is in view, keeps it on whole cards for these tests.
+			await page.evaluate(() => (document.documentElement.dataset.drift = 'off'));
 			await page.locator('.treatments__fan').scrollIntoViewIfNeeded();
 			const centre = await indexAt(page, 0);
 
@@ -243,6 +253,9 @@ test.describe('mobile', () => {
 		page
 	}) => {
 		await page.goto('/');
+		// The fan drifts by itself while on screen (2026-10-28); data-drift="off", set before
+		// it is in view, keeps it on whole cards for these tests.
+		await page.evaluate(() => (document.documentElement.dataset.drift = 'off'));
 		await page.locator('.treatments__fan').scrollIntoViewIfNeeded();
 		const centre = await indexAt(page, 0);
 

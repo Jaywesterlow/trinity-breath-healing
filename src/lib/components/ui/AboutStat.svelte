@@ -133,7 +133,7 @@
 	.stat__value {
 		font-family: var(--font-display);
 		font-weight: var(--font-weight-medium);
-		font-size: 4rem; /* 64px — the ledger's one fixed size, no token at this scale */
+		font-size: 3.25rem; /* 52px (was 64) — the ledger's one fixed size, no token at this scale */
 		line-height: 1;
 		color: var(--color-fg-forest);
 		font-variant-numeric: tabular-nums;
@@ -144,7 +144,7 @@
 	   rather than as part of it. */
 	.stat__plus {
 		display: inline-block;
-		font-size: 2.5rem; /* 40px */
+		font-size: 2rem; /* 32px, was 40 */
 		line-height: 1;
 		vertical-align: top;
 		margin-left: 0.04em;

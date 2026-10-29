@@ -169,17 +169,15 @@ test.describe('Phase 1 landing-page assertions', () => {
 		root = parse('');
 	}
 
-	test('PRF-02: hero renders inline for LCP (no render-blocking image request)', () => {
-		// Hero was redesigned from a raster <enhanced:img> to an inline SVG ({@html} + ?raw — see
-		// Hero.svelte). The LCP hero content now ships in the server-rendered HTML with no separate
-		// image fetch, so the old <link rel="preload" as="image"> no longer applies. Assert the inline
-		// hero SVG is present in the initial HTML instead (raw-HTML match — node-html-parser does not
-		// reliably expose <svg>/<main>).
+	test('PRF-02: hero image is eager and high priority in the initial HTML', () => {
+		// The redesign hero (2026-10-24) is a raster <picture> again, with portrait and landscape
+		// art-directed sources (Hero.svelte). It is the largest thing on the first screen, so it
+		// must never be lazy and is fetched at high priority.
 		expect(indexHtml.length).toBeGreaterThan(0);
-		expect(
-			/<svg[^>]*class="[^"]*hero__img/.test(indexHtml),
-			'inline hero SVG (class="hero__img") missing from server-rendered HTML (PRF-02, inline-SVG hero)'
-		).toBe(true);
+		const tag = indexHtml.match(/<img[^>]*class="[^"]*hero__img[^"]*"[^>]*>/)?.[0] ?? '';
+		expect(tag, 'hero <img class="hero__img"> missing from server-rendered HTML').not.toBe('');
+		expect(tag, 'hero image must be eager (PRF-02)').toMatch(/loading="eager"/);
+		expect(tag, 'hero image must be fetchpriority="high" (PRF-02)').toMatch(/fetchpriority="high"/);
 	});
 
 	/**
@@ -191,8 +189,8 @@ test.describe('Phase 1 landing-page assertions', () => {
 	 * caught that counted `loading="eager"` occurrences — a proxy that reads zero whether the
 	 * requirement is perfectly met or completely unimplemented, which is how this went unnoticed.
 	 *
-	 * The old assertion is also unsatisfiable now: the hero is an inline <svg>, so there is no
-	 * hero <img> to be the single eager one.
+	 * Since the 2026-10-24 redesign the hero is a raster <img> again (eager, high priority) and
+	 * the Werkwijze card images are lazy.
 	 *
 	 * Blanket-lazying the rest is NOT the fix, which is why this is still skipped rather than
 	 * implemented. At least three groups must stay eager for reasons that are deliberate:

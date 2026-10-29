@@ -15,3 +15,6 @@ lighthouserc.json
 .pa11yci.json
 test-results/
 .claude/
+
+# Design sources and prototype scripts (Figma exports, image processing) — not site code
+Figma/

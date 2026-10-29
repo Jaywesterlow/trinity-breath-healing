@@ -39,6 +39,11 @@
  */
 import { test, expect, type Page } from '@playwright/test';
 
+// Real pointer input: a three-step flick on a CPU shared with other workers can arrive as
+// too few pointermove events to build any velocity (passes 8/8 on one worker, failed 1 in
+// 40 alongside others). Retried here only, so a slow runner cannot block a merge on it.
+test.describe.configure({ retries: 2 });
+
 const DESKTOP = { width: 1440, height: 900 };
 
 test.use({ viewport: DESKTOP });
@@ -59,6 +64,9 @@ type Sample = { t: number; pos: number };
 
 async function flickAndSample(page: Page) {
 	await page.goto('/');
+	// The fan drifts by itself while on screen (2026-10-28); data-drift="off", set before
+	// it is in view, keeps the drift out of the flick being measured.
+	await page.evaluate(() => (document.documentElement.dataset.drift = 'off'));
 	await page.locator('.treatments__fan').scrollIntoViewIfNeeded();
 
 	const box = await page.locator('.treatments__fan').boundingBox();

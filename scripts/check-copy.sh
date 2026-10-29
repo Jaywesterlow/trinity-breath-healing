@@ -36,13 +36,17 @@ check_string() {
 
 # LND-09 — locked Figma copy strings (must appear verbatim in rendered HTML)
 # Hero (Plan 01-01)
-check_string "Rust in je hoofd. Ontspanning in je lichaam."
+# The approved hero redesign (d0683e8, 2026-10-27) replaced "Rust in je hoofd.
+# Ontspanning in je lichaam." with this heading.
+check_string "Stress, emoties en ingrijpende ervaringen kunnen je uit balans brengen."
 check_string "Maak een afspraak"
 # Werkwijze (Plan 01-03)
 check_string "Rustig, persoonlijk en op jouw tempo."
 check_string "Kennismaking"
 check_string "De sessie"
-check_string "Verdieping"
+# "Verdieping" became "Afronding & nazorg" in the approved Werkwijze redesign (d0683e8,
+# 2026-10-27). Matched without the ampersand, which the HTML escapes.
+check_string "Afronding"
 # About (Plan 01-04)
 check_string "Vanuit eigen ervaring weet ik wat jij doormaakt."
 # FAQ (Plan 01-07) — restored 2026-07-24. The visible section now backs the FAQPage JSON-LD

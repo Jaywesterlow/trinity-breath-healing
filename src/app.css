@@ -24,6 +24,10 @@
 	   card bodies). Darkened along its own hue until it clears AA on both grounds
 	   it actually sits on: 4.98:1 on --color-bg-sand, 4.55:1 on --color-card-warm. */
 	--color-text-subtle: #656962; /* neutral stone gray — body text on light bg */
+	/* Every button's fill (the button rule below). The owner's Figma tan is #b68a6b, which
+	   gives cream text 2.7:1; this is that same hue taken down to the lightest step that
+	   clears AA with margin: 4.66:1 on cream (owner's choice, 2026-10-24). */
+	--color-cta: #8d6346;
 	--brand-border: #7c5e49; /* dark cream, darkened for WCAG AA — dividers, input borders, CTA chrome (was #b68a6b, 2.73:1; now 5.25:1 on --color-bg-sand) */
 	--color-accent-gold-soft: #c7a27a; /* Figma-sourced — Over mij mobile CTA/link accents on dark overlay */
 	/* Forest taken down 20% so it can carry *text* on gold-soft. Plain
@@ -152,6 +156,34 @@
 	--color-bg-sand-25: color-mix(in srgb, var(--color-bg-sand) 25%, transparent);
 	--color-fg-forest-92: color-mix(in srgb, var(--color-fg-forest) 92%, transparent);
 
+	/* Every green surface (cards, modals, footer) is painted with the Werkwijze cards' watercolour,
+	   and no two neighbours share one (owner, 2026-10-28): ten variants, the calm tops of the
+	   three werkwijze-card images, plain, mirrored and flipped (1200px, ~3.5KB each). Each one's
+	   average is the brand green within 3/255, so sand on it keeps the 4.5:1 of the flat green,
+	   which stays underneath while the image loads. Pick one with paintGreen() ($lib/paint.ts);
+	   --paint-green is the default. */
+	--paint-green-1: url('$lib/images/redesign/green-wash-1.webp') center / cover no-repeat
+		var(--color-brand-green);
+	--paint-green-2: url('$lib/images/redesign/green-wash-2.webp') center / cover no-repeat
+		var(--color-brand-green);
+	--paint-green-3: url('$lib/images/redesign/green-wash-3.webp') center / cover no-repeat
+		var(--color-brand-green);
+	--paint-green-4: url('$lib/images/redesign/green-wash-4.webp') center / cover no-repeat
+		var(--color-brand-green);
+	--paint-green-5: url('$lib/images/redesign/green-wash-5.webp') center / cover no-repeat
+		var(--color-brand-green);
+	--paint-green-6: url('$lib/images/redesign/green-wash-6.webp') center / cover no-repeat
+		var(--color-brand-green);
+	--paint-green-7: url('$lib/images/redesign/green-wash-7.webp') center / cover no-repeat
+		var(--color-brand-green);
+	--paint-green-8: url('$lib/images/redesign/green-wash-8.webp') center / cover no-repeat
+		var(--color-brand-green);
+	--paint-green-9: url('$lib/images/redesign/green-wash-9.webp') center / cover no-repeat
+		var(--color-brand-green);
+	--paint-green-10: url('$lib/images/redesign/green-wash-10.webp') center / cover no-repeat
+		var(--color-brand-green);
+	--paint-green: var(--paint-green-1);
+
 	/* --- Spacing scale (base: 0.25rem / 4px) --- */
 	--space-1: 0.25rem;
 	--space-2: 0.5rem;
@@ -187,30 +219,30 @@
 	--font-size-xs: 0.75rem;
 	--font-size-sm: 0.875rem;
 	--font-size-base: 1rem;
-	--font-size-lg: 1.125rem;
-	--font-size-xl: 1.25rem;
-	--font-size-heading-sm: 1.75rem;
-	--font-size-2xl: clamp(1.5rem, 4vw, 2rem);
-	--font-size-3xl: clamp(2rem, 6vw, 3rem);
+	--font-size-lg: 1.0625rem;
+	--font-size-xl: 1.125rem; /* was 1.25rem; the owner asked for smaller type throughout (2026-10-17) */
+	--font-size-heading-sm: 1.5rem;
+	--font-size-2xl: clamp(1.25rem, 4vw, 1.75rem);
+	--font-size-3xl: clamp(1.75rem, 6vw, 2.5rem);
 
 	/* --- Semantic fluid type scale                                              */
 	/* Each token: 2 sizes (mobile @ 375px, desktop @ 1440px) + one clamp.      */
 	/* Formula: clamp(MIN, calc(intercept + slope·vw), MAX)                      */
 	/* Range: 375px → 1440px (1065px denominator). All values in px.             */
-	--fs-display: clamp(36px, calc(24.74px + 3.005vw), 68px); /* hero H1        36→68 */
-	--fs-title: clamp(36px, calc(31.77px + 1.127vw), 48px); /* hero H1 (Figma) 36→48 */
+	--fs-display: clamp(30px, calc(20.49px + 2.535vw), 57px); /* hero H1        30→57 */
+	--fs-title: clamp(30px, calc(26.48px + 0.939vw), 40px); /* hero H1        30→40 (was 36→48) */
 	--fs-h2: clamp(
-		28px,
-		calc(23.77px + 1.127vw),
-		40px
-	); /* section H2     28→40; was 28→48, colliding with H1's 48px ceiling */
-	--fs-h3: clamp(22px, calc(18.48px + 0.939vw), 32px); /* sub-heading H3 22→32 */
-	--fs-body-lg: clamp(17px, calc(15.94px + 0.282vw), 20px); /* lead / intro   17→20 */
-	--fs-body: clamp(15px, calc(14.3px + 0.188vw), 17px); /* body copy      15→17 */
-	--fs-body-sm: clamp(13px, calc(12.3px + 0.188vw), 15px); /* captions       13→15 */
-	--fs-body-xs: clamp(12px, calc(10.59px + 0.376vw), 16px); /* hero intro      12→16 */
+		24px,
+		calc(20.48px + 0.939vw),
+		34px
+	); /* section H2     24→34; was 28→40 (and before that 28→48) */
+	--fs-h3: clamp(19px, calc(16.18px + 0.751vw), 27px); /* sub-heading H3 19→27 */
+	--fs-body-lg: clamp(16px, calc(15.3px + 0.188vw), 18px); /* lead / intro   16→18 */
+	--fs-body: clamp(15px, calc(14.65px + 0.094vw), 16px); /* body copy      15→16 */
+	--fs-body-sm: clamp(13px, calc(12.65px + 0.094vw), 14px); /* captions       13→14 */
+	--fs-body-xs: clamp(12px, calc(10.94px + 0.282vw), 15px); /* hero intro      12→15 */
 	--fs-label: clamp(13px, calc(12.65px + 0.094vw), 14px); /* nav / labels   13→14 */
-	--fs-cta: clamp(14px, calc(13.3px + 0.188vw), 16px); /* button text    14→16 */
+	--fs-cta: clamp(13px, calc(12.3px + 0.188vw), 15px); /* button text    13→15 */
 
 	--line-height-snug: 1;
 	--line-height-tight: 1.2;
@@ -267,7 +299,7 @@
 	   rounds up to 2px, and then snaps back to 1.5px the instant the animation
 	   settles — so every footer link's underline visibly thinned at the end of
 	   its own reveal. An integral height renders the same mid-wipe as at rest. */
-	--underline-height: 2px;
+	--underline-height: 1px; /* was 2px; 1px like the nav since 2026-10-18 */
 	--motion-underline: 260ms;
 	/* The underline arrives in two stages: a neutral line first, then the link's
 	   own colour sweeping over it. --brand-muted used to play the first part and
@@ -320,9 +352,12 @@
 	--nav-height: 80px; /* mobile: 20px padding × 2 + 40px logo */
 }
 
-@media (min-width: 1024px) {
+/* 1100, not 1024, since 2026-10-17: the nav switches to its desktop row on the
+   same line as the hero and the Werkwijze pin (the owner's rule that tablets render
+   as mobile). At 1024 the six links, the logo and the buttons did not fit. */
+@media (min-width: 1100px) {
 	:root {
-		--nav-height: 100px; /* desktop: explicit height from Nav.svelte */
+		--nav-height: 88px; /* desktop: explicit height from Nav.svelte (was 100 before the smaller logo) */
 	}
 }
 
@@ -503,14 +538,22 @@ h6 {
 }
 
 /* ─── The underline wipe ─────────────────────────────────────────────────────
-   Global rather than per-component: four components had four copies of this,
-   at two different heights and with the exit reversed. Add `link-underline` to
-   any inline link and it behaves the same everywhere.
+   Global rather than per-component: add `link-underline` to any inline link and it
+   behaves the same everywhere.
 
-   The origin flip is the whole trick. At rest the origin is the right edge, so
-   collapsing pulls the line off toward the right; on hover it is the left edge,
-   so growing pushes it out to the right. In and out therefore travel the same
-   direction instead of rewinding. */
+   Rebuilt 2026-10-18 on the nav's model, because this one felt laggy and seemed to
+   thicken at the end. Measured frame by frame, the line's pixels never moved; what
+   changed was its strength: the first stage was currentcolor at 45% alpha, and the
+   full-colour second stage landing on it read as the line getting fatter. Now, as in
+   the nav: 1px, both stages opaque (the idle grey, then the link's colour), so the
+   second stage reads as a change of colour and nothing else. And the wipe is
+   background-size rather than scaleX, so it is painted, not scaled on a compositor
+   layer, and rasterises the same mid-wipe as at rest.
+
+   The position flip keeps the direction: at rest the line is anchored right, so
+   collapsing pulls it off toward the right; on hover it is anchored left, so growing
+   pushes it out to the right. In and out travel the same way instead of rewinding.
+   A context with a dark background sets --link-underline-idle (the footer does). */
 .link-underline {
 	position: relative;
 	text-decoration: none;
@@ -524,24 +567,24 @@ h6 {
 	right: 0;
 	bottom: -0.125rem;
 	height: var(--underline-height);
-	transform: scaleX(0);
-	transform-origin: right center;
-	transition: transform var(--motion-underline) var(--ease-out);
+	background-repeat: no-repeat;
+	background-size: 0% 100%;
+	background-position: right center;
+	transition: background-size var(--motion-underline) var(--ease-out);
+	pointer-events: none;
 }
 
-/* First stage. currentcolor faded rather than the flat grey the nav uses: these
-   links sit on sand in one place and on the footer's green in another, and a
-   fixed grey would vanish on the second. Faded, it is always a quieter version
-   of whatever colour the link already is. */
+/* First stage: the nav's grey, opaque. */
 .link-underline::before {
-	background: color-mix(in srgb, currentcolor 45%, transparent);
+	background-image: linear-gradient(
+		var(--link-underline-idle, var(--color-underline-idle)),
+		var(--link-underline-idle, var(--color-underline-idle))
+	);
 }
 
-/* Second stage, and the one that waits. Both lines occupy the same pixels, so
-   without the delay the full-strength one simply covers the faded one on the
-   way out and there is no first stage to see. */
+/* Second stage, and the one that waits, so the first one is seen at all. */
 .link-underline::after {
-	background: currentColor;
+	background-image: linear-gradient(currentcolor, currentcolor);
 }
 
 .link-underline:focus-visible::after {
@@ -556,23 +599,23 @@ h6 {
 
 .link-underline:focus-visible::before,
 .link-underline:focus-visible::after {
-	transform: scaleX(1);
-	transform-origin: left center;
+	background-size: 100% 100%;
+	background-position: left center;
 }
 
 @media (hover: hover) and (pointer: fine) {
 	.link-underline:hover::before,
 	.link-underline:hover::after {
-		transform: scaleX(1);
-		transform-origin: left center;
+		background-size: 100% 100%;
+		background-position: left center;
 	}
 }
 
 /* Permanently drawn, and not animated: the current page in a nav, or a link in
    body copy that has to read as a link before anyone points at it. */
 .link-underline--always::after {
-	transform: scaleX(1);
-	transform-origin: left center;
+	background-size: 100% 100%;
+	background-position: left center;
 }
 
 /* ─── The button label roll ──────────────────────────────────────────────────
@@ -676,7 +719,7 @@ h6 {
    naming them again. */
 .btn-host,
 .btn-pill {
-	--btn-fill: var(--brand-border);
+	--btn-fill: var(--color-cta);
 	--btn-ink: var(--color-bg-sand);
 }
 
@@ -690,9 +733,16 @@ h6 {
 		border-color var(--motion-arrow) var(--ease-arrow);
 }
 
+/* The outlined tier blurs whatever passes behind it (owner, 2026-10-29): a drifting
+   leaf in the About section can cross "Lees meer over mij", and through a clear
+   button it sat right under the label. Blurred, it stays a soft shape behind the
+   words instead of vanishing or fighting them. No tint, so the button keeps its
+   see-through look. */
 .btn-pill--secondary {
 	background: transparent;
 	color: var(--btn-fill);
+	-webkit-backdrop-filter: blur(8px);
+	backdrop-filter: blur(8px);
 }
 
 .btn-host:not(:disabled):focus-visible .btn-pill,
@@ -798,3 +848,17 @@ h6 {
 .has-cursor-tooltip *::after {
 	cursor: none !important;
 }
+
+/* ─── Smaller buttons (2026-10-17) ─────────────────────────────────────────────
+   The owner asked for buttons a good deal smaller. ButtonLink.svelte is locked
+   (byte-identical), so the size is set here: one step more specific than its own
+   scoped rules (a.btn-link beats .btn-link), nothing else about it changes. The
+   label size already follows --font-size-xl / --btn-label-size. */
+a.btn-link .btn-link__label {
+	height: 2.25rem; /* 36px, was 40 */
+	padding: 0 1.25rem; /* 20px, was 24 */
+}
+
+/* The arrow circle is not sized here any more: it is Frame 49's 32px disc (ButtonLink),
+   6px from the pill's edge on all three sides. This rule made it 36px, 4px from the top
+   and bottom but 6px from the right (owner, 2026-10-28). */
