@@ -30,7 +30,7 @@
 	 * reduced motion shows no leaves at all.
 	 *
 	 * Eight autumn leaves (2026-10-29, owner: orange-ish, mixed, some still green,
-	 * yellow, dark orange, red), all one red-maple shape after her reference photo, drawn by
+	 * yellow, dark orange, red), all one red-maple shape after the owner's reference photo, drawn by
 	 * .planning/quick/261029-apl-autumn-paint-leaves/autumn-leaves.cjs.
 	 */
 
