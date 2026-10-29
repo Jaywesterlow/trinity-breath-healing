@@ -10,6 +10,13 @@
 	   the two cards pull toward the cursor exactly the way a treatment card does. */
 	import { magnetic } from '$lib/actions/magnetic';
 	import { reveal } from '$lib/actions/reveal';
+	/* One illustration per card (2026-10-29), in the hero and Werkwijze style: gold
+	   line art on a sage wash, generated with Gemini's image model (Nano Banana) in
+	   Figma, file "Trinity contact card illustrations". The subject sits on the right;
+	   the left of each image fades out into the card's own paint, so the text keeps
+	   the plain green it had. */
+	import artMeeting from '$lib/images/redesign/contact-meeting.webp?w=480;960;1584&enhanced';
+	import artForm from '$lib/images/redesign/contact-form.webp?w=480;960;1584&enhanced';
 
 	/* null is the rest state: neither route chosen, both cards on offer. Picking
 	   one replaces the pair with that panel, and the switch link above it goes
@@ -120,6 +127,14 @@
 					onclick={() => choose('meeting')}
 					use:reveal={{ distance: 0 }}
 				>
+					<enhanced:img
+						class="route__art"
+						src={artMeeting}
+						alt=""
+						sizes="(min-width: 1100px) 40rem, 100vw"
+						loading="lazy"
+						decoding="async"
+					/>
 					<span class="route__title">Plan een kennismaking</span>
 					<span class="route__body"
 						>Kies zelf een moment. Dertig minuten, online, vrijblijvend.</span
@@ -146,6 +161,14 @@
 					onclick={() => choose('form')}
 					use:reveal={{ distance: 0 }}
 				>
+					<enhanced:img
+						class="route__art"
+						src={artForm}
+						alt=""
+						sizes="(min-width: 1100px) 40rem, 100vw"
+						loading="lazy"
+						decoding="async"
+					/>
 					<span class="route__title">Stuur een bericht</span>
 					<span class="route__body">
 						Liever eerst een vraag stellen? Mailen en appen kan de hele dag.
@@ -381,6 +404,50 @@
 	.route:focus-visible {
 		outline: 2px solid var(--color-accent-gold);
 		outline-offset: 2px;
+	}
+
+	/* The illustration fills the card from the right at the card's full height, and
+	   fades out to the left into the card's paint. Everything else in the card sits
+	   above it. Wide screens only (see the 1280px rule below): on phones the text is centred,
+	   right over the glow, where the light text cannot be read. */
+	.route {
+		position: relative;
+		overflow: hidden;
+		isolation: isolate;
+	}
+
+	/* enhanced:img wraps the image in a <picture>: that wrapper is what is placed,
+	   out of the flow so it adds no gap to the card's column, and hidden until 1280px. */
+	.route :global(picture) {
+		display: none;
+		position: absolute;
+		inset: 0 0 0 auto;
+		z-index: -1;
+		height: 100%;
+		pointer-events: none;
+	}
+
+	.route :global(.route__art) {
+		display: block;
+		height: 100%;
+		width: auto;
+		max-width: none;
+		-webkit-mask-image: linear-gradient(to right, transparent 0, #000 45%);
+		mask-image: linear-gradient(to right, transparent 0, #000 45%);
+	}
+
+	/* From 1280px the card is wide enough for the words and the illustration side by
+	   side; below that (1024px cards are ~510px) the text would run into its glow. */
+	@media (min-width: 1280px) {
+		.route :global(picture) {
+			display: block;
+		}
+
+		/* The words stop short of the illustration on the right. */
+		.route__title,
+		.route__body {
+			max-width: 23rem;
+		}
 	}
 
 	.route__title {
