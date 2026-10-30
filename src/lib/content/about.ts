@@ -1,11 +1,9 @@
 /**
- * The practitioner's own introduction, approved as-is.
+ * The lead of /over-mij, in the practitioner's own words (WhatsApp, 2026-10-30).
  *
- * Lives here rather than inside OverMij.svelte because /over-mij needs the same
- * sentences and a second copy would drift the moment either one is edited. Do
- * not reword: this is her voice, not marketing copy.
+ * The homepage has its own, shorter introduction since that day (OverMij.svelte).
+ * Do not reword: this is her voice, not marketing copy.
  */
 export const ABOUT_INTRO =
-	'Ik ben 53 jaar en weet uit eigen ervaring hoe het voelt om vast te lopen. ' +
-	'Mijn aanpak is geen theorie, het is wat mij zelf heeft geholpen. ' +
-	'Ik werk vanuit rust, veiligheid en echte ervaring.';
+	'Soms brengt het leven ons in situaties waarin we het gevoel hebben vast te lopen, ' +
+	'de verbinding met onszelf kwijt te raken of niet meer goed te weten welke richting we op willen.';

@@ -19,6 +19,7 @@
 	 * constant so it cannot say something slightly different on page four.
 	 */
 	import { Breadcrumbs } from '$lib/components/ui';
+	import CredentialBadge from '$lib/components/ui/CredentialBadge.svelte';
 	import { PageShell, PageHead, PageSection, CtaBand, ServiceCard } from '$lib/components/page';
 	import { SERVICE_ART } from '$lib/constants/service-art';
 	import { BRAND } from '$lib/constants/brand';
@@ -58,6 +59,9 @@
 
 	<PageSection id="wat" eyebrow="In het kort" title="Wat het is">
 		<p class="service__body" use:reveal>{service.intro}</p>
+		{#if slug === 'spinal-touch'}
+			<CredentialBadge />
+		{/if}
 	</PageSection>
 
 	<PageSection id="helpt" eyebrow="Voor wie" title="Waar het bij kan helpen">

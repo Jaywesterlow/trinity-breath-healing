@@ -16,6 +16,8 @@
 	 * See +page.ts for why the page is noindex until the markers are filled.
 	 */
 	import { Breadcrumbs, Todo } from '$lib/components/ui';
+	import { ButtonLink } from '$lib/components/ui/interactions';
+	import CredentialBadge from '$lib/components/ui/CredentialBadge.svelte';
 	import DrawOn from '$lib/components/ui/DrawOn.svelte';
 	import { PageShell, PageHead, PageSection, CtaBand, ServiceCard } from '$lib/components/page';
 	import { reveal } from '$lib/actions/reveal';
@@ -36,7 +38,7 @@
 
 <PageShell>
 	<PageHead eyebrow="Over mij" lead={ABOUT_INTRO}>
-		Vanuit eigen ervaring weet ik wat jij doormaakt.
+		Vanuit eigen ervaring naar bewustwording
 		{#snippet visual()}
 			<div class="about-page__portrait">
 				<DrawOn svg={portrait} />
@@ -45,33 +47,41 @@
 	</PageHead>
 
 	<PageSection id="verhaal" eyebrow="Mijn verhaal" title="Hoe ik hier terechtkwam">
+		<!-- Her words, verbatim (WhatsApp, 2026-10-30). -->
 		<p class="about-page__body" use:reveal>
-			<Todo>
-				Haar verhaal: wat er gebeurde waardoor ze zelf vastliep, en wat haar op dit werk bracht.
-				Twee tot drie alinea's, in haar eigen woorden
-			</Todo>
+			Ook ik heb een periode gekend waarin ik vastliep en mezelf gaandeweg uit het oog verloor. Een
+			ingrijpende periode in mijn leven werd voor mij het begin van verandering.
+		</p>
+		<p class="about-page__body" use:reveal>
+			Ik voelde steeds sterker de behoefte om bewuster te leven, oude patronen te doorbreken en meer
+			vanuit mijn eigen gevoel keuzes te maken. Dat bracht mij op een pad van persoonlijke
+			ontwikkeling, waarin ik kennismaakte met ademwerk, lichaamsgerichte behandelingen en
+			energetisch werk.
+		</p>
+		<p class="about-page__body" use:reveal>
+			Wat begon als een zoektocht naar meer balans en verbinding met mezelf, groeide uit tot een
+			verlangen om ook anderen te begeleiden in hun eigen proces. Vanuit die ontwikkeling is Trinity
+			Breath &amp; Healing ontstaan.
 		</p>
 	</PageSection>
 
 	<PageSection id="werk" eyebrow="In de sessie" title="Hoe ik werk">
 		<p class="about-page__body" use:reveal>
 			Er is tijdens een sessie geen moeten en geen tempo dat gehaald moet worden. Jouw lichaam
-			bepaalt wat er die dag mogelijk is, en ik volg dat in plaats van er iets doorheen te duwen.
+			bepaalt wat er op dat moment mogelijk is. Ik stem mijn begeleiding daarop af, met respect voor
+			jouw grenzen en jouw eigen proces.
 		</p>
-		<p class="about-page__body" use:reveal>
-			<Todo>
-				Wat iemand concreet kan verwachten van een eerste afspraak: hoe lang, wat er gebeurt, wat ze
-				aan moeten trekken, hoe ze zich achteraf kunnen voelen
-			</Todo>
-		</p>
+		<div class="about-page__more" use:reveal>
+			<ButtonLink label="Lees meer over mijn werkwijze" href="/werkwijze" variant="secondary" />
+		</div>
 	</PageSection>
 
 	<PageSection id="opleiding" eyebrow="Achtergrond" title="Opleiding en achtergrond">
 		<p class="about-page__body" use:reveal>
-			Sinds 2024 volg ik onafgebroken opleidingen en verdiepingen. Niet één cursus en klaar — elk
-			jaar komt er werk bij, een deel herhaal ik bewust, en sommige trajecten lopen nog. Het Soul
-			Alchemist-traject telt zes modules; daarvan heb ik er twee afgerond en volgen de rest dit jaar
-			en volgend jaar.
+			Sinds 2024 verdiep ik mij met veel toewijding in persoonlijke ontwikkeling, lichaamsgericht
+			werk en energetische behandelingen. Door het volgen van verschillende opleidingen en
+			trainingen blijf ik mijn kennis en vaardigheden verdiepen. Voor mij is bewustwording een
+			voortdurend proces van leren, ervaren en groeien.
 		</p>
 		<!-- A ledger, like the one on the landing page: date on the left, course and
 		     school on the right, a rule between rows. -->
@@ -87,6 +97,8 @@
 				</li>
 			{/each}
 		</ul>
+
+		<CredentialBadge />
 
 		{#if PLANNED_TRAININGS.length > 0}
 			<!-- Separated on purpose. Something she has planned is not something she
@@ -197,6 +209,10 @@
 
 	.about-page__body:last-child {
 		margin-bottom: 0;
+	}
+
+	.about-page__more {
+		margin-top: var(--space-2);
 	}
 
 	.about-page__body--intro {
