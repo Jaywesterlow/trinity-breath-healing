@@ -26,7 +26,7 @@ test.use({ viewport: { width: 390, height: 844 } });
 const PRERENDERED_INDEX = path.resolve('.svelte-kit/output/prerendered/pages/index.html');
 
 const FAQ_HEADING_TEXT = 'Veelgestelde vragen';
-const ABOUT_BODY_TEXT = 'Ik ben 53 jaar en weet uit eigen ervaring hoe het voelt om vast te lopen.';
+const ABOUT_BODY_TEXT = 'Mijn naam is Brigitte. Mijn persoonlijke levensreis heeft mij geleerd';
 
 test.describe('reveal: prerendered HTML (no JS)', () => {
 	test('FAQ heading and About body are present, with no opacity: 0 inline style', () => {
