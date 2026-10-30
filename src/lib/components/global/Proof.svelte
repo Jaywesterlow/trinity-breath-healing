@@ -1,30 +1,29 @@
 <script lang="ts">
 	/**
-	 * The proof band, straight under the hero (2026-10-17). The three figures used to
-	 * sit at the foot of Over mij, four sections down; a visitor comparing on trust
-	 * now meets them before the first scroll is over. Same figures, same labels, same
-	 * count-up (AboutStat), so nothing here is new copy.
+	 * The band straight under the hero. Until 2026-10-30 it held three figures
+	 * (8+ jaar ervaring, 65+ klachten verholpen, ∞); the owner replaced them with the
+	 * three words the practice is named after, each with its own short line, exactly
+	 * as supplied: Geest, Lichaam, Ziel.
 	 *
-	 * Thin rules between the figures, not the gold lotus PR #31 put there (owner's
-	 * call, 2026-10-18): the site's brown at 28%, the hairline the Over mij ledger
-	 * used. Between rows on a phone, between columns from 700px.
+	 * Phone: one row per word, the word on the left and its line on the right, a
+	 * hairline between rows (the layout of the sketch he sent). From 700px: three
+	 * columns, word above line, a hairline in each seam, as the figures were.
 	 */
-	import { BRAND } from '$lib/constants/brand';
-	import AboutStat from '$lib/components/ui/AboutStat.svelte';
 	import { reveal } from '$lib/actions/reveal';
 
-	const FIGURES = [
-		{ value: BRAND.stats.yearsExperience, label: 'jaar ervaring' },
-		{ value: BRAND.stats.clientsHelped, label: 'klachten verholpen' },
-		{ value: BRAND.stats.satisfaction, label: 'mogelijkheden voor herstel' }
+	const PILLARS = [
+		{ word: 'Geest', line: 'Bewustwording & rust' },
+		{ word: 'Lichaam', line: 'Voelen & ontspannen' },
+		{ word: 'Ziel', line: 'Verbinding & groei' }
 	] as const;
 </script>
 
-<section class="proof" aria-label="In cijfers">
+<section class="proof" aria-label="Geest, lichaam en ziel">
 	<ul class="proof__list">
-		{#each FIGURES as figure (figure.label)}
+		{#each PILLARS as pillar (pillar.word)}
 			<li class="proof__item" use:reveal>
-				<AboutStat value={figure.value} label={figure.label} />
+				<span class="proof__word">{pillar.word}</span>
+				<span class="proof__line">{pillar.line}</span>
 			</li>
 		{/each}
 	</ul>
@@ -39,35 +38,63 @@
 	.proof__list {
 		list-style: none;
 		margin: 0 auto;
-		padding: var(--space-10) var(--space-6);
+		padding: var(--space-6) var(--space-6);
 		max-width: var(--container-max);
 		display: grid;
 	}
 
-	/* Phone: the old ledger, centred, a hairline between the rows. */
+	/* Phone: word left, line right, a hairline between the rows. */
 	.proof__item {
-		padding: var(--space-6) 0;
-		text-align: center;
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: var(--space-4);
+		padding: var(--space-5) 0;
 	}
 
 	.proof__item + .proof__item {
 		border-top: 1px solid var(--proof-hairline);
 	}
 
+	.proof__word {
+		font-family: var(--font-display);
+		font-weight: var(--font-weight-medium);
+		font-size: var(--fs-h2);
+		line-height: 1;
+		color: var(--color-fg-forest);
+	}
+
+	.proof__line {
+		font-family: var(--font-body);
+		font-size: var(--fs-body);
+		line-height: var(--line-height-normal);
+		color: var(--color-text-subtle);
+		text-align: right;
+	}
+
 	@media (min-width: 700px) {
-		/* A row of three, a hairline in each seam. */
+		/* A row of three, word above line, a hairline in each seam. */
 		.proof__list {
 			grid-template-columns: repeat(3, minmax(0, 1fr));
 			padding-block: var(--space-12);
 		}
 
 		.proof__item {
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: var(--space-2);
 			padding: var(--space-2) var(--space-6);
+			text-align: center;
 		}
 
 		.proof__item + .proof__item {
 			border-top: 0;
 			border-left: 1px solid var(--proof-hairline);
+		}
+
+		.proof__line {
+			text-align: center;
 		}
 	}
 

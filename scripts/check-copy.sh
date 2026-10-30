@@ -48,7 +48,7 @@ check_string "De sessie"
 # 2026-10-27). Matched without the ampersand, which the HTML escapes.
 check_string "Afronding"
 # About (Plan 01-04)
-check_string "Vanuit eigen ervaring weet ik wat jij doormaakt."
+check_string "Mijn reis naar bewustwording."
 # FAQ (Plan 01-07) — restored 2026-07-24. The visible section now backs the FAQPage JSON-LD
 # emitted from src/routes/+page.ts; Google requires the markup to match on-page content, so
 # this assertion is what keeps the two from drifting apart again.
