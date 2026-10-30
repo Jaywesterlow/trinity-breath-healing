@@ -66,7 +66,6 @@
 
 	/* Shared with /over-mij, which shows the same introduction. One constant, so
 	   editing her words in one place cannot leave the other version behind. */
-	import { ABOUT_INTRO as bodyText } from '$lib/content/about';
 </script>
 
 <!-- Design "A, grootboek" (2026-09-16), minus its ledger: the three figures moved to
@@ -83,7 +82,7 @@
 	<div class="about__inner">
 		<header class="about__header" use:reveal>
 			<p class="about__eyebrow">Over mij</p>
-			<h2 class="about__heading">Vanuit eigen ervaring weet ik wat jij doormaakt.</h2>
+			<h2 class="about__heading">Mijn reis naar bewustwording.</h2>
 		</header>
 
 		<!-- No reveal: the photo paints itself in on entry, which is an entrance of its
@@ -103,7 +102,13 @@
 		<!-- Body and button fade as one block, separate from the header above because on
 		     mobile the portrait sits between them. -->
 		<div class="about__text" use:reveal>
-			<p class="about__body">{bodyText}</p>
+			<!-- Her words, verbatim (2026-10-30). Homepage only: /over-mij keeps its own
+			     intro (ABOUT_INTRO) until her full story arrives. -->
+			<p class="about__body">
+				Mijn naam is Brigitte. Mijn persoonlijke levensreis heeft mij geleerd hoe belangrijk het is
+				om stil te staan bij jezelf, naar je gevoel te luisteren en opnieuw verbinding te maken met
+				wie je werkelijk bent.
+			</p>
 			<div class="about__more">
 				<ButtonLink label="Lees meer over mij" href="/over-mij" variant="secondary" />
 			</div>
