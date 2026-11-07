@@ -58,6 +58,7 @@
 				{ href: '/', label: 'Home' },
 				{ href: '/behandelingen', label: 'Behandelingen' },
 				{ href: '/diensten', label: 'Diensten' },
+				{ href: '/tarieven', label: 'Tarieven' },
 				{ href: '/werkwijze', label: 'Werkwijze' },
 				{ href: '/over-mij', label: 'Over mij' },
 				{ href: '/contact', label: 'Contact' }

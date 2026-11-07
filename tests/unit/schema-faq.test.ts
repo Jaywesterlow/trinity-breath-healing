@@ -135,22 +135,22 @@ describe('buildGraph.ts — @graph composer', () => {
 		return import('$lib/schema/buildGraph');
 	}
 
-	it('Test 1: buildGraph with empty pageSpecific returns 11 shared nodes (Org + ProfService + Person + WebSite + 7 Service, 260810-mdl)', async () => {
+	it('Test 1: buildGraph with empty pageSpecific returns 12 shared nodes (Org + ProfService + Person + WebSite + 8 Service)', async () => {
 		const { buildGraph } = await loadBuildGraph();
 		const result = buildGraph({ pageSpecific: [], path: '/' });
-		// Organization, ProfessionalService, Person, WebSite, 7 x Service = 11 (was 4 Service = 8)
-		expect(result).toHaveLength(11);
+		// Organization, ProfessionalService, Person, WebSite, 8 x Service = 12
+		expect(result).toHaveLength(12);
 	});
 
 	it('Test 2: buildGraph called twice consecutively returns same count (dedup by @id)', async () => {
 		const { buildGraph } = await loadBuildGraph();
 		const r1 = buildGraph({ pageSpecific: [], path: '/' });
 		const r2 = buildGraph({ pageSpecific: [], path: '/' });
-		expect(r1).toHaveLength(11);
-		expect(r2).toHaveLength(11);
+		expect(r1).toHaveLength(12);
+		expect(r2).toHaveLength(12);
 	});
 
-	it('Test 3: buildGraph with pageSpecific WebPage returns 12 nodes', async () => {
+	it('Test 3: buildGraph with pageSpecific WebPage returns 13 nodes', async () => {
 		const { buildGraph } = await loadBuildGraph();
 		const webPage = {
 			'@type': 'WebPage' as const,
@@ -158,10 +158,10 @@ describe('buildGraph.ts — @graph composer', () => {
 			url: 'https://trinity-breath-healing.vercel.app/'
 		};
 		const result = buildGraph({ pageSpecific: [webPage], path: '/' });
-		expect(result).toHaveLength(12);
+		expect(result).toHaveLength(13);
 	});
 
-	it('Test 4: pageSpecific node with @id matching a shared node deduplicates (stays at 11)', async () => {
+	it('Test 4: pageSpecific node with @id matching a shared node deduplicates (stays at 12)', async () => {
 		const { buildGraph } = await loadBuildGraph();
 		// Organization @id matches a shared node — should deduplicate
 		const duplicate = {
@@ -170,8 +170,8 @@ describe('buildGraph.ts — @graph composer', () => {
 			name: 'Duplicate'
 		};
 		const result = buildGraph({ pageSpecific: [duplicate], path: '/' });
-		// The duplicate @id replaces the shared one — still 11 nodes
-		expect(result).toHaveLength(11);
+		// The duplicate @id replaces the shared one — still 12 nodes
+		expect(result).toHaveLength(12);
 	});
 
 	it('Test 5: shared nodes contain Organization, ProfessionalService, Person, WebSite types', async () => {

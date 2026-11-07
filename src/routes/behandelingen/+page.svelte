@@ -1,6 +1,6 @@
 <script lang="ts">
 	/**
-	 * /behandelingen — the same seven treatments, reached from the other end.
+	 * /behandelingen — the same treatments, reached from the other end.
 	 *
 	 * /diensten lists them by name. This page lists what people actually arrive
 	 * with and routes each complaint to the treatments that address it, because
@@ -13,7 +13,7 @@
 	 * by pointing at /diensten, and every group links into the individual pages.
 	 */
 	import { Breadcrumbs } from '$lib/components/ui';
-	import { PageShell, PageHead, CtaBand } from '$lib/components/page';
+	import { PageShell, PageHead, PageSection, CtaBand } from '$lib/components/page';
 	import { BRAND } from '$lib/constants/brand';
 	import { KLACHTEN } from '$lib/content/klachten';
 	import { reveal } from '$lib/actions/reveal';
@@ -30,7 +30,7 @@
 <PageShell>
 	<PageHead
 		eyebrow="Behandelingen"
-		lead="Je komt meestal niet met de naam van een behandeling, maar met een klacht. Zoek wat herkenbaar is; kiezen hoeft niet."
+		lead="Je hoeft niet precies te weten welke behandeling bij je past. Misschien ervaar je stress, vermoeidheid, onrust of voel je dat je uit balans bent. Kijk rustig wat je herkent. Samen kijken we wat bij jou past."
 	>
 		Waar kom je mee?
 	</PageHead>
@@ -67,13 +67,24 @@
 		<a class="link-underline" href="/diensten">Bekijk alle diensten op naam</a>.
 	</p>
 
+	<!-- Her "Aanvullende ondersteuning" (WhatsApp 2026-10-31, 21:24) and the note she sent
+	     at 21:53 said the same thing, so this is one block: the first, plus the note's
+	     "Ik stel geen diagnoses". The band below carries no note for the same reason. -->
+	<PageSection id="aanvullend" title="Aanvullende ondersteuning">
+		<p class="aanvullend" use:reveal>
+			De behandelingen bij Trinity Breath &amp; Healing zijn gericht op ontspanning, bewustwording
+			en persoonlijk welzijn. Ze zijn aanvullend op reguliere zorg en vervangen geen medische of
+			psychologische behandeling. Ik stel geen diagnoses. Bij lichamelijke of psychische klachten is
+			het belangrijk om passende professionele zorg te zoeken.
+		</p>
+	</PageSection>
+
 	<CtaBand
 		id="verder"
-		title="Staat jouw klacht er niet bij?"
-		lead="Dat komt vaker voor dan je denkt, en het betekent niet dat er niets te doen is. In een kennismaking van dertig minuten kijken we samen wat er speelt."
+		title="Staat jouw hulpvraag er niet bij?"
+		lead="Dat is helemaal niet erg. Tijdens een kennismakingsgesprek van 30 minuten bespreken we wat je ervaart en waar je behoefte aan hebt. Samen kijken we welke behandeling bij jou past."
 		label="Plan een kennismaking"
 		href="/contact"
-		note={BRAND.disclaimer}
 	/>
 </PageShell>
 
@@ -144,6 +155,15 @@
 	.chip:focus-visible {
 		outline: 2px solid var(--color-bg-sand);
 		outline-offset: 2px;
+	}
+
+	.aanvullend {
+		margin: 0;
+		font-family: var(--font-body);
+		font-size: var(--fs-body);
+		font-weight: var(--font-weight-light);
+		line-height: var(--line-height-loose);
+		color: var(--color-text-subtle);
 	}
 
 	.klachten__alt {

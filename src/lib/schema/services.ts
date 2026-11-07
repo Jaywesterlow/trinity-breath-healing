@@ -14,6 +14,7 @@
 import type { Service } from 'schema-dts';
 import { SITE_URL } from '$lib/seo/defaults';
 import { BRAND } from '$lib/constants/brand';
+import { pricesFor } from '$lib/content/tarieven';
 import { organizationNode } from '$lib/schema/shared';
 
 // schema-dts Organization type includes `string` union — cast to extract the @id string
@@ -26,11 +27,22 @@ export function makeServiceNode(slug: string, name: string): Service {
 		name,
 		url: `${SITE_URL}/diensten/${slug}`,
 		provider: { '@id': orgId },
-		areaServed: [...BRAND.areaServed] as string[]
+		areaServed: [...BRAND.areaServed] as string[],
+		offers: pricesFor(slug).map((row) => ({
+			'@type': 'Offer',
+			name: row.label ?? name,
+			url: `${SITE_URL}/tarieven`,
+			priceSpecification: {
+				'@type': 'PriceSpecification',
+				price: row.price,
+				priceCurrency: 'EUR',
+				valueAddedTaxIncluded: true
+			}
+		}))
 	};
 }
 
-/** All 7 modality Service nodes — single source of truth for SCH-04 */
+/** All modality Service nodes — single source of truth for SCH-04 */
 export const allServiceNodes: Service[] = BRAND.services.map((s) =>
 	makeServiceNode(s.slug, s.name)
 );

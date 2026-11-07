@@ -158,7 +158,7 @@
 	<CtaBand
 		id="kennismaken"
 		title="Even kennismaken?"
-		lead="Een kennismaking duurt 30 minuten, is kosteloos en verplicht je tot niets. We kijken samen of dit werk bij je past."
+		lead="Tijdens een kosteloze en vrijblijvende kennismaking van 30 minuten nemen we rustig de tijd om jouw wensen te bespreken en te kijken of mijn werkwijze bij jou past."
 		label="Plan een kennismaking"
 		href="/contact"
 	/>

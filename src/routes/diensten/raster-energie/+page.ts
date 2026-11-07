@@ -18,7 +18,7 @@ export const prerender = true;
 const PATH = '/diensten/raster-energie';
 const TITLE = 'Raster Energie in Amsterdam – TRINITY Breath & Healing';
 const DESCRIPTION =
-	'Herstel van je Goddelijke blauwdruk — energetische stempels en blokkades worden gereinigd. Bij Trinity Breath & Healing in Amsterdam en omgeving, ook op afstand.';
+	'Herstel van je Goddelijke blauwdruk en het loslaten van energetische blokkades. Bij Trinity Breath & Healing in Amsterdam en omgeving, ook op afstand.';
 
 const CRUMBS = [
 	{ name: 'Home', path: '/' },

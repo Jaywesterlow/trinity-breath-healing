@@ -7,7 +7,7 @@ import { allServiceNodes } from '$lib/schema/services';
 /**
  * /diensten — real content as of 2026-09-09, indexed and in the sitemap.
  *
- * This route carries all seven Service nodes, because it is the page that lists
+ * This route carries all eight Service nodes, because it is the page that lists
  * all seven. Each individual /diensten/{slug} page emits only its own node, so
  * nothing is claimed twice from the same URL and every modality still has one
  * canonical page to be cited from.
@@ -17,7 +17,7 @@ export const prerender = true;
 const PATH = '/diensten';
 const TITLE = 'Diensten – alle behandelingen | TRINITY Breath & Healing';
 const DESCRIPTION =
-	'Alle zeven behandelingen van Trinity Breath & Healing op een rij: ademwerk, ' +
+	'Alle acht behandelingen van Trinity Breath & Healing op een rij: ademwerk, ' +
 	'lichaamsgericht werk en energetische sessies in Amsterdam, Zaandam en omgeving.';
 
 const CRUMBS = [

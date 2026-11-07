@@ -155,14 +155,14 @@ export const BRAND = {
 
 	/**
 	 * Services offered — slugs are the stable identifier for routing + schema @id.
-	 * Seven real services (260810-mdl), practitioner-provided copy, owner-approved 2026-08-10.
+	 * Eight real services (260810-mdl, Clearing & Ascensie 2026-11-01), practitioner-provided copy, owner-approved 2026-08-10.
 	 * Do not embellish or translate this copy — it is final as given.
 	 *
 	 * `teaser` — one sentence, the Behandelingen card hover reveal. Was `description`
 	 * (TODO_-prefixed placeholder copy, 260809-hov) — renamed now that real copy exists, since
 	 * "description" no longer says what it is once there's also a modal `intro` paragraph.
 	 * `intro` — the ServiceModal's paragraph under the title.
-	 * `helpsWith` — the ServiceModal's "helpt bij" list.
+	 * `helpsWith` — the ServiceModal's "kan ondersteuning bieden bij" list.
 	 *
 	 * BRTT Body and Trauma Release Breathwork (`trb-breathwork`) are deliberately separate
 	 * services with separate cards/modals/pages — an owner decision, not an oversight.
@@ -171,10 +171,12 @@ export const BRAND = {
 		{
 			slug: 'mahatma-healing',
 			name: 'Mahatma Healing',
+			duration: '30 minuten',
+			remote: true,
 			teaser:
-				'Krachtige, harmoniserende energie die blokkades opheft en je energetisch systeem opschoont.',
+				'Een krachtige, harmoniserende energie gericht op het loslaten van energetische blokkades en het herstellen van innerlijke balans.',
 			intro:
-				'Voorafgaand aan een sessie stem ik af op jouw I AM Presence, jouw Hogere Zelf, zodat ik intuïtief weet welke energie nodig is. Als Mahatma Coach faciliteer ik de Mahatma energie, die harmoniserend en balancerend werkt. Oude energie mag los, zodat er ruimte komt voor nieuwe energie en alles weer kan stromen vanuit je eigen kracht.',
+				'Voorafgaand aan een sessie stem ik mij af op jouw I AM Presence, jouw Hogere Zelf. Vanuit deze verbinding werk ik intuïtief met de Mahatma-energie, die binnen deze werkwijze wordt gezien als harmoniserend en balancerend. Oude energie mag losgelaten worden, zodat er ruimte ontstaat voor nieuwe energie, innerlijke rust en verbinding met je eigen kracht.',
 			helpsWith: [
 				'stress',
 				'burn-out',
@@ -190,6 +192,8 @@ export const BRAND = {
 		{
 			slug: 'goldhealing',
 			name: 'Goldhealing',
+			duration: '30 minuten',
+			remote: true,
 			teaser:
 				'Gouden lichtenergie die negativiteit omzet, beschermt en vooral op het psychische vlak werkt.',
 			intro:
@@ -206,8 +210,9 @@ export const BRAND = {
 		{
 			slug: 'raster-energie',
 			name: 'Raster Energie',
-			teaser:
-				'Herstel van je Goddelijke blauwdruk — energetische stempels en blokkades worden gereinigd.',
+			duration: '30 minuten',
+			remote: true,
+			teaser: 'Herstel van je Goddelijke blauwdruk en het loslaten van energetische blokkades.',
 			intro:
 				'Rond je auraveld ligt een geometrische structuur, verbonden met de axitonale en galaxitonale lijnen. Samen vormen die je blauwdruk, en daarmee je verbinding met je Hogere Zelf. Invloeden van buitenaf kunnen daar stempels en blokkades op achterlaten. De rasterenergie heeft een hoge trillingsfrequentie en herbedraadt je als het ware, zodat je originele blauwdruk hersteld wordt.',
 			helpsWith: [
@@ -222,6 +227,8 @@ export const BRAND = {
 		{
 			slug: 'cranio-fascia-unwinding',
 			name: 'Cranio & Fascia Unwinding',
+			duration: '60 minuten',
+			remote: false,
 			teaser:
 				'Zacht lichaamswerk waarbij je lichaam zelf het tempo bepaalt en opgeslagen spanning loslaat.',
 			intro:
@@ -237,6 +244,8 @@ export const BRAND = {
 		{
 			slug: 'spinal-touch',
 			name: 'Spinal Touch',
+			duration: '60 minuten',
+			remote: false,
 			teaser:
 				'Zachte methode langs de wervelkolom die je centrale zenuwstelsel weer laat doorstromen.',
 			intro:
@@ -256,6 +265,8 @@ export const BRAND = {
 		{
 			slug: 'brtt-body',
 			name: 'BRTT Body',
+			duration: '60 tot 90 minuten',
+			remote: false,
 			teaser:
 				'Lichaamsgericht proces dat via de psoas — de spier van de ziel — opgeslagen trauma bevrijdt.',
 			intro:
@@ -273,6 +284,8 @@ export const BRAND = {
 		{
 			slug: 'trb-breathwork',
 			name: 'Trauma Release Breathwork',
+			duration: '60 tot 90 minuten',
+			remote: false,
 			teaser:
 				'Zeven ademtechnieken die de poort naar je onderbewuste openen en oude lading loslaten.',
 			intro:
@@ -284,6 +297,24 @@ export const BRAND = {
 				'spanning vastgezet in het lichaam',
 				'verankering en aarding',
 				'diepe ontspanning en rust'
+			]
+		},
+		{
+			slug: 'clearing-ascensie',
+			name: 'Clearing & Ascensie-activatie',
+			duration: '60 minuten',
+			remote: false,
+			teaser:
+				"Energetische opschoning van lichaam, energieveld en onderbewuste lagen, gevolgd door twee activaties van je chakra's.",
+			intro:
+				"Tijdens een clearing werk ik op diep energetisch niveau: we reinigen wat zich in jouw systeem heeft vastgezet. Daarna worden je chakra's tijdens de ascensie-activaties uitgenodigd om weer in balans te komen en zich verder te openen voor hun natuurlijke stroom van levensenergie. De Clearing vormt altijd de eerste stap.",
+			helpsWith: [
+				'onrust in je hoofd',
+				'vermoeidheid zonder duidelijke oorzaak',
+				'terugkerende gedachten of zorgen',
+				'moeite met loslaten',
+				'lichamelijke spanning',
+				'het gevoel “niet helemaal jezelf” te zijn'
 			]
 		}
 	] as const,

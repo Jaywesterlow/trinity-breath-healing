@@ -1,6 +1,6 @@
 <script lang="ts">
 	/**
-	 * One layout for all seven /diensten/* pages.
+	 * One layout for all eight /diensten/* pages.
 	 *
 	 * The content is not written here and must not be: every word comes from
 	 * `BRAND.services`, which is the practitioner's own copy, and the same object
@@ -20,15 +20,18 @@
 	 */
 	import { Breadcrumbs } from '$lib/components/ui';
 	import CredentialBadge from '$lib/components/ui/CredentialBadge.svelte';
+	import ClearingAscensie from './ClearingAscensie.svelte';
 	import { PageShell, PageHead, PageSection, CtaBand, ServiceCard } from '$lib/components/page';
 	import { SERVICE_ART } from '$lib/constants/service-art';
 	import { BRAND } from '$lib/constants/brand';
+	import { contraGroupFor } from '$lib/content/contra-indicaties';
 	import { reveal } from '$lib/actions/reveal';
 	import { paintGreen } from '$lib/paint';
 
 	let { slug, crumbs }: { slug: string; crumbs: { name: string; path: string }[] } = $props();
 
 	const service = $derived(BRAND.services.find((s) => s.slug === slug)!);
+	const contra = $derived(contraGroupFor(slug));
 
 	/** The other six, for the row at the bottom. Order is BRAND's, not shuffled. */
 	const others = $derived(BRAND.services.filter((s) => s.slug !== slug));
@@ -64,34 +67,70 @@
 		{/if}
 	</PageSection>
 
-	<PageSection id="helpt" eyebrow="Voor wie" title="Waar het bij kan helpen">
-		<ul class="service__list">
-			{#each service.helpsWith as item (item)}
-				<li class="service__item" use:reveal>
-					<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-						<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" />
-						<path
-							d="m8.5 12 2.4 2.4 4.6-4.8"
-							stroke="currentColor"
-							stroke-width="1.6"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						/>
-					</svg>
-					<span>{item}</span>
-				</li>
-			{/each}
-		</ul>
-	</PageSection>
+	<!-- Her long text already carries this list in her own order. -->
+	{#if slug === 'clearing-ascensie'}
+		<ClearingAscensie />
+	{:else}
+		<PageSection id="helpt" eyebrow="Voor wie" title="Waar het bij kan helpen">
+			<ul class="service__list">
+				{#each service.helpsWith as item (item)}
+					<li class="service__item" use:reveal>
+						<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+							<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" />
+							<path
+								d="m8.5 12 2.4 2.4 4.6-4.8"
+								stroke="currentColor"
+								stroke-width="1.6"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							/>
+						</svg>
+						<span>{item}</span>
+					</li>
+				{/each}
+			</ul>
+		</PageSection>
+	{/if}
 
 	<PageSection id="sessie" eyebrow="De sessie" title="Hoe een sessie verloopt">
 		<p class="service__body" use:reveal>
 			We beginnen met een gesprek over waar je op dit moment tegenaan loopt. Daarna werk ik met
 			{service.name}, afgestemd op wat jij nodig hebt. Je hoeft niets te presteren en niets te
 			vertellen wat je niet wilt vertellen. Na afloop is er tijd om te landen en na te praten. Een
-			sessie duurt ongeveer een uur en kan bij jou thuis of op afstand.
+			sessie duurt {service.duration} en kan {service.remote
+				? 'in de praktijkruimte, bij jou thuis of op afstand'
+				: 'in de praktijkruimte of bij jou thuis'}. De prijs vind je op de
+			<a class="link-underline" href="/tarieven">tarievenpagina</a>.
 		</p>
 	</PageSection>
+
+	{#if contra}
+		<PageSection id="veiligheid" eyebrow="Goed om te weten" title="Gezondheid en veiligheid">
+			<p class="service__body">{contra.intro}</p>
+			{#if contra.items}
+				<ul class="service__contra">
+					{#each contra.items as item (item)}
+						<li>{item}</li>
+					{/each}
+				</ul>
+			{/if}
+			{#if contra.prep}
+				<p class="service__body">{contra.prepTitle}:</p>
+				<ul class="service__contra">
+					{#each contra.prep as item (item)}
+						<li>{item}</li>
+					{/each}
+				</ul>
+			{/if}
+			{#if contra.outro}
+				<p class="service__body">{contra.outro}</p>
+			{/if}
+			<p class="service__body">
+				Stop nooit zelf met voorgeschreven medicatie. Meer hierover staat op de
+				<a class="link-underline" href="/disclaimer">disclaimerpagina</a>.
+			</p>
+		</PageSection>
+	{/if}
 
 	<CtaBand
 		id="afspraak"
@@ -188,6 +227,22 @@
 		color: var(--brand-border);
 	}
 
+	.service__body + .service__body,
+	.service__contra + .service__body {
+		margin-top: var(--space-4);
+	}
+
+	.service__contra {
+		margin: var(--space-3) 0 0;
+		padding-left: 1.25rem;
+		list-style: disc;
+		font-family: var(--font-body);
+		font-size: var(--fs-body);
+		font-weight: var(--font-weight-light);
+		line-height: var(--line-height-loose);
+		color: var(--color-text-subtle);
+	}
+
 	.service__others {
 		list-style: none;
 		margin: 0;
@@ -205,7 +260,8 @@
 	}
 
 	@media (min-width: 1100px) {
-		.service__body {
+		.service__body,
+		.service__contra {
 			font-size: var(--fs-body-lg);
 		}
 

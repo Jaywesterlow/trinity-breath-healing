@@ -58,7 +58,8 @@ const SERVICE_SLUGS = [
 	'cranio-fascia-unwinding',
 	'spinal-touch',
 	'brtt-body',
-	'trb-breathwork'
+	'trb-breathwork',
+	'clearing-ascensie'
 ] as const;
 
 test.describe.parallel('every route — SEO scaffolding', () => {

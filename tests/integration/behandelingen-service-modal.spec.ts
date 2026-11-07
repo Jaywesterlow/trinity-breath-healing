@@ -97,8 +97,8 @@ test.describe('desktop', () => {
 		await press(page, 'next');
 		expect(await activeTitle(page)).toBe('Goldhealing');
 
-		// 6 more presses — 7 total, one full lap of 7 services — wraps back to Mahatma Healing.
-		for (let i = 0; i < 6; i++) await press(page, 'next');
+		// 7 more presses — 8 total, one full lap of 8 services — wraps back to Mahatma Healing.
+		for (let i = 0; i < 7; i++) await press(page, 'next');
 		expect(await activeTitle(page)).toBe('Mahatma Healing');
 	});
 

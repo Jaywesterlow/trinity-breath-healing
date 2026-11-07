@@ -264,7 +264,7 @@
 						</div>
 
 						<div class="service-modal__helps">
-							<h4 class="service-modal__helps-title">Helpt bij</h4>
+							<h4 class="service-modal__helps-title">Kan ondersteuning bieden bij</h4>
 							<ul class="service-modal__helps-list">
 								{#each service.helpsWith as item (item)}
 									<li>{item}</li>

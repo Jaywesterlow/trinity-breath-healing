@@ -17,7 +17,7 @@ export const faqItems: FaqItem[] = [
 	{
 		question: 'Hoe lang duurt een sessie en wat kost het?',
 		answer:
-			'Een sessie duurt gemiddeld 60 tot 90 minuten, inclusief een kort nagesprek om de ervaring te integreren. Tarieven worden besproken tijdens het vrijblijvende kennismakingsgesprek van 30 minuten, zodat we een aanpak kiezen die bij jouw situatie past.'
+			'Dat hangt af van de behandeling. Energetische behandelingen duren 30 minuten en kosten €45. Lichaamsgerichte behandelingen en ademwerk duren 60 tot 90 minuten en kosten €75 of €85. Alle tarieven zijn inclusief btw en staan op de tarievenpagina. Het kennismakingsgesprek van 30 minuten is kosteloos en vrijblijvend.'
 	},
 	{
 		question: 'Wat is Mahatma Healing?',
@@ -47,7 +47,7 @@ export const faqItems: FaqItem[] = [
 	{
 		question: 'Is een behandeling wetenschappelijk bewezen?',
 		answer:
-			'Ademwerk als stressreductietechniek is onderzocht in meerdere gepubliceerde studies en toont consistente effecten op het autonome zenuwstelsel en zelf-gerapporteerde stressniveaus. De energetische behandelmethoden (Mahatma Healing, Goldhealing, Raster Energie, Spinal Touch) worden beschouwd als complementaire zorg en zijn niet afdoende onderzocht in grootschalige gerandomiseerde trials — wij presenteren ze als begeleiding, niet als bewezen medische therapie.'
+			'Ademwerk als stressreductietechniek is onderzocht in meerdere gepubliceerde studies en toont consistente effecten op het autonome zenuwstelsel en zelf-gerapporteerde stressniveaus. De energetische behandelmethoden (Mahatma Healing, Goldhealing, Raster Energie, Clearing & Ascensie-activatie, Spinal Touch) worden beschouwd als complementaire zorg en zijn niet afdoende onderzocht in grootschalige gerandomiseerde trials — wij presenteren ze als begeleiding, niet als bewezen medische therapie.'
 	},
 	{
 		question: 'Hoe maak ik een afspraak?',

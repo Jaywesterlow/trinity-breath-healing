@@ -1,14 +1,14 @@
 /**
  * Where the drawing sits inside each service SVG, as fractions of the
- * viewBox, plus the drawing's own width/height ratio. The three card SVGs
+ * viewBox, plus the drawing's own width/height ratio. The two oldest card SVGs
  * are mostly empty margin, so anything that shows one at a size has to
  * know where the lines actually are. Measured with getBBox() on the
- * rendered SVG: mahatma 4096×2235 → drawing 994×1724 at 1553,258;
- * goldhealing 1760×960 → 592×587 at 583,187; spinal-touch 1418×774 →
+ * rendered SVG: goldhealing 1760×960 → 592×587 at 583,187; spinal-touch 1418×774 →
  * 380×613 at 518,82. Re-measure if an SVG is replaced.
  *
- * The four drawings added 2026-09-27 (raster-energie, trb-breathwork,
- * brtt-body, cranio-fascia-unwinding) were traced already cropped to the
+ * The drawings added 2026-09-27 (trb-breathwork, brtt-body,
+ * cranio-fascia-unwinding) and 2026-11-01 (mahatma-healing, raster-energie,
+ * clearing-ascensie) were traced already cropped to the
  * drawing plus a 12px margin, so their box is the whole viewBox.
  *
  * Read by the carousel's modal (through Behandelingen.svelte) and by the
@@ -26,11 +26,11 @@ export interface ServiceArt {
 export const SERVICE_ART: Record<string, ServiceArt> = {
 	'mahatma-healing': {
 		src: '/images/card-mahatma-healing.svg',
-		x: 0.3791,
-		y: 0.1153,
-		w: 0.2426,
-		h: 0.7712,
-		ratio: 0.5765
+		x: 0,
+		y: 0,
+		w: 1,
+		h: 1,
+		ratio: 0.6224
 	},
 	goldhealing: {
 		src: '/images/card-goldhealing.svg',
@@ -54,7 +54,7 @@ export const SERVICE_ART: Record<string, ServiceArt> = {
 		y: 0,
 		w: 1,
 		h: 1,
-		ratio: 1.2454
+		ratio: 0.5752
 	},
 	'cranio-fascia-unwinding': {
 		src: '/images/card-cranio-fascia-unwinding.svg',
@@ -79,5 +79,13 @@ export const SERVICE_ART: Record<string, ServiceArt> = {
 		w: 1,
 		h: 1,
 		ratio: 0.5868
+	},
+	'clearing-ascensie': {
+		src: '/images/card-clearing-ascensie.svg',
+		x: 0,
+		y: 0,
+		w: 1,
+		h: 1,
+		ratio: 0.3683
 	}
 };
