@@ -243,7 +243,7 @@ export async function sendBookingEmail(
 		...(decideUrl
 			? [
 					`<p style="margin-top:24px"><a href="${decideUrl}" style="display:inline-block;padding:12px 20px;background:#3d4a35;color:#faf0e6;text-decoration:none;border-radius:999px">Aanvraag beoordelen</a></p>`,
-					`<p style="font-size:13px;color:#5f6d56">Deze aanvraag houdt het tijdslot bezet tot je hem beantwoordt, en vervalt vanzelf na 48 uur.</p>`
+					`<p style="font-size:13px;color:#5f6d56">Deze aanvraag houdt het tijdslot bezet tot je hem beantwoordt, en vervalt vanzelf na 24 uur.</p>`
 				]
 			: []),
 		`<p style="font-size:13px;color:#5f6d56">Het tijdslot is op de website al geblokkeerd zodat niemand anders het kan aanvragen.</p>`
@@ -277,6 +277,7 @@ export async function sendBookingApproved(
 		end: string;
 		ics: string;
 		cancellationHours: number;
+		meetUrl?: string;
 	},
 	fetchImpl: typeof fetch = fetch
 ): Promise<SendResult> {
@@ -285,6 +286,7 @@ export async function sendBookingApproved(
 		'',
 		`Je afspraak is bevestigd: ${args.spokenDate}, ${args.start} - ${args.end} (30 minuten).`,
 		'',
+		...(args.meetUrl ? [`Het gesprek is via Google Meet: ${args.meetUrl}`, ''] : []),
 		'In de bijlage zit een agenda-uitnodiging die je aan je eigen agenda kunt toevoegen.',
 		'',
 		'Goed om te weten:',
@@ -304,6 +306,7 @@ export async function sendBookingApproved(
 		`<div style="font-size:16px;color:#3d4a35"><strong>${escapeHtml(args.spokenDate)}</strong></div>`,
 		`<div style="font-size:16px;color:#3d4a35"><strong>${escapeHtml(args.start)} – ${escapeHtml(args.end)}</strong> <span style="font-size:13px;color:#5f6d56">(30 minuten)</span></div>`,
 		'</td></tr></table>',
+		...(args.meetUrl ? [meetButton(args.meetUrl, 'Naar het gesprek in Google Meet')] : []),
 		'<p style="margin:0 0 14px">In de bijlage zit een agenda-uitnodiging die je aan je eigen agenda kunt toevoegen.</p>',
 		'<p style="margin:0 0 6px;font-size:13px;color:#5f6d56"><strong>Goed om te weten</strong></p>',
 		'<ul style="margin:0 0 14px;padding-left:18px;font-size:13px;line-height:1.7;color:#5f6d56">',
@@ -329,6 +332,69 @@ export async function sendBookingApproved(
 					   the attachment as an invitation with RSVP buttons rather than
 					   an anonymous file. */
 					contentType: 'text/calendar; method=REQUEST; charset=utf-8'
+				}
+			]
+		},
+		fetchImpl
+	);
+}
+
+/** One full-width-ish pill linking to the Meet room, in the mails' own green. */
+function meetButton(url: string, label: string): string {
+	return `<p style="margin:0 0 16px"><a href="${escapeHtml(url)}" style="display:inline-block;padding:12px 20px;background:#3d4a35;color:#faf0e6;text-decoration:none;border-radius:999px">${escapeHtml(label)}</a></p>`;
+}
+
+/**
+ * Her own copy once she approves: who, when, the Meet link, and an .ics she
+ * can add to whichever calendar app she uses. METHOD=PUBLISH, because she is
+ * the organiser and is not being invited to her own meeting.
+ *
+ * With one fixed Meet room for every appointment (MEET_URL), she is its owner
+ * and so its host; a visitor without the link in a current invite has to ask
+ * to join, and she lets them in.
+ */
+export async function sendBookingApprovedNotice(
+	args: {
+		clientName: string;
+		clientEmail: string;
+		spokenDate: string;
+		start: string;
+		end: string;
+		ics: string;
+		meetUrl?: string;
+	},
+	fetchImpl: typeof fetch = fetch
+): Promise<SendResult> {
+	const to = env.CONTACT_TO_EMAIL || BRAND.email;
+	const text = [
+		`Je hebt de kennismaking met ${args.clientName} bevestigd.`,
+		'',
+		`Wanneer: ${args.spokenDate}, ${args.start} - ${args.end} (30 minuten)`,
+		`E-mail: ${args.clientEmail}`,
+		...(args.meetUrl ? [`Google Meet: ${args.meetUrl}`] : []),
+		'',
+		'In de bijlage zit de afspraak. Open hem om hem aan je agenda toe te voegen.'
+	].join('\n');
+	const html = [
+		`<h2>Kennismaking bevestigd</h2>`,
+		`<p><strong>Met:</strong> ${escapeHtml(args.clientName)}<br>`,
+		`<strong>Wanneer:</strong> ${escapeHtml(args.spokenDate)}, ${escapeHtml(args.start)} – ${escapeHtml(args.end)} (30 minuten)<br>`,
+		`<strong>E-mail:</strong> <a href="mailto:${encodeURIComponent(args.clientEmail)}">${escapeHtml(args.clientEmail)}</a></p>`,
+		...(args.meetUrl ? [meetButton(args.meetUrl, 'Open de Meet-ruimte')] : []),
+		'<p style="font-size:13px;color:#5f6d56">In de bijlage zit de afspraak. Open hem om hem aan je agenda toe te voegen.</p>'
+	].join('');
+	return deliver(
+		{
+			to,
+			subject: `Kennismaking bevestigd: ${args.clientName}, ${args.spokenDate} ${args.start}`,
+			text,
+			html,
+			replyTo: args.clientEmail,
+			attachments: [
+				{
+					filename: 'afspraak.ics',
+					content: args.ics,
+					contentType: 'text/calendar; method=PUBLISH; charset=utf-8'
 				}
 			]
 		},
@@ -406,7 +472,7 @@ export async function sendBookingReceived(
 		'',
 		`Gevraagd moment: ${args.spokenDate}, ${args.start} - ${args.end} (30 minuten).`,
 		'',
-		'Ik kijk zo snel mogelijk of dit moment lukt en laat het je binnen 48 uur weten.',
+		'Ik kijk zo snel mogelijk of dit moment lukt en laat het je binnen 24 uur weten.',
 		'Zodra ik het bevestig, krijg je een mail met een agenda-uitnodiging.',
 		'',
 		'Goed om te weten:',
@@ -426,7 +492,7 @@ export async function sendBookingReceived(
 		`<div style="font-size:16px;color:#3d4a35"><strong>${escapeHtml(args.spokenDate)}</strong></div>`,
 		`<div style="font-size:16px;color:#3d4a35"><strong>${escapeHtml(args.start)} – ${escapeHtml(args.end)}</strong> <span style="font-size:13px;color:#5f6d56">(30 minuten)</span></div>`,
 		'</td></tr></table>',
-		'<p style="margin:0 0 14px">Ik kijk zo snel mogelijk of dit moment lukt en laat het je <strong>binnen 48 uur</strong> weten. Zodra ik het bevestig, krijg je een mail met een agenda-uitnodiging.</p>',
+		'<p style="margin:0 0 14px">Ik kijk zo snel mogelijk of dit moment lukt en laat het je <strong>binnen 24 uur</strong> weten. Zodra ik het bevestig, krijg je een mail met een agenda-uitnodiging.</p>',
 		'<p style="margin:0 0 6px;font-size:13px;color:#5f6d56"><strong>Goed om te weten</strong></p>',
 		'<ul style="margin:0 0 14px;padding-left:18px;font-size:13px;line-height:1.7;color:#5f6d56">',
 		`<li>Tot ${args.cancellationHours} uur van tevoren kun je kosteloos afzeggen of verzetten.</li>`,

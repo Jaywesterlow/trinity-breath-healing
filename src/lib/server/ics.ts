@@ -22,6 +22,10 @@ export interface InviteDetails {
 	clientName: string;
 	clientEmail: string;
 	organiserEmail: string;
+	/** The practice's fixed Google Meet room (MEET_URL), when set. */
+	meetUrl?: string;
+	/** 'REQUEST' invites the visitor; 'PUBLISH' is her own copy to add to her calendar. */
+	method?: 'REQUEST' | 'PUBLISH';
 }
 
 /** "2026-09-03" + "14:00" -> "20260903T140000". */
@@ -90,9 +94,13 @@ function esc(value: string): string {
 
 export function buildInvite(details: InviteDetails): string {
 	const summary = `Kennismaking — ${details.clientName}`;
+	const method = details.method ?? 'REQUEST';
+	const meet = details.meetUrl ? ` Google Meet: ${details.meetUrl}` : '';
 	const description =
-		'Kennismakingsgesprek van 30 minuten met ' +
-		`${BRAND.legalName}. Vragen vooraf? Antwoord gerust op deze uitnodiging.`;
+		method === 'PUBLISH'
+			? `Kennismakingsgesprek van 30 minuten met ${details.clientName} (${details.clientEmail}).${meet}`
+			: 'Kennismakingsgesprek van 30 minuten met ' +
+				`${BRAND.legalName}.${meet} Vragen vooraf? Antwoord gerust op deze uitnodiging.`;
 
 	const lines = [
 		'BEGIN:VCALENDAR',
@@ -102,7 +110,7 @@ export function buildInvite(details: InviteDetails): string {
 		/* REQUEST, not PUBLISH: this is an invitation addressed to named
 		   attendees, which is what makes Gmail show RSVP buttons rather than a
 		   generic "add to calendar" chip. */
-		'METHOD:REQUEST',
+		`METHOD:${method}`,
 		'BEGIN:VEVENT',
 		`UID:${details.uid}`,
 		`DTSTAMP:${utcStamp(new Date())}`,
@@ -110,6 +118,9 @@ export function buildInvite(details: InviteDetails): string {
 		`DTEND:${stamp(details.datum, details.end)}`,
 		fold(`SUMMARY:${esc(summary)}`),
 		fold(`DESCRIPTION:${esc(description)}`),
+		...(details.meetUrl
+			? [fold(`LOCATION:${esc(details.meetUrl)}`), fold(`URL:${details.meetUrl}`)]
+			: []),
 		fold(`ORGANIZER;CN=${esc(BRAND.legalName)}:mailto:${details.organiserEmail}`),
 		fold(
 			`ATTENDEE;CN=${esc(details.clientName)};ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:${details.clientEmail}`

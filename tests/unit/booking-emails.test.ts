@@ -19,7 +19,12 @@ vi.mock('$env/dynamic/public', () => ({
 	env: { PUBLIC_SITE_URL: 'https://trinitybreathhealing.nl' }
 }));
 
-import { sendBookingReceived, sendBookingApproved, sendBookingRejected } from '$lib/server/email';
+import {
+	sendBookingReceived,
+	sendBookingApproved,
+	sendBookingApprovedNotice,
+	sendBookingRejected
+} from '$lib/server/email';
 import { CANCELLATION_HOURS } from '$lib/legal/meta';
 import { BRAND } from '$lib/constants/brand';
 
@@ -55,7 +60,7 @@ describe('booking e-mails', () => {
 		expect(mail.subject).toContain('Aanvraag ontvangen');
 		expect(mail.text).toContain('nog geen bevestiging');
 		expect(mail.html).toContain('nog geen bevestiging');
-		expect(mail.text).toContain('binnen 48 uur');
+		expect(mail.text).toContain('binnen 24 uur');
 	});
 
 	it('quotes the same cancellation window the terms use', async () => {
@@ -146,5 +151,39 @@ describe('booking e-mails', () => {
 		const mail = sent[0]!;
 		expect(mail.text).toContain('https://trinitybreathhealing.nl/#contact');
 		expect(mail.text).not.toMatch(/helaas.*(vol|druk|geen tijd)/i);
+	});
+});
+
+describe('the Meet room in the confirmation mails', () => {
+	const meetUrl = 'https://meet.google.com/abc-defg-hij';
+
+	it('the visitor gets the link', async () => {
+		const { sent, fake } = capture();
+		await sendBookingApproved(
+			{
+				to: 'anna@example.com',
+				clientName: 'Anna',
+				...slot,
+				ics: 'X',
+				cancellationHours: 24,
+				meetUrl
+			},
+			fake
+		);
+		expect(sent[0]!.text).toContain(meetUrl);
+		expect(sent[0]!.html).toContain(meetUrl);
+	});
+
+	it('she gets her own copy with the link and an .ics, at her inbox', async () => {
+		const { sent, fake } = capture();
+		await sendBookingApprovedNotice(
+			{ clientName: 'Anna de Vries', clientEmail: 'anna@example.com', ...slot, ics: 'X', meetUrl },
+			fake
+		);
+		const mail = sent[0]! as unknown as { to: string[]; text: string; attachments: unknown[] };
+		expect(mail.to).toEqual(['inbox@example.com']);
+		expect(mail.text).toContain(meetUrl);
+		expect(mail.text).toContain('Anna de Vries');
+		expect(mail.attachments).toHaveLength(1);
 	});
 });

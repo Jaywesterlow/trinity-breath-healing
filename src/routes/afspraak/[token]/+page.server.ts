@@ -12,7 +12,12 @@ import type { Actions, PageServerLoad } from './$types';
 import { verifyToken, hashToken } from '$lib/server/token';
 import { decide, statusOf } from '$lib/server/bookings';
 import { isDatabaseConfigured } from '$lib/server/db';
-import { sendBookingApproved, sendBookingRejected, isEmailConfigured } from '$lib/server/email';
+import {
+	sendBookingApproved,
+	sendBookingApprovedNotice,
+	sendBookingRejected,
+	isEmailConfigured
+} from '$lib/server/email';
 import { buildInvite } from '$lib/server/ics';
 import { SITE_URL } from '$lib/seo/defaults';
 import { BRAND } from '$lib/constants/brand';
@@ -113,6 +118,25 @@ export const actions: Actions = {
 
 		const spoken = spokenDate(token.datum);
 		const organiser = env.CONTACT_TO_EMAIL || BRAND.email;
+		/* One fixed Google Meet room for every kennismaking, made in her own
+		   account so she is its host (decided 2026-11-07; per-booking rooms via
+		   the Calendar API can replace it later). Unset, the mails go out
+		   without a link, as before. */
+		const meetUrl = env.MEET_URL || undefined;
+		const fullName = `${token.voornaam} ${token.achternaam}`;
+		const invite = {
+			/* Stable per request, so a later update or cancellation
+			   can address the same event rather than creating a
+			   duplicate in her calendar. */
+			uid: `${hashToken(params.token).slice(0, 32)}@trinitybreathhealing.nl`,
+			datum: token.datum,
+			start: token.start,
+			end: token.end,
+			clientName: fullName,
+			clientEmail: token.email,
+			organiserEmail: organiser,
+			meetUrl
+		};
 
 		const sent =
 			choice === 'approved'
@@ -124,18 +148,8 @@ export const actions: Actions = {
 							start: token.start,
 							end: token.end,
 							cancellationHours: CANCELLATION_HOURS,
-							ics: buildInvite({
-								/* Stable per request, so a later update or cancellation
-								   can address the same event rather than creating a
-								   duplicate in her calendar. */
-								uid: `${hashToken(params.token).slice(0, 32)}@trinitybreathhealing.nl`,
-								datum: token.datum,
-								start: token.start,
-								end: token.end,
-								clientName: `${token.voornaam} ${token.achternaam}`,
-								clientEmail: token.email,
-								organiserEmail: organiser
-							})
+							meetUrl,
+							ics: buildInvite(invite)
 						},
 						fetch
 					)
@@ -151,6 +165,25 @@ export const actions: Actions = {
 					);
 
 		if (!sent.ok) console.error('[afspraak] mail failed:', sent);
+
+		/* Her own copy with the Meet link and an .ics for her calendar. Only
+		   once the visitor's confirmation went out, and its failure does not
+		   change what the page reports: the visitor is what the page is about. */
+		if (sent.ok && choice === 'approved') {
+			const notice = await sendBookingApprovedNotice(
+				{
+					clientName: fullName,
+					clientEmail: token.email,
+					spokenDate: spoken,
+					start: token.start,
+					end: token.end,
+					meetUrl,
+					ics: buildInvite({ ...invite, method: 'PUBLISH' })
+				},
+				fetch
+			);
+			if (!notice.ok) console.error('[afspraak] practitioner notice failed:', notice);
+		}
 
 		return {
 			done: true,

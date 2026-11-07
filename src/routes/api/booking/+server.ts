@@ -54,7 +54,7 @@ const MESSAGES = {
 	   answers. Promising a confirmation that may turn into a decline is how a
 	   visitor ends up feeling misled. */
 	success:
-		'Je aanvraag is verstuurd. Je hoort binnen 48 uur of het moment doorgaat — je krijgt daar bericht van per e-mail.'
+		'Je aanvraag is verstuurd. Je hoort binnen 24 uur of het moment doorgaat — je krijgt daar bericht van per e-mail.'
 } as const;
 
 const MONTHS = [

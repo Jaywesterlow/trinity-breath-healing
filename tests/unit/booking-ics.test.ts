@@ -99,3 +99,34 @@ describe('buildInvite', () => {
 		expect(attendee).toContain('\\;');
 	});
 });
+
+describe('buildInvite with the Meet room', () => {
+	const base = {
+		uid: 'abc123@trinitybreathhealing.nl',
+		datum: '2026-09-03',
+		start: '14:00',
+		end: '14:30',
+		clientName: 'Anna de Vries',
+		clientEmail: 'anna@example.com',
+		organiserEmail: 'info@trinitybreathhealing.nl',
+		meetUrl: 'https://meet.google.com/abc-defg-hij'
+	};
+
+	it('puts the link in LOCATION, URL and the description', () => {
+		const ics = unfold(buildInvite(base));
+		expect(ics).toContain('LOCATION:https://meet.google.com/abc-defg-hij');
+		expect(ics).toContain('URL:https://meet.google.com/abc-defg-hij');
+		expect(ics).toMatch(/DESCRIPTION:.*meet\.google\.com\/abc-defg-hij/);
+	});
+
+	it('her own copy is PUBLISH and names the visitor', () => {
+		const ics = unfold(buildInvite({ ...base, method: 'PUBLISH' }));
+		expect(ics).toContain('METHOD:PUBLISH');
+		expect(ics).toMatch(/DESCRIPTION:.*Anna de Vries/);
+	});
+
+	it('without a link there is no LOCATION', () => {
+		const { meetUrl: _drop, ...noLink } = base;
+		expect(buildInvite(noLink)).not.toContain('LOCATION:');
+	});
+});

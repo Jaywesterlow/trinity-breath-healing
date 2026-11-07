@@ -8,7 +8,7 @@
 import { db } from '$lib/server/db';
 
 /** How long the practitioner has to answer before the slot frees itself. */
-export const PENDING_TTL_HOURS = 48;
+export const PENDING_TTL_HOURS = 24;
 
 export interface TakenSlot {
 	datum: string;
