@@ -77,6 +77,11 @@
 		flex-direction: column;
 		align-items: center;
 		gap: var(--space-4);
+		/* space-3 on a phone: with her longer Kennismaken lead (7-11) the block ran
+		   4px over the third-of-the-viewport band the reveal keeps to. */
+		@media (max-width: 767.98px) {
+			gap: var(--space-3);
+		}
 	}
 
 	.cta__eyebrow {

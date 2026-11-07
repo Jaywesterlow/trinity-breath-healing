@@ -9,8 +9,9 @@
 	import BehandelingenNote from './BehandelingenNote.svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 
-	// All 7 services have art since 2026-09-27 (the last four drawn to match the
-	// first three, approved by the owner). A service absent from this map shows a plain card
+	// All services have art since 2026-09-27 (the last four drawn to match the first
+	// three, approved by the owner; the eighth generated and traced 2026-11-01). A service
+	// absent from this map shows a plain card
 	// (no stand-in number since 2026-09-27, the owner's call): drop a new icon
 	// file in, add its entry here and its crop to SERVICE_ART, and it appears.
 	const ICONS: Record<string, string> = {
@@ -20,7 +21,8 @@
 		'raster-energie': '/images/card-raster-energie.svg',
 		'cranio-fascia-unwinding': '/images/card-cranio-fascia-unwinding.svg',
 		'brtt-body': '/images/card-brtt-body.svg',
-		'trb-breathwork': '/images/card-trb-breathwork.svg'
+		'trb-breathwork': '/images/card-trb-breathwork.svg',
+		'clearing-ascensie': '/images/card-clearing-ascensie.svg'
 	};
 
 	// buttonLabel is placeholder copy, not final — see TreatmentCard.svelte.

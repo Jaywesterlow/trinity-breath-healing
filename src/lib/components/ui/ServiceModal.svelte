@@ -257,14 +257,16 @@
 							<h3 id={`service-modal-title-${service.slug}`} class="service-modal__title">
 								{service.name}
 							</h3>
-							<p class="service-modal__intro">{service.intro}</p>
+							{#each service.intro.split('\n\n') as para, i (i)}
+								<p class="service-modal__intro">{para}</p>
+							{/each}
 							<div class="service-modal__cta">
 								<ButtonLink label="Naar de pagina" href={`/diensten/${service.slug}`} />
 							</div>
 						</div>
 
 						<div class="service-modal__helps">
-							<h4 class="service-modal__helps-title">Helpt bij</h4>
+							<h4 class="service-modal__helps-title">Kan ondersteuning bieden bij</h4>
 							<ul class="service-modal__helps-list">
 								{#each service.helpsWith as item (item)}
 									<li>{item}</li>
@@ -521,6 +523,10 @@
 		font-family: var(--font-body);
 		font-size: var(--fs-body);
 		line-height: var(--line-height-loose);
+	}
+
+	.service-modal__intro + .service-modal__intro {
+		margin-top: var(--space-3);
 	}
 
 	.service-modal__cta {

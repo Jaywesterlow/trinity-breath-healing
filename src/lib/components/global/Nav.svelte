@@ -8,6 +8,7 @@
 		{ path: '/', label: 'Home' },
 		{ path: '/behandelingen', label: 'Behandelingen' },
 		{ path: '/diensten', label: 'Diensten' },
+		{ path: '/tarieven', label: 'Tarieven' },
 		{ path: '/werkwijze', label: 'Werkwijze' },
 		{ path: '/over-mij', label: 'Over mij' },
 		{ path: '/contact', label: 'Contact' }
@@ -277,6 +278,25 @@
 
 	.mobile-menu--open .mobile-menu__cta {
 		pointer-events: auto;
+	}
+
+	/* Seven links and the button do not fit a short screen at the full gap (they ran
+	   into each other under 800px high), so there they close up and flow from the
+	   top, and a phone on its side scrolls. */
+	@media (max-height: 799.98px) {
+		.mobile-menu {
+			justify-content: flex-start;
+			gap: var(--space-2);
+			padding-bottom: var(--space-6);
+			padding-top: calc(var(--nav-height) + var(--space-4));
+			overflow-y: auto;
+		}
+
+		.mobile-menu__cta {
+			position: static;
+			flex-shrink: 0;
+			margin-top: var(--space-4);
+		}
 	}
 
 	/* Same two-line idea as the desktop nav, minus the hover half: a touch screen

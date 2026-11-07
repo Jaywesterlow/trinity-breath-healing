@@ -1,6 +1,6 @@
 <script lang="ts">
 	/**
-	 * One layout for all seven /diensten/* pages.
+	 * One layout for all eight /diensten/* pages.
 	 *
 	 * The content is not written here and must not be: every word comes from
 	 * `BRAND.services`, which is the practitioner's own copy, and the same object
@@ -19,19 +19,28 @@
 	 * constant so it cannot say something slightly different on page four.
 	 */
 	import { Breadcrumbs } from '$lib/components/ui';
+	import CredentialBadge from '$lib/components/ui/CredentialBadge.svelte';
+	import ClearingAscensie from './ClearingAscensie.svelte';
 	import { PageShell, PageHead, PageSection, CtaBand, ServiceCard } from '$lib/components/page';
 	import { SERVICE_ART } from '$lib/constants/service-art';
 	import { BRAND } from '$lib/constants/brand';
+	import { contraGroupFor } from '$lib/content/contra-indicaties';
 	import { reveal } from '$lib/actions/reveal';
 	import { paintGreen } from '$lib/paint';
 
 	let { slug, crumbs }: { slug: string; crumbs: { name: string; path: string }[] } = $props();
 
 	const service = $derived(BRAND.services.find((s) => s.slug === slug)!);
+	const contra = $derived(contraGroupFor(slug));
 
 	/** The other six, for the row at the bottom. Order is BRAND's, not shuffled. */
 	const others = $derived(BRAND.services.filter((s) => s.slug !== slug));
 	const art = $derived(SERVICE_ART[slug]);
+	/* The page may carry a longer text than the card and modal (Gold Healing, 6-11). */
+	const pageText = $derived('pageIntro' in service ? service.pageIntro : service.intro);
+	const paragraphs = $derived(pageText.split('\n\n'));
+	const helpsIntro = $derived('helpsIntro' in service ? service.helpsIntro : null);
+	const paint = $derived(paintGreen(BRAND.services.findIndex((s) => s.slug === slug)));
 </script>
 
 <Breadcrumbs items={crumbs} />
@@ -44,55 +53,103 @@
 		{service.name}
 		{#snippet visual()}
 			{#if art}
-				<!-- The drawing's own box, not the SVG's: see ServiceModal's
+				<!-- The same card as the one turning on the home page: sand lines on
+				     the treatment's own watercolour green (her request, 2-11). The
+				     drawing's own box, not the SVG's: see ServiceModal's
 				     .service-modal__art for the mechanism and service-art.ts for
-				     the numbers. Forest ink on sand, like the portrait on the
-				     landing page. -->
-				<div
-					class="service__art"
-					style={`--art-src: url(${art.src}); --art-x: ${art.x}; --art-y: ${art.y}; --art-w: ${art.w}; --art-h: ${art.h}; --art-ratio: ${art.ratio};`}
-				></div>
+				     the numbers. -->
+				<div class="service__card" style:--paint={paint}>
+					<div
+						class="service__art"
+						style={`--art-src: url(${art.src}); --art-x: ${art.x}; --art-y: ${art.y}; --art-w: ${art.w}; --art-h: ${art.h}; --art-ratio: ${art.ratio};`}
+					></div>
+				</div>
 			{/if}
 		{/snippet}
 	</PageHead>
 
-	<PageSection id="wat" eyebrow="In het kort" title="Wat het is">
-		<p class="service__body" use:reveal>{service.intro}</p>
+	<!-- A question as heading, the way people ask it and AI answers quote it. -->
+	<PageSection id="wat" eyebrow="In het kort" title={`Wat is ${service.name}?`}>
+		{#each paragraphs as para, i (i)}
+			<p class="service__body" use:reveal>{para}</p>
+		{/each}
+		{#if slug === 'spinal-touch'}
+			<CredentialBadge />
+		{/if}
 	</PageSection>
 
-	<PageSection id="helpt" eyebrow="Voor wie" title="Waar het bij kan helpen">
-		<ul class="service__list">
-			{#each service.helpsWith as item (item)}
-				<li class="service__item" use:reveal>
-					<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-						<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" />
-						<path
-							d="m8.5 12 2.4 2.4 4.6-4.8"
-							stroke="currentColor"
-							stroke-width="1.6"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						/>
-					</svg>
-					<span>{item}</span>
-				</li>
-			{/each}
-		</ul>
-	</PageSection>
+	<!-- Her long text already carries this list in her own order. -->
+	{#if slug === 'clearing-ascensie'}
+		<ClearingAscensie />
+	{:else}
+		<PageSection id="helpt" eyebrow="Voor wie" title="Waar het bij kan helpen">
+			{#if helpsIntro}
+				<p class="service__body service__lead-in" use:reveal>{helpsIntro}</p>
+			{/if}
+			<ul class="service__list">
+				{#each service.helpsWith as item (item)}
+					<li class="service__item" use:reveal>
+						<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+							<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6" />
+							<path
+								d="m8.5 12 2.4 2.4 4.6-4.8"
+								stroke="currentColor"
+								stroke-width="1.6"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							/>
+						</svg>
+						<span>{item}</span>
+					</li>
+				{/each}
+			</ul>
+		</PageSection>
+	{/if}
 
 	<PageSection id="sessie" eyebrow="De sessie" title="Hoe een sessie verloopt">
 		<p class="service__body" use:reveal>
 			We beginnen met een gesprek over waar je op dit moment tegenaan loopt. Daarna werk ik met
 			{service.name}, afgestemd op wat jij nodig hebt. Je hoeft niets te presteren en niets te
 			vertellen wat je niet wilt vertellen. Na afloop is er tijd om te landen en na te praten. Een
-			sessie duurt ongeveer een uur en kan bij jou thuis of op afstand.
+			sessie duurt {service.duration} en kan {service.remote
+				? 'in de praktijkruimte, bij jou thuis of op afstand'
+				: 'in de praktijkruimte of bij jou thuis'}. De prijs vind je op de
+			<a class="link-underline" href="/tarieven">tarievenpagina</a>.
 		</p>
 	</PageSection>
 
+	{#if contra}
+		<PageSection id="veiligheid" eyebrow="Goed om te weten" title="Gezondheid en veiligheid">
+			<p class="service__body">{contra.intro}</p>
+			{#if contra.items}
+				<ul class="service__contra">
+					{#each contra.items as item (item)}
+						<li>{item}</li>
+					{/each}
+				</ul>
+			{/if}
+			{#if contra.prep}
+				<p class="service__body">{contra.prepTitle}:</p>
+				<ul class="service__contra">
+					{#each contra.prep as item (item)}
+						<li>{item}</li>
+					{/each}
+				</ul>
+			{/if}
+			{#if contra.outro}
+				<p class="service__body">{contra.outro}</p>
+			{/if}
+			<p class="service__body">
+				Stop nooit zelf met voorgeschreven medicatie. Meer hierover staat op de
+				<a class="link-underline" href="/disclaimer">disclaimerpagina</a>.
+			</p>
+		</PageSection>
+	{/if}
+
 	<CtaBand
 		id="afspraak"
-		title="Een afspraak maken"
-		lead="Je hoeft niet te weten of dit de juiste behandeling voor je is. Dat zoeken we in het eerste gesprek samen uit."
+		title="Samen kijken wat bij jou past"
+		lead={`Ben je benieuwd of ${service.name} iets voor jou kan betekenen? Tijdens een vrijblijvend kennismakingsgesprek nemen we rustig de tijd om jouw wensen en behoeften te bespreken. Samen ontdekken we welke behandeling het beste bij jou aansluit.`}
 		label="Plan een kennismaking"
 		href="/contact"
 		note={BRAND.disclaimer}
@@ -121,17 +178,26 @@
 	   1/--art-h so the drawing's box fills this box, and positioned so the
 	   SVG's margins fall outside it: a percentage position is measured
 	   against (box − mask), which is where the (1 − w) comes from. */
-	.service__art {
+	/* The home carousel's card face (TreatmentCard .tcard): its ratio, radius and
+	   watercolour green, with the drawing centred in its upper part. */
+	.service__card {
+		display: grid;
+		place-items: center;
 		height: 100%;
-		aspect-ratio: var(--art-ratio);
-		/* Below the side-by-side layout the drawing has the column's full width:
-		   a wide one (BRTT Body's lying figure, 2.4:1) would otherwise run past it
-		   at the slot's full height. Width first, height from the ratio. */
+		aspect-ratio: 282 / 459;
+		padding: 14% 12%;
+		border-radius: var(--radius-lg);
+		background: var(--paint, var(--paint-green));
 		@media (max-width: 1099.98px) {
-			height: auto;
-			width: min(100%, calc(var(--phead-visual-h, 14rem) * var(--art-ratio)));
+			height: var(--phead-visual-h, 14rem);
 		}
-		background: var(--color-fg-forest);
+	}
+
+	.service__art {
+		width: 100%;
+		max-height: 100%;
+		aspect-ratio: var(--art-ratio);
+		background: var(--color-bg-sand);
 		-webkit-mask-image: var(--art-src);
 		mask-image: var(--art-src);
 		-webkit-mask-repeat: no-repeat;
@@ -184,6 +250,26 @@
 		color: var(--brand-border);
 	}
 
+	.service__lead-in {
+		margin-bottom: var(--space-4);
+	}
+
+	.service__body + .service__body,
+	.service__contra + .service__body {
+		margin-top: var(--space-4);
+	}
+
+	.service__contra {
+		margin: var(--space-3) 0 0;
+		padding-left: 1.25rem;
+		list-style: disc;
+		font-family: var(--font-body);
+		font-size: var(--fs-body);
+		font-weight: var(--font-weight-light);
+		line-height: var(--line-height-loose);
+		color: var(--color-text-subtle);
+	}
+
 	.service__others {
 		list-style: none;
 		margin: 0;
@@ -201,7 +287,8 @@
 	}
 
 	@media (min-width: 1100px) {
-		.service__body {
+		.service__body,
+		.service__contra {
 			font-size: var(--fs-body-lg);
 		}
 

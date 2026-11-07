@@ -8,11 +8,11 @@
  *
  * Three things are deliberately encoded rather than flattened into prose:
  *
- * `status` — September 2026 has not happened yet. Soul Alchemist module 3 is
- * something she is going to do, not something she has done, and listing a
+ * `planned` — a course she is going to do, not one she has done. Listing a
  * future course among completed qualifications on a health site is exactly the
- * kind of overclaim that costs trust when someone checks. It renders in a
- * separate, clearly-labelled group.
+ * kind of overclaim that costs trust when someone checks, so it renders in a
+ * separate, clearly-labelled group. Soul Alchemist module 3 carried it until
+ * she completed the module (12–14 September 2026, confirmed 30 October).
  *
  * `repeat` — May 2025 is a refresher of the January 2024 course, not a second
  * qualification. Counting it twice would inflate the list.
@@ -26,8 +26,8 @@
  * and they appear as seals on the Master certificate rather than as documents of
  * their own, so they may simply never have had one.
  *
- * SOUL ALCHEMIST IS A SIX-MODULE TRAJECT and she has finished two. Module 3 runs
- * 12–14 September 2026; three more follow next year. That is why the page frames
+ * SOUL ALCHEMIST IS A SIX-MODULE TRAJECT and she has finished three. Module 3
+ * ran 12–14 September 2026; three more follow next year. That is why the page frames
  * her training as ongoing rather than finished — it is accurate, and a
  * practitioner still in training every year reads better than one who stopped.
  *
@@ -125,8 +125,7 @@ export const TRAININGS: Training[] = [
 		date: '2026-09',
 		dateLabel: '12–14 september 2026',
 		name: 'Soul Alchemist — module 3',
-		provider: 'One Consciousness Academy',
-		planned: true
+		provider: 'One Consciousness Academy'
 	}
 ];
 

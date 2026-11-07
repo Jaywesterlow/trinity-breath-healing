@@ -12,8 +12,8 @@ import { ALL_ROUTES } from '$lib/constants/routes';
 import { STUB_META } from '$lib/seo/stub-meta';
 
 describe('BRAND.services (260810-mdl)', () => {
-	it('has exactly 7 entries', () => {
-		expect(BRAND.services).toHaveLength(7);
+	it('has exactly 8 entries', () => {
+		expect(BRAND.services).toHaveLength(8);
 	});
 
 	it('no TODO_ placeholder remains in any service field', () => {
@@ -62,6 +62,7 @@ describe('BRAND.services (260810-mdl)', () => {
 		const slugs = BRAND.services.map((s) => s.slug);
 		expect(slugs).toContain('brtt-body');
 		expect(slugs).toContain('trb-breathwork');
+		expect(slugs).toContain('clearing-ascensie');
 	});
 
 	it('BRAND.disclaimer is a single non-empty constant', () => {

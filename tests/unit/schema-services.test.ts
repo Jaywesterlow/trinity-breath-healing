@@ -61,9 +61,9 @@ describe('services.ts — Service schema nodes', () => {
 		expect(node['url']).toBe('https://trinity-breath-healing.vercel.app/diensten/mahatma-healing');
 	});
 
-	it('Test 5: allServiceNodes has exactly 7 entries', async () => {
+	it('Test 5: allServiceNodes has exactly 8 entries', async () => {
 		const { allServiceNodes } = await loadServices();
-		expect(allServiceNodes).toHaveLength(7);
+		expect(allServiceNodes).toHaveLength(8);
 	});
 
 	it('Test 6: allServiceNodes covers all 7 slugs', async () => {

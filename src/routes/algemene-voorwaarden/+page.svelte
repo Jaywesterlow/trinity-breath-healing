@@ -75,12 +75,14 @@
 
 	<h2>Artikel 4 — Tarieven en betaling</h2>
 	<p>
-		Het tarief voor een sessie bedraagt <Todo>tarief per sessie</Todo>. Tarieven worden vóór de
-		afspraak kenbaar gemaakt; het tarief dat bij de bevestiging is genoemd, is het tarief dat geldt.
+		De tarieven per behandeling staan op de <a href="/tarieven">tarievenpagina</a> en zijn inclusief btw.
+		Tarieven worden vóór de afspraak kenbaar gemaakt; het tarief dat bij de bevestiging is genoemd, is
+		het tarief dat geldt. Voor sessies aan huis worden reiskosten van €0,35 per gereden kilometer berekend,
+		inclusief de heen- en terugreis.
 	</p>
 	<p>
 		Betaling vindt plaats ná de behandeling, per factuur, Tikkie, iDEAL of contant. De praktijk is
-		<Todo>wel/niet</Todo> btw-plichtig. Bij een factuur geldt een betaaltermijn van 14 dagen.
+		btw-plichtig. Bij een factuur geldt een betaaltermijn van 14 dagen.
 	</p>
 	<p>
 		Sessies worden niet vergoed door de zorgverzekeraar, tenzij dit uitdrukkelijk anders met je is

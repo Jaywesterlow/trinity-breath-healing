@@ -7,7 +7,7 @@
  * built from, so the two can be checked against each other and neither can
  * quietly drift. If a service's `helpsWith` changes, come back here.
  *
- * Why this exists at all: /diensten lists the seven treatments by name, which
+ * Why this exists at all: /diensten lists the treatments by name, which
  * only helps a reader who already knows the name. Most people arrive with a
  * complaint, not a modality — "ik slaap slecht", not "ik zoek Spinal Touch" —
  * and that is also how the question reaches an AI assistant. This page answers
@@ -34,27 +34,26 @@ export interface Klacht {
 export const KLACHTEN: Klacht[] = [
 	{
 		id: 'stress-en-burn-out',
-		title: 'Stress en burn-out',
-		body: 'Spanning die niet meer weggaat met een weekend rust, en een hoofd dat niet stopt. We werken aan de plek waar die spanning vastzit, niet alleen aan het gevoel erover.',
+		title: 'Stress en spanning',
+		body: 'Langdurige stress kan zich uiten in een vol hoofd, lichamelijke spanning en moeite met ontspannen. Soms merk je dat je steeds moeilijker tot rust komt en uit balans raakt.',
 		services: ['cranio-fascia-unwinding', 'brtt-body', 'mahatma-healing', 'spinal-touch'],
 		sources: [
 			'langdurige stress en burn-outklachten',
 			'spanning die niet verdwijnt met praten of sporten',
 			'chronische spanning en pantsering',
-			'burn-outklachten',
-			'stress',
-			'burn-out'
+			'overbelasting en burn-outklachten',
+			'stress en innerlijke onrust',
+			'stress en opgebouwde spanning'
 		]
 	},
 	{
 		id: 'slecht-slapen-en-vermoeidheid',
 		title: 'Slecht slapen en vermoeidheid',
-		body: 'Wakker liggen, of wakker worden en nog steeds moe zijn. Vaak staat het zenuwstelsel nog aan terwijl jij allang wilt uitrusten.',
+		body: 'Moeite met inslapen, regelmatig wakker worden of vermoeid zijn ondanks voldoende slaap? Stress en spanning kunnen je zenuwstelsel alert houden, waardoor ontspannen soms lastig is.',
 		services: ['spinal-touch', 'mahatma-healing', 'brtt-body', 'cranio-fascia-unwinding'],
 		sources: [
-			'slaapproblemen',
-			'(chronische) vermoeidheid',
-			'vermoeidheidsklachten',
+			'moeite met ontspannen of slapen',
+			'vermoeidheid en weinig energie',
 			'slaapkwaliteit',
 			'vermoeidheid, onrust en overprikkeling'
 		]
@@ -62,68 +61,57 @@ export const KLACHTEN: Klacht[] = [
 	{
 		id: 'angst-en-somberheid',
 		title: 'Angst en somberheid',
-		body: 'Angstgevoelens, piekeren, of een zwaarte die er al een tijd is. Dit is aanvullend op reguliere zorg, niet in plaats daarvan.',
+		body: 'Heb je last van angstgevoelens, blijf je piekeren of voel je je regelmatig somber? Soms kunnen deze gevoelens je dagelijkse leven beïnvloeden en verlang je naar meer innerlijke rust en balans.',
 		services: ['goldhealing', 'trb-breathwork', 'mahatma-healing', 'spinal-touch'],
 		sources: [
-			'angstgevoelens',
-			'negativiteit en depressieve klachten',
-			'angst en depressieve gevoelens',
-			'angsten en depressieve klachten',
-			'angsten'
+			'angstgevoelens en innerlijke onrust',
+			'negatieve gedachten en sombere gevoelens',
+			'angstgevoelens en sombere gevoelens',
+			'emotionele spanning en angsten'
 		]
 	},
 	{
 		id: 'trauma-en-verwerking',
 		title: 'Trauma en onverwerkte ervaringen',
-		body: 'Gebeurtenissen die het lichaam heeft vastgehouden, ook als je er geen bewuste herinnering meer aan hebt. Er wordt niets opengebroken wat niet los wil.',
+		body: 'Sommige ingrijpende ervaringen kunnen nog lange tijd invloed hebben op hoe je je voelt. Misschien merk je dat je moeite hebt met ontspannen, bepaalde emoties steeds terugkomen of dat je lichaam gespannen blijft.',
 		services: ['trb-breathwork', 'brtt-body', 'mahatma-healing'],
 		sources: [
-			"onverwerkte trauma's",
-			'trauma',
 			'PTSS-symptomen',
-			'onderdrukte emoties',
-			'rouwverwerking',
+			'onderdrukte gevoelens en emotionele blokkades',
+			'rouw en verlies',
 			'emotionele verwerking na intensieve periodes'
 		]
 	},
 	{
 		id: 'pijn-en-lichamelijke-klachten',
 		title: 'Pijn en lichamelijke klachten',
-		body: 'Rug, nek, schouders, hoofdpijn of migraine. Bij fysieke klachten ga je altijd eerst naar de huisarts; dit werk komt daarnaast.',
+		body: 'Ervaar je regelmatig spanning of pijn in je rug, nek of schouders? Of heb je last van hoofdpijn of andere lichamelijke ongemakken? Soms kan het moeilijk zijn om je lichaam volledig te ontspannen. Bij fysieke klachten ga je altijd eerst naar de huisarts.',
 		services: ['spinal-touch', 'brtt-body', 'cranio-fascia-unwinding'],
-		sources: [
-			'rugpijn en hernia',
-			'hoofdpijn en migraine',
-			'gewrichtspijn en fibromyalgie',
-			'migraine, rug-, nek- en schouderklachten',
-			'spijsverteringsklachten',
-			'tinnitus'
-		]
+		sources: ['spanning in rug, nek en schouders', 'migraine, rug-, nek- en schouderklachten']
 	},
 	{
 		id: 'overprikkeling-en-hooggevoeligheid',
 		title: 'Overprikkeling en hooggevoeligheid',
-		body: 'Te veel binnenkrijgen en het niet kwijt kunnen. Ook voor kinderen: Goldhealing is daar zacht genoeg voor.',
+		body: 'Ervaar je prikkels en emoties intens, raak je snel overbelast of heb je moeite om tot rust te komen? Soms kan alles om je heen te veel worden en verlang je naar rust, ruimte en balans.',
 		services: ['goldhealing', 'cranio-fascia-unwinding', 'mahatma-healing'],
 		sources: [
 			'stress en overprikkeling',
 			'hooggevoeligheid bij kinderen',
-			'ADHD',
-			'autisme en PDD-NOS',
+			'behoefte aan rust en ontspanning bij ADHD of autisme',
 			'vermoeidheid, onrust en overprikkeling'
 		]
 	},
 	{
 		id: 'vastzitten-zonder-duidelijke-klacht',
 		title: 'Vastzitten, zonder dat je het kunt benoemen',
-		body: 'Geen diagnose, geen duidelijke aanleiding, wel het gevoel dat er iets niet stroomt. Dat is een geldige reden om te komen.',
-		services: ['raster-energie', 'mahatma-healing', 'trb-breathwork'],
+		body: 'Soms voel je dat je vastloopt, zonder precies te weten waarom. Oude patronen, overtuigingen of emoties kunnen je persoonlijke groei in de weg staan. Misschien voel je dat het tijd is om los te laten en ruimte te maken voor verandering.',
+		services: ['raster-energie', 'mahatma-healing', 'trb-breathwork', 'clearing-ascensie'],
 		sources: [
 			'energetische blokkades',
 			'inzicht en bewustwording',
 			'activeren van je zelfgenezend vermogen',
 			'moeite met voelen of ontspannen',
-			'verankering en aarding'
+			'bewustwording van oude patronen'
 		]
 	}
 ];

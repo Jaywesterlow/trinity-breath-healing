@@ -58,6 +58,7 @@
 				{ href: '/', label: 'Home' },
 				{ href: '/behandelingen', label: 'Behandelingen' },
 				{ href: '/diensten', label: 'Diensten' },
+				{ href: '/tarieven', label: 'Tarieven' },
 				{ href: '/werkwijze', label: 'Werkwijze' },
 				{ href: '/over-mij', label: 'Over mij' },
 				{ href: '/contact', label: 'Contact' }
@@ -67,8 +68,8 @@
 			heading: 'DIENSTEN',
 			links: [
 				{ href: '/diensten/mahatma-healing', label: 'Mahatma Healing' },
-				{ href: '/diensten/goldhealing', label: 'Goldhealing' },
-				{ href: '/diensten/raster-energie', label: 'Raster Energie' },
+				{ href: '/diensten/goldhealing', label: 'Gold Healing' },
+				{ href: '/diensten/raster-energie', label: 'Rasterenergie' },
 				{ href: '/diensten/spinal-touch', label: 'Spinal Touch' },
 				{ href: '/diensten', label: 'Meer diensten' }
 			]

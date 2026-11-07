@@ -32,8 +32,8 @@ export const ALL_ROUTES: readonly { path: string; title: string; kind: RouteKind
 	{ path: '/contact', title: 'Contact', kind: 'page' },
 	{ path: '/diensten', title: 'Diensten', kind: 'page' },
 	{ path: '/diensten/mahatma-healing', title: 'Mahatma Healing', kind: 'page' },
-	{ path: '/diensten/goldhealing', title: 'Goldhealing', kind: 'page' },
-	{ path: '/diensten/raster-energie', title: 'Raster Energie', kind: 'page' },
+	{ path: '/diensten/goldhealing', title: 'Gold Healing', kind: 'page' },
+	{ path: '/diensten/raster-energie', title: 'Rasterenergie', kind: 'page' },
 	{
 		path: '/diensten/cranio-fascia-unwinding',
 		title: 'Cranio & Fascia Unwinding',
@@ -42,6 +42,12 @@ export const ALL_ROUTES: readonly { path: string; title: string; kind: RouteKind
 	{ path: '/diensten/spinal-touch', title: 'Spinal Touch', kind: 'page' },
 	{ path: '/diensten/brtt-body', title: 'BRTT Body', kind: 'page' },
 	{ path: '/diensten/trb-breathwork', title: 'Trauma Release Breathwork', kind: 'page' },
+	{
+		path: '/diensten/clearing-ascensie',
+		title: 'Clearing & Ascensie-activatie',
+		kind: 'page'
+	},
+	{ path: '/tarieven', title: 'Tarieven', kind: 'page' },
 	{ path: '/artikelen', title: 'Artikelen', kind: 'stub' },
 	/* The three legal pages carry real content and are indexed on purpose: in the
 	   YMYL health category a findable privacy statement and a findable medical

@@ -86,7 +86,7 @@ test.describe('desktop', () => {
 		expect(await activeTitle(page)).toBe(cardTitle);
 	});
 
-	test('Next moves to the adjacent service (Mahatma Healing -> Goldhealing) and wraps at the end', async ({
+	test('Next moves to the adjacent service (Mahatma Healing -> Gold Healing) and wraps at the end', async ({
 		page
 	}) => {
 		const mahatma = await indexForSlug(page, 'mahatma-healing');
@@ -95,10 +95,10 @@ test.describe('desktop', () => {
 		expect(await activeTitle(page)).toBe('Mahatma Healing');
 
 		await press(page, 'next');
-		expect(await activeTitle(page)).toBe('Goldhealing');
+		expect(await activeTitle(page)).toBe('Gold Healing');
 
-		// 6 more presses — 7 total, one full lap of 7 services — wraps back to Mahatma Healing.
-		for (let i = 0; i < 6; i++) await press(page, 'next');
+		// 7 more presses — 8 total, one full lap of 8 services — wraps back to Mahatma Healing.
+		for (let i = 0; i < 7; i++) await press(page, 'next');
 		expect(await activeTitle(page)).toBe('Mahatma Healing');
 	});
 
@@ -124,7 +124,7 @@ test.describe('desktop', () => {
 		await page.locator(PIVOT).nth(mahatma).locator(CARD).click();
 		await page.waitForTimeout(1500);
 
-		await page.locator('.service-modal__nav--next').click(); // -> Goldhealing
+		await page.locator('.service-modal__nav--next').click(); // -> Gold Healing
 		await page.waitForTimeout(700);
 
 		await page.locator('.service-modal__close').click();

@@ -2,18 +2,14 @@
 	/**
 	 * Medisch voorbehoud.
 	 *
-	 * De contra-indicatielijst is de reden dat deze pagina meer is dan een
-	 * juridische formaliteit. Trauma Release Breathwork werkt met intensieve
-	 * ademtechnieken; die zijn voor de meeste mensen prima, maar niet voor
-	 * iedereen, en dat hoort vindbaar te zijn vóór iemand boekt in plaats van
-	 * pas in de intake.
-	 *
-	 * De lijst is opgesteld naar wat voor deze vorm van ademwerk gangbaar is en
-	 * staat bewust als <Todo> gemarkeerd voor bevestiging: alleen de behandelaar
-	 * kan vaststellen welke situaties in haar praktijk werkelijk gelden.
+	 * De contra-indicaties zijn de reden dat deze pagina meer is dan een
+	 * juridische formaliteit: ze horen vindbaar te zijn vóór iemand boekt in
+	 * plaats van pas in de intake. Ze verschillen per behandeling en komen van de
+	 * behandelaar zelf, zie $lib/content/contra-indicaties.
 	 */
-	import { LegalDoc, Todo } from '$lib/components/ui';
+	import { LegalDoc } from '$lib/components/ui';
 	import { BRAND } from '$lib/constants/brand';
+	import { CONTRA_GROUPS } from '$lib/content/contra-indicaties';
 	import { LEGAL_LAST_UPDATED } from '$lib/legal/meta';
 	import type { PageData } from './$types';
 
@@ -51,28 +47,36 @@
 
 	<h2>Wanneer eerst overleggen</h2>
 	<p>
-		Ademwerk kan intensief zijn. Voor de meeste mensen is dat prima, maar in een aantal situaties
-		wil ik het vooraf met je bespreken en soms eerst met je arts laten overleggen. Meld het daarom
-		altijd wanneer een van deze dingen op je van toepassing is
-		<Todo>lijst door behandelaar te bevestigen</Todo>:
+		Niet elke behandeling past bij iedereen, en wat geldt verschilt per behandeling. Meld het daarom
+		altijd vooraf wanneer een van deze dingen op je van toepassing is.
 	</p>
-	<ul>
-		<li>zwangerschap;</li>
-		<li>hart- en vaatziekten, een doorgemaakt hartinfarct of sterk verhoogde bloeddruk;</li>
-		<li>epilepsie;</li>
-		<li>een aneurysma of een eerdere hersenbloeding;</li>
-		<li>glaucoom of netvliesloslating;</li>
-		<li>ernstige psychiatrische aandoeningen, zoals psychose, schizofrenie of bipolariteit;</li>
-		<li>een recente operatie, botbreuk of ernstige blessure;</li>
-		<li>astma of andere longaandoeningen — neem in dat geval je medicatie mee;</li>
-		<li>osteoporose;</li>
-		<li>het gebruik van medicatie die je bewustzijn, hartslag of bloeddruk beïnvloedt.</li>
-	</ul>
-	<p>
-		Dit is geen lijst met verboden. Het is een lijst met redenen om het gesprek eerst te voeren,
-		zodat we samen kunnen kiezen wat verantwoord is — soms is dat een zachtere vorm van werken in
-		plaats van helemaal niets.
-	</p>
+	{#each CONTRA_GROUPS as group (group.id)}
+		<h3>{group.title}</h3>
+		{#if group.treatments !== group.title}
+			<p>Dit geldt voor {group.treatments}.</p>
+		{/if}
+		<p>{group.intro}</p>
+		{#if group.items}
+			<ul>
+				{#each group.items as item (item)}
+					<li>{item}</li>
+				{/each}
+			</ul>
+		{/if}
+		{#if group.prep}
+			<p>{group.prepTitle}:</p>
+			<ul>
+				{#each group.prep as item (item)}
+					<li>{item}</li>
+				{/each}
+			</ul>
+		{/if}
+		{#if group.outro}
+			<p>{group.outro}</p>
+		{/if}
+	{/each}
+	<h3>Cranio &amp; Fascia Unwinding en BRTT Body</h3>
+	<p>Voor deze behandelingen bespreken we tijdens de kennismaking wat voor jou verantwoord is.</p>
 
 	<h2>Wat je van een sessie kunt verwachten</h2>
 	<p>

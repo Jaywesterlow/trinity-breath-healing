@@ -2,8 +2,8 @@ import { describe, it, expect } from 'vitest';
 import { ALL_ROUTES } from '$lib/constants/routes';
 
 describe('ALL_ROUTES manifest', () => {
-	it('contains exactly 18 entries (2026-09-18: /faq merged into /contact, /blog dropped)', () => {
-		expect(ALL_ROUTES.length).toBe(18);
+	it('contains exactly 20 entries (2026-09-18: /faq merged into /contact, /blog dropped)', () => {
+		expect(ALL_ROUTES.length).toBe(20);
 	});
 
 	it('paths match the reserved route list, in order', () => {
@@ -22,6 +22,8 @@ describe('ALL_ROUTES manifest', () => {
 			'/diensten/spinal-touch',
 			'/diensten/brtt-body',
 			'/diensten/trb-breathwork',
+			'/diensten/clearing-ascensie',
+			'/tarieven',
 			'/artikelen',
 			'/privacyverklaring',
 			'/algemene-voorwaarden',
@@ -35,12 +37,12 @@ describe('ALL_ROUTES manifest', () => {
 		expect(ALL_ROUTES[0]!.path).toBe('/');
 	});
 
-	it('has exactly 7 modality routes, and they all carry real content', () => {
+	it('has exactly 8 modality routes, and they all carry real content', () => {
 		// Was "7 service-stub entries". They graduated to `kind: 'page'` on 2026-09-09
 		// when each got a real /diensten/{slug} page, which is what puts them in the
 		// sitemap. The count and the slugs are still the thing worth pinning.
 		const modalities = ALL_ROUTES.filter((r) => r.path.startsWith('/diensten/'));
-		expect(modalities.length).toBe(7);
+		expect(modalities.length).toBe(8);
 		expect(modalities.every((r) => r.kind === 'page')).toBe(true);
 		const paths = modalities.map((r) => r.path);
 		expect(paths).toContain('/diensten/mahatma-healing');

@@ -43,7 +43,8 @@ check_string "Maak een afspraak"
 # Werkwijze (Plan 01-03)
 check_string "Rustig, persoonlijk en op jouw tempo."
 check_string "Kennismaking"
-check_string "De sessie"
+# "De sessie" became "De behandeling" with her Werkwijze copy (TODO.md §15, 30-10).
+check_string "De behandeling"
 # "Verdieping" became "Afronding & nazorg" in the approved Werkwijze redesign (d0683e8,
 # 2026-10-27). Matched without the ampersand, which the HTML escapes.
 check_string "Afronding"

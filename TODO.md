@@ -24,7 +24,7 @@ machine can check is checked, and anything it cannot is dated.
 |---|---|
 | **Homepage contact form + date planner** | **Finished and pushed.** Three-step wizard, square tiles at every width, both panels locked to one height, mobile-first. Cal.com dropped; the site owns booking. Nothing outstanding in the component itself. |
 | **Pre-launch audit** | **Done.** CSP, security headers, self-hosted fonts, stubs out of the sitemap and noindexed, custom 404. |
-| **Page list / sitemap** | **18 routes** in `src/lib/constants/routes.ts`, **15 published** as of 2026-09-18. Eleven graduated on 2026-09-09: the seven modalities under `/diensten/`, their `/diensten` index, `/behandelingen`, `/werkwijze` and `/contact`. On 2026-09-18 `/faq` merged into `/contact#faq` (301) and `/blog` was dropped. Three are still stubs — `/over-mij`, `/artikelen`, `/reviews` — noindexed and out of the sitemap until they carry something. |
+| **Page list / sitemap** | **20 routes** in `src/lib/constants/routes.ts`, **17 published** as of 2026-09-18. Eleven graduated on 2026-09-09: the seven modalities under `/diensten/`, their `/diensten` index, `/behandelingen`, `/werkwijze` and `/contact`. On 2026-09-18 `/faq` merged into `/contact#faq` (301) and `/blog` was dropped. Three are still stubs — `/over-mij`, `/artikelen`, `/reviews` — noindexed and out of the sitemap until they carry something. |
 | **Legal pages + OG image + favicons + Plausible** | **Done and pushed.** |
 | **Booking approval + slot blocking** | **Live.** A requested slot greys out at once; she approves or declines from her inbox; approval sends a calendar invite, a decline reopens the slot. Supabase holds only date, time and status — no name, e-mail or klachten. |
 | **Homepage redesign** | **Moved to Figma 2026-10-23** (file "Trinity Healing", team JW). Feedback from Rowin and Brigitte, the new illustration style and the order of work are in §15. The site follows once a section is approved in Figma. **Werkwijze approved 2026-10-24** (full-card images, site green, paper texture); **Hero approved 2026-10-24** (two overflowing images, watercolour text wash). **Both built in code 2026-10-24, plus nav blur and the Frame 49 button — uncommitted, waiting for Jay's OK** (see "Built in code" in §15). Next: Jay's verdict on the Behandelingen images, then Over mij. |
@@ -32,6 +32,95 @@ machine can check is checked, and anything it cannot is dated.
 | **Page titles** | **Fixed 2026-09-09.** Eleven shipped the brand name twice (76–88 chars, of which Google shows ~60) because `Head.svelte` appended it to a title that already had it. All 20 are now 48–62 with the brand once, in one spelling. |
 
 **Live since 2026-08-24** on `trinitybreathhealing.nl`, with mail wired through Resend. What is left is content, not plumbing.
+
+---
+
+## 0a. Voor Brigitte — vragen en wat ik anders heb gedaan
+
+Everything only she can answer, one list, in her language so it can be sent as is.
+Started 2026-11-01 from her WhatsApp of 31-10 and her form. Strike items here as they
+come back. This replaces asking from memory; `.planning/notes/VAN-BRIGITTE.md` is older.
+
+### Vragen van 7-11, met screenshots
+
+Haar WhatsApp van 1 t/m 6 november is verwerkt, behalve deze punten. Elke vraag hoort
+bij één screenshot uit `.planning/notes/brigitte-2026-11-07/`; het gele vak is de tekst
+waar het om gaat. Tot ze antwoordt blijft de huidige tekst staan.
+
+- [ ] **1. Adres** (`1-adres.png`). Pagina Werkwijze, blok "Praktisch", regel "Waar". Mag
+      hier je volledige adres komen: Reigersbos 100 L, 3e etage, 1107 ES Amsterdam? Ja of nee?
+      Is het je woonadres, dan raad ik nee aan: mensen krijgen het adres dan in de
+      bevestigingsmail. Is het een praktijkruimte, dan ja, en dan zet ik het ook op je
+      Google-profiel.
+- [ ] **2. Spinal Touch** (`2-spinal-touch-lijst.png`). Pagina Spinal Touch, blok "Waar het
+      bij kan helpen". Ik heb hernia, migraine, fibromyalgie en tinnitus weggehaald en de
+      lijst geschreven zoals je andere lijsten. Klopt hij zo? Ja of nee?
+      stress en opgebouwde spanning · spanning in rug, nek en schouders · angstgevoelens en
+      sombere gevoelens · overbelasting en burn-outklachten · vermoeidheid en weinig energie ·
+      moeite met ontspannen of slapen · behoefte aan rust en balans in je lichaam
+- [ ] **3. Kennismaking** (`3-kennismaking-online.png`). Pagina Werkwijze, stap 1. Er staat
+      dat de kennismaking online is. Klopt dat altijd, of mogen mensen ook langskomen?
+- [ ] **4. Aangekleed** (`4-aangekleed.png`). Pagina Werkwijze, stap 3. Mag deze zin blijven
+      staan: "lig je aangekleed op een behandeltafel"? Ja of nee?
+- [ ] **5. Appen** (`5-appen.png`). Pagina Werkwijze, stap 4. Mag deze zin blijven staan:
+      "je kunt me altijd appen als je je afvraagt of het klopt"? Ja of nee?
+- [ ] **6. Welke kaart?** (`6a-derde-kaart.png`, `6b-overprikkeling-kaart.png`). Pagina
+      Behandelingen. Je tekst "Onrust en overprikkeling: Gold Healing kan als aanvullende
+      ondersteuning worden ingezet…" vervangt welke kaart: A, "Overprikkeling en
+      hooggevoeligheid", of B, "Angst en somberheid" (de derde)?
+- [ ] **7. Kinderen.** Bij Gold Healing en Spinal Touch staat nu dat ze ook voor kinderen
+      zijn. Geldt dat ook voor Cranio & Fascia Unwinding en BRTT? Zo ja, vanaf welke leeftijd?
+- [ ] Ze heeft op 1, 2 en 5 november weer 6 berichten verwijderd. Stond daar nog iets in?
+
+Beantwoord door haar berichten van 1–6 november: de naam is **Rasterenergie** (en **Gold
+Healing**); op afstand kunnen alleen Mahatma, Gold Healing en Rasterenergie, dus Clearing
+niet; Gold Healing, Spinal Touch, BRTT en TRB hebben nieuwe kaartteksten (Cranio nog niet);
+haar nieuwe zorgzin staat nu op elke pagina en vervangt het samengevoegde blok hieronder.
+Reiskosten staan al op /tarieven (€0,35 per km), dus die vraag vervalt.
+
+### Wat ik niet heb gedaan, en waarom
+
+- [ ] **Over mij, "Wat ik doe" blijft staan.** Die links naar je behandelingen helpen Google en AI-zoekmachines begrijpen wat je doet. Dat het ook bij Diensten staat is geen probleem.
+- [ ] **Over mij, "Waar ik werk" en "Belangrijk om te weten" blijven staan.** Dit is de pagina waar mensen beslissen of ze je vertrouwen, en de melding dat een behandeling geen reguliere zorg vervangt hoort daar ook.
+- [ ] **De medicijnnamen uit je TRB-lijst staan niet op de site.** Die horen in de intake. Op de site staat: "Gebruik je medicatie? Bespreek dit vooraf met mij."
+- [ ] **"Neussprays even een weekje mee stoppen" staat er zo niet.** De disclaimer zegt dat niemand zelf met medicatie stopt, dus de site zegt nu dat neusspray wordt afgeraden en dat ze het vooraf aangeven, dan kijken jullie samen wat past.
+- [ ] **Clearing: "Wat ontstaat is" is "Wat kan ontstaan" geworden**, met "Dit verschilt per persoon." erachter. Een gezondheidsresultaat mag je niet als zekerheid beloven.
+- [ ] **Kaart Pijn: de zin "Bij fysieke klachten ga je altijd eerst naar de huisarts." blijft staan**, achter je nieuwe tekst. De kaart noemt hoofdpijn en migraine, en die wil je eerst door een arts laten bekijken.
+- [x] *(Vervangen 7-11 door haar nieuwe zorgzin.)* **Je twee teksten over aanvullende zorg zijn één blok geworden** ("Aanvullende ondersteuning", met "Ik stel geen diagnoses" erin), omdat dezelfde boodschap anders twee keer op één pagina stond.
+
+### Behandelingen en namen
+
+- [x] Raster: heet het **Raster Energie** (zoals nu op de site) of **Raster Healing / Rasterhealing** (zoals in je prijslijst en je nieuwe plaatje)? *Rasterenergie, 2-11.*
+- [ ] BRTT: staat het voor **Body Release Trauma Therapy** (op de site) of **Body Remembers Trauma Therapy** (in je prijslijst)?
+- [x] Kan Clearing & Ascensie ook **op afstand**? Je noemde alleen Mahatma, Gold en Raster. *Nee, 2-11.*
+- [ ] Kunnen **alle** behandelingen aan huis, ook TRB en Clearing & Ascensie?
+- [ ] De draaiende kaarten: je hebt Mahatma en Raster doorgegeven. Zijn **Goldhealing, Cranio, Spinal Touch, BRTT en TRB** qua tekst goed zo, of komen die nog? *Alles binnen 1-11 behalve Cranio.*
+- [ ] **Afbeeldingen op de kaarten.** Mahatma, Raster en Clearing & Ascensie hebben nu de nieuwe stijl: sierlijke lijnen, en op Mahatma en Raster jouw eigen ontwerp als basis, zonder de gloed zodat ze bij de andere kaarten passen. Goldhealing, Spinal Touch en BRTT zijn in vergelijking dun en stil. Wil je dat ik die drie ook in deze stijl laat maken? Goede afbeeldingen voor een website maken kost geld: Google rekent ongeveer $0,13 per gemaakte afbeelding (Nano Banana Pro, prijs van november 2026), en meestal zijn er een paar pogingen per afbeelding nodig. Die kosten komen op de factuur.
+- [ ] Je hebt 8 berichten verwijderd. Stond daar **nog iets in** dat moet veranderen?
+
+### Contra-indicaties en veiligheid
+
+- [ ] Welke contra-indicaties gelden voor **Cranio & Fascia Unwinding**?
+- [ ] Welke contra-indicaties gelden voor **BRTT**?
+- [ ] Je Spinal Touch-lijst begint met "werk je ook in de aura". Geldt de lijst voor **elke** Spinal Touch-sessie, of alleen als je ook in de aura werkt? Nu staat hij voor alle sessies.
+- [ ] **Blijf hierom vragen.** De kaart **Angst en somberheid** verwijst naar Spinal Touch en TRB, terwijl die bij angstremmers, antidepressiva of ernstige psychische klachten worden afgeraden. Moeten die twee van de kaart af? Tot haar antwoord blijven de tags staan.
+- [ ] **Blijf hierom vragen.** Kinderen en gezinnen: zijn Goldhealing, Spinal Touch, Cranio en BRTT **alle vier** geschikt voor kinderen? Vanaf welke leeftijd, en is er altijd een ouder bij? De veelgestelde vragen zeggen nu nog dat behandelingen voor volwassenen zijn. **De kaart "Kinderen en Gezinnen" is nog niet gebouwd;** dat wacht op dit antwoord.
+- [ ] Welke **vragen** moeten in de intakevragenlijst bij de bevestigingsmail? Mag ik je Spinal Touch-intake als basis gebruiken?
+
+### Voorwaarden en privacy
+
+- [ ] Annuleren: je schrijft dat "het betaalde bedrag" wordt meegenomen, maar cliënten betalen ná de behandeling. Wat moet er staan als iemand binnen 24 uur annuleert en nog niets heeft betaald?
+- [ ] Word je nog lid van **CAT**, of wil je een andere beroepsvereniging? Tot die tijd staat er geen klachtenregeling in de voorwaarden. Wettelijk moet je als zorgaanbieder er een hebben, dus dit is belangrijk.
+- [ ] Hoe lang wil je **aantekeningen** van behandelingen bewaren?
+- [ ] Welke **mailbox** gebruik je voor de praktijk, Gmail of info@? Dat moet in de privacyverklaring.
+
+### Nog open, als je eraan toekomt
+
+- [ ] Hoe ziet een **eerste sessie** er van begin tot eind uit?
+- [ ] **Reviews**: drie tot vijf cliënten met een paar zinnen, voornaam is genoeg, met toestemming.
+- [ ] **Vijf vragen** die cliënten je steeds stellen, met jouw antwoord.
+- [ ] Is de **portretfoto** op de site echt jij, of is het gezicht gegenereerd?
+- [ ] Een echte **foto van je praktijkruimte**, als je die wilt laten zien.
 
 ---
 
@@ -308,7 +397,7 @@ prices, and adding Jay as Manager.
       covers reading her Google Calendar later (§8 step 3).
 - [ ] Her story — 2–3 paragraphs, her own words
 - [ ] What a first session is actually like
-- [ ] **Confirm the contraindication list on `/disclaimer`** ⚠️
+- [~] **Contraindications on `/disclaimer`** — confirmed per group 31-10 except Cranio and BRTT, see §11
 - [x] **Calendar: Google.** Confirmed 29-08. Unblocks §8 step 3 — the ICS feed
       route works with Google Calendar's secret address, which is the easier of
       the two options.
@@ -567,8 +656,21 @@ profile is worse than no link, and it was already shipping once.
 
 ## 11. Contra-indicaties: één lijst of één per behandeling?
 
-`/disclaimer` carries **one shared list** of situations to discuss first, and it
-applies to all seven treatments at once.
+**Decided and built 2026-11-01:** one list per treatment group, in
+`src/lib/content/contra-indicaties.ts`, shown on `/disclaimer` and on each service
+page. Sources: form 31-10 (TRB), WhatsApp 31-10 19:51 (energetic), her Spinal Touch
+intake form p. 7. Her medication names stay off the site and belong in the intake
+(§13); nasal spray is on the site as something to discuss, not to stop, because
+`/disclaimer` says never to stop medication.
+
+- [ ] **Cranio & Fascia Unwinding and BRTT Body: ask her for their contra-indications.**
+      Until then `/disclaimer` says these are discussed at the kennismaking, and
+      their service pages show no section.
+- [ ] Ask her: the Spinal Touch list is headed "werk je ook in de aura". Does it
+      apply to every session? The site currently shows it for all of them.
+
+Before that, `/disclaimer` carried one shared list of situations to discuss first,
+applying to all seven treatments at once.
 
 Her message of 29-08 says that is not how she works: *"Als mensen een bepaalde
 aandoening hebben dan wil ik ze eigenlijk niet behandelen maar ik heb wel een
@@ -578,14 +680,12 @@ are not the same risk.
 
 That is a content-structure question, not a wording one:
 
-- [ ] Decide: keep the global list and add a per-service line, or move
+- [x] Decide: keep the global list and add a per-service line, or move
       contra-indications onto each service in `BRAND.services` and let
       `/disclaimer` summarise.
-- [ ] A per-service list also feeds the Service JSON-LD and gives each
-      `/diensten/*` page real, specific content — an AEO gain, not just a
-      legal one.
-- [ ] Blocked on her definitive answer (promised 30-08) — do not restructure
-      before it lands, the shape of her answer decides the shape of the page.
+- [ ] A per-service list could also feed the Service JSON-LD. The service pages
+      carry it already; the JSON-LD does not yet.
+- [x] Blocked on her definitive answer (promised 30-08) — answered 31-10.
 
 ---
 

@@ -16,14 +16,14 @@ import { makeServiceNode } from '$lib/schema/services';
 export const prerender = true;
 
 const PATH = '/diensten/raster-energie';
-const TITLE = 'Raster Energie in Amsterdam – TRINITY Breath & Healing';
+const TITLE = 'Rasterenergie in Amsterdam – TRINITY Breath & Healing';
 const DESCRIPTION =
-	'Herstel van je Goddelijke blauwdruk — energetische stempels en blokkades worden gereinigd. Bij Trinity Breath & Healing in Amsterdam en omgeving, ook op afstand.';
+	'Herstel van je Goddelijke blauwdruk en het loslaten van energetische blokkades. Bij Trinity Breath & Healing in Amsterdam en omgeving, ook op afstand.';
 
 const CRUMBS = [
 	{ name: 'Home', path: '/' },
 	{ name: 'Diensten', path: '/diensten' },
-	{ name: 'Raster Energie', path: PATH }
+	{ name: 'Rasterenergie', path: PATH }
 ];
 
 export const load: PageLoad = async () => {
@@ -31,7 +31,7 @@ export const load: PageLoad = async () => {
 	const pageSpecific = [
 		buildBreadcrumb(CRUMBS),
 		buildWebPage({ title: TITLE, description: DESCRIPTION, path: PATH }),
-		makeServiceNode('raster-energie', 'Raster Energie')
+		makeServiceNode('raster-energie', 'Rasterenergie')
 	];
 	return { meta, crumbs: CRUMBS, graph: buildGraph({ pageSpecific, path: PATH }) };
 };

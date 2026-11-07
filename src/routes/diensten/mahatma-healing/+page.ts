@@ -18,7 +18,7 @@ export const prerender = true;
 const PATH = '/diensten/mahatma-healing';
 const TITLE = 'Mahatma Healing in Amsterdam – TRINITY Breath & Healing';
 const DESCRIPTION =
-	'Krachtige, harmoniserende energie die blokkades opheft en je energetisch systeem opschoont. Bij Trinity Breath & Healing in Amsterdam en omgeving, ook op afstand.';
+	'Een zachte, harmoniserende energetische behandeling voor innerlijke balans, het loslaten van spanning en ruimte voor rust. In Amsterdam e.o., ook op afstand.';
 
 const CRUMBS = [
 	{ name: 'Home', path: '/' },

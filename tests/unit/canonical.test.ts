@@ -58,10 +58,10 @@ describe('defaults (src/lib/seo/defaults.ts)', () => {
 // Tests 4 + 5: BRAND constant (no env mock needed — brand.ts has no env imports)
 // ---------------------------------------------------------------------------
 describe('BRAND (src/lib/constants/brand.ts)', () => {
-	it('Test 4: BRAND.services contains exactly 7 entries with correct slugs (260810-mdl)', async () => {
+	it('Test 4: BRAND.services contains exactly 8 entries with correct slugs (260810-mdl)', async () => {
 		const { BRAND } = await import('$lib/constants/brand');
 		const slugs = BRAND.services.map((s: { slug: string; name: string }) => s.slug);
-		expect(slugs).toHaveLength(7);
+		expect(slugs).toHaveLength(8);
 		expect(slugs).toContain('mahatma-healing');
 		expect(slugs).toContain('goldhealing');
 		expect(slugs).toContain('raster-energie');
@@ -69,6 +69,7 @@ describe('BRAND (src/lib/constants/brand.ts)', () => {
 		expect(slugs).toContain('spinal-touch');
 		expect(slugs).toContain('brtt-body');
 		expect(slugs).toContain('trb-breathwork');
+		expect(slugs).toContain('clearing-ascensie');
 	});
 
 	it('Test 5: BRAND.areaServed contains Amsterdam and Almere', async () => {
