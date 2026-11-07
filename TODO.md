@@ -436,13 +436,13 @@ modal image animation.
 - [ ] **Move the domain to her name once the site is finished.** It is already registered with her as registrant; this is the second half — moving it into her own TransIP account, which is a free internal transfer, so she owns the management too and is not dependent on Jay's login.
 - [x] **Set the Vercel mail env vars** — done. `RESEND_API_KEY` (Secret), `CONTACT_FROM_EMAIL` = `Trinity Breath & Healing <contact@trinitybreathhealing.nl>`, `CONTACT_TO_EMAIL` = Jay's Gmail.
 - [ ] **Repoint `CONTACT_TO_EMAIL` at her inbox** once `info@` forwarding exists. Required, not optional: unset, the code falls back to `BRAND.email`, which has no mailbox — Resend would report success and the submission would vanish.
-- [ ] Paste a permanent Google Meet room link for the confirmation e-mail
+- [ ] **Fixed Meet room (decided 2026-11-07, option 1):** Brigitte makes one "vergadering voor later" in her own Google account so she is host; set it as `MEET_URL` in Vercel. It goes into both confirmation mails and both .ics files. Per-booking rooms via the Calendar API (her OAuth) can replace it later.
 - [x] Verify the Resend sending domain — DKIM, SPF and MX in TransIP, region `eu-west-1` (Ireland), which is what the privacy statement promises
-- [ ] Sign the Resend verwerkersovereenkomst (named in the privacy statement)
+- [x] Resend verwerkersovereenkomst: **nothing to sign** (checked 2026-11-07). Their DPA binds on accepting the Terms of Service.
 - [x] **Done 30-08.** Google Search Console: `trinitybreathhealing.nl` added as a **Domain** property, verified by DNS TXT in TransIP, and `https://trinitybreathhealing.nl/sitemap.xml` submitted. One snag worth remembering: TransIP refuses a second TXT on `@` at a different TTL, so the Google record had to match the existing SPF record's 1-hour TTL. GSC also rejected the bare `sitemap.xml` and took the absolute URL. At the time only five URLs were in the sitemap; it is 16 since 2026-09-09, so the sitemap wants resubmitting in GSC. See `Insights/manual-steps.md` §2.
 - [ ] Create the Plausible account, then set `PUBLIC_PLAUSIBLE_DOMAIN` in Vercel
 - [x] Supabase booking store — project created, migration run, `DATABASE_URL` (transaction pooler, IPv4) and `BOOKING_TOKEN_SECRET` set in Vercel
-- [ ] **Sign the Supabase verwerkersovereenkomst** and add Supabase to the processor table in `/privacyverklaring`. Lower stakes than Resend's — the table holds no personal data — but it is still a processor and the statement currently does not name it.
+- [x] Supabase verwerkersovereenkomst: **nothing to sign** (2026-11-07), it binds via the Terms. Still to do: add Supabase to the processor table in `/privacyverklaring`. Lower stakes than Resend's — the table holds no personal data — but it is still a processor and the statement currently does not name it.
 - [x] **DONE 02-09.** Google Business Profile — **must be created from her Google account**, not Jay's: verification goes to the business and transferring ownership afterwards is a genuine hassle. Set it up as a **service-area business** (Amsterdam and surroundings) rather than a storefront. She rents the Reigersbos room one day a week; listing a part-time rented room as a normal storefront is how listings get suspended. Address hidden, or shown with Saturday-only hours.
 - [ ] Regenerate the visual-regression baselines on Windows (`npm run test:visual -- --update-snapshots`) — the spec skips on Linux, so CI cannot
 - [ ] Check LCP in Search Console a few weeks after launch
@@ -461,7 +461,7 @@ modal image animation.
       seven, copy taken from `BRAND.services` rather than written fresh.
 - [ ] `/reviews` — needs her reviews first; carries Review + AggregateRating JSON-LD
 - [ ] `/artikelen` — only worth it once there is something to put in it (`/blog` dropped 2026-09-18: one home for written pieces, not two)
-- [ ] Resubmit the sitemap in Search Console — it went from 5 URLs to 16
+- [x] Resubmit the sitemap in Search Console. Done 2026-11-07 (Google had read 15 pages that day).
 
 ---
 
