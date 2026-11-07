@@ -36,7 +36,7 @@ export const CONTRA_GROUPS: readonly ContraGroup[] = [
 	{
 		id: 'energetisch',
 		title: 'Energetische sessies',
-		treatments: 'Mahatma Healing, Raster Energie, Goldhealing en Clearing & Ascensie-activaties',
+		treatments: 'Mahatma Healing, Rasterenergie, Gold Healing en Clearing & Ascensie-activaties',
 		slugs: ['mahatma-healing', 'goldhealing', 'raster-energie', 'clearing-ascensie'],
 		intro:
 			'Bij epilepsie, een pacemaker of ernstige psychische aandoeningen, zoals schizofrenie of psychosegevoeligheid, is het belangrijk dit vooraf te melden. Er kan dan geen energetische sessie gedaan worden.',

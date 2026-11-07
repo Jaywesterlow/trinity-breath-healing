@@ -150,7 +150,8 @@ export const BRAND = {
 		'Weesp',
 		'Oostzaan',
 		'Hoofddorp',
-		'Badhoevedorp'
+		'Badhoevedorp',
+		'Utrecht'
 	] as const,
 
 	/**
@@ -174,42 +175,46 @@ export const BRAND = {
 			duration: '30 minuten',
 			remote: true,
 			teaser:
-				'Een krachtige, harmoniserende energie gericht op het loslaten van energetische blokkades en het herstellen van innerlijke balans.',
+				'Een zachte, harmoniserende energetische behandeling die gericht is op het ondersteunen van innerlijke balans, het loslaten van spanning en het creëren van ruimte voor rust en bewustwording.',
 			intro:
-				'Voorafgaand aan een sessie stem ik mij af op jouw I AM Presence, jouw Hogere Zelf. Vanuit deze verbinding werk ik intuïtief met de Mahatma-energie, die binnen deze werkwijze wordt gezien als harmoniserend en balancerend. Oude energie mag losgelaten worden, zodat er ruimte ontstaat voor nieuwe energie, innerlijke rust en verbinding met je eigen kracht.',
+				'Mahatma Healing is een energetische behandeling die gericht is op harmonie, balans en innerlijke bewustwording.\n\nAls Mahatma Coach verbind ik mij voorafgaand aan de sessie met jouw I AM Presence, jouw Hogere Zelf. Vanuit deze verbinding stem ik mij intuïtief af op wat jij op dat moment nodig hebt.\n\nBinnen deze energetische werkwijze staat het loslaten van oude energie en het herstellen van de innerlijke balans centraal. Zo ontstaat er ruimte voor ontspanning, bewustwording en een diepere verbinding met jezelf.',
+			/* Her "Voor wie" opening (5-11), shown above the list on the service page. */
+			helpsIntro:
+				'Mahatma Healing is bedoeld voor iedereen die behoefte heeft aan meer rust, balans en verbinding met zichzelf. De behandeling kan als aanvullende ondersteuning worden ervaren bij:',
 			helpsWith: [
-				'stress',
-				'burn-out',
-				'vermoeidheidsklachten',
-				'angsten',
-				'slaapproblemen',
-				'ADHD',
-				'trauma',
-				'allergieën',
-				'rouwverwerking'
+				'stress en innerlijke onrust',
+				'vermoeidheid en weinig energie',
+				'moeite met ontspannen of slapen',
+				'emotionele spanning en angsten',
+				'rouw en verlies',
+				'overbelasting en burn-outklachten',
+				'behoefte aan meer innerlijke balans',
+				'persoonlijke en spirituele groei'
 			]
 		},
 		{
 			slug: 'goldhealing',
-			name: 'Goldhealing',
+			name: 'Gold Healing',
 			duration: '30 minuten',
 			remote: true,
 			teaser:
-				'Gouden lichtenergie die negativiteit omzet, beschermt en vooral op het psychische vlak werkt.',
+				'Een zachte, transformerende behandeling met gouden lichtenergie, gericht op bescherming, emotionele balans en innerlijke rust.',
 			intro:
-				'Goldhealing stemt je af op een van de sterkst transformerende energiestralen uit de kosmos. Het gouden licht zet negatieve gevoelens en gedachten om en blijft je na de behandeling omringen als bescherming. Ik combineer het vaak met de Mahatma of Kundalini energie, zodat zowel de bron als de klacht wordt aangeraakt. Ook heel geschikt voor kinderen.',
+				'Gold Healing is een energetische behandeling waarbij gewerkt wordt met gouden lichtenergie. Deze energie wordt binnen de methode geassocieerd met transformatie, bescherming en het loslaten van negatieve gedachten en gevoelens.\n\nIk combineer Gold Healing regelmatig met Mahatma- of Kundalini-energie, waarbij aandacht is voor zowel de ervaren klachten als de mogelijke onderliggende oorzaken.\n\nDe behandeling is ook geschikt voor kinderen.',
+			/* The service page's longer text (6-11); the card and modal keep `intro` (1-11). */
+			pageIntro:
+				'Gold Healing is een energetische behandeling waarbij gewerkt wordt met gouden lichtenergie. Binnen deze werkwijze staat het transformeren van negatieve energie naar positieve energie centraal.\n\nDe behandeling richt zich vooral op het emotionele en psychische vlak en is bedoeld om innerlijke rust, balans en een gevoel van bescherming te ondersteunen.\n\nTijdens de sessie werk ik met zowel Mahatma-energie als Gold Healing. Deze energieën worden gecombineerd om harmonie, innerlijke balans en emotioneel welzijn te ondersteunen.',
 			helpsWith: [
-				'angstgevoelens',
-				'negativiteit en depressieve klachten',
+				'angstgevoelens en innerlijke onrust',
+				'negatieve gedachten en sombere gevoelens',
 				'stress en overprikkeling',
 				'hooggevoeligheid bij kinderen',
-				'ADHD',
-				'autisme en PDD-NOS'
+				'behoefte aan rust en ontspanning bij ADHD of autisme'
 			]
 		},
 		{
 			slug: 'raster-energie',
-			name: 'Raster Energie',
+			name: 'Rasterenergie',
 			duration: '30 minuten',
 			remote: true,
 			teaser: 'Herstel van je Goddelijke blauwdruk en het loslaten van energetische blokkades.',
@@ -247,19 +252,19 @@ export const BRAND = {
 			duration: '60 minuten',
 			remote: false,
 			teaser:
-				'Zachte methode langs de wervelkolom die je centrale zenuwstelsel weer laat doorstromen.',
+				'Een zachte aanrakingsmethode langs de wervelkolom, gericht op ontspanning en het ondersteunen van de balans in het zenuwstelsel.',
 			intro:
-				'Stress en trauma slaan zich op aan de achterzijde van je lichaam en kunnen zich daar inkapselen. De blokkades die zo ontstaan houden signalen tussen je centrale zenuwstelsel en je organen, spieren en weefsels tegen. Via lichte aanraking op specifieke punten langs je wervelkolom geef ik subtiele signalen aan dat zenuwstelsel. Geschikt voor alle leeftijden, van pasgeborenen tot ouderen.',
+				"Spinal Touch is een zachte, lichaamsgerichte aanrakingsmethode waarbij ik werk met specifieke punten langs de wervelkolom.\n\nDoor middel van subtiele aanrakingen nodig ik het lichaam uit om tot rust te komen, spanning los te laten en de natuurlijke balans te hervinden.\n\nDe behandeling is gericht op diepe ontspanning en het ondersteunen van het zenuwstelsel. Spinal Touch is geschikt voor jong en oud, van baby's tot ouderen.",
+			/* Softened 7-11 in the style of her own new lists (no hernia, migraine,
+			   fibromyalgie, tinnitus); sent to her to check, TODO.md §0a. */
 			helpsWith: [
-				'rugpijn en hernia',
-				'hoofdpijn en migraine',
-				'angsten en depressieve klachten',
-				'burn-outklachten',
-				'gewrichtspijn en fibromyalgie',
-				'spijsverteringsklachten',
-				'(chronische) vermoeidheid',
-				'slaapproblemen',
-				'tinnitus'
+				'stress en opgebouwde spanning',
+				'spanning in rug, nek en schouders',
+				'angstgevoelens en sombere gevoelens',
+				'overbelasting en burn-outklachten',
+				'vermoeidheid en weinig energie',
+				'moeite met ontspannen of slapen',
+				'behoefte aan rust en balans in je lichaam'
 			]
 		},
 		{
@@ -268,7 +273,7 @@ export const BRAND = {
 			duration: '60 tot 90 minuten',
 			remote: false,
 			teaser:
-				'Lichaamsgericht proces dat via de psoas — de spier van de ziel — opgeslagen trauma bevrijdt.',
+				'Een lichaamsgerichte methode waarbij je via natuurlijke lichaamsreacties spanning kunt loslaten en diepe ontspanning kunt ervaren.',
 			intro:
 				'BRTT, Body Release Trauma Therapy, is een krachtig lichaamsgericht proces dat opgeslagen trauma, heftige gebeurtenissen en stress uit je lichaam bevrijdt. Met gevarieerde technieken activeren we de psoas-spier, ook wel de spier van de ziel genoemd. Het lichaam mag ontladen, je zenuwstelsel kalmeert en lagen van lichaamspantsering laten los.',
 			helpsWith: [
@@ -287,16 +292,16 @@ export const BRAND = {
 			duration: '60 tot 90 minuten',
 			remote: false,
 			teaser:
-				'Zeven ademtechnieken die de poort naar je onderbewuste openen en oude lading loslaten.',
+				'Een diepgaand ademproces met zeven ademtechnieken, gericht op bewustwording en het loslaten van emotionele spanning en oude patronen.',
 			intro:
-				"TRB is een diepgaande vorm van ademwerk. Via zeven ademtechnieken maak je verbinding met de kern van je overtuigingen en ervaringen. De sessie brengt je in een diepe, soms trance-achtige staat waarin opgeslagen emoties en trauma's veilig losgelaten of gereset mogen worden — ook ervaringen waar je geen bewuste herinnering meer aan hebt.",
+				'TRB is een diepgaande vorm van ademwerk waarbij zeven ademtechnieken worden toegepast. Tijdens de sessie richt je de aandacht op je ademhaling en maak je ruimte om contact te maken met je gevoelens, overtuigingen en ervaringen.\n\nHet ademproces kan verschillende lichamelijke en emotionele reacties oproepen en bijdragen aan bewustwording, emotionele verwerking en het loslaten van spanning.',
 			helpsWith: [
-				"onverwerkte trauma's",
-				'onderdrukte emoties',
-				'angst en depressieve gevoelens',
-				'spanning vastgezet in het lichaam',
-				'verankering en aarding',
-				'diepe ontspanning en rust'
+				'stress en opgebouwde spanning',
+				'onderdrukte gevoelens en emotionele blokkades',
+				'angstgevoelens en innerlijke onrust',
+				'bewustwording van oude patronen',
+				'lichaamsbewustzijn',
+				'behoefte aan ontspanning en verbinding met jezelf'
 			]
 		},
 		{
@@ -325,7 +330,7 @@ export const BRAND = {
 	 * it can never drift between services. Her words, condensed.
 	 */
 	disclaimer:
-		'Een behandeling vervangt nooit reguliere zorg en ik stel geen diagnose. Bij fysieke klachten ga je altijd eerst naar de huisarts.',
+		'Mijn behandelingen zijn aanvullend op de reguliere gezondheidszorg en vervangen geen medische zorg. Ik stel geen diagnoses. Raadpleeg bij gezondheidsklachten altijd een arts.',
 
 	stats: {
 		yearsExperience: '8+',

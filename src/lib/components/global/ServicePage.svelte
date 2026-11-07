@@ -36,6 +36,11 @@
 	/** The other six, for the row at the bottom. Order is BRAND's, not shuffled. */
 	const others = $derived(BRAND.services.filter((s) => s.slug !== slug));
 	const art = $derived(SERVICE_ART[slug]);
+	/* The page may carry a longer text than the card and modal (Gold Healing, 6-11). */
+	const pageText = $derived('pageIntro' in service ? service.pageIntro : service.intro);
+	const paragraphs = $derived(pageText.split('\n\n'));
+	const helpsIntro = $derived('helpsIntro' in service ? service.helpsIntro : null);
+	const paint = $derived(paintGreen(BRAND.services.findIndex((s) => s.slug === slug)));
 </script>
 
 <Breadcrumbs items={crumbs} />
@@ -48,20 +53,26 @@
 		{service.name}
 		{#snippet visual()}
 			{#if art}
-				<!-- The drawing's own box, not the SVG's: see ServiceModal's
+				<!-- The same card as the one turning on the home page: sand lines on
+				     the treatment's own watercolour green (her request, 2-11). The
+				     drawing's own box, not the SVG's: see ServiceModal's
 				     .service-modal__art for the mechanism and service-art.ts for
-				     the numbers. Forest ink on sand, like the portrait on the
-				     landing page. -->
-				<div
-					class="service__art"
-					style={`--art-src: url(${art.src}); --art-x: ${art.x}; --art-y: ${art.y}; --art-w: ${art.w}; --art-h: ${art.h}; --art-ratio: ${art.ratio};`}
-				></div>
+				     the numbers. -->
+				<div class="service__card" style:--paint={paint}>
+					<div
+						class="service__art"
+						style={`--art-src: url(${art.src}); --art-x: ${art.x}; --art-y: ${art.y}; --art-w: ${art.w}; --art-h: ${art.h}; --art-ratio: ${art.ratio};`}
+					></div>
+				</div>
 			{/if}
 		{/snippet}
 	</PageHead>
 
-	<PageSection id="wat" eyebrow="In het kort" title="Wat het is">
-		<p class="service__body" use:reveal>{service.intro}</p>
+	<!-- A question as heading, the way people ask it and AI answers quote it. -->
+	<PageSection id="wat" eyebrow="In het kort" title={`Wat is ${service.name}?`}>
+		{#each paragraphs as para, i (i)}
+			<p class="service__body" use:reveal>{para}</p>
+		{/each}
 		{#if slug === 'spinal-touch'}
 			<CredentialBadge />
 		{/if}
@@ -72,6 +83,9 @@
 		<ClearingAscensie />
 	{:else}
 		<PageSection id="helpt" eyebrow="Voor wie" title="Waar het bij kan helpen">
+			{#if helpsIntro}
+				<p class="service__body service__lead-in" use:reveal>{helpsIntro}</p>
+			{/if}
 			<ul class="service__list">
 				{#each service.helpsWith as item (item)}
 					<li class="service__item" use:reveal>
@@ -134,8 +148,8 @@
 
 	<CtaBand
 		id="afspraak"
-		title="Een afspraak maken"
-		lead="Je hoeft niet te weten of dit de juiste behandeling voor je is. Dat zoeken we in het eerste gesprek samen uit."
+		title="Samen kijken wat bij jou past"
+		lead={`Ben je benieuwd of ${service.name} iets voor jou kan betekenen? Tijdens een vrijblijvend kennismakingsgesprek nemen we rustig de tijd om jouw wensen en behoeften te bespreken. Samen ontdekken we welke behandeling het beste bij jou aansluit.`}
 		label="Plan een kennismaking"
 		href="/contact"
 		note={BRAND.disclaimer}
@@ -164,17 +178,26 @@
 	   1/--art-h so the drawing's box fills this box, and positioned so the
 	   SVG's margins fall outside it: a percentage position is measured
 	   against (box − mask), which is where the (1 − w) comes from. */
-	.service__art {
+	/* The home carousel's card face (TreatmentCard .tcard): its ratio, radius and
+	   watercolour green, with the drawing centred in its upper part. */
+	.service__card {
+		display: grid;
+		place-items: center;
 		height: 100%;
-		aspect-ratio: var(--art-ratio);
-		/* Below the side-by-side layout the drawing has the column's full width:
-		   a wide one (BRTT Body's lying figure, 2.4:1) would otherwise run past it
-		   at the slot's full height. Width first, height from the ratio. */
+		aspect-ratio: 282 / 459;
+		padding: 14% 12%;
+		border-radius: var(--radius-lg);
+		background: var(--paint, var(--paint-green));
 		@media (max-width: 1099.98px) {
-			height: auto;
-			width: min(100%, calc(var(--phead-visual-h, 14rem) * var(--art-ratio)));
+			height: var(--phead-visual-h, 14rem);
 		}
-		background: var(--color-fg-forest);
+	}
+
+	.service__art {
+		width: 100%;
+		max-height: 100%;
+		aspect-ratio: var(--art-ratio);
+		background: var(--color-bg-sand);
 		-webkit-mask-image: var(--art-src);
 		mask-image: var(--art-src);
 		-webkit-mask-repeat: no-repeat;
@@ -225,6 +248,10 @@
 		width: 1.25rem;
 		height: 1.25rem;
 		color: var(--brand-border);
+	}
+
+	.service__lead-in {
+		margin-bottom: var(--space-4);
 	}
 
 	.service__body + .service__body,

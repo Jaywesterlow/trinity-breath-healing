@@ -41,6 +41,43 @@ Everything only she can answer, one list, in her language so it can be sent as i
 Started 2026-11-01 from her WhatsApp of 31-10 and her form. Strike items here as they
 come back. This replaces asking from memory; `.planning/notes/VAN-BRIGITTE.md` is older.
 
+### Vragen van 7-11, met screenshots
+
+Haar WhatsApp van 1 t/m 6 november is verwerkt, behalve deze punten. Elke vraag hoort
+bij één screenshot uit `.planning/notes/brigitte-2026-11-07/`; het gele vak is de tekst
+waar het om gaat. Tot ze antwoordt blijft de huidige tekst staan.
+
+- [ ] **1. Adres** (`1-adres.png`). Pagina Werkwijze, blok "Praktisch", regel "Waar". Mag
+      hier je volledige adres komen: Reigersbos 100 L, 3e etage, 1107 ES Amsterdam? Ja of nee?
+      Is het je woonadres, dan raad ik nee aan: mensen krijgen het adres dan in de
+      bevestigingsmail. Is het een praktijkruimte, dan ja, en dan zet ik het ook op je
+      Google-profiel.
+- [ ] **2. Spinal Touch** (`2-spinal-touch-lijst.png`). Pagina Spinal Touch, blok "Waar het
+      bij kan helpen". Ik heb hernia, migraine, fibromyalgie en tinnitus weggehaald en de
+      lijst geschreven zoals je andere lijsten. Klopt hij zo? Ja of nee?
+      stress en opgebouwde spanning · spanning in rug, nek en schouders · angstgevoelens en
+      sombere gevoelens · overbelasting en burn-outklachten · vermoeidheid en weinig energie ·
+      moeite met ontspannen of slapen · behoefte aan rust en balans in je lichaam
+- [ ] **3. Kennismaking** (`3-kennismaking-online.png`). Pagina Werkwijze, stap 1. Er staat
+      dat de kennismaking online is. Klopt dat altijd, of mogen mensen ook langskomen?
+- [ ] **4. Aangekleed** (`4-aangekleed.png`). Pagina Werkwijze, stap 3. Mag deze zin blijven
+      staan: "lig je aangekleed op een behandeltafel"? Ja of nee?
+- [ ] **5. Appen** (`5-appen.png`). Pagina Werkwijze, stap 4. Mag deze zin blijven staan:
+      "je kunt me altijd appen als je je afvraagt of het klopt"? Ja of nee?
+- [ ] **6. Welke kaart?** (`6a-derde-kaart.png`, `6b-overprikkeling-kaart.png`). Pagina
+      Behandelingen. Je tekst "Onrust en overprikkeling: Gold Healing kan als aanvullende
+      ondersteuning worden ingezet…" vervangt welke kaart: A, "Overprikkeling en
+      hooggevoeligheid", of B, "Angst en somberheid" (de derde)?
+- [ ] **7. Kinderen.** Bij Gold Healing en Spinal Touch staat nu dat ze ook voor kinderen
+      zijn. Geldt dat ook voor Cranio & Fascia Unwinding en BRTT? Zo ja, vanaf welke leeftijd?
+- [ ] Ze heeft op 1, 2 en 5 november weer 6 berichten verwijderd. Stond daar nog iets in?
+
+Beantwoord door haar berichten van 1–6 november: de naam is **Rasterenergie** (en **Gold
+Healing**); op afstand kunnen alleen Mahatma, Gold Healing en Rasterenergie, dus Clearing
+niet; Gold Healing, Spinal Touch, BRTT en TRB hebben nieuwe kaartteksten (Cranio nog niet);
+haar nieuwe zorgzin staat nu op elke pagina en vervangt het samengevoegde blok hieronder.
+Reiskosten staan al op /tarieven (€0,35 per km), dus die vraag vervalt.
+
 ### Wat ik niet heb gedaan, en waarom
 
 - [ ] **Over mij, "Wat ik doe" blijft staan.** Die links naar je behandelingen helpen Google en AI-zoekmachines begrijpen wat je doet. Dat het ook bij Diensten staat is geen probleem.
@@ -49,15 +86,15 @@ come back. This replaces asking from memory; `.planning/notes/VAN-BRIGITTE.md` i
 - [ ] **"Neussprays even een weekje mee stoppen" staat er zo niet.** De disclaimer zegt dat niemand zelf met medicatie stopt, dus de site zegt nu dat neusspray wordt afgeraden en dat ze het vooraf aangeven, dan kijken jullie samen wat past.
 - [ ] **Clearing: "Wat ontstaat is" is "Wat kan ontstaan" geworden**, met "Dit verschilt per persoon." erachter. Een gezondheidsresultaat mag je niet als zekerheid beloven.
 - [ ] **Kaart Pijn: de zin "Bij fysieke klachten ga je altijd eerst naar de huisarts." blijft staan**, achter je nieuwe tekst. De kaart noemt hoofdpijn en migraine, en die wil je eerst door een arts laten bekijken.
-- [ ] **Je twee teksten over aanvullende zorg zijn één blok geworden** ("Aanvullende ondersteuning", met "Ik stel geen diagnoses" erin), omdat dezelfde boodschap anders twee keer op één pagina stond.
+- [x] *(Vervangen 7-11 door haar nieuwe zorgzin.)* **Je twee teksten over aanvullende zorg zijn één blok geworden** ("Aanvullende ondersteuning", met "Ik stel geen diagnoses" erin), omdat dezelfde boodschap anders twee keer op één pagina stond.
 
 ### Behandelingen en namen
 
-- [ ] Raster: heet het **Raster Energie** (zoals nu op de site) of **Raster Healing / Rasterhealing** (zoals in je prijslijst en je nieuwe plaatje)?
+- [x] Raster: heet het **Raster Energie** (zoals nu op de site) of **Raster Healing / Rasterhealing** (zoals in je prijslijst en je nieuwe plaatje)? *Rasterenergie, 2-11.*
 - [ ] BRTT: staat het voor **Body Release Trauma Therapy** (op de site) of **Body Remembers Trauma Therapy** (in je prijslijst)?
-- [ ] Kan Clearing & Ascensie ook **op afstand**? Je noemde alleen Mahatma, Gold en Raster.
+- [x] Kan Clearing & Ascensie ook **op afstand**? Je noemde alleen Mahatma, Gold en Raster. *Nee, 2-11.*
 - [ ] Kunnen **alle** behandelingen aan huis, ook TRB en Clearing & Ascensie?
-- [ ] De draaiende kaarten: je hebt Mahatma en Raster doorgegeven. Zijn **Goldhealing, Cranio, Spinal Touch, BRTT en TRB** qua tekst goed zo, of komen die nog?
+- [ ] De draaiende kaarten: je hebt Mahatma en Raster doorgegeven. Zijn **Goldhealing, Cranio, Spinal Touch, BRTT en TRB** qua tekst goed zo, of komen die nog? *Alles binnen 1-11 behalve Cranio.*
 - [ ] **Afbeeldingen op de kaarten.** Mahatma, Raster en Clearing & Ascensie hebben nu de nieuwe stijl: sierlijke lijnen, en op Mahatma en Raster jouw eigen ontwerp als basis, zonder de gloed zodat ze bij de andere kaarten passen. Goldhealing, Spinal Touch en BRTT zijn in vergelijking dun en stil. Wil je dat ik die drie ook in deze stijl laat maken? Goede afbeeldingen voor een website maken kost geld: Google rekent ongeveer $0,13 per gemaakte afbeelding (Nano Banana Pro, prijs van november 2026), en meestal zijn er een paar pogingen per afbeelding nodig. Die kosten komen op de factuur.
 - [ ] Je hebt 8 berichten verwijderd. Stond daar **nog iets in** dat moet veranderen?
 

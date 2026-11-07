@@ -29,7 +29,7 @@
 		{
 			n: '02',
 			title: 'Voor de sessie',
-			body: 'Je krijgt vooraf te horen wat je kunt verwachten en waar we werken. Draag kleding waarin je makkelijk kunt liggen. Eet niet te zwaar vlak van tevoren. Verder hoef je niets voor te bereiden.'
+			body: 'Voorafgaand aan de behandeling nemen we rustig de tijd om stil te staan bij hoe het met je gaat en wat je op dat moment nodig hebt. Ik leg uit wat je kunt verwachten en er is alle ruimte om vragen te stellen of je wensen aan te geven. Het is prettig om comfortabele, makkelijk zittende kleding te dragen en vlak voor de sessie geen zware maaltijd te eten.'
 		},
 		{
 			n: '03',
@@ -49,11 +49,26 @@
 	];
 
 	const FACTS = [
-		{ label: 'Duur', value: 'Ongeveer een uur, de kennismaking dertig minuten' },
+		{
+			label: 'Duur',
+			value:
+				'De tijdsduur verschilt per behandeling. Bij de verschillende behandelingen vind je meer informatie. Het vrijblijvende kennismakingsgesprek duurt 30 minuten.'
+		},
 		{ label: 'Waar', value: BRAND.practice.locationNote },
-		{ label: 'Bij jou thuis', value: BRAND.practice.homeVisitNote },
-		{ label: 'Op afstand', value: BRAND.practice.remoteNote },
-		{ label: 'Regio', value: BRAND.areaServed.join(', ') }
+		{
+			label: 'Bij jou thuis',
+			value:
+				'Op andere dagen zijn behandelingen aan huis mogelijk. Hiervoor worden reiskosten in rekening gebracht.'
+		},
+		{
+			label: 'Op afstand',
+			value:
+				'Mahatma Healing, Gold Healing en Rasterenergie kunnen ook op afstand worden aangeboden.'
+		},
+		{
+			label: 'Regio',
+			value: `${BRAND.areaServed.join(', ')}. Andere locaties zijn mogelijk in overleg.`
+		}
 	];
 </script>
 
@@ -62,20 +77,24 @@
 <PageShell>
 	<PageHead
 		eyebrow="Werkwijze"
-		lead="Van het eerste bericht tot de dagen erna. Geen verrassingen, want die helpen niet als je al gespannen binnenkomt."
+		lead="Vanaf het eerste contact tot de begeleiding na afloop neem ik je stap voor stap mee. Zo weet je wat je kunt verwachten en is er alle ruimte om je op je gemak te voelen."
 	>
 		Zo verloopt een sessie
 	</PageHead>
 
 	<!-- Five steps in one row on a wide screen, so the whole route from first
 	     message to afterwards is in view at once; three and two on a laptop,
-	     a column on a phone. Each step keeps its own reveal. -->
+	     a column on a phone. Number and title fade as one, the text as another:
+	     her "Voor de sessie" (7-11) made a whole step taller than the third of
+	     the viewport one revealed block may be (reveal-audit.spec.ts). -->
 	<ol class="steps">
 		{#each STEPS as step (step.n)}
-			<li class="step" use:reveal>
-				<span class="step__n" aria-hidden="true">{step.n}</span>
-				<h2 class="step__title">{step.title}</h2>
-				<p class="step__body">{step.body}</p>
+			<li class="step">
+				<div class="step__head" use:reveal>
+					<span class="step__n" aria-hidden="true">{step.n}</span>
+					<h2 class="step__title">{step.title}</h2>
+				</div>
+				<p class="step__body" use:reveal>{step.body}</p>
 			</li>
 		{/each}
 	</ol>
@@ -122,6 +141,12 @@
 		   the third-of-the-viewport band the reveal keeps to. */
 		padding-top: var(--space-4);
 		border-top: 1px solid color-mix(in srgb, var(--brand-border) 28%, transparent);
+	}
+
+	.step__head {
+		display: flex;
+		flex-direction: column;
+		gap: var(--space-3);
 	}
 
 	.step__n {

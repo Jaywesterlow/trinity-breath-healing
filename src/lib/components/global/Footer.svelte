@@ -68,8 +68,8 @@
 			heading: 'DIENSTEN',
 			links: [
 				{ href: '/diensten/mahatma-healing', label: 'Mahatma Healing' },
-				{ href: '/diensten/goldhealing', label: 'Goldhealing' },
-				{ href: '/diensten/raster-energie', label: 'Raster Energie' },
+				{ href: '/diensten/goldhealing', label: 'Gold Healing' },
+				{ href: '/diensten/raster-energie', label: 'Rasterenergie' },
 				{ href: '/diensten/spinal-touch', label: 'Spinal Touch' },
 				{ href: '/diensten', label: 'Meer diensten' }
 			]

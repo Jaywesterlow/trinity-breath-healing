@@ -29,10 +29,13 @@ import { test, expect } from '@playwright/test';
    in five pieces on both widths now — header, body-and-button, and one per ledger row,
    since three rows of 64px numerals are 391px and over the third — where the phone used
    to have three (header, scrim, stats). The note under the carousel is still one. The
-   ceiling holds. */
+   ceiling holds.
+
+   2026-11-07: '/werkwijze' each step fades in two (head, text), since her longer
+   "Voor de sessie" made one step taller than the third: five more. */
 const CEILING: Record<string, number> = {
 	'/': 42,
-	'/werkwijze': 20,
+	'/werkwijze': 25,
 	'/behandelingen': 18,
 	'/diensten': 18,
 	'/diensten/spinal-touch': 30,

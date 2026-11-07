@@ -12,7 +12,7 @@ export const faqItems: FaqItem[] = [
 	{
 		question: 'Voor wie is een behandeling bij Trinity Breath & Healing geschikt?',
 		answer:
-			'Behandelingen zijn geschikt voor volwassenen die lichamelijke spanning, chronische vermoeidheid of emotionele blokkades willen aanpakken. Mensen met een actieve psychose, ernstige cardiovasculaire aandoeningen of zwangerschap worden verzocht eerst hun arts te raadplegen voordat zij een afspraak inplannen.'
+			"Behandelingen zijn geschikt voor volwassenen die lichamelijke spanning, chronische vermoeidheid of emotionele blokkades willen aanpakken. Gold Healing is ook geschikt voor kinderen, en Spinal Touch voor jong en oud, van baby's tot ouderen. Mensen met een actieve psychose, ernstige cardiovasculaire aandoeningen of zwangerschap worden verzocht eerst hun arts te raadplegen voordat zij een afspraak inplannen."
 	},
 	{
 		question: 'Hoe lang duurt een sessie en wat kost het?',
@@ -25,14 +25,14 @@ export const faqItems: FaqItem[] = [
 			'Mahatma Healing is een energetische behandelmethode waarbij universele levensenergie bewust via de handen naar het lichaam wordt geleid om blokkades te verminderen en het zelfherstellend vermogen te activeren. De techniek werkt niet op het niveau van diagnose of genezing maar op het niveau van energetisch evenwicht — resultaten variëren per persoon.'
 	},
 	{
-		question: 'Wat is Goldhealing?',
+		question: 'Wat is Gold Healing?',
 		answer:
-			'Goldhealing is een specifieke vorm van energetische genezing die werkt met hoge-frequentie energie om diepe emotionele en lichamelijke spanningslagen aan te spreken. Het is een aanvullende methode naast reguliere zorg, geen vervanging voor medische behandeling.'
+			'Gold Healing is een specifieke vorm van energetische genezing die werkt met hoge-frequentie energie om diepe emotionele en lichamelijke spanningslagen aan te spreken. Het is een aanvullende methode naast reguliere zorg, geen vervanging voor medische behandeling.'
 	},
 	{
-		question: 'Wat is Raster Energie?',
+		question: 'Wat is Rasterenergie?',
 		answer:
-			'Raster Energie richt zich op het bioenergetische veld rondom het lichaam — ook wel het aura of energetisch raster genoemd — en herstelt verstoringen in dat veld die samenhangen met stress, trauma of ziekte. De behandeling vindt volledig non-invasief plaats, zonder fysiek contact tenzij de cliënt daarmee instemt.'
+			'Rasterenergie richt zich op het bioenergetische veld rondom het lichaam — ook wel het aura of energetisch raster genoemd — en herstelt verstoringen in dat veld die samenhangen met stress, trauma of ziekte. De behandeling vindt volledig non-invasief plaats, zonder fysiek contact tenzij de cliënt daarmee instemt.'
 	},
 	{
 		question: 'Wat is Spinal Touch?',

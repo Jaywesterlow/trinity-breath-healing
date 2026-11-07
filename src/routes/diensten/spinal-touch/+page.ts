@@ -18,7 +18,7 @@ export const prerender = true;
 const PATH = '/diensten/spinal-touch';
 const TITLE = 'Spinal Touch in Amsterdam – TRINITY Breath & Healing';
 const DESCRIPTION =
-	'Zachte methode langs de wervelkolom die je centrale zenuwstelsel weer laat doorstromen. Bij Trinity Breath & Healing in Amsterdam en omgeving, ook op afstand.';
+	'Een zachte aanrakingsmethode langs de wervelkolom, gericht op ontspanning en balans in het zenuwstelsel. Voor jong en oud, in Amsterdam en omgeving.';
 
 const CRUMBS = [
 	{ name: 'Home', path: '/' },

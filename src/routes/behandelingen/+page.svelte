@@ -73,9 +73,7 @@
 	<PageSection id="aanvullend" title="Aanvullende ondersteuning">
 		<p class="aanvullend" use:reveal>
 			De behandelingen bij Trinity Breath &amp; Healing zijn gericht op ontspanning, bewustwording
-			en persoonlijk welzijn. Ze zijn aanvullend op reguliere zorg en vervangen geen medische of
-			psychologische behandeling. Ik stel geen diagnoses. Bij lichamelijke of psychische klachten is
-			het belangrijk om passende professionele zorg te zoeken.
+			en persoonlijk welzijn. {BRAND.disclaimer}
 		</p>
 	</PageSection>
 

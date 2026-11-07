@@ -41,9 +41,9 @@ export const KLACHTEN: Klacht[] = [
 			'langdurige stress en burn-outklachten',
 			'spanning die niet verdwijnt met praten of sporten',
 			'chronische spanning en pantsering',
-			'burn-outklachten',
-			'stress',
-			'burn-out'
+			'overbelasting en burn-outklachten',
+			'stress en innerlijke onrust',
+			'stress en opgebouwde spanning'
 		]
 	},
 	{
@@ -52,9 +52,8 @@ export const KLACHTEN: Klacht[] = [
 		body: 'Moeite met inslapen, regelmatig wakker worden of vermoeid zijn ondanks voldoende slaap? Stress en spanning kunnen je zenuwstelsel alert houden, waardoor ontspannen soms lastig is.',
 		services: ['spinal-touch', 'mahatma-healing', 'brtt-body', 'cranio-fascia-unwinding'],
 		sources: [
-			'slaapproblemen',
-			'(chronische) vermoeidheid',
-			'vermoeidheidsklachten',
+			'moeite met ontspannen of slapen',
+			'vermoeidheid en weinig energie',
 			'slaapkwaliteit',
 			'vermoeidheid, onrust en overprikkeling'
 		]
@@ -65,11 +64,10 @@ export const KLACHTEN: Klacht[] = [
 		body: 'Heb je last van angstgevoelens, blijf je piekeren of voel je je regelmatig somber? Soms kunnen deze gevoelens je dagelijkse leven beïnvloeden en verlang je naar meer innerlijke rust en balans.',
 		services: ['goldhealing', 'trb-breathwork', 'mahatma-healing', 'spinal-touch'],
 		sources: [
-			'angstgevoelens',
-			'negativiteit en depressieve klachten',
-			'angst en depressieve gevoelens',
-			'angsten en depressieve klachten',
-			'angsten'
+			'angstgevoelens en innerlijke onrust',
+			'negatieve gedachten en sombere gevoelens',
+			'angstgevoelens en sombere gevoelens',
+			'emotionele spanning en angsten'
 		]
 	},
 	{
@@ -78,11 +76,9 @@ export const KLACHTEN: Klacht[] = [
 		body: 'Sommige ingrijpende ervaringen kunnen nog lange tijd invloed hebben op hoe je je voelt. Misschien merk je dat je moeite hebt met ontspannen, bepaalde emoties steeds terugkomen of dat je lichaam gespannen blijft.',
 		services: ['trb-breathwork', 'brtt-body', 'mahatma-healing'],
 		sources: [
-			"onverwerkte trauma's",
-			'trauma',
 			'PTSS-symptomen',
-			'onderdrukte emoties',
-			'rouwverwerking',
+			'onderdrukte gevoelens en emotionele blokkades',
+			'rouw en verlies',
 			'emotionele verwerking na intensieve periodes'
 		]
 	},
@@ -91,14 +87,7 @@ export const KLACHTEN: Klacht[] = [
 		title: 'Pijn en lichamelijke klachten',
 		body: 'Ervaar je regelmatig spanning of pijn in je rug, nek of schouders? Of heb je last van hoofdpijn of andere lichamelijke ongemakken? Soms kan het moeilijk zijn om je lichaam volledig te ontspannen. Bij fysieke klachten ga je altijd eerst naar de huisarts.',
 		services: ['spinal-touch', 'brtt-body', 'cranio-fascia-unwinding'],
-		sources: [
-			'rugpijn en hernia',
-			'hoofdpijn en migraine',
-			'gewrichtspijn en fibromyalgie',
-			'migraine, rug-, nek- en schouderklachten',
-			'spijsverteringsklachten',
-			'tinnitus'
-		]
+		sources: ['spanning in rug, nek en schouders', 'migraine, rug-, nek- en schouderklachten']
 	},
 	{
 		id: 'overprikkeling-en-hooggevoeligheid',
@@ -108,8 +97,7 @@ export const KLACHTEN: Klacht[] = [
 		sources: [
 			'stress en overprikkeling',
 			'hooggevoeligheid bij kinderen',
-			'ADHD',
-			'autisme en PDD-NOS',
+			'behoefte aan rust en ontspanning bij ADHD of autisme',
 			'vermoeidheid, onrust en overprikkeling'
 		]
 	},
@@ -123,7 +111,7 @@ export const KLACHTEN: Klacht[] = [
 			'inzicht en bewustwording',
 			'activeren van je zelfgenezend vermogen',
 			'moeite met voelen of ontspannen',
-			'verankering en aarding'
+			'bewustwording van oude patronen'
 		]
 	}
 ];

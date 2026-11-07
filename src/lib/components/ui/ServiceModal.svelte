@@ -257,7 +257,9 @@
 							<h3 id={`service-modal-title-${service.slug}`} class="service-modal__title">
 								{service.name}
 							</h3>
-							<p class="service-modal__intro">{service.intro}</p>
+							{#each service.intro.split('\n\n') as para, i (i)}
+								<p class="service-modal__intro">{para}</p>
+							{/each}
 							<div class="service-modal__cta">
 								<ButtonLink label="Naar de pagina" href={`/diensten/${service.slug}`} />
 							</div>
@@ -521,6 +523,10 @@
 		font-family: var(--font-body);
 		font-size: var(--fs-body);
 		line-height: var(--line-height-loose);
+	}
+
+	.service-modal__intro + .service-modal__intro {
+		margin-top: var(--space-3);
 	}
 
 	.service-modal__cta {

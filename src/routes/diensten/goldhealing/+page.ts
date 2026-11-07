@@ -16,14 +16,14 @@ import { makeServiceNode } from '$lib/schema/services';
 export const prerender = true;
 
 const PATH = '/diensten/goldhealing';
-const TITLE = 'Goldhealing in Amsterdam – TRINITY Breath & Healing';
+const TITLE = 'Gold Healing in Amsterdam – TRINITY Breath & Healing';
 const DESCRIPTION =
-	'Gouden lichtenergie die negativiteit omzet, beschermt en vooral op het psychische vlak werkt. Bij Trinity Breath & Healing in Amsterdam en omgeving.';
+	'Een zachte behandeling met gouden lichtenergie, gericht op bescherming, emotionele balans en innerlijke rust. In Amsterdam en omgeving, ook op afstand.';
 
 const CRUMBS = [
 	{ name: 'Home', path: '/' },
 	{ name: 'Diensten', path: '/diensten' },
-	{ name: 'Goldhealing', path: PATH }
+	{ name: 'Gold Healing', path: PATH }
 ];
 
 export const load: PageLoad = async () => {
@@ -31,7 +31,7 @@ export const load: PageLoad = async () => {
 	const pageSpecific = [
 		buildBreadcrumb(CRUMBS),
 		buildWebPage({ title: TITLE, description: DESCRIPTION, path: PATH }),
-		makeServiceNode('goldhealing', 'Goldhealing')
+		makeServiceNode('goldhealing', 'Gold Healing')
 	];
 	return { meta, crumbs: CRUMBS, graph: buildGraph({ pageSpecific, path: PATH }) };
 };

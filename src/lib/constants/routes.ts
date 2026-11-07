@@ -32,8 +32,8 @@ export const ALL_ROUTES: readonly { path: string; title: string; kind: RouteKind
 	{ path: '/contact', title: 'Contact', kind: 'page' },
 	{ path: '/diensten', title: 'Diensten', kind: 'page' },
 	{ path: '/diensten/mahatma-healing', title: 'Mahatma Healing', kind: 'page' },
-	{ path: '/diensten/goldhealing', title: 'Goldhealing', kind: 'page' },
-	{ path: '/diensten/raster-energie', title: 'Raster Energie', kind: 'page' },
+	{ path: '/diensten/goldhealing', title: 'Gold Healing', kind: 'page' },
+	{ path: '/diensten/raster-energie', title: 'Rasterenergie', kind: 'page' },
 	{
 		path: '/diensten/cranio-fascia-unwinding',
 		title: 'Cranio & Fascia Unwinding',

@@ -27,7 +27,7 @@
 <PageShell>
 	<PageHead
 		eyebrow="Diensten"
-		lead="Acht behandelingen: via de adem, via aanraking of via energie. Welke bij jou past, zoeken we samen uit."
+		lead="Iedere behandeling heeft een eigen werkwijze, met aandacht voor lichaam, geest en ziel. Samen kijken we welke behandeling het beste aansluit bij jouw wensen en behoeften."
 	>
 		Alle behandelingen
 	</PageHead>

@@ -18,7 +18,7 @@ export const prerender = true;
 const PATH = '/diensten/brtt-body';
 const TITLE = 'BRTT Body in Amsterdam – TRINITY Breath & Healing';
 const DESCRIPTION =
-	'Lichaamsgericht proces dat via de psoas — de spier van de ziel — opgeslagen trauma bevrijdt. Trinity Breath & Healing, Amsterdam en omgeving en Zaandam.';
+	'Een lichaamsgerichte methode waarbij je via natuurlijke lichaamsreacties spanning kunt loslaten en diep kunt ontspannen. In Amsterdam en omgeving, ook aan huis.';
 
 const CRUMBS = [
 	{ name: 'Home', path: '/' },
