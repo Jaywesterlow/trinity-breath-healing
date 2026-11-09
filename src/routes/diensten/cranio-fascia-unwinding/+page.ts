@@ -18,7 +18,7 @@ export const prerender = true;
 const PATH = '/diensten/cranio-fascia-unwinding';
 const TITLE = 'Cranio & Fascia Unwinding – TRINITY Breath & Healing';
 const DESCRIPTION =
-	'Zacht lichaamswerk waarbij je lichaam zelf het tempo bepaalt en opgeslagen spanning loslaat. Trinity Breath & Healing, Amsterdam en omgeving en Zaandam.';
+	'Zacht, lichaamsgericht werk waarbij je lichaam het tempo bepaalt en opgebouwde spanning loslaat. Voor alle leeftijden, in Amsterdam en omgeving en Zaandam.';
 
 const CRUMBS = [
 	{ name: 'Home', path: '/' },

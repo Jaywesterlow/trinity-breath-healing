@@ -40,6 +40,13 @@
 	const pageText = $derived('pageIntro' in service ? service.pageIntro : service.intro);
 	const paragraphs = $derived(pageText.split('\n\n'));
 	const helpsIntro = $derived('helpsIntro' in service ? service.helpsIntro : null);
+	/* Her own texts where she sent them (8-11): "Wat brengt het jou?" (Mahatma),
+	   "Hoe een sessie verloopt" and "Gezondheidsverklaring" (BRTT, TRB). */
+	const benefits = $derived('benefits' in service ? service.benefits.split('\n\n') : null);
+	const session = $derived('session' in service ? service.session.split('\n\n') : null);
+	const healthCheck = $derived('healthCheck' in service ? service.healthCheck.split('\n\n') : null);
+	/* Her lists come as a left and a right column; the grid fills top to bottom. */
+	const listRows = $derived(Math.ceil(service.helpsWith.length / 2));
 	const paint = $derived(paintGreen(BRAND.services.findIndex((s) => s.slug === slug)));
 </script>
 
@@ -82,11 +89,12 @@
 	{#if slug === 'clearing-ascensie'}
 		<ClearingAscensie />
 	{:else}
-		<PageSection id="helpt" eyebrow="Voor wie" title="Waar het bij kan helpen">
+		<!-- Her heading (5-11), in the words of her "Kan ondersteuning bieden bij". -->
+		<PageSection id="helpt" eyebrow="Voor wie" title="Waarbij het kan ondersteunen">
 			{#if helpsIntro}
 				<p class="service__body service__lead-in" use:reveal>{helpsIntro}</p>
 			{/if}
-			<ul class="service__list">
+			<ul class="service__list" style:--list-rows={listRows}>
 				{#each service.helpsWith as item (item)}
 					<li class="service__item" use:reveal>
 						<svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -106,29 +114,57 @@
 		</PageSection>
 	{/if}
 
+	{#if benefits}
+		<PageSection id="opbrengst" eyebrow="Wat het je geeft" title="Wat brengt het jou?">
+			{#each benefits as para, i (i)}
+				<p class="service__body" use:reveal>{para}</p>
+			{/each}
+		</PageSection>
+	{/if}
+
 	<PageSection id="sessie" eyebrow="De sessie" title="Hoe een sessie verloopt">
-		<p class="service__body" use:reveal>
-			We beginnen met een gesprek over waar je op dit moment tegenaan loopt. Daarna werk ik met
-			{service.name}, afgestemd op wat jij nodig hebt. Je hoeft niets te presteren en niets te
-			vertellen wat je niet wilt vertellen. Na afloop is er tijd om te landen en na te praten. Een
-			sessie duurt {service.duration} en kan {service.remote
-				? 'in de praktijkruimte, bij jou thuis of op afstand'
-				: 'in de praktijkruimte of bij jou thuis'}. De prijs vind je op de
-			<a class="link-underline" href="/tarieven">tarievenpagina</a>.
-		</p>
+		{#if session}
+			{#each session as para, i (i)}
+				<p class="service__body" use:reveal>{para}</p>
+			{/each}
+			<p class="service__body" use:reveal>
+				De prijs vind je op de <a class="link-underline" href="/tarieven">tarievenpagina</a>.
+			</p>
+		{:else}
+			<p class="service__body" use:reveal>
+				We beginnen met een gesprek over waar je op dit moment tegenaan loopt. Daarna werk ik met
+				{service.name}, afgestemd op wat jij nodig hebt. Je hoeft niets te presteren en niets te
+				vertellen wat je niet wilt vertellen. Na afloop is er tijd om te landen en na te praten. Een
+				sessie duurt {service.duration} en kan {service.remote
+					? 'in de praktijkruimte, bij jou thuis of op afstand'
+					: 'in de praktijkruimte of bij jou thuis'}. De prijs vind je op de
+				<a class="link-underline" href="/tarieven">tarievenpagina</a>.
+			</p>
+		{/if}
 	</PageSection>
 
-	{#if contra}
+	{#if contra || healthCheck}
 		<PageSection id="veiligheid" eyebrow="Goed om te weten" title="Gezondheid en veiligheid">
-			<p class="service__body">{contra.intro}</p>
-			{#if contra.items}
+			{#if healthCheck}
+				<h3 class="service__h3">Gezondheidsverklaring</h3>
+				{#each healthCheck as para, i (i)}
+					<p class="service__body">{para}</p>
+				{/each}
+			{/if}
+			{#if contra}
+				{#if healthCheck}
+					<h3 class="service__h3">Contra-indicaties</h3>
+				{/if}
+				<p class="service__body">{contra.intro}</p>
+			{/if}
+			{#if contra?.items}
 				<ul class="service__contra">
 					{#each contra.items as item (item)}
 						<li>{item}</li>
 					{/each}
 				</ul>
 			{/if}
-			{#if contra.prep}
+			{#if contra?.prep}
 				<p class="service__body">{contra.prepTitle}:</p>
 				<ul class="service__contra">
 					{#each contra.prep as item (item)}
@@ -136,7 +172,7 @@
 					{/each}
 				</ul>
 			{/if}
-			{#if contra.outro}
+			{#if contra?.outro}
 				<p class="service__body">{contra.outro}</p>
 			{/if}
 			<p class="service__body">
@@ -146,10 +182,11 @@
 		</PageSection>
 	{/if}
 
+	<!-- Her Kennismaken text for every service page, the same everywhere (8-11). -->
 	<CtaBand
 		id="afspraak"
-		title="Samen kijken wat bij jou past"
-		lead={`Ben je benieuwd of ${service.name} iets voor jou kan betekenen? Tijdens een vrijblijvend kennismakingsgesprek nemen we rustig de tijd om jouw wensen en behoeften te bespreken. Samen ontdekken we welke behandeling het beste bij jou aansluit.`}
+		title="Een afspraak maken"
+		lead="Twijfel je welke behandeling het beste bij jou past? Tijdens een eerste gesprek kijken we samen naar jouw wensen en behoeften en welke behandeling daarbij aansluit."
 		label="Plan een kennismaking"
 		href="/contact"
 		note={BRAND.disclaimer}
@@ -254,6 +291,18 @@
 		margin-bottom: var(--space-4);
 	}
 
+	.service__h3 {
+		margin: 0 0 var(--space-2);
+		font-family: var(--font-body);
+		font-size: var(--fs-body);
+		font-weight: var(--font-weight-medium, 500);
+		color: var(--color-fg-forest);
+	}
+
+	.service__body + .service__h3 {
+		margin-top: var(--space-6);
+	}
+
 	.service__body + .service__body,
 	.service__contra + .service__body {
 		margin-top: var(--space-4);
@@ -284,11 +333,18 @@
 		.service__others {
 			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
+
+		/* Her left column first, then her right one (8-11). */
+		.service__list {
+			grid-auto-flow: column;
+			grid-template-rows: repeat(var(--list-rows), auto);
+		}
 	}
 
 	@media (min-width: 1100px) {
 		.service__body,
-		.service__contra {
+		.service__contra,
+		.service__h3 {
 			font-size: var(--fs-body-lg);
 		}
 

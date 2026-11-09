@@ -41,36 +41,38 @@ Everything only she can answer, one list, in her language so it can be sent as i
 Started 2026-11-01 from her WhatsApp of 31-10 and her form. Strike items here as they
 come back. This replaces asking from memory; `.planning/notes/VAN-BRIGITTE.md` is older.
 
-### Vragen van 7-11, met screenshots
+### Vragen van 9-11
 
-Haar WhatsApp van 1 t/m 6 november is verwerkt, behalve deze punten. Elke vraag hoort
-bij één screenshot uit `.planning/notes/brigitte-2026-11-07/`; het gele vak is de tekst
-waar het om gaat. Tot ze antwoordt blijft de huidige tekst staan.
+Haar WhatsApp van 8-11 (09:20 tot 20:34) is verwerkt in 261109-b8n. Nog open:
 
-- [ ] **1. Adres** (`1-adres.png`). Pagina Werkwijze, blok "Praktisch", regel "Waar". Mag
-      hier je volledige adres komen: Reigersbos 100 L, 3e etage, 1107 ES Amsterdam? Ja of nee?
-      Is het je woonadres, dan raad ik nee aan: mensen krijgen het adres dan in de
-      bevestigingsmail. Is het een praktijkruimte, dan ja, en dan zet ik het ook op je
-      Google-profiel.
-- [ ] **2. Spinal Touch** (`2-spinal-touch-lijst.png`). Pagina Spinal Touch, blok "Waar het
-      bij kan helpen". Ik heb hernia, migraine, fibromyalgie en tinnitus weggehaald en de
-      lijst geschreven zoals je andere lijsten. Klopt hij zo? Ja of nee?
-      stress en opgebouwde spanning · spanning in rug, nek en schouders · angstgevoelens en
-      sombere gevoelens · overbelasting en burn-outklachten · vermoeidheid en weinig energie ·
-      moeite met ontspannen of slapen · behoefte aan rust en balans in je lichaam
-- [ ] **3. Kennismaking** (`3-kennismaking-online.png`). Pagina Werkwijze, stap 1. Er staat
-      dat de kennismaking online is. Klopt dat altijd, of mogen mensen ook langskomen?
-- [ ] **4. Aangekleed** (`4-aangekleed.png`). Pagina Werkwijze, stap 3. Mag deze zin blijven
-      staan: "lig je aangekleed op een behandeltafel"? Ja of nee?
-- [ ] **5. Appen** (`5-appen.png`). Pagina Werkwijze, stap 4. Mag deze zin blijven staan:
-      "je kunt me altijd appen als je je afvraagt of het klopt"? Ja of nee?
-- [ ] **6. Welke kaart?** (`6a-derde-kaart.png`, `6b-overprikkeling-kaart.png`). Pagina
-      Behandelingen. Je tekst "Onrust en overprikkeling: Gold Healing kan als aanvullende
-      ondersteuning worden ingezet…" vervangt welke kaart: A, "Overprikkeling en
-      hooggevoeligheid", of B, "Angst en somberheid" (de derde)?
-- [ ] **7. Kinderen.** Bij Gold Healing en Spinal Touch staat nu dat ze ook voor kinderen
-      zijn. Geldt dat ook voor Cranio & Fascia Unwinding en BRTT? Zo ja, vanaf welke leeftijd?
-- [ ] Ze heeft op 1, 2 en 5 november weer 6 berichten verwijderd. Stond daar nog iets in?
+- [ ] **4. Aangekleed** (vraag van 7-11, geen antwoord). Haar tekst van stap 3 staat er nu,
+      met onze zin "Je ligt daarbij aangekleed op een behandeltafel." erin tot ze antwoordt.
+- [ ] **5. Appen** (7-11, geen antwoord). Haar tekst van stap 4 staat er, met "Vraag je je de
+      dagen erna iets af, dan kun je me altijd appen." erin tot ze antwoordt.
+- [ ] **6. Welke kaart?** (7-11, geen antwoord). Haar tekst "Onrust en overprikkeling" (6-11)
+      staat nog niet op de site.
+- [ ] **Meet-link** (7-11, geen antwoord). Zonder link staat er geen Meet-knop in de
+      bevestiging; zie §0 voor `MEET_URL`.
+- [ ] **Kinderen, BRTT.** Cranio en Spinal Touch zijn voor alle leeftijden (8-11). BRTT: ja
+      of nee, en zo ja vanaf welke leeftijd? Pas dan wordt de kaart "Kinderen en Gezinnen"
+      gebouwd (Gold Healing, Spinal Touch, Cranio, en BRTT als het ja is).
+- [ ] **Contra-indicaties Cranio en BRTT.** Ze denkt dat ze die al gaf. Wat we hebben: de
+      energetische behandelingen (31-10), Spinal Touch (intake) en TRB (formulier). Voor
+      Cranio en BRTT nog niets, alleen de gezondheidsverklaring van 8-11.
+- [ ] **Gezondheidsverklaring.** BRTT en TRB beloven er nu een vóór de behandeling, en de
+      bevestigingsmail zegt dat hij komt. Heeft ze hem als document? Dan gaat hij mee.
+- [ ] **Clearing-kaarten "overal".** De kaart staat al op home, /diensten, /tarieven en een
+      eigen pagina, en bij de klachtkaart "vastzitten". Waar mist ze hem?
+
+Beantwoord op 8-11: adres mag erop (alleen werkadres, de kamer van haar fysio op zaterdag);
+kennismaking ook telefonisch, langskomen als iemand meteen een behandeling wil; Spinal
+Touch-lijst vervangen door haar eigen lijst; Cranio en Spinal Touch voor alle leeftijden;
+BRTT is Body Remembers Trauma Therapy; TRB €99; Cranio kan niet op afstand.
+
+Bewust anders dan haar bericht, terug te schrijven: de kop blijft "Wat is …?" in plaats van
+"Wat het is" (vraagkoppen worden beter opgepikt door Google en AI); bij Rasterenergie staat
+haar eigen tekst in zijn geheel, niet de Google-tekst; "Raster Energie" heet op de site
+overal Rasterenergie, zoals ze op 2-11 koos.
 
 Beantwoord door haar berichten van 1–6 november: de naam is **Rasterenergie** (en **Gold
 Healing**); op afstand kunnen alleen Mahatma, Gold Healing en Rasterenergie, dus Clearing
@@ -91,10 +93,10 @@ Reiskosten staan al op /tarieven (€0,35 per km), dus die vraag vervalt.
 ### Behandelingen en namen
 
 - [x] Raster: heet het **Raster Energie** (zoals nu op de site) of **Raster Healing / Rasterhealing** (zoals in je prijslijst en je nieuwe plaatje)? *Rasterenergie, 2-11.*
-- [ ] BRTT: staat het voor **Body Release Trauma Therapy** (op de site) of **Body Remembers Trauma Therapy** (in je prijslijst)?
+- [x] BRTT: staat het voor **Body Release Trauma Therapy** (op de site) of **Body Remembers Trauma Therapy** (in je prijslijst)? *Body Remembers, 8-11.*
 - [x] Kan Clearing & Ascensie ook **op afstand**? Je noemde alleen Mahatma, Gold en Raster. *Nee, 2-11.*
 - [ ] Kunnen **alle** behandelingen aan huis, ook TRB en Clearing & Ascensie?
-- [ ] De draaiende kaarten: je hebt Mahatma en Raster doorgegeven. Zijn **Goldhealing, Cranio, Spinal Touch, BRTT en TRB** qua tekst goed zo, of komen die nog? *Alles binnen 1-11 behalve Cranio.*
+- [x] De draaiende kaarten: je hebt Mahatma en Raster doorgegeven. Zijn **Goldhealing, Cranio, Spinal Touch, BRTT en TRB** qua tekst goed zo, of komen die nog? *Alles binnen 1-11, Cranio op 8-11.*
 - [ ] **Afbeeldingen op de kaarten.** Mahatma, Raster en Clearing & Ascensie hebben nu de nieuwe stijl: sierlijke lijnen, en op Mahatma en Raster jouw eigen ontwerp als basis, zonder de gloed zodat ze bij de andere kaarten passen. Goldhealing, Spinal Touch en BRTT zijn in vergelijking dun en stil. Wil je dat ik die drie ook in deze stijl laat maken? Goede afbeeldingen voor een website maken kost geld: Google rekent ongeveer $0,13 per gemaakte afbeelding (Nano Banana Pro, prijs van november 2026), en meestal zijn er een paar pogingen per afbeelding nodig. Die kosten komen op de factuur.
 - [ ] Je hebt 8 berichten verwijderd. Stond daar **nog iets in** dat moet veranderen?
 

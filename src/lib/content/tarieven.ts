@@ -1,12 +1,12 @@
 /**
  * Her price list (WhatsApp 2026-10-31, 20:24; the amounts match her form of the
- * same day). Read by /tarieven and by the Service JSON-LD, so a price changes in
- * one place.
+ * same day; TRB to €99 on 2026-11-08, 11:44). Read by /tarieven and by the
+ * Service JSON-LD, so a price changes in one place.
  *
  * Names come from BRAND.services through the slug, not from her list, so a
- * treatment is called the same on every page. Her list says "Rasterhealing" and
- * "Body Remembers Trauma Therapy" where the site says "Raster Energie" and
- * "Body Release Trauma Therapy"; both are open questions in TODO.md.
+ * treatment is called the same on every page. Her list says "Rasterhealing"
+ * where the site says "Rasterenergie" (her answer of 2-11). BRTT is Body
+ * Remembers Trauma Therapy (8-11), as her list already said.
  */
 export interface PriceRow {
 	/** The service page this row belongs to. */
@@ -44,7 +44,7 @@ export const PRICE_GROUPS: readonly PriceGroup[] = [
 			{ slug: 'cranio-fascia-unwinding', duration: '60 minuten', price: 75 },
 			{ slug: 'spinal-touch', duration: '60 minuten', price: 85 },
 			{ slug: 'brtt-body', duration: '60–90 minuten', price: 75 },
-			{ slug: 'trb-breathwork', duration: '60–90 minuten', price: 85 }
+			{ slug: 'trb-breathwork', duration: '60–90 minuten', price: 99 }
 		]
 	},
 	{

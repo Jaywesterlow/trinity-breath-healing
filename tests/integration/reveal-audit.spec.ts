@@ -32,13 +32,17 @@ import { test, expect } from '@playwright/test';
    ceiling holds.
 
    2026-11-07: '/werkwijze' each step fades in two (head, text), since her longer
-   "Voor de sessie" made one step taller than the third: five more. */
+   "Voor de sessie" made one step taller than the third: five more.
+
+   2026-11-09: her texts of 2-11 for steps 1, 3 and 4 are split at her own paragraph
+   breaks, so no step is over the third: three more. '/diensten/spinal-touch' gains her
+   "Hoe een sessie verloopt" (five paragraphs) and two list items (8-11). */
 const CEILING: Record<string, number> = {
 	'/': 42,
-	'/werkwijze': 25,
+	'/werkwijze': 28,
 	'/behandelingen': 18,
 	'/diensten': 18,
-	'/diensten/spinal-touch': 30,
+	'/diensten/spinal-touch': 38,
 	/* The FAQ moved onto /contact on 2026-09-18 (was /faq, ceiling 20): the page is
 	   now head + planner + the accordion, so its ceiling is the sum of the two. */
 	'/contact': 34
