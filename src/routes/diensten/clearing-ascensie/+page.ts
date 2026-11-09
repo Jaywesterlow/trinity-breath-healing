@@ -10,8 +10,8 @@ export const prerender = true;
 const PATH = '/diensten/clearing-ascensie';
 const TITLE = 'Clearing & Ascensie-activatie – TRINITY Breath & Healing';
 const DESCRIPTION =
-	'Energetische opschoning van lichaam en energieveld, gevolgd door twee activaties van je ' +
-	"chakra's. Los te boeken of als compleet traject, in Amsterdam en omgeving.";
+	'Een energetisch proces om oude patronen en blokkades los te laten, met twee activaties van ' +
+	"je chakra's. Los of als compleet traject, in Amsterdam en omgeving.";
 
 const CRUMBS = [
 	{ name: 'Home', path: '/' },

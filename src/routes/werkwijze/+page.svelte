@@ -24,7 +24,8 @@
 		{
 			n: '01',
 			title: 'Kennismaking',
-			body: 'Dertig minuten, online, vrijblijvend. Je vertelt waar je tegenaan loopt en ik vertel wat ik doe. Aan het eind weten we allebei of het klikt. Er volgt geen verkooppraatje en je hoeft ter plekke niets te beslissen.'
+			/* Her text of 2-11; the last sentence is her answer of 8-11 (09:26). */
+			body: 'Tijdens een vrijblijvend kennismakingsgesprek van 30 minuten nemen we rustig de tijd om elkaar te leren kennen. Je kunt vertellen wat je bezighoudt en waar je behoefte aan hebt. Ik vertel je over mijn werkwijze en de mogelijkheden binnen mijn praktijk. Samen kijken we of mijn begeleiding bij jou past, zodat je in alle rust kunt voelen of je een volgende stap wilt zetten.\n\nHet gesprek kan online of telefonisch. Wil je meteen een behandeling, dan kun je ook langskomen.'
 		},
 		{
 			n: '02',
@@ -34,17 +35,19 @@
 		{
 			n: '03',
 			title: 'De sessie zelf',
-			body: 'We beginnen met een gesprek. Daarna lig je aangekleed op een behandeltafel en werk ik met adem, aanraking of energie, afhankelijk van wat er nodig is. Je bepaalt zelf hoeveel je vertelt. Er is geen goed of fout, en je hoeft niets te voelen wat er niet is.'
+			/* Steps 3 to 5: her texts of 2-11. "aangekleed" (3) and "appen" (4) are ours
+			   and stay until she answers questions 4 and 5 (TODO.md §0a). */
+			body: 'Tijdens de sessie staat jouw welzijn centraal. Afhankelijk van de gekozen behandeling werk ik met energie, zachte aanraking, ademhaling of lichaamsgerichte technieken. Je ligt daarbij aangekleed op een behandeltafel. Je krijgt de ruimte om te ontspannen en te ervaren wat zich op dat moment aandient. Iedere sessie is anders en wordt afgestemd op jouw persoonlijke behoeften.\n\nEr is niets wat je moet voelen of ervaren. Je mag er helemaal zijn, precies zoals je bent. Alles gebeurt in jouw tempo, met aandacht en respect voor jouw persoonlijke grenzen.'
 		},
 		{
 			n: '04',
 			title: 'Na afloop',
-			body: 'Er is tijd om te landen en na te praten. Sommige mensen zijn stil, anderen willen juist alles kwijt. Beide is prima. De dagen erna kan er nog iets nakomen: dat hoort erbij, en je kunt me altijd appen als je je afvraagt of het klopt.'
+			body: 'Na de sessie nemen we rustig de tijd om bij te komen en stil te staan bij jouw ervaring. Er is ruimte om te delen wat je hebt gevoeld of ervaren, maar niets hoeft. Iedereen ervaart een behandeling op zijn eigen manier. Soms voel je direct verschil, terwijl je op andere momenten pas later iets opmerkt.\n\nIk geef je, waar nodig, persoonlijke tips mee om ook na de sessie goed voor jezelf te zorgen. Vraag je je de dagen erna iets af, dan kun je me altijd appen.'
 		},
 		{
 			n: '05',
-			title: 'Verder, of niet',
-			body: 'Eén sessie kan genoeg zijn. Bij langer bestaande klachten werken we vaker in een reeks, in jouw tempo. Je zit nergens aan vast en ik hou geen traject aan dat niet meer nodig is.'
+			title: 'Hoe nu verder?',
+			body: 'Na de behandeling kijken we samen hoe je de sessie hebt ervaren en of je behoefte hebt aan verdere begeleiding. Soms is één sessie voldoende, terwijl op andere momenten meerdere behandelingen prettig kunnen zijn. Jij bepaalt wat goed voelt en welke volgende stap bij jou past. Alles gebeurt in jouw eigen tempo.'
 		}
 	];
 
@@ -54,7 +57,11 @@
 			value:
 				'De tijdsduur verschilt per behandeling. Bij de verschillende behandelingen vind je meer informatie. Het vrijblijvende kennismakingsgesprek duurt 30 minuten.'
 		},
-		{ label: 'Waar', value: BRAND.practice.locationNote },
+		/* Her text of 2-11; the address may be published (her answer of 8-11). */
+		{
+			label: 'Waar',
+			value: `Op zaterdag ontvang ik je in de praktijk in Amsterdam-Zuidoost: ${BRAND.address.street}, ${BRAND.address.floor}, ${BRAND.address.postalCode} ${BRAND.address.city}.`
+		},
 		{
 			label: 'Bij jou thuis',
 			value:
@@ -94,7 +101,9 @@
 					<span class="step__n" aria-hidden="true">{step.n}</span>
 					<h2 class="step__title">{step.title}</h2>
 				</div>
-				<p class="step__body" use:reveal>{step.body}</p>
+				{#each step.body.split('\n\n') as para, i (i)}
+					<p class="step__body" use:reveal>{para}</p>
+				{/each}
 			</li>
 		{/each}
 	</ol>
@@ -113,7 +122,7 @@
 	<CtaBand
 		id="beginnen"
 		title="Beginnen bij het begin"
-		lead="De kennismaking is er om te kijken of het klikt, niet om je iets te verkopen. Kies zelf een moment dat je uitkomt."
+		lead="Wil je ontdekken wat ik voor je kan betekenen? Tijdens een vrijblijvend kennismakingsgesprek van 30 minuten nemen we rustig de tijd om kennis te maken en jouw vragen te bespreken. Samen kijken we of mijn begeleiding aansluit bij jouw wensen en behoeften."
 		label="Plan een kennismaking"
 		href="/contact"
 		note={BRAND.disclaimer}
@@ -172,6 +181,10 @@
 		font-size: var(--fs-body);
 		line-height: var(--line-height-loose);
 		color: var(--color-text-subtle);
+	}
+
+	.step__body + .step__body {
+		margin-top: var(--space-3);
 	}
 
 	@media (min-width: 700px) {

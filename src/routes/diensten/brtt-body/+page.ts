@@ -18,7 +18,7 @@ export const prerender = true;
 const PATH = '/diensten/brtt-body';
 const TITLE = 'BRTT Body in Amsterdam – TRINITY Breath & Healing';
 const DESCRIPTION =
-	'Een lichaamsgerichte methode waarbij je via natuurlijke lichaamsreacties spanning kunt loslaten en diep kunt ontspannen. In Amsterdam en omgeving, ook aan huis.';
+	'Body Remembers Trauma Therapy: via natuurlijke trillingen en bewegingen opgebouwde spanning loslaten en diep ontspannen. In Amsterdam en omgeving, ook aan huis.';
 
 const CRUMBS = [
 	{ name: 'Home', path: '/' },

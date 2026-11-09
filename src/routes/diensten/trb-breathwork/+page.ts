@@ -18,7 +18,7 @@ export const prerender = true;
 const PATH = '/diensten/trb-breathwork';
 const TITLE = 'Trauma Release Breathwork – TRINITY Breath & Healing';
 const DESCRIPTION =
-	'Een diepgaand ademproces met zeven ademtechnieken, gericht op bewustwording en het loslaten van emotionele spanning en oude patronen. In Amsterdam en omgeving.';
+	'Een diepgaande ademmethode met zeven ademprincipes, gericht op het loslaten van opgebouwde spanning en emotionele verwerking. In Amsterdam en omgeving.';
 
 const CRUMBS = [
 	{ name: 'Home', path: '/' },

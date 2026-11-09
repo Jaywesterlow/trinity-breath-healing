@@ -268,6 +268,14 @@ export async function sendBookingEmail(
  * reverse of the notification above, because here the visitor is the one who
  * might want to reply.
  */
+/**
+ * Her BRTT and TRB pages (8-11) promise a gezondheidsverklaring before the
+ * treatment. The booking is the kennismaking, so the mail says it is coming;
+ * Brigitte sends the form itself once a treatment is chosen.
+ */
+const HEALTH_CHECK_TEXT =
+	'• Kies je daarna voor BRTT of TRB, dan ontvang je vóór die behandeling een gezondheidsverklaring om in te vullen en te ondertekenen.';
+
 export async function sendBookingApproved(
 	args: {
 		to: string;
@@ -293,6 +301,7 @@ export async function sendBookingApproved(
 		`• Tot ${args.cancellationHours} uur van tevoren kun je kosteloos afzeggen of verzetten.`,
 		'• Kun je niet? Laat het even weten door op deze mail te antwoorden.',
 		'• Dit gesprek is online. Je hoeft niets voor te bereiden.',
+		HEALTH_CHECK_TEXT,
 		'',
 		'Tot dan!'
 	].join('\n');
@@ -313,6 +322,7 @@ export async function sendBookingApproved(
 		`<li>Tot ${args.cancellationHours} uur van tevoren kun je kosteloos afzeggen of verzetten.</li>`,
 		'<li>Kun je niet? Laat het even weten door op deze mail te antwoorden.</li>',
 		'<li>Dit gesprek is online. Je hoeft niets voor te bereiden.</li>',
+		`<li>${HEALTH_CHECK_TEXT.slice(2)}</li>`,
 		'</ul>',
 		'<p style="margin:0">Tot dan!</p>'
 	].join('');
