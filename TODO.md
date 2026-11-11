@@ -49,7 +49,7 @@ Haar WhatsApp van 10-11 (06:37 tot 22:59) is verwerkt in 261111-b10. Berichten t
 - [ ] **6. Welke kaart?** Ze vroeg om een foto (10-11, 07:22). Screenshot van de kaart
       "Overprikkeling en hooggevoeligheid" gaat mee in de berichten van 11-11; daarna moet
       ze zeggen of haar tekst "Onrust en overprikkeling" (6-11) die vervangt.
-- [ ] **Meet-link: Jay zet hem in Vercel.** Ze stuurde hem op 10-11, 21:57:
+- [x] **Meet-link: Jay zet hem in Vercel.** *Gedaan 11-11.* Ze stuurde hem op 10-11, 21:57:
       `https://meet.google.com/kym-dfsy-ccd`. Zie §0 voor `MEET_URL`.
 - [ ] **Clearing-kaarten "overal".** Geen antwoord op vraag 4 van 9-11. Waar mist ze hem?
 - [ ] **TransIP-wachtwoord** stond in WhatsApp (10-11, 22:17). Gevraagd om het te veranderen.
@@ -441,12 +441,12 @@ modal image animation.
       info@ is linked to her Gmail app over IMAP/SMTP, so no forwarding is needed.
       Why it matters: if it is empty, the code falls back to `BRAND.email`. Resend then reports
       "sent" but the request disappears.
-- [ ] **Jay: zet `MEET_URL` = `https://meet.google.com/kym-dfsy-ccd`** (Gitte stuurde hem op 10-11, 21:57). Op dezelfde pagina: **Add Environment Variable**, Key `MEET_URL`, Value de link, alleen **Production**, **Save**. Daarna redeployt en test de agent.
-- [ ] **Fixed Meet room (decided 2026-11-07, option 1):** Brigitte makes one "vergadering voor later" in her own Google account so she is host; set it as `MEET_URL` in Vercel. It goes into both confirmation mails and both .ics files. Per-booking rooms via the Calendar API (her OAuth) can replace it later.
+- [x] **Done 2026-11-11 (Jay, as Sensitive).** `MEET_URL` = `https://meet.google.com/kym-dfsy-ccd` (Gitte stuurde hem op 10-11, 21:57). Op dezelfde pagina: **Add Environment Variable**, Key `MEET_URL`, Value de link, alleen **Production**, **Save**. Daarna redeployt en test de agent.
+- [x] **Fixed Meet room (decided 2026-11-07, option 1), live 2026-11-11:** Brigitte makes one "vergadering voor later" in her own Google account so she is host; set it as `MEET_URL` in Vercel. It goes into both confirmation mails and both .ics files. Per-booking rooms via the Calendar API (her OAuth) can replace it later.
 - [x] Verify the Resend sending domain — DKIM, SPF and MX in TransIP, region `eu-west-1` (Ireland), which is what the privacy statement promises
 - [x] Resend verwerkersovereenkomst: **nothing to sign** (checked 2026-11-07). Their DPA binds on accepting the Terms of Service.
 - [x] **Done 30-08.** Google Search Console: `trinitybreathhealing.nl` added as a **Domain** property, verified by DNS TXT in TransIP, and `https://trinitybreathhealing.nl/sitemap.xml` submitted. One snag worth remembering: TransIP refuses a second TXT on `@` at a different TTL, so the Google record had to match the existing SPF record's 1-hour TTL. GSC also rejected the bare `sitemap.xml` and took the absolute URL. At the time only five URLs were in the sitemap; it is 16 since 2026-09-09, so the sitemap wants resubmitting in GSC. See `Insights/manual-steps.md` §2.
-- [x] ~~Create the Plausible account~~ **Dropped 2026-11-11** (Jay): no analytics without Brigitte's explicit go-ahead. Search Console is the only metric. Plausible is out of `/privacyverklaring`; `Analytics.svelte` stays dormant because `PUBLIC_PLAUSIBLE_DOMAIN` is unset. If analytics come back, the privacy statement must name the tool again.
+- [x] ~~Create the Plausible account~~ **Dropped 2026-11-11** (Jay): no analytics without Brigitte's explicit go-ahead. Search Console is the only metric. Plausible is out of `/privacyverklaring` and out of the CSP in `svelte.config.js`; `Analytics.svelte` stays dormant because `PUBLIC_PLAUSIBLE_DOMAIN` is unset. If analytics come back, the privacy statement must name the tool again.
 - [x] Supabase booking store — project created, migration run, `DATABASE_URL` (transaction pooler, IPv4) and `BOOKING_TOKEN_SECRET` set in Vercel
 - [x] Supabase verwerkersovereenkomst: **nothing to sign** (2026-11-07), it binds via the Terms. Still to do: add Supabase to the processor table in `/privacyverklaring`. Lower stakes than Resend's — the table holds no personal data — but it is still a processor and the statement currently does not name it.
 - [x] **DONE 02-09.** Google Business Profile — **must be created from her Google account**, not Jay's: verification goes to the business and transferring ownership afterwards is a genuine hassle. Set it up as a **service-area business** (Amsterdam and surroundings) rather than a storefront. She rents the Reigersbos room one day a week; listing a part-time rented room as a normal storefront is how listings get suspended. Address hidden, or shown with Saturday-only hours.

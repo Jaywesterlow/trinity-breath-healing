@@ -38,28 +38,26 @@ const config = {
 		 * Permissions-Policy) stay in vercel.json — a meta-tag CSP cannot express
 		 * frame-ancestors, so X-Frame-Options carries that.
 		 *
-		 * Plausible is the only third party in the list, and only because it is
-		 * the one that replaces a worse third party: without it the alternative
-		 * is GA4, which would bring cookies and a consent banner with it. It
-		 * gets script-src (to load) and connect-src (to post the pageview) and
-		 * nothing else — no img-src, so it cannot fall back to a tracking pixel.
+		 * Everything is 'self': the site loads no third-party resource at all,
+		 * which is what keeps it out of cookie-banner territory. Adding an
+		 * embed, a CDN script or a captcha later means widening this — treat
+		 * that as the warning it is.
 		 *
-		 * Everything else is 'self': the site loads no other third-party
-		 * resource at all, which is what keeps it out of cookie-banner
-		 * territory. Adding an embed, a CDN script or a captcha later means
-		 * widening this — treat that as the warning it is. A self-hosted
-		 * Plausible (PUBLIC_PLAUSIBLE_HOST) needs its origin added here too;
-		 * CSP is a build-time header and cannot read a runtime env var.
+		 * Plausible was dropped on 2026-11-11 (no analytics without the
+		 * client's go-ahead), so plausible.io is no longer allowed here. If
+		 * analytics come back, add the origin to script-src and connect-src,
+		 * and name the tool in /privacyverklaring again. CSP is a build-time
+		 * header and cannot read a runtime env var.
 		 */
 		csp: {
 			mode: 'hash',
 			directives: {
 				'default-src': ['self'],
-				'script-src': ['self', 'https://plausible.io'],
+				'script-src': ['self'],
 				'style-src': ['self', 'unsafe-inline'],
 				'img-src': ['self', 'data:'],
 				'font-src': ['self'],
-				'connect-src': ['self', 'https://plausible.io'],
+				'connect-src': ['self'],
 				'form-action': ['self'],
 				'base-uri': ['self'],
 				'object-src': ['none']
