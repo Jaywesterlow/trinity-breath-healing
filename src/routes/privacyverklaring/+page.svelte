@@ -119,11 +119,6 @@
 					<td data-label="Gegevens">Naam, adres, factuurgegevens</td>
 					<td data-label="Grondslag (AVG)">Wettelijke verplichting (art. 6 lid 1 sub c)</td>
 				</tr>
-				<tr>
-					<td data-label="Doel">De website verbeteren</td>
-					<td data-label="Gegevens">Geaggregeerde bezoekstatistieken</td>
-					<td data-label="Grondslag (AVG)">Gerechtvaardigd belang (art. 6 lid 1 sub f)</td>
-				</tr>
 			</tbody>
 		</table>
 	</div>
