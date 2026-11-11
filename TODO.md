@@ -452,7 +452,7 @@ modal image animation.
 - [x] **DONE 02-09.** Google Business Profile — **must be created from her Google account**, not Jay's: verification goes to the business and transferring ownership afterwards is a genuine hassle. Set it up as a **service-area business** (Amsterdam and surroundings) rather than a storefront. She rents the Reigersbos room one day a week; listing a part-time rented room as a normal storefront is how listings get suspended. Address hidden, or shown with Saturday-only hours.
 - [ ] Regenerate the visual-regression baselines on Windows (`npm run test:visual -- --update-snapshots`) — the spec skips on Linux, so CI cannot
 - [ ] Check LCP in Search Console a few weeks after launch
-- [x] PR #13 (`docs/consolidate`) and PR #14 closed unmerged, branches deleted (2026-11-11, Jay: too old)
+- [x] PR #13 (`docs/consolidate`) and PR #14 — both turned out to be merged long ago; leftover branches deleted 2026-11-11
 
 ---
 
