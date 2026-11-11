@@ -35,7 +35,7 @@
 		Waar kom je mee?
 	</PageHead>
 
-	<!-- Seven complaints as green watercolour cards (2026-10-29, owner: the cards get
+	<!-- Eight complaints (Kinderen en gezinnen 2026-11-11) as green watercolour cards (2026-10-29, owner: the cards get
 	     the home page's painted green, the treatments become small gold tags), two
 	     across on a tablet and three on a laptop; each keeps its anchor id, which other
 	     pages link to. No reveal: a card is a third of the screen or more, over the
@@ -181,13 +181,23 @@
 	}
 
 	@media (min-width: 1100px) {
+		/* Three across, on a six-track grid so a short last row can be centred:
+		   one card alone sits in the middle, two sit side by side in the middle,
+		   not under the first two. */
 		.klachten {
-			grid-template-columns: repeat(3, minmax(0, 1fr));
+			grid-template-columns: repeat(6, minmax(0, 1fr));
 		}
 
-		/* A card alone on the last row sits in the middle, not under the first. */
+		.klacht {
+			grid-column: span 2;
+		}
+
 		.klacht:last-child:nth-child(3n + 1) {
-			grid-column: 2;
+			grid-column: 3 / span 2;
+		}
+
+		.klacht:nth-last-child(2):nth-child(3n + 1) {
+			grid-column: 2 / span 2;
 		}
 	}
 </style>

@@ -48,8 +48,8 @@
 
 	<CtaBand
 		id="hulp"
-		title="Weet je niet welke je nodig hebt?"
-		lead="Dat hoeft ook niet. In een kennismaking van dertig minuten kijken we samen wat er speelt en wat daarbij past. Vrijblijvend, online."
+		title="Weet je niet welke behandeling bij jou past?"
+		lead="Dat is helemaal niet erg. Tijdens een vrijblijvend kennismakingsgesprek van ongeveer 30 minuten bespreken we samen wat er bij jou speelt en welke behandeling het beste bij jouw behoeften aansluit. Het gesprek vindt plaats via telefonisch contact of videobellen."
 		label="Plan een kennismaking"
 		href="/contact"
 		note={BRAND.disclaimer}

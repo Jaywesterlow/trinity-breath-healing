@@ -269,12 +269,12 @@ export async function sendBookingEmail(
  * might want to reply.
  */
 /**
- * Her BRTT and TRB pages (8-11) promise a gezondheidsverklaring before the
- * treatment. The booking is the kennismaking, so the mail says it is coming;
- * Brigitte sends the form itself once a treatment is chosen.
+ * BRTT and TRB come with a gezondheidsverklaring. Brigitte has it signed at the
+ * start of the treatment itself (10-11), so the mail says that, not that one
+ * is sent beforehand.
  */
 const HEALTH_CHECK_TEXT =
-	'• Kies je daarna voor BRTT of TRB, dan ontvang je vóór die behandeling een gezondheidsverklaring om in te vullen en te ondertekenen.';
+	'• Kies je daarna voor BRTT of TRB, dan vul je bij aanvang van die behandeling een gezondheidsverklaring in en onderteken je die ter plekke.';
 
 export async function sendBookingApproved(
 	args: {

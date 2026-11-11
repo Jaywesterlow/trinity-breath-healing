@@ -41,28 +41,25 @@ Everything only she can answer, one list, in her language so it can be sent as i
 Started 2026-11-01 from her WhatsApp of 31-10 and her form. Strike items here as they
 come back. This replaces asking from memory; `.planning/notes/VAN-BRIGITTE.md` is older.
 
-### Vragen van 9-11
+### Vragen van 9-11, stand 11-11
 
-Haar WhatsApp van 8-11 (09:20 tot 20:34) is verwerkt in 261109-b8n. Nog open:
+Haar WhatsApp van 10-11 (06:37 tot 22:59) is verwerkt in 261111-b10. Berichten terug:
+`.planning/notes/brigitte-2026-11-11/BERICHTEN.md`. Nog open:
 
-- [ ] **4. Aangekleed** (vraag van 7-11, geen antwoord). Haar tekst van stap 3 staat er nu,
-      met onze zin "Je ligt daarbij aangekleed op een behandeltafel." erin tot ze antwoordt.
-- [ ] **5. Appen** (7-11, geen antwoord). Haar tekst van stap 4 staat er, met "Vraag je je de
-      dagen erna iets af, dan kun je me altijd appen." erin tot ze antwoordt.
-- [ ] **6. Welke kaart?** (7-11, geen antwoord). Haar tekst "Onrust en overprikkeling" (6-11)
-      staat nog niet op de site.
-- [ ] **Meet-link** (7-11, geen antwoord). Zonder link staat er geen Meet-knop in de
-      bevestiging; zie §0 voor `MEET_URL`.
-- [ ] **Kinderen, BRTT.** Cranio en Spinal Touch zijn voor alle leeftijden (8-11). BRTT: ja
-      of nee, en zo ja vanaf welke leeftijd? Pas dan wordt de kaart "Kinderen en Gezinnen"
-      gebouwd (Gold Healing, Spinal Touch, Cranio, en BRTT als het ja is).
-- [ ] **Contra-indicaties Cranio en BRTT.** Ze denkt dat ze die al gaf. Wat we hebben: de
-      energetische behandelingen (31-10), Spinal Touch (intake) en TRB (formulier). Voor
-      Cranio en BRTT nog niets, alleen de gezondheidsverklaring van 8-11.
-- [ ] **Gezondheidsverklaring.** BRTT en TRB beloven er nu een vóór de behandeling, en de
-      bevestigingsmail zegt dat hij komt. Heeft ze hem als document? Dan gaat hij mee.
-- [ ] **Clearing-kaarten "overal".** De kaart staat al op home, /diensten, /tarieven en een
-      eigen pagina, en bij de klachtkaart "vastzitten". Waar mist ze hem?
+- [ ] **6. Welke kaart?** Ze vroeg om een foto (10-11, 07:22). Screenshot van de kaart
+      "Overprikkeling en hooggevoeligheid" gaat mee in de berichten van 11-11; daarna moet
+      ze zeggen of haar tekst "Onrust en overprikkeling" (6-11) die vervangt.
+- [ ] **Meet-link: Jay zet hem in Vercel.** Ze stuurde hem op 10-11, 21:57:
+      `https://meet.google.com/kym-dfsy-ccd`. Zie §0 voor `MEET_URL`.
+- [ ] **Clearing-kaarten "overal".** Geen antwoord op vraag 4 van 9-11. Waar mist ze hem?
+- [ ] **TransIP-wachtwoord** stond in WhatsApp (10-11, 22:17). Gevraagd om het te veranderen.
+
+Beantwoord op 10-11: "aangekleed" mag eruit (gedaan); stap 4 vanaf "Ik geef je, waar nodig"
+weg (gedaan); BRTT vanaf 6 jaar, Spinal Touch en Cranio alle leeftijden, ouder altijd erbij,
+Gold Healing als gezin vanaf 12 (kaart "Kinderen en gezinnen" op /behandelingen, FAQ);
+contra-indicaties: één lijst voor BRTT en TRB, geen voor Cranio; de gezondheidsverklaring
+tekent ze ter plekke (pagina's en bevestigingsmail aangepast); nieuwe stap 5 en Mahatma
+"Wat brengt het jou?" in alinea's; Kennismaken-band op /werkwijze en /diensten.
 
 Beantwoord op 8-11: adres mag erop (alleen werkadres, de kamer van haar fysio op zaterdag);
 kennismaking ook telefonisch, langskomen als iemand meteen een behandeling wil; Spinal
@@ -444,7 +441,7 @@ modal image animation.
       info@ is linked to her Gmail app over IMAP/SMTP, so no forwarding is needed.
       Why it matters: if it is empty, the code falls back to `BRAND.email`. Resend then reports
       "sent" but the request disappears.
-- [ ] **Jay: zet `MEET_URL` zodra Gitte de link stuurt** (gevraagd op 7-11). Op dezelfde pagina: **Add Environment Variable**, Key `MEET_URL`, Value de link, alleen **Production**, **Save**. Daarna redeployt en test de agent.
+- [ ] **Jay: zet `MEET_URL` = `https://meet.google.com/kym-dfsy-ccd`** (Gitte stuurde hem op 10-11, 21:57). Op dezelfde pagina: **Add Environment Variable**, Key `MEET_URL`, Value de link, alleen **Production**, **Save**. Daarna redeployt en test de agent.
 - [ ] **Fixed Meet room (decided 2026-11-07, option 1):** Brigitte makes one "vergadering voor later" in her own Google account so she is host; set it as `MEET_URL` in Vercel. It goes into both confirmation mails and both .ics files. Per-booking rooms via the Calendar API (her OAuth) can replace it later.
 - [x] Verify the Resend sending domain — DKIM, SPF and MX in TransIP, region `eu-west-1` (Ireland), which is what the privacy statement promises
 - [x] Resend verwerkersovereenkomst: **nothing to sign** (checked 2026-11-07). Their DPA binds on accepting the Terms of Service.

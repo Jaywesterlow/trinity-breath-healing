@@ -29,10 +29,14 @@
      and the note under it. -->
 <section class="cta" aria-labelledby={id}>
 	<div class="cta__card" style:--paint={paintGreen(4)}>
-		<div class="cta__text" use:reveal>
-			<p class="cta__eyebrow">{eyebrow}</p>
-			<h2 {id} class="cta__h2">{title}</h2>
-			<p class="cta__lead">{lead}</p>
+		<!-- Heading and lead fade as two blocks: her two-paragraph /diensten lead
+		     (10-11) made the one block taller than a third of a phone screen. -->
+		<div class="cta__text">
+			<div class="cta__head" use:reveal>
+				<p class="cta__eyebrow">{eyebrow}</p>
+				<h2 {id} class="cta__h2">{title}</h2>
+			</div>
+			<p class="cta__lead" use:reveal>{lead}</p>
 		</div>
 		<div class="cta__button" use:reveal>
 			<ButtonLink {label} {href} />
@@ -72,7 +76,8 @@
 		text-align: center;
 	}
 
-	.cta__text {
+	.cta__text,
+	.cta__head {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
