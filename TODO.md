@@ -99,11 +99,11 @@ Reiskosten staan al op /tarieven (€0,35 per km), dus die vraag vervalt.
 
 ### Contra-indicaties en veiligheid
 
-- [ ] Welke contra-indicaties gelden voor **Cranio & Fascia Unwinding**?
-- [ ] Welke contra-indicaties gelden voor **BRTT**?
+- [x] Welke contra-indicaties gelden voor **Cranio & Fascia Unwinding**? *Geen, 10-11.*
+- [x] Welke contra-indicaties gelden voor **BRTT**? *Dezelfde lijst als TRB, 10-11.*
 - [ ] Je Spinal Touch-lijst begint met "werk je ook in de aura". Geldt de lijst voor **elke** Spinal Touch-sessie, of alleen als je ook in de aura werkt? Nu staat hij voor alle sessies.
 - [ ] **Blijf hierom vragen.** De kaart **Angst en somberheid** verwijst naar Spinal Touch en TRB, terwijl die bij angstremmers, antidepressiva of ernstige psychische klachten worden afgeraden. Moeten die twee van de kaart af? Tot haar antwoord blijven de tags staan.
-- [ ] **Blijf hierom vragen.** Kinderen en gezinnen: zijn Goldhealing, Spinal Touch, Cranio en BRTT **alle vier** geschikt voor kinderen? Vanaf welke leeftijd, en is er altijd een ouder bij? De veelgestelde vragen zeggen nu nog dat behandelingen voor volwassenen zijn. **De kaart "Kinderen en Gezinnen" is nog niet gebouwd;** dat wacht op dit antwoord.
+- [x] Kinderen en gezinnen: welke behandelingen, vanaf welke leeftijd? *10-11: Spinal Touch en Cranio alle leeftijden, BRTT vanaf 6, ouder altijd erbij, Gold Healing als gezin vanaf 12. Kaart en FAQ gebouwd in PR #41.*
 - [ ] Welke **vragen** moeten in de intakevragenlijst bij de bevestigingsmail? Mag ik je Spinal Touch-intake als basis gebruiken?
 
 ### Voorwaarden en privacy
@@ -431,7 +431,7 @@ modal image animation.
 ## 3. Accounts and DNS — nobody else can do these
 
 - [x] Buy the domain — **bought 2026-08-24**, under Jay's own TransIP account
-- [ ] **Invoice the aunt for costs fronted on her behalf** (domain, and anything after it). Keep the receipts as you go rather than reconstructing them later.
+- [x] **Invoice the aunt for costs fronted on her behalf** — sent (Jay, 2026-11-11). Costs from here on go on the next invoice.
 - [ ] **Move the domain to her name once the site is finished.** It is already registered with her as registrant; this is the second half — moving it into her own TransIP account, which is a free internal transfer, so she owns the management too and is not dependent on Jay's login.
 - [x] **Set the Vercel mail env vars** — done. `RESEND_API_KEY` (Secret), `CONTACT_FROM_EMAIL` = `Trinity Breath & Healing <contact@trinitybreathhealing.nl>`, `CONTACT_TO_EMAIL` = Jay's Gmail.
 - [x] **`CONTACT_TO_EMAIL` = `info@trinitybreathhealing.nl`, done 2026-11-10** by the agent
@@ -452,8 +452,7 @@ modal image animation.
 - [x] **DONE 02-09.** Google Business Profile — **must be created from her Google account**, not Jay's: verification goes to the business and transferring ownership afterwards is a genuine hassle. Set it up as a **service-area business** (Amsterdam and surroundings) rather than a storefront. She rents the Reigersbos room one day a week; listing a part-time rented room as a normal storefront is how listings get suspended. Address hidden, or shown with Saturday-only hours.
 - [ ] Regenerate the visual-regression baselines on Windows (`npm run test:visual -- --update-snapshots`) — the spec skips on Linux, so CI cannot
 - [ ] Check LCP in Search Console a few weeks after launch
-- [ ] Decide on PR #13 (`docs/consolidate`), open since 2026-08-10
-- [ ] Review or merge PR #14 — this branch already contains all of it
+- [x] PR #13 (`docs/consolidate`) and PR #14 closed unmerged, branches deleted (2026-11-11, Jay: too old)
 
 ---
 
