@@ -63,10 +63,8 @@
 
 	<h3>Websitebezoek</h3>
 	<p>
-		Deze website plaatst geen cookies en gebruikt geen trackers die jou als persoon herkennen. Om te
-		zien welke pagina's bezocht worden gebruik ik Plausible Analytics: dat meet zonder cookies en
-		zonder een individueel bezoekersprofiel op te bouwen. Daarom vind je op deze site ook geen
-		cookiebanner.
+		Deze website plaatst geen cookies, gebruikt geen trackers en houdt geen bezoekstatistieken bij.
+		Daarom vind je op deze site ook geen cookiebanner.
 	</p>
 
 	<h2>3. Gegevens over je gezondheid</h2>
@@ -167,12 +165,6 @@
 					</td>
 					<td data-label="Waar staan de gegevens">Europese Unie (regio Ierland)</td>
 					<td data-label="Toegang van buiten de EU">Ja — Verenigde Staten</td>
-				</tr>
-				<tr>
-					<td data-label="Verwerker">Plausible Analytics</td>
-					<td data-label="Waarvoor">Bezoekstatistieken zonder cookies</td>
-					<td data-label="Waar staan de gegevens">Europese Unie</td>
-					<td data-label="Toegang van buiten de EU">Nee</td>
 				</tr>
 				<tr>
 					<td data-label="Verwerker"><Todo>e-mailprovider</Todo></td>
