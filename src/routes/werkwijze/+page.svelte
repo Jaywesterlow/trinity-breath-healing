@@ -35,19 +35,20 @@
 		{
 			n: '03',
 			title: 'De sessie zelf',
-			/* Steps 3 to 5: her texts of 2-11. "aangekleed" (3) and "appen" (4) are ours
-			   and stay until she answers questions 4 and 5 (TODO.md §0a). */
-			body: 'Tijdens de sessie staat jouw welzijn centraal. Afhankelijk van de gekozen behandeling werk ik met energie, zachte aanraking, ademhaling of lichaamsgerichte technieken. Je ligt daarbij aangekleed op een behandeltafel. Je krijgt de ruimte om te ontspannen en te ervaren wat zich op dat moment aandient. Iedere sessie is anders en wordt afgestemd op jouw persoonlijke behoeften.\n\nEr is niets wat je moet voelen of ervaren. Je mag er helemaal zijn, precies zoals je bent. Alles gebeurt in jouw tempo, met aandacht en respect voor jouw persoonlijke grenzen.'
+			/* Steps 3 and 4: her texts of 2-11. Our "aangekleed" sentence (3) and the end of
+			   step 4 from "Ik geef je, waar nodig" came out on her answers of 10-11. */
+			body: 'Tijdens de sessie staat jouw welzijn centraal. Afhankelijk van de gekozen behandeling werk ik met energie, zachte aanraking, ademhaling of lichaamsgerichte technieken. Je krijgt de ruimte om te ontspannen en te ervaren wat zich op dat moment aandient. Iedere sessie is anders en wordt afgestemd op jouw persoonlijke behoeften.\n\nEr is niets wat je moet voelen of ervaren. Je mag er helemaal zijn, precies zoals je bent. Alles gebeurt in jouw tempo, met aandacht en respect voor jouw persoonlijke grenzen.'
 		},
 		{
 			n: '04',
 			title: 'Na afloop',
-			body: 'Na de sessie nemen we rustig de tijd om bij te komen en stil te staan bij jouw ervaring. Er is ruimte om te delen wat je hebt gevoeld of ervaren, maar niets hoeft. Iedereen ervaart een behandeling op zijn eigen manier. Soms voel je direct verschil, terwijl je op andere momenten pas later iets opmerkt.\n\nIk geef je, waar nodig, persoonlijke tips mee om ook na de sessie goed voor jezelf te zorgen. Vraag je je de dagen erna iets af, dan kun je me altijd appen.'
+			body: 'Na de sessie nemen we rustig de tijd om bij te komen en stil te staan bij jouw ervaring. Er is ruimte om te delen wat je hebt gevoeld of ervaren, maar niets hoeft. Iedereen ervaart een behandeling op zijn eigen manier. Soms voel je direct verschil, terwijl je op andere momenten pas later iets opmerkt.'
 		},
 		{
 			n: '05',
-			title: 'Hoe nu verder?',
-			body: 'Na de behandeling kijken we samen hoe je de sessie hebt ervaren en of je behoefte hebt aan verdere begeleiding. Soms is één sessie voldoende, terwijl op andere momenten meerdere behandelingen prettig kunnen zijn. Jij bepaalt wat goed voelt en welke volgende stap bij jou past. Alles gebeurt in jouw eigen tempo.'
+			/* Her step 5 of 10-11, 07:51. */
+			title: 'Een vervolg op jouw tempo',
+			body: 'Soms is één behandeling voldoende, terwijl er in andere situaties behoefte is aan meerdere sessies. We bespreken samen wat passend is bij jouw wensen en behoeften. Je bepaalt altijd zelf of en wanneer je een vervolgafspraak wilt maken.'
 		}
 	];
 
@@ -121,8 +122,8 @@
 
 	<CtaBand
 		id="beginnen"
-		title="Beginnen bij het begin"
-		lead="Wil je ontdekken wat ik voor je kan betekenen? Tijdens een vrijblijvend kennismakingsgesprek van 30 minuten nemen we rustig de tijd om kennis te maken en jouw vragen te bespreken. Samen kijken we of mijn begeleiding aansluit bij jouw wensen en behoeften."
+		title="Een eerste stap naar verbinding"
+		lead="Wil je eerst kennismaken of heb je vragen over een behandeling? Neem gerust contact met mij op. Samen kijken we wat bij jouw wensen en behoeften past."
 		label="Plan een kennismaking"
 		href="/contact"
 		note={BRAND.disclaimer}

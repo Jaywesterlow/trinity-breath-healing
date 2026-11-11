@@ -202,9 +202,10 @@ export const BRAND = {
 				'behoefte aan meer innerlijke balans',
 				'persoonlijke en spirituele groei'
 			],
-			/* "Wat brengt het jou?" (2-11, 23:03): a section of its own on the page. */
+			/* "Wat brengt het jou?": her version of 10-11, 07:51, "graag met alinea
+			   indelen" (07:53). Replaces the 2-11 text. */
 			benefits:
-				'Mahatma Healing nodigt je uit om even stil te staan bij jezelf en de drukte van het dagelijks leven los te laten.\n\nDe behandeling kan bijdragen aan een gevoel van diepe ontspanning, innerlijke rust en meer verbinding met jezelf.\n\nHet biedt ruimte om bewust te worden van wat je bezighoudt, spanning los te laten en nieuwe inzichten te krijgen die je kunnen helpen om meer balans te ervaren.\n\nIedereen beleeft een sessie op zijn eigen manier. Wat je ervaart, mag er zijn.'
+				'Mahatma Healing nodigt je uit om even stil te staan bij jezelf en opnieuw verbinding te maken met je innerlijke rust.\n\nDe behandeling kan bijdragen aan diepe ontspanning, emotionele balans en een gevoel van harmonie tussen lichaam, geest en ziel.\n\nDaarnaast biedt het ruimte voor bewustwording en nieuwe inzichten die je kunnen ondersteunen in je persoonlijke ontwikkeling.'
 		},
 		{
 			slug: 'goldhealing',
@@ -323,7 +324,7 @@ export const BRAND = {
 			session:
 				'We beginnen met een kort gesprek waarin we bespreken waar je op dit moment tegenaan loopt en wat jouw behoeften zijn.\n\nTijdens de behandeling begeleid ik je met een lichaamsgerichte oefening die het lichaam uitnodigt om via natuurlijke trillingen en bewegingen opgebouwde spanning te ontladen. Hierbij krijgt je lichaam de ruimte om op zijn eigen tempo te reageren.\n\nJe hoeft niet alles opnieuw te vertellen of te analyseren. We richten ons op wat je in je lichaam ervaart, waarbij jouw grenzen en persoonlijke tempo worden gerespecteerd.\n\nNa afloop is er ruimte om rustig bij te komen en je ervaringen te delen.',
 			healthCheck:
-				'Voor jouw veiligheid is het belangrijk om vooraf te beoordelen of BRTT voor jou geschikt is.\n\nDaarom ontvang je vóór de behandeling een gezondheidsverklaring waarin je enkele vragen over je gezondheid beantwoordt. Deze verklaring wordt vooraf ingevuld en ondertekend.\n\nBij bepaalde medische of psychische aandoeningen kan BRTT worden afgeraden of is vooraf overleg met een arts noodzakelijk.'
+				'Voor jouw veiligheid is het belangrijk om vooraf te beoordelen of BRTT voor jou geschikt is.\n\nDaarom vul je bij aanvang van de behandeling een gezondheidsverklaring in, waarin je enkele vragen over je gezondheid beantwoordt. Deze verklaring onderteken je ter plekke, voordat we beginnen.\n\nBij bepaalde medische of psychische aandoeningen kan BRTT worden afgeraden of is vooraf overleg met een arts noodzakelijk.'
 		},
 		{
 			slug: 'trb-breathwork',
@@ -349,7 +350,7 @@ export const BRAND = {
 				'We beginnen met een kort gesprek waarin we bespreken waar je op dit moment tegenaan loopt en wat jouw wensen en behoeften zijn.\n\nTijdens de sessie werken we bewust met de ademhaling, waarbij aandacht is voor lichamelijke sensaties, gevoelens en wat zich op dat moment aandient. De ademprincipes worden afgestemd op jouw lichaam en persoonlijke behoeften.\n\nJe wordt hierin zorgvuldig begeleid, met respect voor jouw grenzen en eigen tempo. De sessie biedt ruimte voor ontspanning, lichaamsbewustzijn, emotionele verwerking en nieuwe inzichten.\n\nNa afloop nemen we de tijd om rustig bij te komen en je ervaringen te delen.\n\nEen TRB-sessie duurt ongeveer 60 tot 90 minuten en vindt plaats op locatie of bij jou thuis.',
 			/* Her text says "BRTT" in the first sentence, a copy slip: it is the TRB block. */
 			healthCheck:
-				'Voor jouw veiligheid is het belangrijk om vooraf te beoordelen of TRB voor jou geschikt is.\n\nDaarom ontvang je vóór de behandeling een gezondheidsverklaring waarin je enkele vragen over je gezondheid beantwoordt. Deze verklaring wordt vooraf ingevuld en ondertekend.\n\nBij bepaalde medische of psychische aandoeningen kan TRB worden afgeraden of is vooraf overleg met een arts noodzakelijk.'
+				'Voor jouw veiligheid is het belangrijk om vooraf te beoordelen of TRB voor jou geschikt is.\n\nDaarom vul je bij aanvang van de behandeling een gezondheidsverklaring in, waarin je enkele vragen over je gezondheid beantwoordt. Deze verklaring onderteken je ter plekke, voordat we beginnen.\n\nBij bepaalde medische of psychische aandoeningen kan TRB worden afgeraden of is vooraf overleg met een arts noodzakelijk.'
 		},
 		{
 			slug: 'clearing-ascensie',

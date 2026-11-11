@@ -102,6 +102,15 @@ export const KLACHTEN: Klacht[] = [
 		]
 	},
 	{
+		/* Her answers of 2026-11-10, 07:31: Spinal Touch and Cranio for all ages, BRTT
+		   from 6, a parent always present, Gold Healing as a family from 12. */
+		id: 'kinderen-en-gezinnen',
+		title: 'Kinderen en gezinnen',
+		body: 'Ook kinderen kunnen spanning, onrust of overprikkeling ervaren. Spinal Touch en Cranio & Fascia Unwinding zijn geschikt voor alle leeftijden en BRTT vanaf 6 jaar, altijd met een ouder erbij. Gold Healing kan als gezinssessie vanaf 12 jaar.',
+		services: ['spinal-touch', 'cranio-fascia-unwinding', 'brtt-body', 'goldhealing'],
+		sources: ['hooggevoeligheid bij kinderen', 'De behandeling is ook geschikt voor kinderen.']
+	},
+	{
 		id: 'vastzitten-zonder-duidelijke-klacht',
 		title: 'Vastzitten, zonder dat je het kunt benoemen',
 		body: 'Soms voel je dat je vastloopt, zonder precies te weten waarom. Oude patronen, overtuigingen of emoties kunnen je persoonlijke groei in de weg staan. Misschien voel je dat het tijd is om los te laten en ruimte te maken voor verandering.',

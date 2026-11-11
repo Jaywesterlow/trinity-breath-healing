@@ -5,16 +5,17 @@
  *
  * Bronnen, in haar woorden:
  * - energetisch: WhatsApp 2026-10-31, 19:51
- * - TRB: formulier 2026-10-31, haar twee lijsten samengevoegd
+ * - BRTT en TRB: formulier 2026-10-31, en dezelfde lijst als foto "voor brtt en trb"
+ *   (WhatsApp 2026-11-10, 07:25), haar twee lijsten samengevoegd
  * - Spinal Touch: haar intakeformulier, pagina 7 (WhatsApp 2026-10-31, 19:21)
  *
- * Bewust niet hier: de medicijnnamen uit haar TRB-lijst. Die horen in de intake,
- * niet op een openbare pagina. De neusspray staat er wel, als iets om te
- * bespreken: de disclaimer zegt dat niemand zelf met medicatie stopt, dus de site
- * mag dat ook niet vragen (Jaymar, 2026-11-01).
+ * Bewust niet hier: de merknamen van medicijnen uit haar lijst. Die horen in de
+ * intake, niet op een openbare pagina; de soorten medicatie staan wel in de outro,
+ * als iets om te bespreken. Ook de neusspray: de disclaimer zegt dat niemand zelf
+ * met medicatie stopt, dus de site mag dat ook niet vragen (Jaymar, 2026-11-01).
  *
- * Cranio & Fascia Unwinding en BRTT Body hebben nog geen lijst van haar, zie
- * TODO.md §11.
+ * Cranio & Fascia Unwinding heeft geen contra-indicaties (haar antwoord van
+ * 2026-11-10, 07:27), dus geen groep.
  */
 
 export interface ContraGroup {
@@ -64,13 +65,13 @@ export const CONTRA_GROUPS: readonly ContraGroup[] = [
 		]
 	},
 	{
-		id: 'trb',
-		title: 'Trauma Release Breathwork',
-		treatments: 'Trauma Release Breathwork',
-		slugs: ['trb-breathwork'],
-		intro: 'Je kunt niet deelnemen aan een TRB-sessie bij:',
+		id: 'brtt-trb',
+		title: 'BRTT en Trauma Release Breathwork',
+		treatments: 'BRTT (Body Remembers Trauma Therapy) en Trauma Release Breathwork',
+		slugs: ['brtt-body', 'trb-breathwork'],
+		intro: 'Je kunt niet deelnemen aan een BRTT- of TRB-sessie bij:',
 		items: [
-			'hartziektes of hartklachten',
+			'hartziektes',
 			'zwangerschap',
 			'recente hersenbloedingen',
 			'epilepsie',
@@ -91,7 +92,7 @@ export const CONTRA_GROUPS: readonly ContraGroup[] = [
 			'geen alcohol 3 dagen voor aanvang'
 		],
 		outro:
-			'Gebruik je medicatie? Bespreek dit vooraf met mij. Neusspray wordt rond een sessie afgeraden: geef het aan als je die gebruikt, dan kijken we samen wat past.'
+			'Gebruik je medicatie, zoals antidepressiva of middelen tegen angst, Ritalin, slaapmiddelen, bloeddrukverlagers, verdovingsmiddelen, bètablokkers, migraine- of pijnmedicatie, allergie- of hoestmedicatie? Bespreek dit vooraf met mij. Neusspray wordt rond een sessie afgeraden: geef het aan als je die gebruikt, dan kijken we samen wat past.'
 	}
 ];
 

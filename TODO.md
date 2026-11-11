@@ -41,28 +41,25 @@ Everything only she can answer, one list, in her language so it can be sent as i
 Started 2026-11-01 from her WhatsApp of 31-10 and her form. Strike items here as they
 come back. This replaces asking from memory; `.planning/notes/VAN-BRIGITTE.md` is older.
 
-### Vragen van 9-11
+### Vragen van 9-11, stand 11-11
 
-Haar WhatsApp van 8-11 (09:20 tot 20:34) is verwerkt in 261109-b8n. Nog open:
+Haar WhatsApp van 10-11 (06:37 tot 22:59) is verwerkt in 261111-b10. Berichten terug:
+`.planning/notes/brigitte-2026-11-11/BERICHTEN.md`. Nog open:
 
-- [ ] **4. Aangekleed** (vraag van 7-11, geen antwoord). Haar tekst van stap 3 staat er nu,
-      met onze zin "Je ligt daarbij aangekleed op een behandeltafel." erin tot ze antwoordt.
-- [ ] **5. Appen** (7-11, geen antwoord). Haar tekst van stap 4 staat er, met "Vraag je je de
-      dagen erna iets af, dan kun je me altijd appen." erin tot ze antwoordt.
-- [ ] **6. Welke kaart?** (7-11, geen antwoord). Haar tekst "Onrust en overprikkeling" (6-11)
-      staat nog niet op de site.
-- [ ] **Meet-link** (7-11, geen antwoord). Zonder link staat er geen Meet-knop in de
-      bevestiging; zie §0 voor `MEET_URL`.
-- [ ] **Kinderen, BRTT.** Cranio en Spinal Touch zijn voor alle leeftijden (8-11). BRTT: ja
-      of nee, en zo ja vanaf welke leeftijd? Pas dan wordt de kaart "Kinderen en Gezinnen"
-      gebouwd (Gold Healing, Spinal Touch, Cranio, en BRTT als het ja is).
-- [ ] **Contra-indicaties Cranio en BRTT.** Ze denkt dat ze die al gaf. Wat we hebben: de
-      energetische behandelingen (31-10), Spinal Touch (intake) en TRB (formulier). Voor
-      Cranio en BRTT nog niets, alleen de gezondheidsverklaring van 8-11.
-- [ ] **Gezondheidsverklaring.** BRTT en TRB beloven er nu een vóór de behandeling, en de
-      bevestigingsmail zegt dat hij komt. Heeft ze hem als document? Dan gaat hij mee.
-- [ ] **Clearing-kaarten "overal".** De kaart staat al op home, /diensten, /tarieven en een
-      eigen pagina, en bij de klachtkaart "vastzitten". Waar mist ze hem?
+- [ ] **6. Welke kaart?** Ze vroeg om een foto (10-11, 07:22). Screenshot van de kaart
+      "Overprikkeling en hooggevoeligheid" gaat mee in de berichten van 11-11; daarna moet
+      ze zeggen of haar tekst "Onrust en overprikkeling" (6-11) die vervangt.
+- [ ] **Meet-link: Jay zet hem in Vercel.** Ze stuurde hem op 10-11, 21:57:
+      `https://meet.google.com/kym-dfsy-ccd`. Zie §0 voor `MEET_URL`.
+- [ ] **Clearing-kaarten "overal".** Geen antwoord op vraag 4 van 9-11. Waar mist ze hem?
+- [ ] **TransIP-wachtwoord** stond in WhatsApp (10-11, 22:17). Gevraagd om het te veranderen.
+
+Beantwoord op 10-11: "aangekleed" mag eruit (gedaan); stap 4 vanaf "Ik geef je, waar nodig"
+weg (gedaan); BRTT vanaf 6 jaar, Spinal Touch en Cranio alle leeftijden, ouder altijd erbij,
+Gold Healing als gezin vanaf 12 (kaart "Kinderen en gezinnen" op /behandelingen, FAQ);
+contra-indicaties: één lijst voor BRTT en TRB, geen voor Cranio; de gezondheidsverklaring
+tekent ze ter plekke (pagina's en bevestigingsmail aangepast); nieuwe stap 5 en Mahatma
+"Wat brengt het jou?" in alinea's; Kennismaken-band op /werkwijze en /diensten.
 
 Beantwoord op 8-11: adres mag erop (alleen werkadres, de kamer van haar fysio op zaterdag);
 kennismaking ook telefonisch, langskomen als iemand meteen een behandeling wil; Spinal
@@ -102,11 +99,11 @@ Reiskosten staan al op /tarieven (€0,35 per km), dus die vraag vervalt.
 
 ### Contra-indicaties en veiligheid
 
-- [ ] Welke contra-indicaties gelden voor **Cranio & Fascia Unwinding**?
-- [ ] Welke contra-indicaties gelden voor **BRTT**?
+- [x] Welke contra-indicaties gelden voor **Cranio & Fascia Unwinding**? *Geen, 10-11.*
+- [x] Welke contra-indicaties gelden voor **BRTT**? *Dezelfde lijst als TRB, 10-11.*
 - [ ] Je Spinal Touch-lijst begint met "werk je ook in de aura". Geldt de lijst voor **elke** Spinal Touch-sessie, of alleen als je ook in de aura werkt? Nu staat hij voor alle sessies.
 - [ ] **Blijf hierom vragen.** De kaart **Angst en somberheid** verwijst naar Spinal Touch en TRB, terwijl die bij angstremmers, antidepressiva of ernstige psychische klachten worden afgeraden. Moeten die twee van de kaart af? Tot haar antwoord blijven de tags staan.
-- [ ] **Blijf hierom vragen.** Kinderen en gezinnen: zijn Goldhealing, Spinal Touch, Cranio en BRTT **alle vier** geschikt voor kinderen? Vanaf welke leeftijd, en is er altijd een ouder bij? De veelgestelde vragen zeggen nu nog dat behandelingen voor volwassenen zijn. **De kaart "Kinderen en Gezinnen" is nog niet gebouwd;** dat wacht op dit antwoord.
+- [x] Kinderen en gezinnen: welke behandelingen, vanaf welke leeftijd? *10-11: Spinal Touch en Cranio alle leeftijden, BRTT vanaf 6, ouder altijd erbij, Gold Healing als gezin vanaf 12. Kaart en FAQ gebouwd in PR #41.*
 - [ ] Welke **vragen** moeten in de intakevragenlijst bij de bevestigingsmail? Mag ik je Spinal Touch-intake als basis gebruiken?
 
 ### Voorwaarden en privacy
@@ -434,7 +431,7 @@ modal image animation.
 ## 3. Accounts and DNS — nobody else can do these
 
 - [x] Buy the domain — **bought 2026-08-24**, under Jay's own TransIP account
-- [ ] **Invoice the aunt for costs fronted on her behalf** (domain, and anything after it). Keep the receipts as you go rather than reconstructing them later.
+- [x] **Invoice the aunt for costs fronted on her behalf** — sent (Jay, 2026-11-11). Costs from here on go on the next invoice.
 - [ ] **Move the domain to her name once the site is finished.** It is already registered with her as registrant; this is the second half — moving it into her own TransIP account, which is a free internal transfer, so she owns the management too and is not dependent on Jay's login.
 - [x] **Set the Vercel mail env vars** — done. `RESEND_API_KEY` (Secret), `CONTACT_FROM_EMAIL` = `Trinity Breath & Healing <contact@trinitybreathhealing.nl>`, `CONTACT_TO_EMAIL` = Jay's Gmail.
 - [x] **`CONTACT_TO_EMAIL` = `info@trinitybreathhealing.nl`, done 2026-11-10** by the agent
@@ -444,19 +441,18 @@ modal image animation.
       info@ is linked to her Gmail app over IMAP/SMTP, so no forwarding is needed.
       Why it matters: if it is empty, the code falls back to `BRAND.email`. Resend then reports
       "sent" but the request disappears.
-- [ ] **Jay: zet `MEET_URL` zodra Gitte de link stuurt** (gevraagd op 7-11). Op dezelfde pagina: **Add Environment Variable**, Key `MEET_URL`, Value de link, alleen **Production**, **Save**. Daarna redeployt en test de agent.
+- [ ] **Jay: zet `MEET_URL` = `https://meet.google.com/kym-dfsy-ccd`** (Gitte stuurde hem op 10-11, 21:57). Op dezelfde pagina: **Add Environment Variable**, Key `MEET_URL`, Value de link, alleen **Production**, **Save**. Daarna redeployt en test de agent.
 - [ ] **Fixed Meet room (decided 2026-11-07, option 1):** Brigitte makes one "vergadering voor later" in her own Google account so she is host; set it as `MEET_URL` in Vercel. It goes into both confirmation mails and both .ics files. Per-booking rooms via the Calendar API (her OAuth) can replace it later.
 - [x] Verify the Resend sending domain — DKIM, SPF and MX in TransIP, region `eu-west-1` (Ireland), which is what the privacy statement promises
 - [x] Resend verwerkersovereenkomst: **nothing to sign** (checked 2026-11-07). Their DPA binds on accepting the Terms of Service.
 - [x] **Done 30-08.** Google Search Console: `trinitybreathhealing.nl` added as a **Domain** property, verified by DNS TXT in TransIP, and `https://trinitybreathhealing.nl/sitemap.xml` submitted. One snag worth remembering: TransIP refuses a second TXT on `@` at a different TTL, so the Google record had to match the existing SPF record's 1-hour TTL. GSC also rejected the bare `sitemap.xml` and took the absolute URL. At the time only five URLs were in the sitemap; it is 16 since 2026-09-09, so the sitemap wants resubmitting in GSC. See `Insights/manual-steps.md` §2.
-- [ ] Create the Plausible account, then set `PUBLIC_PLAUSIBLE_DOMAIN` in Vercel
+- [x] ~~Create the Plausible account~~ **Dropped 2026-11-11** (Jay): no analytics without Brigitte's explicit go-ahead. Search Console is the only metric. Plausible is out of `/privacyverklaring`; `Analytics.svelte` stays dormant because `PUBLIC_PLAUSIBLE_DOMAIN` is unset. If analytics come back, the privacy statement must name the tool again.
 - [x] Supabase booking store — project created, migration run, `DATABASE_URL` (transaction pooler, IPv4) and `BOOKING_TOKEN_SECRET` set in Vercel
 - [x] Supabase verwerkersovereenkomst: **nothing to sign** (2026-11-07), it binds via the Terms. Still to do: add Supabase to the processor table in `/privacyverklaring`. Lower stakes than Resend's — the table holds no personal data — but it is still a processor and the statement currently does not name it.
 - [x] **DONE 02-09.** Google Business Profile — **must be created from her Google account**, not Jay's: verification goes to the business and transferring ownership afterwards is a genuine hassle. Set it up as a **service-area business** (Amsterdam and surroundings) rather than a storefront. She rents the Reigersbos room one day a week; listing a part-time rented room as a normal storefront is how listings get suspended. Address hidden, or shown with Saturday-only hours.
 - [ ] Regenerate the visual-regression baselines on Windows (`npm run test:visual -- --update-snapshots`) — the spec skips on Linux, so CI cannot
 - [ ] Check LCP in Search Console a few weeks after launch
-- [ ] Decide on PR #13 (`docs/consolidate`), open since 2026-08-10
-- [ ] Review or merge PR #14 — this branch already contains all of it
+- [x] PR #13 (`docs/consolidate`) and PR #14 — both turned out to be merged long ago; leftover branches deleted 2026-11-11
 
 ---
 

@@ -12,7 +12,7 @@ export const faqItems: FaqItem[] = [
 	{
 		question: 'Voor wie is een behandeling bij Trinity Breath & Healing geschikt?',
 		answer:
-			'Behandelingen zijn geschikt voor volwassenen die lichamelijke spanning, chronische vermoeidheid of emotionele blokkades willen aanpakken. Gold Healing is ook geschikt voor kinderen, en Spinal Touch en Cranio & Fascia Unwinding zijn er voor alle leeftijden. Mensen met een actieve psychose, ernstige cardiovasculaire aandoeningen of zwangerschap worden verzocht eerst hun arts te raadplegen voordat zij een afspraak inplannen.'
+			'Behandelingen zijn geschikt voor volwassenen die lichamelijke spanning, chronische vermoeidheid of emotionele blokkades willen aanpakken. Spinal Touch en Cranio & Fascia Unwinding zijn er voor alle leeftijden, BRTT vanaf 6 jaar, en Gold Healing kan als gezinssessie vanaf 12 jaar. Bij kinderen is er altijd een ouder bij. Mensen met een actieve psychose, ernstige cardiovasculaire aandoeningen of zwangerschap worden verzocht eerst hun arts te raadplegen voordat zij een afspraak inplannen.'
 	},
 	{
 		question: 'Hoe lang duurt een sessie en wat kost het?',
