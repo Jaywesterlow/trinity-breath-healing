@@ -862,3 +862,41 @@ a.btn-link .btn-link__label {
 /* The arrow circle is not sized here any more: it is Frame 49's 32px disc (ButtonLink),
    6px from the pill's edge on all three sides. This rule made it 36px, 4px from the top
    and bottom but 6px from the right (owner, 2026-10-28). */
+
+/* ─── Long button labels on narrow screens (2026-11-13) ─────────────────────────
+   A label never wrapped (.text-roll is nowrap, the arrow pill a fixed 44px), so on
+   a phone with its text size turned up "Lees meer over mijn werkwijze" made a
+   356px button on a 360px screen and the page scrolled sideways. The button may
+   not grow past its container, and a label that does not fit takes a second line;
+   one that fits looks exactly as before. Set here because ButtonLink.svelte is
+   locked; a.btn-link is one step more specific than its scoped rules. */
+a.btn-link {
+	max-width: 100%;
+}
+
+a.btn-link.btn-link--arrow {
+	height: auto;
+	min-height: 2.75rem;
+}
+
+a.btn-link .btn-link__label {
+	min-width: 0;
+	text-align: center;
+	line-height: 1.2;
+}
+
+a.btn-link:not(.btn-link--arrow) .btn-link__label {
+	height: auto;
+	min-height: 2.25rem;
+}
+
+a.btn-link .text-roll,
+a.btn-link .text-roll::after {
+	white-space: normal;
+}
+
+/* The rolled-in copy wraps on the same lines as the word it replaces. */
+a.btn-link .text-roll::after {
+	box-sizing: border-box;
+	padding: inherit;
+}

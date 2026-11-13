@@ -166,6 +166,57 @@
 		gap: var(--space-3);
 	}
 
+	/* Phones (2026-11-13). The fixed 9rem + 3.5rem columns left the treatment column
+	   narrower than a single word on a phone, and wider still with the phone's text
+	   size turned up, so "Mahatma" ran into "30 minuten" (her screenshot). Below
+	   640px each row stacks: the treatment on its own line, duration and price on the
+	   line under it. The column headers stay in the markup for screen readers and
+	   crawlers, visually hidden, since "30 minuten" and "€45" say what they are. */
+	@media (max-width: 639.98px) {
+		.prices {
+			table-layout: auto;
+		}
+
+		.prices thead {
+			position: absolute;
+			width: 1px;
+			height: 1px;
+			overflow: hidden;
+			clip-path: inset(50%);
+			white-space: nowrap;
+		}
+
+		.prices tbody tr {
+			display: grid;
+			grid-template-columns: 1fr auto;
+			column-gap: var(--space-4);
+			row-gap: var(--space-1);
+			padding: var(--space-3) 0;
+			border-bottom: 1px solid color-mix(in srgb, var(--brand-border) 20%, transparent);
+		}
+
+		.prices tbody th,
+		.prices tbody td {
+			display: block;
+			padding: 0;
+			border-bottom: 0;
+			min-width: 0;
+		}
+
+		.prices tbody th {
+			grid-column: 1 / -1;
+			overflow-wrap: anywhere;
+		}
+
+		.prices tbody td {
+			color: var(--color-text-subtle);
+		}
+
+		.prices tbody td:last-child {
+			color: var(--color-fg-forest);
+		}
+	}
+
 	@media (min-width: 1100px) {
 		.prices,
 		.tarieven__body {
