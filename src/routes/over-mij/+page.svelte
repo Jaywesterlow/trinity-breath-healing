@@ -5,7 +5,7 @@
 	 * Built as a finished page with the biography left open, rather than left as
 	 * a "komt binnenkort" card, because the structure is the part that can be
 	 * decided without the practitioner and the words are the part that cannot.
-	 * Every <Todo> below is a paragraph she writes; nothing here invents a
+	 * A <Todo> marks a paragraph she writes; nothing here invents a
 	 * qualification, a year or a training she may not have.
 	 *
 	 * The copy that IS here is hers already: the introduction is the approved
@@ -15,7 +15,7 @@
 	 *
 	 * See +page.ts for why the page is noindex until the markers are filled.
 	 */
-	import { Breadcrumbs, Todo } from '$lib/components/ui';
+	import { Breadcrumbs } from '$lib/components/ui';
 	import { ButtonLink } from '$lib/components/ui/interactions';
 	import CredentialBadge from '$lib/components/ui/CredentialBadge.svelte';
 	import DrawOn from '$lib/components/ui/DrawOn.svelte';
@@ -111,10 +111,6 @@
 						: ''}{training.name} ({training.dateLabel}){/each}
 			</p>
 		{/if}
-
-		<p class="about-page__body" use:reveal>
-			<Todo>Aangesloten bij een beroepsvereniging? Zo ja, welke, en sinds wanneer</Todo>
-		</p>
 	</PageSection>
 
 	<PageSection id="doe" eyebrow="Behandelingen" title="Wat ik doe" wide>

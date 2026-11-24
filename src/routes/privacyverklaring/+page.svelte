@@ -162,9 +162,9 @@
 					<td data-label="Toegang van buiten de EU">Ja — Verenigde Staten</td>
 				</tr>
 				<tr>
-					<td data-label="Verwerker"><Todo>e-mailprovider</Todo></td>
+					<td data-label="Verwerker">TransIP</td>
 					<td data-label="Waarvoor">De mailbox waarin je bericht binnenkomt</td>
-					<td data-label="Waar staan de gegevens"><Todo>land</Todo></td>
+					<td data-label="Waar staan de gegevens">Nederland</td>
 					<td data-label="Toegang van buiten de EU"><Todo>ja of nee</Todo></td>
 				</tr>
 			</tbody>
