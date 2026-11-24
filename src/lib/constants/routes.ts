@@ -55,9 +55,9 @@ export const ALL_ROUTES: readonly { path: string; title: string; kind: RouteKind
 	{ path: '/privacyverklaring', title: 'Privacyverklaring', kind: 'page' },
 	{ path: '/algemene-voorwaarden', title: 'Algemene voorwaarden', kind: 'page' },
 	{ path: '/disclaimer', title: 'Disclaimer', kind: 'page' },
-	/* Reserved for Review + AggregateRating structured data. The footer already
-	   links "Reviews", so the URL has to exist before launch either way. */
-	{ path: '/reviews', title: 'Reviews', kind: 'stub' }
+	/* Published 2026-11-24 with three client reviews ($lib/content/reviews). No
+	   AggregateRating: the reviews carry no star ratings, and none are invented. */
+	{ path: '/reviews', title: 'Reviews', kind: 'page' }
 ] as const;
 
 export type RouteEntry = (typeof ALL_ROUTES)[number];
