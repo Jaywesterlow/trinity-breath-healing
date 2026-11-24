@@ -1,7 +1,7 @@
 /**
  * The availability endpoint is the planner's only source of "already taken".
- * Its failure mode is pinned here: an unreachable store answers 503 with an
- * explicit unavailable flag, never a 200 with an empty list — the planner
+ * Its failure mode is pinned here: an unreachable store answers taken: null with
+ * an explicit unavailable flag, never an empty list — the planner
  * would read that as "everything is free".
  */
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -42,22 +42,22 @@ describe('GET /api/availability', () => {
 		expect(headers['cache-control']).toContain('s-maxage=30');
 	});
 
-	it('answers 503 unavailable, uncached, when the store is not configured', async () => {
+	it('answers unavailable (taken: null, never []), uncached, when the store is not configured', async () => {
 		configured.mockReturnValue(false);
 		const { event } = call('https://x.test/api/availability?from=2026-11-01&to=2026-11-30');
 		const res = await GET(event as never);
-		expect(res.status).toBe(503);
+		expect(res.status).toBe(200);
 		expect(await res.json()).toEqual({ taken: null, unavailable: true });
 		expect(res.headers.get('cache-control')).toBe('no-store');
 		expect(taken).not.toHaveBeenCalled();
 	});
 
-	it('answers 503 unavailable, uncached, when the query fails', async () => {
+	it('answers unavailable (taken: null, never []), uncached, when the query fails', async () => {
 		configured.mockReturnValue(true);
 		taken.mockRejectedValue(new Error('connection refused'));
 		const { event } = call('https://x.test/api/availability?from=2026-11-01&to=2026-11-30');
 		const res = await GET(event as never);
-		expect(res.status).toBe(503);
+		expect(res.status).toBe(200);
 		expect(await res.json()).toEqual({ taken: null, unavailable: true });
 		expect(res.headers.get('cache-control')).toBe('no-store');
 	});
