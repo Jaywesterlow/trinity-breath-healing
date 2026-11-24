@@ -2,23 +2,31 @@ import type { PageLoad } from './$types';
 import { buildGraph } from '$lib/schema/buildGraph';
 import { buildBreadcrumb } from '$lib/schema/breadcrumb';
 import { buildWebPage } from '$lib/schema/webpage';
-import { STUB_META } from '$lib/seo/stub-meta';
 
+/**
+ * /reviews — published 2026-11-24 with three client reviews (`$lib/content/reviews`).
+ * Its metadata moved here from STUB_META when it graduated, like /tarieven; the
+ * route is `kind: 'page'` in routes.ts, so it is in the sitemap and indexed.
+ */
 export const prerender = true;
 
-export const load: PageLoad = async ({ url }) => {
-	const stub = STUB_META[url.pathname];
-	if (!stub) throw new Error(`no STUB_META entry for ${url.pathname}`);
-	/* Placeholder content: keep it out of the index until it says something. */
-	const meta = {
-		title: stub.title,
-		description: stub.description,
-		path: url.pathname,
-		noindex: true
-	};
+const PATH = '/reviews';
+const TITLE = 'Reviews en ervaringen van cliënten';
+const DESCRIPTION =
+	'Ervaringen van cliënten van Trinity Breath & Healing in hun eigen woorden: Mahatma & Gold Healing, Cranio & Fascia Unwinding, Clearing en Rasterenergie.';
+const LEAD =
+	'Drie cliënten vertellen in hun eigen woorden over hun behandelingen. Twee van hen schreven hun ervaring in het Engels.';
+
+const CRUMBS = [
+	{ name: 'Home', path: '/' },
+	{ name: 'Reviews', path: PATH }
+];
+
+export const load: PageLoad = async () => {
+	const meta = { title: TITLE, description: DESCRIPTION, path: PATH };
 	const pageSpecific = [
-		buildBreadcrumb(stub.crumbs),
-		buildWebPage({ title: stub.title, description: stub.description, path: url.pathname })
+		buildBreadcrumb(CRUMBS),
+		buildWebPage({ title: TITLE, description: DESCRIPTION, path: PATH })
 	];
-	return { meta, graph: buildGraph({ pageSpecific, path: url.pathname }) };
+	return { meta, crumbs: CRUMBS, lead: LEAD, graph: buildGraph({ pageSpecific, path: PATH }) };
 };

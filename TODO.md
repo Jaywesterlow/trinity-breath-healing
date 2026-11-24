@@ -37,7 +37,7 @@ all content from Brigitte (§0a) plus a few account steps for Jay (§3). Recent:
 |---|---|
 | **Homepage contact form + date planner** | **Finished and pushed.** Three-step wizard, square tiles at every width, both panels locked to one height, mobile-first. Cal.com dropped; the site owns booking. Nothing outstanding in the component itself. |
 | **Pre-launch audit** | **Done.** CSP, security headers, self-hosted fonts, stubs out of the sitemap and noindexed, custom 404. |
-| **Page list / sitemap** | **20 routes** in `src/lib/constants/routes.ts`, **17 published** as of 2026-09-18. Eleven graduated on 2026-09-09: the seven modalities under `/diensten/`, their `/diensten` index, `/behandelingen`, `/werkwijze` and `/contact`. On 2026-09-18 `/faq` merged into `/contact#faq` (301) and `/blog` was dropped. Three are still stubs — `/over-mij`, `/artikelen`, `/reviews` — noindexed and out of the sitemap until they carry something. |
+| **Page list / sitemap** | **20 routes** in `src/lib/constants/routes.ts`, **18 published** as of 2026-11-24 (`/reviews` graduated that day). Eleven graduated on 2026-09-09: the seven modalities under `/diensten/`, their `/diensten` index, `/behandelingen`, `/werkwijze` and `/contact`. On 2026-09-18 `/faq` merged into `/contact#faq` (301) and `/blog` was dropped. Two are still stubs — `/over-mij`, `/artikelen` — noindexed and out of the sitemap until they carry something. |
 | **Legal pages + OG image + favicons + Plausible** | **Done and pushed.** |
 | **Booking approval + slot blocking** | **Live.** A requested slot greys out at once; she approves or declines from her inbox; approval sends a calendar invite, a decline reopens the slot. Supabase holds only date, time and status — no name, e-mail or klachten. |
 | **Homepage redesign** | **Hero, Werkwijze, nav glass and the button colour are built and on `main`** (checked 2026-11-24; the "uncommitted" below is history). Still open: paper texture, Behandelingen images for Gold Healing, Spinal Touch and BRTT, contact illustrations. Original note: **Moved to Figma 2026-10-23** (file "Trinity Healing", team JW). Feedback from Rowin and Brigitte, the new illustration style and the order of work are in §15. The site follows once a section is approved in Figma. **Werkwijze approved 2026-10-24** (full-card images, site green, paper texture); **Hero approved 2026-10-24** (two overflowing images, watercolour text wash). **Both built in code 2026-10-24, plus nav blur and the Frame 49 button — uncommitted, waiting for Jay's OK** (see "Built in code" in §15). Next: Jay's verdict on the Behandelingen images, then Over mij. |
@@ -53,6 +53,46 @@ all content from Brigitte (§0a) plus a few account steps for Jay (§3). Recent:
 Everything only she can answer, one list, in her language so it can be sent as is.
 Started 2026-11-01 from her WhatsApp of 31-10 and her form. Strike items here as they
 come back. This replaces asking from memory; `.planning/notes/VAN-BRIGITTE.md` is older.
+
+### Stand 24-11: wat Jay eerst met Brigitte moet bevestigen
+
+Uit haar WhatsApp, maar bewust **niet** op de site gezet (Jay, 2026-11-24): haar appjes zijn
+haar woorden, geen geverifieerde medische of juridische bron. Klinische en juridische tekst
+blijft zoals hij was tot Jay of Brigitte het bevestigt.
+
+- [ ] **CAT Collectief.** Haar woorden (10-11, 17:12–18:22): "ik heb me aangemeld bij Cat",
+      "CAT Collectief", "Ik heb de cat voor 2027". Te bevestigen: is ze nu lid, of gaat het
+      lidmaatschap pas in 2027 in? Tot dan blijven de klachtenregeling in
+      `/algemene-voorwaarden` (artikel 10) en de beroepsvereniging op `/over-mij` open.
+- [ ] **`/over-mij` blijft noindex** (en `kind: 'stub'`) tot het lidmaatschap en de open
+      juridische punten bevestigd zijn. Haar verhaal staat er al; alleen de
+      beroepsvereniging ontbreekt.
+- [ ] **Annuleren binnen 24 uur.** De tekst in artikel 5 is ongewijzigd, inclusief de
+      `<Todo>` voor de termijn. Bron nodig van Brigitte: wat kost afzeggen binnen 24 uur als er
+      nog niets betaald is? (De eerdere notitie "24 uur bevestigd 29-08" in §1 is niet als bron
+      terug te vinden en is daarom niet gebruikt.)
+- [ ] **Cranio en contra-indicaties.** Haar woorden (10-11, 07:27): "De contra indicaties zijn
+      er niet voor cranio." Niet als claim gepubliceerd. De disclaimer noemt Cranio nog samen
+      met BRTT ("bespreken we tijdens de kennismaking"), terwijl BRTT een eigen lijst met TRB
+      heeft. Laten bevestigen hoe dit er moet staan.
+- [ ] **Leeftijden** (kaart "Kinderen en gezinnen" en de FAQ, al live sinds 11-11): staan er
+      als beleid van de praktijk. Laten bevestigen dat dat zo bedoeld is, niet als
+      veiligheidsadvies.
+- [ ] **Mailbox** voor de privacyverklaring (info@ of Gmail): geen expliciete keuze van haar.
+- [ ] **Bewaartermijn** aantekeningen van behandelingen.
+- [ ] **Vijf veelgestelde vragen** van cliënten met haar antwoorden.
+- [ ] **Portretfoto** (is de huidige echt zij?) en eventueel een foto van de praktijkruimte.
+- [ ] **Beltijden** (nu 09:00–17:00 als gok in `BRAND.phoneHours`).
+- [ ] **Kaarten:** welke tekst "Onrust en overprikkeling" vervangt, en waar ze de Clearing-kaart mist.
+- [ ] **Spinal Touch:** gelden de contra-indicaties voor elke sessie of alleen bij aurawerk? En
+      de kaart "Angst en somberheid" (Spinal Touch en TRB bij antidepressiva).
+- [ ] Inhoud van haar verwijderde WhatsApp-berichten is niet te achterhalen.
+
+Wel gedaan op 24-11: **`/reviews`** staat live met drie reviews (Ero, Ragne, Marvin), letterlijk
+zoals Marvin ze op 17-11 namens hen mailde, alleen voornamen, en Brigitte bevestigde in WhatsApp
+dat hij ze stuurde. Footer "Lezen" linkt ernaar. Al eerder live en nagekeken op `main`: de kaart
+Kinderen en gezinnen, de gezondheidsverklaring ter plekke (pagina's en bevestigingsmail), de
+Meet-link, de tekst onderaan `/diensten` en haar Werkwijze-correcties van 10-11.
 
 ### Vragen van 9-11, stand 11-11
 
@@ -129,7 +169,7 @@ Reiskosten staan al op /tarieven (€0,35 per km), dus die vraag vervalt.
 ### Nog open, als je eraan toekomt
 
 - [ ] Hoe ziet een **eerste sessie** er van begin tot eind uit?
-- [ ] **Reviews**: drie tot vijf cliënten met een paar zinnen, voornaam is genoeg, met toestemming.
+- [x] **Reviews**: drie binnen (17-11, via Marvin), live op `/reviews` sinds 24-11.
 - [ ] **Vijf vragen** die cliënten je steeds stellen, met jouw antwoord.
 - [ ] Is de **portretfoto** op de site echt jij, of is het gezicht gegenereerd?
 - [ ] Een echte **foto van je praktijkruimte**, als je die wilt laten zien.
@@ -414,8 +454,8 @@ prices, and adding Jay as Manager.
 - [x] Her story — on `/over-mij` ("Mijn verhaal"), her words, WhatsApp 2026-10-30
 - [x] What a first session is actually like — covered by her own steps on `/werkwijze`
       (10-11). `/over-mij` links there. Ask her only if she wants a separate account of it.
-- [x] **Contraindications on `/disclaimer`** — confirmed per group 31-10; Cranio and BRTT
-      settled 10-11 (one list for BRTT and TRB, none for Cranio). No `<Todo>` left on the page.
+- [~] **Contraindications on `/disclaimer`** — confirmed per group 31-10. Her 10-11 answer on
+      Cranio is not published as a claim; see "Stand 24-11" in §0a. No `<Todo>` on the page.
 - [x] **Calendar: Google.** Confirmed 29-08. Unblocks §8 step 3 — the ICS feed
       route works with Google Calendar's secret address, which is the easier of
       the two options.
@@ -484,7 +524,7 @@ modal image animation.
       questions instead of being two orderings of one list.
 - [x] **Service page template — built 2026-09-09**, one `ServicePage.svelte` for all
       seven, copy taken from `BRAND.services` rather than written fresh.
-- [ ] `/reviews` — needs her reviews first; carries Review + AggregateRating JSON-LD
+- [x] `/reviews` — live 2026-11-24 with three reviews. No Review/AggregateRating JSON-LD: there are no ratings, and self-hosted reviews of the business are not shown as rich results.
 - [ ] `/artikelen` — only worth it once there is something to put in it (`/blog` dropped 2026-09-18: one home for written pieces, not two)
 - [x] Resubmit the sitemap in Search Console. Done 2026-11-07 (Google had read 15 pages that day).
 

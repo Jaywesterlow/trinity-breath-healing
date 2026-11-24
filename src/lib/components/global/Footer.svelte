@@ -49,6 +49,7 @@
 			heading: 'LEZEN',
 			links: [
 				{ href: '/contact#faq', label: 'Veelgestelde vragen' },
+				{ href: '/reviews', label: 'Reviews' },
 				{ href: '/disclaimer', label: 'Disclaimer' }
 			]
 		},

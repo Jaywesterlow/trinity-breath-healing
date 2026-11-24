@@ -72,21 +72,9 @@ export const STUB_META: Record<string, StubMeta> = {
 			{ name: 'Home', path: '/' },
 			{ name: 'Artikelen', path: '/artikelen' }
 		]
-	},
+	}
 
 	// /privacyverklaring, /algemene-voorwaarden and /disclaimer used to live here.
 	// They now carry real content and own their own metadata — see each route's
 	// +page.ts.
-
-	'/reviews': {
-		title: 'Reviews en ervaringen van cliënten',
-		heading: 'Reviews',
-		description:
-			'Ervaringen van mensen die bij Trinity Breath & Healing in Amsterdam een sessie volgden. Lees wat ademwerk en energetische behandeling voor hen betekende.',
-		lead: 'Ervaringen van mensen die een sessie volgden. Ik verzamel ze nog, dus deze pagina is voorlopig leeg.',
-		crumbs: [
-			{ name: 'Home', path: '/' },
-			{ name: 'Reviews', path: '/reviews' }
-		]
-	}
 };
