@@ -8,10 +8,10 @@
  * landing page is prerendered, so anything computed at build time would be a
  * snapshot of availability at deploy time and wrong within the hour.
  *
- * Failure answers 503 with an explicit unavailable flag, never a 200 with an
- * empty list: an empty 200 reads as "everything is free", and an unverified
- * slot must never be presented as available. The 503 is deliberately
- * uncached, so recovery shows the moment the store is back.
+ * Failure answers with taken: null and an explicit unavailable flag, never with an
+ * empty list: an empty list reads as "everything is free", and an unverified
+ * slot must never be presented as available. The answer is deliberately
+ * uncached, so recovery shows the moment the store is back. It is a 200 rather than a 5xx on purpose: a 503 on this fetch kept / and /contact from reaching networkidle in CI.
  */
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { isDatabaseConfigured } from '$lib/server/db';
@@ -54,6 +54,6 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
 function unavailable(): Response {
 	return json(
 		{ taken: null, unavailable: true },
-		{ status: 503, headers: { 'cache-control': 'no-store' } }
+		{ headers: { 'cache-control': 'no-store' } }
 	);
 }
