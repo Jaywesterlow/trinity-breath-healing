@@ -52,8 +52,5 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
 
 /** The honest outage answer: no slots claimed, and nothing may cache it. */
 function unavailable(): Response {
-	return json(
-		{ taken: null, unavailable: true },
-		{ headers: { 'cache-control': 'no-store' } }
-	);
+	return json({ taken: null, unavailable: true }, { headers: { 'cache-control': 'no-store' } });
 }
