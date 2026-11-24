@@ -11,13 +11,13 @@ import { STUB_META } from '$lib/seo/stub-meta';
  * could not stay a "komt binnenkort" card: it is the one page a visitor clicks
  * precisely when they are deciding whether to trust the practitioner.
  *
- * Still `noindex`, deliberately. The page renders <Todo> markers where the
- * practitioner's training, credentials and story go, and this is a health/YMYL
+ * Still `noindex`, deliberately. Her association membership (CAT Collectief,
+ * starting 2027, in her words of 2026-11-24) is deliberately not stated yet, and this is a health/YMYL
  * site where the About page is the E-E-A-T page — publishing it with visible
  * gaps would put the weakest version of the trust argument in front of Google
  * on the exact URL that carries it.
  *
- * To publish: fill the markers in +page.svelte, delete `noindex` below, and
+ * To publish: fill the missing paragraphs in +page.svelte, delete `noindex` below, and
  * flip this route's `kind` to 'page' in src/lib/constants/routes.ts so it
  * enters the sitemap.
  */
