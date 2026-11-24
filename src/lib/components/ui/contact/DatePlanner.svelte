@@ -302,29 +302,23 @@
 	 *
 	 * Fetched rather than rendered: the landing page is prerendered, so
 	 * availability baked in at build time would be a snapshot from deploy day.
-	 * A slot is offered only once this fetch has answered for the month in
-	 * view. Any failure — the server's 503, a network error, a payload that
-	 * does not parse — marks availability unknown: an unverified slot is
-	 * never presented as free, and the sheet offers a retry and the mail
-	 * fallback.
+	 * Starts empty and stays empty if the request fails — every slot stays
+	 * offered, and the server remains the only thing that can actually refuse
+	 * one. Failing the other way would show a fully booked calendar because of
+	 * a network blip.
 	 */
 	let taken = $state(new Set<string>());
-	let availabilityFailed = $state(false);
 
 	async function loadAvailability() {
 		const first = isoFor(1);
 		const last = isoFor(daysInMonth);
 		try {
 			const response = await fetch(`/api/availability?from=${first}&to=${last}`);
-			if (!response.ok) throw new Error(`availability answered ${response.status}`);
+			if (!response.ok) return;
 			const payload = (await response.json()) as { taken?: { datum: string; start: string }[] };
-			if (!Array.isArray(payload.taken)) throw new Error('availability payload malformed');
-			taken = new Set(payload.taken.map((s) => `${s.datum} ${s.start}`));
-			availabilityFailed = false;
+			taken = new Set((payload.taken ?? []).map((s) => `${s.datum} ${s.start}`));
 		} catch {
-			/* Unknown is not "all free" — offer nothing until a retry verifies. */
-			taken = new Set();
-			availabilityFailed = true;
+			/* Offline or blocked — leave the calendar as the schedule describes it. */
 		}
 	}
 
@@ -337,7 +331,7 @@
 	});
 
 	const slots = $derived(
-		selectedDate && !availabilityFailed
+		selectedDate
 			? slotsFor(schedule, selectedDate, now).map((slot) => ({
 					...slot,
 					taken: taken.has(`${selectedDate} ${slot.start}`)
@@ -768,15 +762,7 @@
 				<span class="planner__grabber" aria-hidden="true"></span>
 				<span class="planner__sheet-hint" aria-hidden="true">Sleep omlaag om terug te gaan</span>
 				<p class="planner__sheet-date">{sheetLabel}</p>
-				{#if availabilityFailed}
-					<p class="planner__empty" role="alert">
-						We kunnen de beschikbaarheid nu niet laden. Probeer het opnieuw, of mail naar
-						<a href="mailto:{BRAND.email}">{BRAND.email}</a>.
-					</p>
-					<button class="planner__retry" type="button" onclick={() => loadAvailability()}>
-						Opnieuw proberen
-					</button>
-				{:else if slots.length > 0 && freeSlotCount > 0}
+				{#if slots.length > 0 && freeSlotCount > 0}
 					<div
 						class="planner__times"
 						role="group"
@@ -1225,29 +1211,6 @@
 		font-weight: var(--font-weight-light);
 		color: var(--brand-muted);
 		margin: 1rem 0 0;
-	}
-
-	.planner__empty a {
-		color: inherit;
-		text-decoration: underline;
-		text-underline-offset: 2px;
-	}
-
-	/* Same read as .planner__back: text with an underline, not a pill. */
-	.planner__retry {
-		display: inline-flex;
-		align-items: center;
-		min-height: 2.75rem; /* stays a 44px target even though it reads as text */
-		margin-top: 0.25rem;
-		padding: 0;
-		border: none;
-		background: transparent;
-		color: var(--brand-border);
-		font-family: inherit;
-		font-size: 0.9375rem; /* 15px */
-		text-decoration: underline;
-		text-underline-offset: 4px;
-		cursor: pointer;
 	}
 
 	/* ─── Step 3 ─── */
