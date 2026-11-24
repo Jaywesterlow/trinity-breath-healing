@@ -199,6 +199,17 @@ test.describe('Contact — /api/contact', () => {
 
 test.describe('Contact — date planner', () => {
 	test.beforeEach(async ({ page }) => {
+		/* The planner asks the live slot store which times are taken and, since
+		   the availability fix, refuses to offer times when that store does not
+		   answer. There is no store in this suite, so answer for it: an empty
+		   taken list, every slot free — what these tests have always assumed. */
+		await page.route('**/api/availability**', (route) =>
+			route.fulfill({
+				status: 200,
+				contentType: 'application/json',
+				body: JSON.stringify({ taken: [] })
+			})
+		);
 		await page.goto('/');
 		await page.locator('#contact').scrollIntoViewIfNeeded();
 		await chooseMode(page, 'afspraak');

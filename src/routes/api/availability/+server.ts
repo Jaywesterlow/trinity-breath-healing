@@ -8,10 +8,10 @@
  * landing page is prerendered, so anything computed at build time would be a
  * snapshot of availability at deploy time and wrong within the hour.
  *
- * Returns an empty list rather than an error when the database is not
- * configured. The planner then behaves exactly as it did before this feature
- * existed — every slot offered, the server still the only thing that decides —
- * instead of failing closed and showing a fully booked calendar.
+ * Failure answers with taken: null and an explicit unavailable flag, never with an
+ * empty list: an empty list reads as "everything is free", and an unverified
+ * slot must never be presented as available. The answer is deliberately
+ * uncached, so recovery shows the moment the store is back. It is a 200 rather than a 5xx on purpose: a 503 on this fetch kept / and /contact from reaching networkidle in CI.
  */
 import { json, type RequestHandler } from '@sveltejs/kit';
 import { isDatabaseConfigured } from '$lib/server/db';
@@ -27,6 +27,7 @@ const MAX_DAYS = 120;
 export const GET: RequestHandler = async ({ url, setHeaders }) => {
 	const from = url.searchParams.get('from') ?? '';
 	const to = url.searchParams.get('to') ?? '';
+
 	if (!ISO_DATE.test(from) || !ISO_DATE.test(to) || to < from) {
 		return json({ taken: [] }, { status: 400 });
 	}
@@ -34,7 +35,7 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
 	const spanDays = (Date.parse(to) - Date.parse(from)) / 86_400_000;
 	if (spanDays > MAX_DAYS) return json({ taken: [] }, { status: 400 });
 
-	if (!isDatabaseConfigured()) return json({ taken: [] });
+	if (!isDatabaseConfigured()) return unavailable();
 
 	try {
 		const taken = await takenSlots(from, to);
@@ -45,7 +46,11 @@ export const GET: RequestHandler = async ({ url, setHeaders }) => {
 		return json({ taken });
 	} catch (error) {
 		console.error('[availability] query failed:', error);
-		/* Fail open, for the same reason as the unconfigured case above. */
-		return json({ taken: [] });
+		return unavailable();
 	}
 };
+
+/** The honest outage answer: no slots claimed, and nothing may cache it. */
+function unavailable(): Response {
+	return json({ taken: null, unavailable: true }, { headers: { 'cache-control': 'no-store' } });
+}
