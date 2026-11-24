@@ -8,7 +8,8 @@ brief, and the open threads were living in three different places.
 - `.planning/` — the GSD phase artifacts.
 - **This file** — what is still open, and who can do it.
 
-Branch: `claude/trinity-redesign-frames`.
+Work happens on short branches off `main`, one PR each, merged when CI is green.
+(Updated 2026-11-24; this used to name `claude/trinity-redesign-frames`.)
 
 **Test counts and route lists used to be written out here and went stale within a
 week.** They are not repeated any more: `npm test` reports the counts, and
@@ -20,6 +21,18 @@ machine can check is checked, and anything it cannot is dated.
 
 ## 0. Where we actually left off
 
+**Stand 2026-11-24.** The site is live and up to date on `main`. What is left is almost
+all content from Brigitte (§0a) plus a few account steps for Jay (§3). Recent:
+
+- **#35 (2026-10-30):** the band under the hero shows Geest / Lichaam / Ziel instead of
+  the 8+ / 65+ / ∞ figures; the homepage Over mij reads "Mijn reis naar bewustwording."
+  with her new intro.
+- **#44 (2026-11-13):** her report that prices and names ran into each other on a phone.
+  `/tarieven` rows now stack below 640px, and long button labels wrap instead of making
+  the page scroll sideways. All 20 pages were swept at 320, 390, 820 and 1366, and at 360
+  with all text 30% larger, for overlapping text, sideways scroll and text past the edge.
+  Nothing left after the fix. The sweep script is not in the repo; worth adding as a spec.
+
 | Thread | State |
 |---|---|
 | **Homepage contact form + date planner** | **Finished and pushed.** Three-step wizard, square tiles at every width, both panels locked to one height, mobile-first. Cal.com dropped; the site owns booking. Nothing outstanding in the component itself. |
@@ -27,7 +40,7 @@ machine can check is checked, and anything it cannot is dated.
 | **Page list / sitemap** | **20 routes** in `src/lib/constants/routes.ts`, **17 published** as of 2026-09-18. Eleven graduated on 2026-09-09: the seven modalities under `/diensten/`, their `/diensten` index, `/behandelingen`, `/werkwijze` and `/contact`. On 2026-09-18 `/faq` merged into `/contact#faq` (301) and `/blog` was dropped. Three are still stubs — `/over-mij`, `/artikelen`, `/reviews` — noindexed and out of the sitemap until they carry something. |
 | **Legal pages + OG image + favicons + Plausible** | **Done and pushed.** |
 | **Booking approval + slot blocking** | **Live.** A requested slot greys out at once; she approves or declines from her inbox; approval sends a calendar invite, a decline reopens the slot. Supabase holds only date, time and status — no name, e-mail or klachten. |
-| **Homepage redesign** | **Moved to Figma 2026-10-23** (file "Trinity Healing", team JW). Feedback from Rowin and Brigitte, the new illustration style and the order of work are in §15. The site follows once a section is approved in Figma. **Werkwijze approved 2026-10-24** (full-card images, site green, paper texture); **Hero approved 2026-10-24** (two overflowing images, watercolour text wash). **Both built in code 2026-10-24, plus nav blur and the Frame 49 button — uncommitted, waiting for Jay's OK** (see "Built in code" in §15). Next: Jay's verdict on the Behandelingen images, then Over mij. |
+| **Homepage redesign** | **Hero, Werkwijze, nav glass and the button colour are built and on `main`** (checked 2026-11-24; the "uncommitted" below is history). Still open: paper texture, Behandelingen images for Gold Healing, Spinal Touch and BRTT, contact illustrations. Original note: **Moved to Figma 2026-10-23** (file "Trinity Healing", team JW). Feedback from Rowin and Brigitte, the new illustration style and the order of work are in §15. The site follows once a section is approved in Figma. **Werkwijze approved 2026-10-24** (full-card images, site green, paper texture); **Hero approved 2026-10-24** (two overflowing images, watercolour text wash). **Both built in code 2026-10-24, plus nav blur and the Frame 49 button — uncommitted, waiting for Jay's OK** (see "Built in code" in §15). Next: Jay's verdict on the Behandelingen images, then Over mij. |
 | **Subpage grid** | **Done 2026-09-09.** Every page's breadcrumb and `<h1>` now share a left edge with the footer; the reading measure moved to the children. `tests/integration/page-grid.spec.ts` holds it. |
 | **Page titles** | **Fixed 2026-09-09.** Eleven shipped the brand name twice (76–88 chars, of which Google shows ~60) because `Head.svelte` appended it to a title that already had it. All 20 are now 48–62 with the brand once, in one spelling. |
 
@@ -207,8 +220,10 @@ and one style reference so they match:
 - [ ] Contact ×2 — Rowin: an illustration on the right of each of the two green
       blocks that open a form
 
-### Built in code — 2026-10-24, uncommitted
-On branch `claude/proof-lotus-nav-scroll-261018`. **Ask Jay before committing/pushing.**
+### Built in code — 2026-10-24, now on `main`
+*Checked 2026-11-24: the hero images and text wash, the Werkwijze copy, the nav blur and
+`--color-cta` are all on `main`. The paper texture is still not built.*
+Originally on branch `claude/proof-lotus-nav-scroll-261018`.
 - **Hero** (`Hero.svelte`): the two images with art direction by aspect ratio (portrait
   below 1:1, landscape above), the text wash under the text, Brigitte's copy, image eager
   + `fetchpriority=high`. Old `hero-illustration.svg` deleted.
@@ -230,12 +245,12 @@ On branch `claude/proof-lotus-nav-scroll-261018`. **Ask Jay before committing/pu
   placed in the Figma frames.
 
 ### Copy from Brigitte
-- [ ] **Hero.** Title: "Stress, emoties en ingrijpende ervaringen kunnen je uit
+- [x] *(Live, checked 2026-11-24.)* **Hero.** Title: "Stress, emoties en ingrijpende ervaringen kunnen je uit
       balans brengen." Lead: "Bij Trinity Breath & Healing begeleid ik je met
       ademwerk, lichaamsgerichte en energetische behandelingen om spanning los te
       laten, patronen te herkennen en weer dichter bij jezelf te komen." The title
       does not name the modality; the lead does, so it stays directly under it.
-- [ ] **Werkwijze.** Heading "Wat kun je verwachten?", sub "Rustig, persoonlijk
+- [x] *(Live, checked 2026-11-24.)* **Werkwijze.** Heading "Wat kun je verwachten?", sub "Rustig, persoonlijk
       en op jouw tempo." Cards:
   1. Kennismaking — "We beginnen met een persoonlijk gesprek waarin we kijken
      naar jouw wensen, behoeften en wat je op dit moment bezighoudt."
@@ -248,7 +263,8 @@ On branch `claude/proof-lotus-nav-scroll-261018`. **Ask Jay before committing/pu
   3. Afronding & nazorg — "Na de behandeling nemen we alle tijd om rustig af te
      ronden. Je krijgt de ruimte om je ervaringen te delen en, wanneer dat nodig
      is, ontvang je persoonlijke adviezen voor je nazorg."
-- [ ] **Over mij.** Title "Mijn eigen reis bracht mij dichter bij mezelf". Text
+- [x] *(Superseded 2026-10-30, #35: the homepage section now reads "Mijn reis naar
+      bewustwording." with the intro Jay sent.)* **Over mij.** Title "Mijn eigen reis bracht mij dichter bij mezelf". Text
       as she sent it, with four fixes to confirm with her: "inspireerde" →
       "inspireerden"; "kennen. oude" → "kennen, oude"; "meer naar mezelf te
       luisteren" → "meer naar mezelf luisteren"; full stop after the last
@@ -284,8 +300,9 @@ after the static style is approved.
 
 ### Order
 1. ~~Werkwijze in Figma (copy + three cards; sets the style)~~ — approved 2026-10-24
-2. ~~Hero~~ — approved 2026-10-24, built in code (uncommitted)
-3. Behandelingen images: Jay's verdict on round 1, then round 2 and into the site
+2. ~~Hero~~ — approved 2026-10-24, built and on `main`
+3. Behandelingen images: Mahatma, Rasterenergie and Clearing & Ascensie are in the new
+   style (§0a); Gold Healing, Spinal Touch and BRTT wait on Brigitte's yes (it costs money)
 4. Over mij (portrait once the question above is answered)
 5. Contact illustrations
 6. Render-to-line transition
@@ -328,7 +345,7 @@ Every one of these renders as **red bracketed text** on a live page right now.
 - [x] Phone number — 06 24 24 45 85
 - [x] BTW-ID — `NL005276270B90`
 - [x] E-mail — she uses `bgrohe72@gmail.com` and wants a business address, so `info@trinitybreathhealing.nl` has to be created and forwarded there
-- [ ] Price per session
+- [x] Price per session — **on `/tarieven` since 2026-10-31** (her WhatsApp of that day)
 - [x] Cancellation window — **confirmed 24 h, 29-08.** `CANCELLATION_HOURS` was already provisionally 24, so the e-mails and the algemene voorwaarden were quoting the right number by luck. It is now hers.
 - [~] Payment method — **answered 29-08, half-blocked.** Payment is **after** the
       treatment, by **factuur, Tikkie, iDEAL or cash**. Two things follow:
@@ -394,9 +411,11 @@ prices, and adding Jay as Manager.
       Jay's account: Google verifies the listing against the business itself and
       moving primary ownership afterwards is a real hassle. Same login also
       covers reading her Google Calendar later (§8 step 3).
-- [ ] Her story — 2–3 paragraphs, her own words
-- [ ] What a first session is actually like
-- [~] **Contraindications on `/disclaimer`** — confirmed per group 31-10 except Cranio and BRTT, see §11
+- [x] Her story — on `/over-mij` ("Mijn verhaal"), her words, WhatsApp 2026-10-30
+- [x] What a first session is actually like — covered by her own steps on `/werkwijze`
+      (10-11). `/over-mij` links there. Ask her only if she wants a separate account of it.
+- [x] **Contraindications on `/disclaimer`** — confirmed per group 31-10; Cranio and BRTT
+      settled 10-11 (one list for BRTT and TRB, none for Cranio). No `<Todo>` left on the page.
 - [x] **Calendar: Google.** Confirmed 29-08. Unblocks §8 step 3 — the ICS feed
       route works with Google Calendar's secret address, which is the easier of
       the two options.
@@ -422,8 +441,9 @@ modal image animation.
 
 ## 2. Publish once §1 comes back
 
-- [ ] Fill the `<Todo>` markers on `/privacyverklaring`, `/algemene-voorwaarden`, `/disclaimer`
-- [ ] Fill `/over-mij`, then delete `noindex` in its `+page.ts` and flip its `kind` to `'page'` in `routes.ts`
+- [ ] Fill the `<Todo>` markers on `/privacyverklaring` (mailbox, bewaartermijn) and
+      `/algemene-voorwaarden` (late-cancellation charge, klachtenregeling). `/disclaimer` has none left (2026-11-24).
+- [ ] Fill `/over-mij` (only the beroepsvereniging is left, 2026-11-24), then delete `noindex` in its `+page.ts` and flip its `kind` to `'page'` in `routes.ts`
 - [ ] Flip `scripts/grep-placeholders.sh` to exit 1 on any match (the LGL-11 launch gate)
 
 ---
@@ -472,7 +492,8 @@ modal image animation.
 
 ## 5. Open design decisions
 
-- [ ] **Sitewide colour contrast.** pa11y reports contrast errors on `/`. `--brand-muted` and `--brand-border` were already darkened to pass AA, but the tan CTA pills (nav "Maak een afspraak", the form's "Verstuur email") still fail at roughly 2.1–2.7:1. Fixing them changes the brand look, so it is the owner's call.
+- [x] *(Resolved by `--color-cta: #8d6346`, 4.66:1 with cream text, see §15. Not re-measured
+      on `/` since; CI's pa11y job passes.)* **Sitewide colour contrast.** pa11y reports contrast errors on `/`. `--brand-muted` and `--brand-border` were already darkened to pass AA, but the tan CTA pills (nav "Maak een afspraak", the form's "Verstuur email") still fail at roughly 2.1–2.7:1. Fixing them changes the brand look, so it is the owner's call.
 - [ ] Homepage redesign — §6.
 - [ ] Modal layout and carousel speed — §7.
 - [ ] Availability sources — §8.
