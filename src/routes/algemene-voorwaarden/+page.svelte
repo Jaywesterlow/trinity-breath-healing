@@ -91,8 +91,8 @@
 
 	<h2>Artikel 5 — Verzetten en annuleren</h2>
 	<p>
-		Kun je niet komen, laat het dan zo snel mogelijk weten. Tot
-		<Todo>annuleringstermijn, bijv. 24 uur</Todo> voor de afspraak kun je kosteloos verzetten of annuleren.
+		Kun je niet komen, laat het dan zo snel mogelijk weten. Tot 24 uur voor de afspraak kun je
+		kosteloos verzetten of annuleren.
 	</p>
 	<p>
 		Bij annulering binnen die termijn, of wanneer je zonder bericht niet verschijnt, brengt de
