@@ -33,7 +33,9 @@ describe('GET /api/availability', () => {
 	it('answers the taken slots, shortly cached, when the store answers', async () => {
 		configured.mockReturnValue(true);
 		taken.mockResolvedValue([{ datum: '2026-11-25', start: '19:00' }]);
-		const { event, headers } = call('https://x.test/api/availability?from=2026-11-01&to=2026-11-30');
+		const { event, headers } = call(
+			'https://x.test/api/availability?from=2026-11-01&to=2026-11-30'
+		);
 		const res = await GET(event as never);
 		expect(res.status).toBe(200);
 		expect(await res.json()).toEqual({ taken: [{ datum: '2026-11-25', start: '19:00' }] });
