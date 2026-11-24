@@ -95,9 +95,9 @@
 		kosteloos verzetten of annuleren.
 	</p>
 	<p>
-		Bij annulering binnen die termijn, of wanneer je zonder bericht niet verschijnt, brengt de
-		praktijk <Todo>percentage of bedrag</Todo> van het tarief in rekening. De gereserveerde tijd kan dan
-		immers niet meer aan iemand anders worden gegeven.
+		Annuleer je binnen 24 uur voor de afspraak, dan kan de afspraak worden verplaatst. Verschijn je
+		zonder bericht niet, dan brengt de praktijk <Todo>percentage of bedrag</Todo> van het tarief in rekening.
+		De gereserveerde tijd kan dan immers niet meer aan iemand anders worden gegeven.
 	</p>
 	<p>
 		Moet de praktijk zelf een afspraak afzeggen, dan wordt in overleg een nieuwe datum gepland en
